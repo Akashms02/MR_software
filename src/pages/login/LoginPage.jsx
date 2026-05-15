@@ -1,13 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-
-/* ── Hardcoded credentials ───────────────────────────────── */
-const CREDENTIALS = [
-  { email: 'admin@greenhr.in',    password: 'admin123',    role: 'HR Admin',  redirect: '/dashboard' },
-  { email: 'manager@greenhr.in',  password: 'manager123',  role: 'Manager',   redirect: '/dashboard' },
-  { email: 'employee@greenhr.in', password: 'emp123',      role: 'Employee',  redirect: '/dashboard' },
-]
+import { useDispatch, useSelector } from 'react-redux'
+import { login } from '../../redux/actions/authActions'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,37 +18,39 @@ const EyeOff = () => (
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { loading, error: authError, user, requiresPasswordChange } = useSelector((state) => state.auth)
+
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw]     = useState(false)
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
+  const [localError, setLocalError] = useState('')
+
+  const error = localError || authError;
+
+  useEffect(() => {
+    if (user) {
+      if (requiresPasswordChange) { 
+        navigate('/create-password', { replace: true }); 
+        return; 
+      }
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, requiresPasswordChange, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    setError('')
+    setLocalError('')
 
-    if (!email.trim())    { setError('Please enter your email.'); return }
-    if (!password.trim()) { setError('Please enter your password.'); return }
+    if (!email.trim())    { setLocalError('Please enter your email.'); return }
+    if (!password.trim()) { setLocalError('Please enter your password.'); return }
 
-    const match = CREDENTIALS.find(
-      c => c.email === email.trim().toLowerCase() && c.password === password
-    )
-
-    if (!match) {
-      setError('Invalid email or password. Please try again.')
-      return
+    const result = await dispatch(login({ email: email.trim(), password }));
+    if (result === 'CHANGE_PASSWORD_REQUIRED') {
+      navigate('/create-password', {
+        state: { mode: 'FIRST_LOGIN', email: email.trim(), tempPassword: password },
+      });
     }
-
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setLoading(false)
-    
-    // Store user info for dashboard
-    localStorage.setItem('userRole', match.role)
-    localStorage.setItem('userName', match.name || (match.email.split('@')[0]))
-    
-    navigate(match.redirect)
   }
 
   const containerVariants = {
@@ -146,7 +143,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '28px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-                GreenHR
+                GmaxepayHR
               </div>
               <div style={{ fontSize: '11px', color: 'var(--lime-dark)', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
                 Pharma HRMS
@@ -220,8 +217,8 @@ export default function LoginPage() {
                   id="login-email"
                   type="email"
                   value={email}
-                  onChange={e => { setEmail(e.target.value); setError('') }}
-                  placeholder="you@greenhr.in"
+                  onChange={e => { setEmail(e.target.value); setLocalError('') }}
+                  placeholder="you@gmaxepayhr.in"
                   autoComplete="email"
                   style={{
                     width: '100%', padding: '14px 16px',
@@ -248,7 +245,7 @@ export default function LoginPage() {
                     id="login-password"
                     type={showPw ? 'text' : 'password'}
                     value={password}
-                    onChange={e => { setPassword(e.target.value); setError('') }}
+                    onChange={e => { setPassword(e.target.value); setLocalError('') }}
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     style={{
@@ -345,7 +342,7 @@ export default function LoginPage() {
               </motion.button>
             </form>
 
-            {/* Demo Credentials Hint */}
+              {/* Demo Credentials Hint */}
             <div style={{
               marginTop: '36px', paddingTop: '24px',
               borderTop: '1px solid var(--border)',
@@ -354,7 +351,11 @@ export default function LoginPage() {
                 One-Click Demo Access
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {CREDENTIALS.map((c, i) => (
+                {[
+                  { email: 'superadmin@mrmedical.com', password: 'SuperAdmin@123', role: 'Super Admin' },
+                  { email: 'admin.one@mrmedical.com', password: 'Password@123', role: 'Admin' },
+                  { email: 'employee@mrmedical.com', password: 'password123', role: 'Employee' }
+                ].map((c, i) => (
                   <motion.div 
                     whileHover={{ x: 4, background: 'var(--bg-section)' }}
                     key={i} 
@@ -363,12 +364,12 @@ export default function LoginPage() {
                       padding: '8px 12px', borderRadius: '8px',
                       cursor: 'pointer', transition: 'background 0.2s'
                     }}
-                    onClick={() => { setEmail(c.email); setPassword(c.password); setError('') }}
+                    onClick={() => { setEmail(c.email); setPassword(c.password); setLocalError('') }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{
                         width: '8px', height: '8px', borderRadius: '50%',
-                        background: c.role === 'HR Admin' ? '#F43F5E' : c.role === 'Manager' ? '#3B82F6' : 'var(--lime-dark)'
+                        background: c.role.includes('Admin') ? '#F43F5E' : 'var(--lime-dark)'
                       }} />
                       <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{c.role}</span>
                     </div>

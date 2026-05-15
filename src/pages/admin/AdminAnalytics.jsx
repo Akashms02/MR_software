@@ -15,7 +15,7 @@ export default function AdminAnalytics() {
     <div>
       <SectionHeader
         title="HR Analytics"
-        sub="Workforce insights and trends for GreenHR Pharma"
+        sub="Workforce insights and trends for GmaxepayHR Pharma"
       />
 
       {/* KPI Tiles */}

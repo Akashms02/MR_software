@@ -1,0 +1,479 @@
+import axios from "axios";
+import { API_ROUTE } from "../../data/env";
+import {
+  LOGIN_REQUEST,
+  LOGIN_SUCCESS,
+  LOGIN_FAILURE,
+  FETCH_PROFILE_REQUEST,
+  FETCH_PROFILE_SUCCESS,
+  FETCH_PROFILE_FAILURE,
+  LOGOUT,
+  CLEAR_ERRORS,
+  SET_REQUIRE_PASSWORD_CHANGE,
+  FORGOT_PASSWORD_REQUEST,
+  FORGOT_PASSWORD_SUCCESS,
+  FORGOT_PASSWORD_FAILURE,
+  VERIFY_OTP_REQUEST,
+  VERIFY_OTP_SUCCESS,
+  VERIFY_OTP_FAILURE,
+  RESET_PASSWORD_REQUEST,
+  RESET_PASSWORD_SUCCESS,
+  RESET_PASSWORD_FAILURE,
+  CHANGE_PASSWORD_REQUEST,
+  CHANGE_PASSWORD_SUCCESS,
+  CHANGE_PASSWORD_FAILURE,
+  INITIALIZE_AUTH_START,
+  INITIALIZE_AUTH_COMPLETE,
+  UPDATE_PROFILE_REQUEST,
+  UPDATE_PROFILE_SUCCESS,
+  UPDATE_PROFILE_FAILURE,
+  UPDATE_PROFILE_ADMIN_SUCCESS,
+  UPDATE_PROFILE_ADMIN_REQUEST,
+  UPDATE_PROFILE_ADMIN_FAILURE,
+} from "../actionType/authActionType";
+import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
+import { setAccessToken, handleLogoutRedirect } from "../../api/axiosInstance";
+
+const commonError = "Something went wrong!";
+
+/* =======================
+   LOGIN
+ ======================= */
+export const login = (credentials) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: LOGIN_REQUEST });
+  try {
+    const response = await axios.post(`${API_ROUTE}/auth/login`, credentials);
+
+    if (
+      response.status === 200 ||
+      response?.data?.success === true ||
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      const { data } = response.data;
+      const token = data?.accessToken || data?.token;
+      const refreshToken = data?.refreshToken || data?.refresh_token;
+
+      // Build sanitized user (no tokens in Redux state)
+      const sanitizedData = { ...data };
+      delete sanitizedData.accessToken;
+      delete sanitizedData.token;
+      delete sanitizedData.refreshToken;
+      delete sanitizedData.refresh_token;
+
+      if (token) {
+        setAccessToken(token);
+        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+
+        localStorage.setItem("user", JSON.stringify(sanitizedData));
+        const expiresIn = data?.expiresIn || data?.expireIn || 900;
+        localStorage.setItem("expiryTime", Date.now() + expiresIn * 1000);
+      }
+
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: { user: sanitizedData, token },
+      });
+
+      dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
+      return true;
+    }
+
+    dispatch({
+      type: LOGIN_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || commonError;
+    const status = error.response?.status;
+
+    if (
+      status === 403 &&
+      message.toLowerCase().includes("change password required")
+    ) {
+      dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: true });
+      dispatch({ type: LOGIN_FAILURE, payload: message });
+      return "CHANGE_PASSWORD_REQUIRED";
+    }
+
+    dispatch({
+      type: LOGIN_FAILURE,
+      payload: message,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   FETCH PROFILE
+ ======================= */
+export const fetchProfile = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: FETCH_PROFILE_REQUEST });
+  try {
+    const response = await axios.get(`${API_ROUTE}/profile`);
+
+    if (
+      response.status === 200 ||
+      response?.data?.success === true ||
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      dispatch({
+        type: FETCH_PROFILE_SUCCESS,
+        payload: response.data.data,
+      });
+      return { ok: true };
+    }
+
+    dispatch({
+      type: FETCH_PROFILE_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return { ok: false, status: response?.status, message: response?.data?.message };
+  } catch (error) {
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message || error.message || commonError;
+    dispatch({
+      type: FETCH_PROFILE_FAILURE,
+      payload: message,
+    });
+    return { ok: false, status, message };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   UPDATE PROFILE
+ ======================= */
+export const updateProfile = (formData) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: UPDATE_PROFILE_REQUEST });
+  try {
+    const response = await axios.patch(`${API_ROUTE}/profile`, formData);
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      const { data } = response.data;
+
+      dispatch({
+        type: UPDATE_PROFILE_SUCCESS,
+        payload: data,
+      });
+
+      // Update cached user info in localStorage
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        const currentUser = JSON.parse(savedUser);
+        const updatedUser = { ...currentUser, ...data };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      return true;
+    }
+
+    dispatch({
+      type: UPDATE_PROFILE_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: UPDATE_PROFILE_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const updateProfileAdmin = (clientId, formData) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: UPDATE_PROFILE_ADMIN_REQUEST });
+  try {
+    const response = await axios.patch(`${API_ROUTE}/clients/${clientId}`, formData);
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      const { data } = response.data;
+
+      dispatch({
+        type: UPDATE_PROFILE_ADMIN_SUCCESS,
+        payload: data,
+      });
+
+      // Update cached user info in localStorage
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        const currentUser = JSON.parse(savedUser);
+        const updatedUser = { ...currentUser, ...data };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      return true;
+    }
+
+    dispatch({
+      type: UPDATE_PROFILE_ADMIN_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: UPDATE_PROFILE_ADMIN_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+// Clear Errors
+export const clearErrors = () => (dispatch) => {
+  dispatch({ type: CLEAR_ERRORS });
+};
+
+// Require Password Change Action
+export const requirePasswordChange = (status) => (dispatch) => {
+  dispatch({
+    type: SET_REQUIRE_PASSWORD_CHANGE,
+    payload: status,
+  });
+};
+
+/* =======================
+   FORGOT PASSWORD (OTP SEND)
+ ======================= */
+export const forgotPassword = (mobileNo) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: FORGOT_PASSWORD_REQUEST });
+  try {
+    const response = await axios.post(`${API_ROUTE}/otp/send`, { mobileNo });
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      dispatch({
+        type: FORGOT_PASSWORD_SUCCESS,
+        payload: { message: response.data.message, mobileNo },
+      });
+      return true;
+    }
+
+    dispatch({
+      type: FORGOT_PASSWORD_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: FORGOT_PASSWORD_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   VERIFY OTP
+ ======================= */
+export const verifyOtp = (mobileNo, otp) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: VERIFY_OTP_REQUEST });
+  try {
+    const response = await axios.post(`${API_ROUTE}/otp/verify`, {
+      mobileNo,
+      otp,
+    });
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      localStorage.setItem("recoveryMobile", mobileNo);
+      localStorage.setItem("recoveryOtp", otp);
+
+      dispatch({
+        type: VERIFY_OTP_SUCCESS,
+        payload: { otp, mobileNo },
+      });
+      dispatch(requirePasswordChange(true));
+      return true;
+    }
+
+    dispatch({
+      type: VERIFY_OTP_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: VERIFY_OTP_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   RESET PASSWORD
+ ======================= */
+export const createNewPassword = (resetData) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: RESET_PASSWORD_REQUEST });
+  try {
+    const payload = {
+      mobileNo: resetData.mobileNo,
+      otp: resetData.otp,
+      newPassword: resetData.newPassword,
+      confirmPassword: resetData.confirmPassword,
+    };
+
+    const response = await axios.post(
+      `${API_ROUTE}/otp/reset-password`,
+      payload,
+    );
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      localStorage.removeItem("recoveryMobile");
+      localStorage.removeItem("recoveryOtp");
+
+      dispatch({
+        type: RESET_PASSWORD_SUCCESS,
+        payload: response.data.message,
+      });
+      dispatch(requirePasswordChange(false));
+      return true;
+    }
+
+    dispatch({
+      type: RESET_PASSWORD_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: RESET_PASSWORD_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+/* =======================
+   CHANGE FIRST PASSWORD
+ ======================= */
+export const changeFirstPassword = (data) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: CHANGE_PASSWORD_REQUEST });
+  try {
+    const response = await axios.post(
+      `${API_ROUTE}/auth/change-password`,
+      data,
+    );
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      dispatch({
+        type: CHANGE_PASSWORD_SUCCESS,
+        payload: response.data.message || "Password changed successfully",
+      });
+      dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
+      return true;
+    }
+
+    dispatch({
+      type: CHANGE_PASSWORD_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: CHANGE_PASSWORD_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   LOGOUT
+ ======================= */
+export const logout = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    await axios.post(`${API_ROUTE}/auth/logout`, {});
+  } catch (error) {
+    console.error("Logout API failed:", error);
+  } finally {
+    setAccessToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("expiryTime");
+    localStorage.removeItem("recoveryMobile");
+    localStorage.removeItem("recoveryOtp");
+    localStorage.removeItem("refreshToken");
+
+    dispatch({ type: LOGOUT });
+    dispatch({ type: LOADING_END });
+
+    window.location.href = "/login";
+  }
+};
+
+/* =======================
+   INITIALIZE AUTH
+ ======================= */
+export const initializeAuth = () => async (dispatch) => {
+  const savedUser = localStorage.getItem("user");
+  const savedToken = localStorage.getItem("accessToken");
+
+  if (!savedUser || !savedToken) {
+    dispatch({ type: INITIALIZE_AUTH_COMPLETE });
+    return;
+  }
+
+  dispatch({ type: INITIALIZE_AUTH_START });
+  dispatch({ type: LOADING_START });
+
+  try {
+    setAccessToken(savedToken);
+
+    const user = JSON.parse(savedUser);
+    dispatch({
+      type: LOGIN_SUCCESS,
+      payload: { user, token: savedToken },
+    });
+
+  } catch (err) {
+    console.error("[Auth] Failed to restore session:", err.message);
+    handleLogoutRedirect();
+  } finally {
+    dispatch({ type: INITIALIZE_AUTH_COMPLETE });
+    dispatch({ type: LOADING_END });
+  }
+};

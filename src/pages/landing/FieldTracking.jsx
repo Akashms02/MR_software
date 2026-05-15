@@ -60,7 +60,7 @@ export default function FieldTracking() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--green)' }}>GreenHR Field</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--green)' }}>GmaxepayHR Field</div>
                   <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>4 Reps Active · May 14</div>
                 </div>
                 <div className="badge-green" style={{ fontSize: '10px', padding: '2px 8px' }}>Live</div>

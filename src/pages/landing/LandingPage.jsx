@@ -3,7 +3,7 @@ import HeroSection from './HeroSection'
 import StatsBar from './StatsBar'
 import FeaturesSection from './FeaturesSection'
 import WorkflowSection from './WorkflowSection'
-import WhyGreenHR from './WhyGreenHR'
+import WhyGmaxepayHR from './WhyGreenHR'
 import DemoPreview from './DemoPreview'
 import FieldTracking from './FieldTracking'
 import Footer from './Footer'
@@ -16,7 +16,7 @@ export default function LandingPage() {
       <StatsBar />
       <FeaturesSection />
       <WorkflowSection />
-      <WhyGreenHR />
+      <WhyGmaxepayHR />
       <DemoPreview />
       <FieldTracking />
       <Footer />
