@@ -5,7 +5,7 @@ import AdminPayroll from './AdminPayroll'
 import AdminAnalytics from './AdminAnalytics'
 import AdminCompliance from './AdminCompliance'
 import AdminAttendance from './AdminAttendance'
-import MyTeam from './MyTeam'
+import MyTeam from './TeamManagement'
 import WaterCooler from './WaterCooler'
 
 export default function AdminRouter() {

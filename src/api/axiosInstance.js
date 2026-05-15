@@ -138,15 +138,18 @@ axios.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Handle Normal Token Expiry (Silent Refresh)
+      // Handle Normal Token Expiry (Silent Refresh - Disabled for now)
       if (!originalRequest._retry && !isPublic(originalRequest.url)) {
+        console.warn('[Auth] 401 Unauthorized - Refresh disabled, logging out.');
+        handleLogoutRedirect('session_expired');
+        /*
         originalRequest._retry = true;
         const newToken = await silentRefresh();
         if (newToken) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          // Use axios(config) to retry with the same instance settings
           return axios(originalRequest);
         }
+        */
       }
     }
 

@@ -39,7 +39,7 @@ export default function Navbar() {
             </div>
             <div>
               <span style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-                Green<span style={{ color: 'var(--green)' }}>HR</span>
+                Gmaxepay<span style={{ color: 'var(--green)' }}>HR</span>
               </span>
               <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '1px', lineHeight: 1 }}>
                 PHARMA HRMS

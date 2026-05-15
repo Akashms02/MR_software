@@ -129,7 +129,11 @@ export default function LoginPage() {
           animate="visible"
           style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
         >
-          <motion.div variants={itemVariants} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <motion.div 
+            variants={itemVariants} 
+            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+          >
             <div style={{
               width: '56px', height: '56px', borderRadius: '16px',
               background: 'linear-gradient(135deg, var(--lime) 0%, var(--lime-dark) 100%)',
