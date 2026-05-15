@@ -146,7 +146,7 @@ export default function AdminPayroll({ role }) {
               {/* Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '18px', borderBottom: '1px solid #f3f4f6', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '20px', color: '#16a34a' }}>GreenHR Pharma</div>
+                  <div style={{ fontWeight: 800, fontSize: '20px', color: '#16a34a' }}>GmaxepayHR Pharma</div>
                   <div style={{ fontSize: '12px', color: '#9ca3af' }}>Payslip — April 2026</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

@@ -63,7 +63,7 @@ export default function DemoPreview() {
           style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
         >
           <div className="section-label">🖥️ Live Demo Preview</div>
-          <h2 className="section-title">See GreenHR in Action</h2>
+          <h2 className="section-title">See GmaxepayHR in Action</h2>
         </motion.div>
 
         <motion.div 
@@ -97,7 +97,7 @@ export default function DemoPreview() {
                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#f59e0b' }} />
                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, background: '#fff', padding: '4px 16px', borderRadius: '6px', border: '1px solid var(--border)' }}>app.greenhr.in/dashboard</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, background: '#fff', padding: '4px 16px', borderRadius: '6px', border: '1px solid var(--border)' }}>app.gmaxepayhr.in/dashboard</div>
             </div>
 
             <div style={{ padding: '0', background: '#fff' }}>

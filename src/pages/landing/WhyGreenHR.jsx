@@ -5,16 +5,16 @@ const PILLARS = [
   { icon: '🛡️', title: 'Enterprise Security',     desc: 'AES-256 encryption, role-based access control, MFA, and complete audit logging.' },
 ]
 
-export default function WhyGreenHR() {
+export default function WhyGmaxepayHR() {
   return (
     <section id="whyus" className="section-spacing" style={{ background: 'var(--bg-section)' }}>
       <div className="section-container">
         {/* Header */}
         <div style={{ marginBottom: '56px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="section-label">🌿 Why GreenHR</div>
+          <div className="section-label">🌿 Why GmaxepayHR</div>
           <h2 className="section-title">Built on 4 Core Pillars</h2>
           <p className="section-sub">
-            The four fundamental principles that make GreenHR the preferred HRMS for pharma enterprises.
+            The four fundamental principles that make GmaxepayHR the preferred HRMS for pharma enterprises.
           </p>
         </div>
 

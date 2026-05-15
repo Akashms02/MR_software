@@ -35,7 +35,7 @@ export default function Footer() {
             </p>
 
             {[
-              { icon: '📧', text: 'hello@greenhr.in' },
+              { icon: '📧', text: 'hello@gmaxepayhr.in' },
               { icon: '📞', text: '+91 98765 43210' },
               { icon: '🏢', text: 'Mumbai · Bengaluru · Hyderabad' },
             ].map((c, i) => (
@@ -78,7 +78,7 @@ export default function Footer() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
         }}>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            © 2026 GreenHR. Powered by <span style={{ color: 'var(--green)', fontWeight: 600 }}>GreenCall Technologies Pvt. Ltd.</span> · All rights reserved.
+            © 2026 GmaxepayHR. Powered by <span style={{ color: 'var(--green)', fontWeight: 600 }}>GreenCall Technologies Pvt. Ltd.</span> · All rights reserved.
           </div>
           <div style={{ display: 'flex', gap: '16px' }}>
             {['Privacy Policy', 'Terms', 'Cookies'].map(l => (

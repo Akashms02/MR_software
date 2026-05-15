@@ -27,7 +27,7 @@ export default function EmployeePayslip() {
         <Card style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '16px', borderBottom: '1px solid #f3f4f6', marginBottom: '18px' }}>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '18px', color: '#16a34a' }}>GreenHR Pharma</div>
+              <div style={{ fontWeight: 800, fontSize: '18px', color: '#16a34a' }}>GmaxepayHR Pharma</div>
               <div style={{ fontSize: '12px', color: '#9ca3af' }}>Payslip — April 2026</div>
             </div>
             <OutlineBtn style={{ fontSize: '12px', padding: '6px 12px' }}>⬇ PDF</OutlineBtn>

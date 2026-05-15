@@ -1,14 +1,13 @@
 import React from 'react'
-import { Share2, ExternalLink, ChevronRight, FileText, CreditCard, ShieldCheck, HeartHandshake, Network, Briefcase, Users, Calendar, Search, HelpCircle } from 'lucide-react'
-import { CANDIDATES } from '../../data/hrmsData'
+import { Share2, ExternalLink, ChevronRight, FileText, CreditCard, ShieldCheck, HeartHandshake, Network, Briefcase, Users, Calendar, Search, HelpCircle, Server, Key, Database, Globe } from 'lucide-react'
 
-/* ── Stat Card — matching ref: icon top-left, big number bottom-right, label bottom-left ── */
+/* ── Stat Card ── */
 function StatCard({ label, value, type }) {
   const configs = {
     teal:   { from: '#6EC6C2', to: '#4AAFA9', Icon: Users,    iconColor: '#2D9E98' },
-    orange: { from: '#FFB07A', to: '#FF8F4E', Icon: Calendar,  iconColor: '#CC6B1A' },
-    coral:  { from: '#FF9090', to: '#FF6B6B', Icon: Search,    iconColor: '#CC3333' },
-    purple: { from: '#B8A6FB', to: '#9B87F5', Icon: HelpCircle,iconColor: '#6B4FD4' },
+    orange: { from: '#FFB07A', to: '#FF8F4E', Icon: Globe,    iconColor: '#CC6B1A' },
+    coral:  { from: '#FF9090', to: '#FF6B6B', Icon: ShieldCheck,iconColor: '#CC3333' },
+    purple: { from: '#B8A6FB', to: '#9B87F5', Icon: Server,   iconColor: '#6B4FD4' },
   }
   const c = configs[type] || configs.teal
   const { Icon } = c
@@ -23,7 +22,6 @@ function StatCard({ label, value, type }) {
       overflow: 'hidden', color: '#fff',
       boxShadow: '0 4px 16px rgba(0,0,0,0.10)'
     }}>
-      {/* Top row: icon + close circle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{
           width: '40px', height: '40px', borderRadius: '12px',
@@ -40,8 +38,6 @@ function StatCard({ label, value, type }) {
           lineHeight: 1
         }}>×</div>
       </div>
-
-      {/* Bottom row: label left, value right */}
       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', fontWeight: 600, opacity: 0.9, maxWidth: '90px', lineHeight: 1.3 }}>
           {label}
@@ -54,7 +50,7 @@ function StatCard({ label, value, type }) {
   )
 }
 
-/* ── Event Row with colored date badge ─────────────────────────────────── */
+/* ── Event Row ── */
 function EventRow({ date, month, title, sub, color }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 0' }}>
@@ -74,22 +70,21 @@ function EventRow({ date, month, title, sub, color }) {
   )
 }
 
-/* ── Candidate row in Hiring Applications ──────────────────────────────── */
-function HiringRow({ name, role, status }) {
+/* ── HiringRow renamed to AdminRow ── */
+function AdminRow({ name, role, status }) {
   const badgeColors = {
-    'Creative Lead':     { bg: '#EFF6FF', color: '#3B82F6' },
-    'Front End Developer': { bg: '#F0FDF4', color: '#22C55E' },
-    'Product Manager':   { bg: '#FEF3C7', color: '#F59E0B' },
+    'Branch Admin':    { bg: '#EFF6FF', color: '#3B82F6' },
+    'HR Manager':      { bg: '#F0FDF4', color: '#22C55E' },
+    'System Support':  { bg: '#FEF3C7', color: '#F59E0B' },
   }
   const badge = badgeColors[role] || { bg: '#F3F4F6', color: '#6B7280' }
-
   const initials = name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{
         width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, #CBD5E1, #94A3B8)',
+        background: 'linear-gradient(135deg, #111827, #374151)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '13px', fontWeight: 700, color: '#fff'
       }}>{initials}</div>
@@ -105,7 +100,7 @@ function HiringRow({ name, role, status }) {
   )
 }
 
-/* ── Quick Action Tile ──────────────────────────────────────────────────── */
+/* ── Quick Action Tile ── */
 function QATile({ icon: Icon, label }) {
   return (
     <div style={{
@@ -122,7 +117,6 @@ function QATile({ icon: Icon, label }) {
   )
 }
 
-/* ── Card wrapper ──────────────────────────────────────────────────────── */
 function Card({ children, style }) {
   return (
     <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '20px', ...style }}>
@@ -131,14 +125,10 @@ function Card({ children, style }) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ADMIN DASHBOARD
-═══════════════════════════════════════════════════════════════════════════ */
-export default function AdminDashboard() {
+export default function SuperAdminDashboard() {
   return (
     <div className="animate-fade">
-
-      {/* ── Info Banner ──────────────────────────────────────────── */}
+      {/* ── Info Banner ── */}
       <div style={{
         background: '#fff', borderRadius: '12px', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -146,44 +136,42 @@ export default function AdminDashboard() {
         border: '1px solid #F3F4F6'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '16px' }}>⚡</span>
+          <span style={{ fontSize: '16px' }}>🛡️</span>
           <span style={{ fontSize: '13px', color: '#374151' }}>
-            <strong style={{ color: '#111827' }}>Take Action :</strong> The appraisal cycle is around the corner. Let's get started.
+            <strong style={{ color: '#111827' }}>System Alert :</strong> Global system backup completed successfully. No vulnerabilities detected.
           </span>
         </div>
         <button className="btn-lime" style={{ fontSize: '13px', padding: '9px 18px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
-          Send Reminders
+          View Logs
         </button>
       </div>
 
-      {/* ── Stat Cards Row ───────────────────────────────────────── */}
+      {/* ── Stat Cards Row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '20px' }}>
-        <StatCard label="Total Employees" value="289" type="teal"   />
-        <StatCard label="On Leave"        value="08"  type="orange" />
-        <StatCard label="Hiring Roles"    value="03"  type="coral"  />
-        <StatCard label="Requests"        value="28"  type="purple" />
+        <StatCard label="Global Users"    value="12,482" type="teal"   />
+        <StatCard label="Total Branches"  value="18"     type="orange" />
+        <StatCard label="Active Admins"   value="45"     type="coral"  />
+        <StatCard label="Server Status"   value="99%"    type="purple" />
       </div>
 
-      {/* ── Middle Row: Venn + News & Events + Hiring Applications ── */}
+      {/* ── Middle Row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: '16px', marginBottom: '16px' }}>
 
-        {/* Venn / Location Bubbles */}
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>Location</div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>Global Distribution</div>
             <ExternalLink size={14} color="#9CA3AF" style={{ cursor: 'pointer' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0', position: 'relative', height: '130px' }}>
-            {/* Bubble cluster */}
             <div style={{ position: 'relative', width: '160px', height: '130px' }}>
-              <div style={{ position:'absolute', width:'90px', height:'90px', borderRadius:'50%', background:'rgba(99,102,241,0.18)', top:'0', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'16px',fontWeight:800,color:'#4F46E5' }}>122</div>
-              <div style={{ position:'absolute', width:'58px', height:'58px', borderRadius:'50%', background:'rgba(16,185,129,0.18)', bottom:'10px', right:'8px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'13px',fontWeight:800,color:'#059669' }}>38</div>
-              <div style={{ position:'absolute', width:'46px', height:'46px', borderRadius:'50%', background:'rgba(245,158,11,0.2)', bottom:'5px', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'12px',fontWeight:800,color:'#D97706' }}>27</div>
-              <div style={{ position:'absolute', width:'38px', height:'38px', borderRadius:'50%', background:'rgba(239,68,68,0.15)', top:'30px', left:'5px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'11px',fontWeight:800,color:'#DC2626' }}>14</div>
+              <div style={{ position:'absolute', width:'90px', height:'90px', borderRadius:'50%', background:'rgba(99,102,241,0.18)', top:'0', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'16px',fontWeight:800,color:'#4F46E5' }}>USHQ</div>
+              <div style={{ position:'absolute', width:'58px', height:'58px', borderRadius:'50%', background:'rgba(16,185,129,0.18)', bottom:'10px', right:'8px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'13px',fontWeight:800,color:'#059669' }}>EMEA</div>
+              <div style={{ position:'absolute', width:'46px', height:'46px', borderRadius:'50%', background:'rgba(245,158,11,0.2)', bottom:'5px', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'12px',fontWeight:800,color:'#D97706' }}>APAC</div>
+              <div style={{ position:'absolute', width:'38px', height:'38px', borderRadius:'50%', background:'rgba(239,68,68,0.15)', top:'30px', left:'5px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'11px',fontWeight:800,color:'#DC2626' }}>LATAM</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
-            {[['#4F46E5','Remote'],['#059669','France'],['#D97706','India'],['#DC2626','USA']].map(([color, label]) => (
+            {[['#4F46E5','North America'],['#059669','Europe'],['#D97706','Asia Pacific'],['#DC2626','South America']].map(([color, label]) => (
               <div key={label} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'11px', color:'#6B7280' }}>
                 <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: color, flexShrink:0 }} />
                 {label}
@@ -192,54 +180,51 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {/* News & Events */}
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>News & Events</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>System Updates</div>
             <ExternalLink size={14} color="#9CA3AF" style={{ cursor: 'pointer' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-            <EventRow date="03" month="Aug" title="Board Meeting"   sub="Project Meeting"               color="#A78BFA" />
-            <EventRow date="29" month="Aug" title="Holiday - India" sub="Holi by GmaxepayHR Team"          color="#10B981" />
-            <EventRow date="13" month="Aug" title="New Joinee"      sub="Welcome aboard, Rafi Ansari"   color="#F59E0B" />
-            <EventRow date="22" month="Aug" title="New Joinee"      sub="Welcome aboard, Farmers M."    color="#EF4444" />
-            <EventRow date="24" month="Aug" title="Work Anniversary" sub="Happy Work Anniversary, Eve…" color="#3B82F6" />
-            <EventRow date="21" month="Aug" title="Policy Update"   sub="Travel Reimbursement - V.2.1"  color="#8B5CF6" />
+            <EventRow date="01" month="Sep" title="Server Migration" sub="Database cluster switch" color="#A78BFA" />
+            <EventRow date="05" month="Sep" title="Security Patch"   sub="v4.2 Auth Module"        color="#10B981" />
+            <EventRow date="12" month="Sep" title="Global Sync"      sub="Cross-region replication" color="#F59E0B" />
+            <EventRow date="18" month="Sep" title="Downtime"         sub="Scheduled maintenance"    color="#EF4444" />
+            <EventRow date="22" month="Sep" title="API Update"       sub="Deprecating v1 endpoints" color="#3B82F6" />
+            <EventRow date="25" month="Sep" title="Audit Review"     sub="Quarterly compliance check" color="#8B5CF6" />
           </div>
         </Card>
 
-        {/* Hiring Applications */}
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>Hiring Applications</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>Active Admins</div>
             <button style={{
               display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px',
               background: '#C8F04A', border: 'none', borderRadius: '8px',
               fontSize: '12px', fontWeight: 700, cursor: 'pointer'
             }}>
-              <Share2 size={12} /> Share
+              Manage
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <HiringRow name="Harper Lee"       role="Creative Lead"      status="processing" />
-            <HiringRow name="Francis Degas"    role="Front End Developer" status="selected" />
-            <HiringRow name="Leonora Carington" role="Product Manager"   status="processing" />
-            <HiringRow name="Andrew Hunt, M"   role="Creative Lead"      status="selected" />
+            <AdminRow name="Sarah Connor"   role="Branch Admin"   status="active" />
+            <AdminRow name="John Smith"     role="HR Manager"     status="active" />
+            <AdminRow name="Elena Gilbert"  role="System Support" status="active" />
+            <AdminRow name="Marcus Wright"  role="Branch Admin"   status="active" />
           </div>
         </Card>
       </div>
 
-      {/* ── Bottom Row: Hiring Updates + Quick Actions ───────────── */}
+      {/* ── Bottom Row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
-        {/* Hiring Updates */}
         <Card>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Hiring Updates</div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Administration Actions</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              { label: 'Shortlisted Candidates' },
-              { label: 'Upcoming Interviews' },
-              { label: 'Rejected Applications' },
+              { label: 'Review Global Policies' },
+              { label: 'Manage Data Retention' },
+              { label: 'Configure SSO Integration' },
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -252,16 +237,15 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {/* Quick Actions */}
         <Card>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Quick Actions</div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Super Admin Tools</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
-            <QATile icon={FileText}       label="Contracts"   />
-            <QATile icon={CreditCard}     label="Payments"    />
-            <QATile icon={ShieldCheck}    label="Security"    />
-            <QATile icon={HeartHandshake} label="IT Support"  />
-            <QATile icon={Network}        label="PSA"         />
-            <QATile icon={Briefcase}      label="Integration" />
+            <QATile icon={Database}       label="Database"    />
+            <QATile icon={Key}            label="API Keys"    />
+            <QATile icon={ShieldCheck}    label="Audit Logs"  />
+            <QATile icon={Server}         label="Backups"     />
+            <QATile icon={Network}        label="Routing"     />
+            <QATile icon={Globe}          label="Regions"     />
           </div>
         </Card>
       </div>
