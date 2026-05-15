@@ -19,6 +19,7 @@ function App() {
     { title: 'Smart Notifications', desc: 'Real-time alerts with role-based transparency.', icon: '🔔' },
   ];
 
+export default function App() {
   return (
     <div className="min-h-screen bg-gradient-mesh">
       {/* Navigation */}
