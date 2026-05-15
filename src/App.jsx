@@ -24,7 +24,8 @@ export default function App() {
     dispatch(initializeAuth());
   }, [dispatch]);
 
-  // 2. Proactive Token Refresh Scheduler
+  // 2. Proactive Token Refresh Scheduler (Commented out until Refresh API is ready)
+  /*
   useEffect(() => {
     const REFRESH_AHEAD_MS = 120000; // 2 minutes before expiry
     const MIN_DELAY_MS = 10000;
@@ -70,8 +71,10 @@ export default function App() {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [dispatch]);
+  */
 
-  // 3. Proactive Session Heartbeat & Cross-Tab Sync
+  // 3. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
+  /*
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -97,6 +100,7 @@ export default function App() {
       clearInterval(interval);
     };
   }, [isAuthenticated, user]);
+  */
 
   return (
     <Routes>

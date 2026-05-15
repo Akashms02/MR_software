@@ -1,14 +1,19 @@
 import { Bell, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
-import { ADMIN_NAV, SUPER_ADMIN_NAV } from './navConfig'
+import { ADMIN_NAV, SUPER_ADMIN_NAV, EMPLOYEE_NAV } from './navConfig'
 
 /* ── Page Title helper ───────────────────────────────────────────── */
 function getPageTitle(activePage, role) {
-  if (activePage === 'dashboard') return role === 'Employee' ? 'Good Morning' : 'Good Morning'
+  if (activePage === 'dashboard') return 'Good Morning'
   if (activePage === 'me') return 'Me > Leaves'
   if (activePage === 'recruitment') return 'Recruitment > Candidates'
+  if (activePage === 'myteam') return 'My Team'
   
-  const navItem = ADMIN_NAV.find(n => n.id === activePage) || SUPER_ADMIN_NAV.find(n => n.id === activePage)
+  const navItem = 
+    ADMIN_NAV.find(n => n.id === activePage) || 
+    SUPER_ADMIN_NAV.find(n => n.id === activePage) ||
+    EMPLOYEE_NAV.find(n => n.id === activePage)
+
   return navItem?.label || 'Dashboard'
 }
 

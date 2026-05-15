@@ -1,12 +1,13 @@
 import { Card, SectionHeader, StatCard } from '../../components/ui'
 import { LEAVE_BALANCE, RECENT_ACTIVITY, UPCOMING_EVENTS } from '../../data/hrmsData'
-
-const ME = {
-  name: 'Priya Sharma', id: 'GH002', dept: 'Clinical Research',
-  designation: 'Clinical Research Associate', location: 'Pune', salary: 72000,
-}
+import { useSelector } from 'react-redux'
 
 export default function EmployeeDashboard() {
+  const { user } = useSelector(state => state.auth)
+  
+  const displayName = user?.fullName || user?.name || 'Employee';
+  const displayRole = user?.role?.replace('_', ' ') || 'Team Member';
+  const displayDept = user?.dept || 'Operations';
   return (
     <div>
       {/* Welcome banner */}
@@ -17,8 +18,8 @@ export default function EmployeeDashboard() {
       }}>
         <div>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', marginBottom: '4px', fontWeight: 500 }}>Welcome back 👋</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{ME.name}</div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>{ME.designation} · {ME.dept}</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{displayName}</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>{displayRole} · {displayDept}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>Today</div>
