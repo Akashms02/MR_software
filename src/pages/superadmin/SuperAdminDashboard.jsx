@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { Share2, ExternalLink, ChevronRight, FileText, CreditCard, ShieldCheck, HeartHandshake, Network, Briefcase, Users, Calendar, Search, HelpCircle, Server, Key, Database, Globe } from 'lucide-react'
-
+import { fetchProfile } from '../../redux/actions/authActions'
+import { getAdmins } from '../../redux/actions/adminActions'
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
   const configs = {
@@ -126,8 +129,115 @@ function Card({ children, style }) {
 }
 
 export default function SuperAdminDashboard() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const { admins } = useSelector((state) => state.admin);
+
+  useEffect(() => {
+    dispatch(fetchProfile());
+    dispatch(getAdmins());
+  }, [dispatch]);
+
+  const displayName = user?.fullName || 'Super Admin';
+  const displayEmail = user?.email || 'superadmin@mrmedical.com';
+  const displayPhone = user?.phone || '9876543210';
+  const displayRole = user?.role?.replace('_', ' ') || 'SUPER ADMIN';
+  const displayRefCode = user?.adminReferenceCode || 'ROOT';
+
   return (
     <div className="animate-fade">
+      {/* ── Welcome Header Card ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        borderRadius: '20px',
+        padding: '24px 30px',
+        marginBottom: '20px',
+        color: '#fff',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '24px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)'
+      }}>
+        {/* Glowing ambient lights */}
+        <div style={{
+          position: 'absolute', top: '-50px', right: '-50px',
+          width: '200px', height: '200px', borderRadius: '50%',
+          background: 'rgba(99, 102, 241, 0.15)', filter: 'blur(40px)',
+          pointerEvents: 'none'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-50px', left: '-50px',
+          width: '180px', height: '180px', borderRadius: '50%',
+          background: 'rgba(16, 185, 129, 0.12)', filter: 'blur(45px)',
+          pointerEvents: 'none'
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', zIndex: 1 }}>
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #4F46E5, #06B6D4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '24px', fontWeight: 800, color: '#fff',
+            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+            border: '2px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+              Logged In Session · {displayRole}
+            </div>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              {displayName}
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📧 {displayEmail}
+              </span>
+              <span style={{ fontSize: '13px', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📱 {displayPhone}
+              </span>
+              <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.1)', color: '#F1F5F9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.15)', fontWeight: 600 }}>
+                Ref Code: {displayRefCode}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', zIndex: 1 }}>
+          <button style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '10px',
+            color: '#fff',
+            padding: '10px 18px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+          >
+            System Status
+          </button>
+          <button className="btn-lime" style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}>
+            Manage Platform
+          </button>
+        </div>
+      </div>
       {/* ── Info Banner ── */}
       <div style={{
         background: '#fff', borderRadius: '12px', padding: '12px 20px',
@@ -150,7 +260,7 @@ export default function SuperAdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '20px' }}>
         <StatCard label="Global Users"    value="12,482" type="teal"   />
         <StatCard label="Total Branches"  value="18"     type="orange" />
-        <StatCard label="Active Admins"   value="45"     type="coral"  />
+        <StatCard label="Active Admins"   value={admins ? admins.length : "0"}     type="coral"  />
         <StatCard label="Server Status"   value="99%"    type="purple" />
       </div>
 
@@ -198,19 +308,71 @@ export default function SuperAdminDashboard() {
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>Active Admins</div>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px',
-              background: '#C8F04A', border: 'none', borderRadius: '8px',
-              fontSize: '12px', fontWeight: 700, cursor: 'pointer'
-            }}>
+            <button 
+              onClick={() => navigate('/superadmin/admins')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px',
+                background: '#C8F04A', border: 'none', borderRadius: '8px',
+                fontSize: '12px', fontWeight: 700, cursor: 'pointer'
+              }}
+            >
               Manage
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <AdminRow name="Sarah Connor"   role="Branch Admin"   status="active" />
-            <AdminRow name="John Smith"     role="HR Manager"     status="active" />
-            <AdminRow name="Elena Gilbert"  role="System Support" status="active" />
-            <AdminRow name="Marcus Wright"  role="Branch Admin"   status="active" />
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+                  <th style={{ padding: '6px 2px', fontSize: '10px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>Admin</th>
+                  <th style={{ padding: '6px 2px', fontSize: '10px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>Ref Code</th>
+                  <th style={{ padding: '6px 2px', fontSize: '10px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!admins || admins.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" style={{ padding: '16px 2px', fontSize: '12px', color: '#6B7280', textAlign: 'center' }}>
+                      No active admins found.
+                    </td>
+                  </tr>
+                ) : (
+                  admins.slice(0, 4).map((admin) => {
+                    const initials = admin.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'A';
+                    return (
+                      <tr key={admin.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                        <td style={{ padding: '8px 2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              width: '24px', height: '24px', borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #1E293B, #0F172A)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '10px', fontWeight: 700, color: '#fff', flexShrink: 0
+                            }}>
+                              {initials}
+                            </div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '70px' }}>
+                              {admin.fullName}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '8px 2px', fontSize: '11px', color: '#4B5563', fontWeight: 600 }}>
+                          {admin.adminReferenceCode || 'ROOT'}
+                        </td>
+                        <td style={{ padding: '8px 2px' }}>
+                          <span style={{
+                            padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
+                            background: admin.enabled ? '#EFF6FF' : '#FEF2F2',
+                            color: admin.enabled ? '#1E40AF' : '#991B1B'
+                          }}>
+                            {admin.enabled ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>

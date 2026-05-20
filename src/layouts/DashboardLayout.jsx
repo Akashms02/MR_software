@@ -12,9 +12,10 @@ export default function DashboardLayout({ children }) {
   // Format the role to look nicer (e.g. "SUPER_ADMIN" -> "Super Admin")
   const displayRole = role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
-  const normalizedRole = role.toLowerCase()
-  const isSuperAdmin = normalizedRole === 'superadmin' || normalizedRole === 'super admin' || normalizedRole === 'super_admin'
-  const isEmployee = !isSuperAdmin && !normalizedRole.includes('admin') && normalizedRole !== 'manager'
+  const roleStr = (role || '').toUpperCase().trim();
+  const isSuperAdmin = roleStr === 'SUPER_ADMIN' || roleStr === 'SUPERADMIN' || roleStr === 'SUPER ADMIN';
+  const isAdmin = roleStr === 'ADMIN';
+  const isEmployee = !isSuperAdmin && !isAdmin;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F0F2F5', fontFamily: "'Inter', sans-serif" }}>

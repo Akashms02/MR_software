@@ -11,7 +11,7 @@ import WaterCooler from './WaterCooler'
 export default function AdminRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard/dashboard" replace />} />
+      <Route path="/" element={<AdminDashboard />} />
       <Route path="dashboard" element={<AdminDashboard />} />
       <Route path="employees" element={<AdminEmployees />} />
       <Route path="finance" element={<AdminPayroll />} />
@@ -20,7 +20,7 @@ export default function AdminRouter() {
       <Route path="me" element={<AdminAttendance />} />
       <Route path="myteam" element={<MyTeam />} />
       <Route path="watercooler" element={<WaterCooler />} />
-      <Route path="*" element={<Navigate to="/dashboard/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
   )
 }

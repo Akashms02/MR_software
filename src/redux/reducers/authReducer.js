@@ -25,7 +25,8 @@ import {
   UPDATE_PROFILE_REQUEST,
   UPDATE_PROFILE_SUCCESS,
   UPDATE_PROFILE_FAILURE,
-  UPDATE_PROFILE_ADMIN_SUCCESS
+  UPDATE_PROFILE_ADMIN_SUCCESS,
+  REFRESH_TOKEN_SUCCESS
 } from '../actionType/authActionType';
 
 // Hydrate initial state from localStorage with Expiration Check
@@ -104,6 +105,14 @@ export const authReducer = (state = initialState, action) => {
         token: action.payload.token || state.token,
         error: null,
       };
+
+    case REFRESH_TOKEN_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        token: action.payload.token || state.token,
+        error: null,
+      }
 
     case FETCH_PROFILE_SUCCESS:
       return {

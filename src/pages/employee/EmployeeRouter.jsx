@@ -7,11 +7,11 @@ import AdminAttendance from '../admin/AdminAttendance'
 export default function EmployeeRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard/dashboard" replace />} />
+      <Route path="/" element={<EmployeeDashboard />} />
       <Route path="dashboard" element={<EmployeeDashboard />} />
       <Route path="finance" element={<EmployeePayslip />} />
       <Route path="me" element={<AdminAttendance />} />
-      <Route path="*" element={<Navigate to="/dashboard/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/employee/dashboard" replace />} />
     </Routes>
   )
 }

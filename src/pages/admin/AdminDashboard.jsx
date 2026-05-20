@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Share2, ExternalLink, ChevronRight, FileText, CreditCard, ShieldCheck, HeartHandshake, Network, Briefcase, Users, Calendar, Search, HelpCircle } from 'lucide-react'
 import { CANDIDATES } from '../../data/hrmsData'
+import { fetchProfile } from '../../redux/actions/authActions'
 
 /* ── Stat Card — matching ref: icon top-left, big number bottom-right, label bottom-left ── */
 function StatCard({ label, value, type }) {
@@ -135,8 +137,112 @@ function Card({ children, style }) {
    ADMIN DASHBOARD
 ═══════════════════════════════════════════════════════════════════════════ */
 export default function AdminDashboard() {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
+
+  const displayName = user?.fullName || 'Company Admin';
+  const displayEmail = user?.email || 'admin@mrmedical.com';
+  const displayPhone = user?.phone || '9876543210';
+  const displayRole = user?.role?.replace('_', ' ') || 'ADMIN';
+  const displayRefCode = user?.adminReferenceCode || 'AD001';
+
   return (
     <div className="animate-fade">
+      {/* ── Welcome Header Card ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
+        borderRadius: '20px',
+        padding: '24px 30px',
+        marginBottom: '20px',
+        color: '#fff',
+        boxShadow: '0 10px 25px -5px rgba(6, 78, 59, 0.3), 0 8px 10px -6px rgba(6, 78, 59, 0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '24px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)'
+      }}>
+        {/* Glowing ambient lights */}
+        <div style={{
+          position: 'absolute', top: '-50px', right: '-50px',
+          width: '200px', height: '200px', borderRadius: '50%',
+          background: 'rgba(200, 240, 74, 0.15)', filter: 'blur(40px)',
+          pointerEvents: 'none'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-50px', left: '-50px',
+          width: '180px', height: '180px', borderRadius: '50%',
+          background: 'rgba(16, 185, 129, 0.12)', filter: 'blur(45px)',
+          pointerEvents: 'none'
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', zIndex: 1 }}>
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #C8F04A, #10B981)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '24px', fontWeight: 800, color: '#064E3B',
+            boxShadow: '0 4px 14px rgba(200, 240, 74, 0.4)',
+            border: '2px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A7F3D0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+              Logged In Session · {displayRole}
+            </div>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              {displayName}
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: '#D1FAE5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📧 {displayEmail}
+              </span>
+              <span style={{ fontSize: '13px', color: '#D1FAE5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📱 {displayPhone}
+              </span>
+              <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.1)', color: '#F1F5F9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.15)', fontWeight: 600 }}>
+                Ref Code: {displayRefCode}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', zIndex: 1 }}>
+          <button style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '10px',
+            color: '#fff',
+            padding: '10px 18px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+          >
+            System Status
+          </button>
+          <button className="btn-lime" style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}>
+            Manager Controls
+          </button>
+        </div>
+      </div>
 
       {/* ── Info Banner ──────────────────────────────────────────── */}
       <div style={{

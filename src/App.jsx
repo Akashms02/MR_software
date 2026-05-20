@@ -11,7 +11,7 @@ import DashContainer from './pages/DashContainer';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Actions & Utils
-import { initializeAuth } from './redux/actions/authActions';
+import { initializeAuth, refreshToken, logout } from './redux/actions/authActions';
 import { isRefreshing, silentRefresh } from './api/axiosInstance';
 import { LOGIN_SUCCESS } from './redux/actionType/authActionType';
 
@@ -24,54 +24,40 @@ export default function App() {
     dispatch(initializeAuth());
   }, [dispatch]);
 
-  // 2. Proactive Token Refresh Scheduler (Commented out until Refresh API is ready)
-  /*
+  // 2. Token Refresh Scheduler (Triggers immediately and then every 5 minutes if authenticated)
   useEffect(() => {
-    const REFRESH_AHEAD_MS = 120000; // 2 minutes before expiry
-    const MIN_DELAY_MS = 10000;
+    if (!isAuthenticated) return;
+
     let refreshTimer;
 
-    const scheduleNext = () => {
-      const expiryTime = localStorage.getItem("expiryTime");
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!expiryTime || !refreshToken) return;
-
-      const msToExpiry = Number(expiryTime) - Date.now();
-      const delay = Math.max(MIN_DELAY_MS, msToExpiry - REFRESH_AHEAD_MS);
-
-      clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(runRefresh, delay);
-    };
-
     const runRefresh = async () => {
-      if (!isRefreshing()) {
-        const newToken = await silentRefresh();
-        if (newToken) {
-          const freshUser = JSON.parse(localStorage.getItem("user") || "null");
-          dispatch({
-            type: LOGIN_SUCCESS,
-            payload: { user: freshUser, token: newToken },
-          });
+      const rToken = localStorage.getItem("refreshToken");
+      console.log("[Auth Scheduler] Checking refresh token...", { rToken });
+      
+      if (rToken) {
+        console.log("%c[Auth Scheduler] Hitting refresh token API...", "color: #00ff00; font-weight: bold;");
+        const success = await dispatch(refreshToken({ refreshToken: rToken }));
+        if (!success) {
+          console.warn("[Auth Scheduler] Refresh token failed or was rejected. Logging out...");
+          dispatch(logout());
+          return;
         }
+      } else {
+        console.warn("[Auth Scheduler] No refresh token found in localStorage. Logging out...");
+        dispatch(logout());
+        return;
       }
-      scheduleNext();
+      // Schedule the next check in 5 minutes (300,000 ms)
+      refreshTimer = setTimeout(runRefresh, 300000);
     };
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        scheduleNext();
-      }
-    };
-
-    scheduleNext();
-    document.addEventListener("visibilitychange", handleVisibility);
+    // Run 2 seconds after mount/login so they can see it instantly on load
+    refreshTimer = setTimeout(runRefresh, 2000);
 
     return () => {
       clearTimeout(refreshTimer);
-      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [dispatch]);
-  */
+  }, [dispatch, isAuthenticated]);
 
   // 3. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
   /*
@@ -88,7 +74,7 @@ export default function App() {
     const interval = setInterval(async () => {
       try {
         // Adjust heartbeat URL based on role if needed
-        const heartbeatUrl = `${API_ROUTE}/profile`;
+        const heartbeatUrl = `${API_ROUTE}/auth/me`;
         await axios.get(heartbeatUrl);
       } catch (err) {
         // Errors are handled globally by axiosInstance interceptor
@@ -106,6 +92,30 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/superadmin/*"
+        element={
+          <ProtectedRoute>
+            <DashContainer rolePath="superadmin" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <DashContainer rolePath="admin" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/employee/*"
+        element={
+          <ProtectedRoute>
+            <DashContainer rolePath="employee" />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard/*"
         element={
