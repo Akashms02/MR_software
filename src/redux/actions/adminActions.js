@@ -13,7 +13,12 @@ import {
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
 const commonError = "Something went wrong!";
-const isSuccess = (status) => status === 200 || status === 201 || status === "SUCCESS";
+const isSuccess = (status) => 
+  status === 200 || 
+  status === 201 || 
+  status === "SUCCESS" || 
+  status === true || 
+  status === "true";
 
 /* =======================
    LIST ADMINS
@@ -92,4 +97,26 @@ export const clearErrors = () => (dispatch) => {
 // Clear Success
 export const clearSuccess = () => (dispatch) => {
   dispatch({ type: CLEAR_SUCCESS });
+};
+
+/* =======================
+   TOGGLE ADMIN STATUS
+ ======================= */
+export const toggleAdminStatus = (adminId, enabled) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.put(`${API_ROUTE}/admin/${adminId}/status?enabled=${enabled}`);
+    const { status, message } = response.data ?? {};
+
+    if (isSuccess(status) || response.status === 200) {
+      dispatch(getAdmins());
+      return { ok: true, message };
+    }
+    return { ok: false, message: message || commonError };
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || commonError;
+    return { ok: false, message };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
 };

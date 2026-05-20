@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux'
+import { Navigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 
 // Role-based Route Managers
@@ -6,7 +7,7 @@ import SuperAdminRouter from './superadmin/SuperAdminRouter'
 import AdminRouter from './admin/AdminRouter'
 import EmployeeRouter from './employee/EmployeeRouter'
 
-export default function DashContainer() {
+export default function DashContainer({ rolePath }) {
   const { user } = useSelector(state => state.auth)
   
   let role = 'Employee';
@@ -19,18 +20,29 @@ export default function DashContainer() {
     } catch (e) {}
   }
 
+  const normalizedRole = (role || '').toUpperCase().trim();
+  const isSuperAdmin = normalizedRole === 'SUPER_ADMIN' || normalizedRole === 'SUPERADMIN' || normalizedRole === 'SUPER ADMIN';
+  const isAdmin = normalizedRole === 'ADMIN';
+
+  // Dynamic automatic path guard & redirection
+  if (isSuperAdmin && rolePath !== 'superadmin') {
+    return <Navigate to="/superadmin/dashboard" replace />
+  }
+  if (isAdmin && rolePath !== 'admin') {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+  if (!isSuperAdmin && !isAdmin && rolePath !== 'employee') {
+    return <Navigate to="/employee/dashboard" replace />
+  }
+
   const renderContent = () => {
-    const normalizedRole = role.toLowerCase();
-    
-    if (normalizedRole === 'superadmin' || normalizedRole === 'super admin' || normalizedRole === 'super_admin') {
-      return <SuperAdminRouter />
-    } 
-    else if (normalizedRole.includes('admin') || normalizedRole === 'manager') {
-      return <AdminRouter />
-    } 
-    else {
-      return <EmployeeRouter />
+    if (isSuperAdmin) {
+      return <SuperAdminRouter />;
     }
+    if (isAdmin) {
+      return <AdminRouter />;
+    }
+    return <EmployeeRouter />;
   }
 
   return (

@@ -1,9 +1,16 @@
+import React, { useEffect } from 'react'
 import { Card, SectionHeader, StatCard } from '../../components/ui'
 import { LEAVE_BALANCE, RECENT_ACTIVITY, UPCOMING_EVENTS } from '../../data/hrmsData'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { fetchProfile } from '../../redux/actions/authActions'
 
 export default function EmployeeDashboard() {
+  const dispatch = useDispatch()
   const { user } = useSelector(state => state.auth)
+
+  useEffect(() => {
+    dispatch(fetchProfile())
+  }, [dispatch])
   
   const displayName = user?.fullName || user?.name || 'Employee';
   const displayRole = user?.role?.replace('_', ' ') || 'Team Member';
