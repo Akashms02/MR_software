@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { API_ROUTE } from '../data/env';
 
-// ─────────────────────────────────────────────
-// 1. ACCESS TOKEN (in-memory + localStorage sync)
-// ─────────────────────────────────────────────
 let _accessToken = localStorage.getItem('accessToken') || null;
 
 export const setAccessToken = (token) => {
@@ -20,9 +17,6 @@ export const setAccessToken = (token) => {
 
 export const getAccessToken = () => _accessToken;
 
-// ─────────────────────────────────────────────
-// 2. REFRESH LOCK (prevents parallel refreshes)
-// ─────────────────────────────────────────────
 let _isRefreshing = false;
 let _failedQueue = [];
 
@@ -35,13 +29,10 @@ const processQueue = (error, token = null) => {
 
 const shouldForceLogout = (error) => {
   const status = error?.response?.status;
-  // Only force logout when refresh token is invalid/unauthorized.
   return status === 400 || status === 401 || status === 403;
 };
 
-// ─────────────────────────────────────────────
-// 3. CORE SILENT REFRESH FUNCTION (single source of truth)
-// ─────────────────────────────────────────────
+
 export const silentRefresh = async () => {
   if (_isRefreshing) {
     // Already refreshing – wait for it to finish
@@ -96,7 +87,7 @@ export const silentRefresh = async () => {
 // ─────────────────────────────────────────────
 // 4. GLOBAL REQUEST INTERCEPTOR (attach token)
 // ─────────────────────────────────────────────
-const PUBLIC_ROUTES = ['/auth/login', '/auth/refresh', '/otp/'];
+const PUBLIC_ROUTES = ['/auth/login', '/auth/refresh', '/auth/refresh-token', '/otp/'];
 
 const isPublic = (url = '') => PUBLIC_ROUTES.some((r) => url.includes(r));
 
@@ -119,9 +110,6 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─────────────────────────────────────────────
-// 5. GLOBAL RESPONSE INTERCEPTOR (handle 401)
-// ─────────────────────────────────────────────
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {

@@ -78,10 +78,11 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
         {currentNav.map(item => {
           const isActive = activePage === item.id
           const Icon = item.icon
+          const prefix = isSuperAdmin ? '/superadmin' : (!isEmployee ? '/admin' : '/employee')
           return (
             <button
               key={item.id}
-              onClick={() => navigate(`/dashboard/${item.id}`)}
+              onClick={() => navigate(`${prefix}/${item.id}`)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 width: '100%', padding: '10px 14px', borderRadius: '10px',

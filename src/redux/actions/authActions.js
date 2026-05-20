@@ -30,6 +30,9 @@ import {
   UPDATE_PROFILE_ADMIN_SUCCESS,
   UPDATE_PROFILE_ADMIN_REQUEST,
   UPDATE_PROFILE_ADMIN_FAILURE,
+  REFRESH_TOKEN_REQUEST,
+  REFRESH_TOKEN_SUCCESS,
+  REFRESH_TOKEN_FAILURE,
 } from "../actionType/authActionType";
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 import { setAccessToken, handleLogoutRedirect } from "../../api/axiosInstance";
@@ -55,25 +58,23 @@ export const login = (credentials) => async (dispatch) => {
       const token = data?.accessToken || data?.token;
       const refreshToken = data?.refreshToken || data?.refresh_token;
 
-      // Build sanitized user (no tokens in Redux state)
-      const sanitizedData = { ...data };
-      delete sanitizedData.accessToken;
-      delete sanitizedData.token;
-      delete sanitizedData.refreshToken;
-      delete sanitizedData.refresh_token;
-
       if (token) {
         setAccessToken(token);
         if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
 
-        localStorage.setItem("user", JSON.stringify(sanitizedData));
         const expiresIn = data?.expiresIn || data?.expireIn || 900;
         localStorage.setItem("expiryTime", Date.now() + expiresIn * 1000);
       }
 
+      // Fetch user profile from /auth/me based on the token
+      const profileResponse = await axios.get(`${API_ROUTE}/auth/me`);
+      const profileData = profileResponse.data?.data || profileResponse.data;
+
+      localStorage.setItem("user", JSON.stringify(profileData));
+
       dispatch({
         type: LOGIN_SUCCESS,
-        payload: { user: sanitizedData, token },
+        payload: { user: profileData, token },
       });
 
       dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
@@ -116,7 +117,7 @@ export const fetchProfile = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_PROFILE_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/profile`);
+    const response = await axios.get(`${API_ROUTE}/auth/me`);
 
     if (
       response.status === 200 ||
@@ -124,9 +125,14 @@ export const fetchProfile = () => async (dispatch) => {
       response?.data?.status === 200 ||
       response?.data?.status === "SUCCESS"
     ) {
+      const profileData = response.data.data || response.data;
+      
+      // Update cached user info in localStorage
+      localStorage.setItem("user", JSON.stringify(profileData));
+
       dispatch({
         type: FETCH_PROFILE_SUCCESS,
-        payload: response.data.data,
+        payload: profileData,
       });
       return { ok: true };
     }
@@ -149,9 +155,6 @@ export const fetchProfile = () => async (dispatch) => {
   }
 };
 
-/* =======================
-   UPDATE PROFILE
- ======================= */
 export const updateProfile = (formData) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: UPDATE_PROFILE_REQUEST });
@@ -213,7 +216,6 @@ export const updateProfileAdmin = (clientId, formData) => async (dispatch) => {
         payload: data,
       });
 
-      // Update cached user info in localStorage
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const currentUser = JSON.parse(savedUser);
@@ -240,12 +242,10 @@ export const updateProfileAdmin = (clientId, formData) => async (dispatch) => {
   }
 };
 
-// Clear Errors
 export const clearErrors = () => (dispatch) => {
   dispatch({ type: CLEAR_ERRORS });
 };
 
-// Require Password Change Action
 export const requirePasswordChange = (status) => (dispatch) => {
   dispatch({
     type: SET_REQUIRE_PASSWORD_CHANGE,
@@ -253,9 +253,6 @@ export const requirePasswordChange = (status) => (dispatch) => {
   });
 };
 
-/* =======================
-   FORGOT PASSWORD (OTP SEND)
- ======================= */
 export const forgotPassword = (mobileNo) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FORGOT_PASSWORD_REQUEST });
@@ -289,9 +286,7 @@ export const forgotPassword = (mobileNo) => async (dispatch) => {
   }
 };
 
-/* =======================
-   VERIFY OTP
- ======================= */
+
 export const verifyOtp = (mobileNo, otp) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: VERIFY_OTP_REQUEST });
@@ -332,9 +327,6 @@ export const verifyOtp = (mobileNo, otp) => async (dispatch) => {
   }
 };
 
-/* =======================
-   RESET PASSWORD
- ======================= */
 export const createNewPassword = (resetData) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: RESET_PASSWORD_REQUEST });
@@ -381,9 +373,7 @@ export const createNewPassword = (resetData) => async (dispatch) => {
     dispatch({ type: LOADING_END });
   }
 };
-/* =======================
-   CHANGE FIRST PASSWORD
- ======================= */
+
 export const changeFirstPassword = (data) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: CHANGE_PASSWORD_REQUEST });
@@ -421,9 +411,6 @@ export const changeFirstPassword = (data) => async (dispatch) => {
   }
 };
 
-/* =======================
-   LOGOUT
- ======================= */
 export const logout = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   try {
@@ -445,9 +432,6 @@ export const logout = () => async (dispatch) => {
   }
 };
 
-/* =======================
-   INITIALIZE AUTH
- ======================= */
 export const initializeAuth = () => async (dispatch) => {
   const savedUser = localStorage.getItem("user");
   const savedToken = localStorage.getItem("accessToken");
@@ -474,6 +458,63 @@ export const initializeAuth = () => async (dispatch) => {
     handleLogoutRedirect();
   } finally {
     dispatch({ type: INITIALIZE_AUTH_COMPLETE });
+    dispatch({ type: LOADING_END });
+  }
+};
+
+
+export const refreshToken = (data) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: REFRESH_TOKEN_REQUEST });
+  try {
+    const response = await axios.post(
+      `${API_ROUTE}/auth/refresh-token`,
+      data,
+    );
+
+    if (
+      response.status === 200 ||
+      response?.data?.success === true ||
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS"
+    ) {
+      const resData = response.data?.data || response.data;
+      const token = resData?.accessToken || resData?.token;
+      const newRefreshToken = resData?.refreshToken || resData?.refresh_token;
+
+      if (token) {
+        setAccessToken(token);
+        if (newRefreshToken) {
+          localStorage.setItem("refreshToken", newRefreshToken);
+        }
+        const expiresIn = resData?.expiresIn || resData?.expireIn || 900;
+        localStorage.setItem("expiryTime", Date.now() + expiresIn * 1000);
+      }
+
+      dispatch({
+        type: REFRESH_TOKEN_SUCCESS,
+        payload: { token, message: response.data?.message || "Token refreshed successfully" },
+      });
+      return true;
+    }
+
+    dispatch({
+      type: REFRESH_TOKEN_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    const status = error.response?.status;
+    dispatch({
+      type: REFRESH_TOKEN_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    if (status === 400 || status === 401 || status === 403) {
+      console.warn("[Auth] Refresh token was rejected or expired. Logging out...");
+      dispatch(logout());
+    }
+    return false;
+  } finally {
     dispatch({ type: LOADING_END });
   }
 };

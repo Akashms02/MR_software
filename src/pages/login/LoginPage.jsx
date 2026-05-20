@@ -35,7 +35,14 @@ export default function LoginPage() {
         navigate('/create-password', { replace: true }); 
         return; 
       }
-      navigate('/dashboard', { replace: true });
+      const roleStr = (user.role || '').toUpperCase().trim();
+      if (roleStr === 'SUPER_ADMIN' || roleStr === 'SUPERADMIN' || roleStr === 'SUPER ADMIN') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else if (roleStr === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/employee/dashboard', { replace: true });
+      }
     }
   }, [user, requiresPasswordChange, navigate]);
 
