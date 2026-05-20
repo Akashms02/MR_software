@@ -7,6 +7,7 @@ import { API_ROUTE } from './data/env';
 // Components
 import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/login/LoginPage';
+import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
 import DashContainer from './pages/DashContainer';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -106,6 +107,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/dashboard/*"
         element={

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -285,7 +286,7 @@ export default function LoginPage() {
 
               {/* Forgot password */}
               <div style={{ textAlign: 'right', marginBottom: '28px' }}>
-                <a href="#" style={{
+                <Link to="/forgot-password" style={{
                   fontSize: '13px', color: 'var(--lime-dark)',
                   textDecoration: 'none', fontWeight: 700,
                   transition: 'opacity 0.2s'
@@ -294,7 +295,7 @@ export default function LoginPage() {
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
 
               {/* Error */}
