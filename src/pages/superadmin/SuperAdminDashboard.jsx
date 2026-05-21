@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { Share2, ExternalLink, ChevronRight, FileText, CreditCard, ShieldCheck, HeartHandshake, Network, Briefcase, Users, Calendar, Search, HelpCircle, Server, Key, Database, Globe } from 'lucide-react'
+import {  ExternalLink, ChevronRight,  ShieldCheck, Network, Users, Server, Key, Database, Globe } from 'lucide-react'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { getAdmins } from '../../redux/actions/adminActions'
 /* ── Stat Card ── */
@@ -73,36 +73,6 @@ function EventRow({ date, month, title, sub, color }) {
   )
 }
 
-/* ── HiringRow renamed to AdminRow ── */
-function AdminRow({ name, role, status }) {
-  const badgeColors = {
-    'Branch Admin':    { bg: '#EFF6FF', color: '#3B82F6' },
-    'HR Manager':      { bg: '#F0FDF4', color: '#22C55E' },
-    'System Support':  { bg: '#FEF3C7', color: '#F59E0B' },
-  }
-  const badge = badgeColors[role] || { bg: '#F3F4F6', color: '#6B7280' }
-  const initials = name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div style={{
-        width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, #111827, #374151)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '13px', fontWeight: 700, color: '#fff'
-      }}>{initials}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>{name}</div>
-        <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{role.split(' ')[0]}</div>
-      </div>
-      <div style={{
-        padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-        background: badge.bg, color: badge.color, flexShrink: 0, whiteSpace: 'nowrap'
-      }}>{role}</div>
-    </div>
-  )
-}
-
 /* ── Quick Action Tile ── */
 function QATile({ icon: Icon, label }) {
   return (
@@ -149,62 +119,56 @@ export default function SuperAdminDashboard() {
     <div className="animate-fade">
       {/* ── Welcome Header Card ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-        borderRadius: '20px',
-        padding: '24px 30px',
-        marginBottom: '20px',
-        color: '#fff',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+        background: '#fff',
+        borderRadius: '18px',
+        padding: '32px 40px',
+        marginBottom: '24px',
+        color: '#111827',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.07)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '24px',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.08)'
+        gap: '32px',
+        border: '1px solid #F0F0F0',
+        transition: 'all 0.3s ease'
       }}>
-        {/* Glowing ambient lights */}
-        <div style={{
-          position: 'absolute', top: '-50px', right: '-50px',
-          width: '200px', height: '200px', borderRadius: '50%',
-          background: 'rgba(99, 102, 241, 0.15)', filter: 'blur(40px)',
-          pointerEvents: 'none'
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-50px', left: '-50px',
-          width: '180px', height: '180px', borderRadius: '50%',
-          background: 'rgba(16, 185, 129, 0.12)', filter: 'blur(45px)',
-          pointerEvents: 'none'
-        }} />
+        {/* No glowing lights */}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', zIndex: 1 }}>
           <div style={{
-            width: '64px', height: '64px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, #4F46E5, #06B6D4)',
+            width: '72px', height: '72px', borderRadius: '16px',
+            background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '24px', fontWeight: 800, color: '#fff',
-            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
-            border: '2px solid rgba(255, 255, 255, 0.2)'
+            boxShadow: '0 8px 16px rgba(79, 70, 229, 0.2)',
+            border: 'none',
+            cursor: 'default'
           }}>
             {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
-              Logged In Session · {displayRole}
+          <div style={{
+            flex: 1 }}>
+            <div style={{ marginBottom: '12px' }}>
+              <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>
+                {displayName}
+              </h2>
+              <p style={{ fontSize: '13px', color: '#6B7280', margin: '8px 0 0 0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {displayRole}
+              </p>
             </div>
-            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-              {displayName}
-            </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                📧 {displayEmail}
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: '20px', fontSize: '13px', color: '#4B5563', fontWeight: 500 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px' }}>📧</span>
+                <span>{displayEmail}</span>
               </span>
-              <span style={{ fontSize: '13px', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                📱 {displayPhone}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px' }}>📱</span>
+                <span>{displayPhone}</span>
               </span>
-              <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.1)', color: '#F1F5F9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.15)', fontWeight: 600 }}>
-                Ref Code: {displayRefCode}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #F0F9FF 0%, #F8F1FF 100%)', padding: '6px 14px', borderRadius: '8px', fontWeight: 600, color: '#4F46E5', border: '1px solid #E0E7FF' }}>
+                <span style={{ fontSize: '16px' }}>🔑</span>
+                <span>{displayRefCode}</span>
               </span>
             </div>
           </div>
@@ -212,28 +176,56 @@ export default function SuperAdminDashboard() {
 
         <div style={{ display: 'flex', gap: '12px', zIndex: 1 }}>
           <button style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            background: '#F3F4F6',
+            border: '1px solid #E5E7EB',
             borderRadius: '10px',
-            color: '#fff',
-            padding: '10px 18px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-          >
-            System Status
-          </button>
-          <button className="btn-lime" style={{
-            padding: '10px 20px',
-            borderRadius: '10px',
+            color: '#374151',
+            padding: '11px 20px',
             fontSize: '13px',
             fontWeight: 700,
-            cursor: 'pointer'
-          }}>
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#E5E7EB';
+            e.currentTarget.style.borderColor = '#D1D5DB';
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = '#F3F4F6';
+            e.currentTarget.style.borderColor = '#E5E7EB';
+            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+          >
+            View Status
+          </button>
+          <button
+            onClick={() => navigate('/superadmin/system-settings')}
+            style={{
+            background: 'linear-gradient(135deg, #C8F04A 0%, #B8E03A 100%)',
+            border: 'none',
+            borderRadius: '10px',
+            color: '#111827',
+            padding: '11px 24px',
+            fontSize: '13px',
+            fontWeight: 800,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 12px rgba(200, 240, 74, 0.3)',
+            letterSpacing: '0.3px'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = '0 8px 16px rgba(200, 240, 74, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(200, 240, 74, 0.3)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+          >
             Manage Platform
           </button>
         </div>

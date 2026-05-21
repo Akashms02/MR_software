@@ -84,6 +84,71 @@ export const onboardMember = (payload) => async (dispatch) => {
   }
 };
 
+/* =======================
+   FETCH ONBOARDING STATUS
+   ======================= */
+export const fetchOnboardingStatus = (employeeId) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(`${API_ROUTE}/admin/onboard/status/${employeeId}`);
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || "Failed to fetch onboarding status";
+    dispatch({ type: TEAM_ONBOARD_FAILURE, payload: msg });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   SAVE ONBOARDING STEP
+   ======================= */
+export const saveOnboardingStep = (stepNumber, employeeId, payload, isMultipart = false) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: TEAM_ONBOARD_REQUEST });
+  try {
+    let url = `${API_ROUTE}/admin/onboard/step${stepNumber}`;
+    if (stepNumber > 1) {
+      url += `/${employeeId}`;
+    }
+
+    const config = isMultipart 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+
+    const response = await axios.post(url, payload, config);
+    const { status, message } = response.data ?? {};
+
+    if (isSuccess(status) || response.status === 201 || response.status === 200) {
+      dispatch({
+        type: TEAM_ONBOARD_SUCCESS,
+        payload: response.data,
+      });
+      // If it is the last step, refresh the team list
+      if (stepNumber === 7) {
+        dispatch(getMyTeam());
+      }
+      return response.data;
+    }
+
+    dispatch({
+      type: TEAM_ONBOARD_FAILURE,
+      payload: message || commonError,
+    });
+    throw new Error(message || commonError);
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || commonError;
+    dispatch({
+      type: TEAM_ONBOARD_FAILURE,
+      payload: msg,
+    });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
 // Clear Errors
 export const clearErrors = () => (dispatch) => {
   dispatch({ type: CLEAR_ERRORS });

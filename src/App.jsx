@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
-import { API_ROUTE } from './data/env';
+
 
 // Components
 import LandingPage from './pages/landing/LandingPage';
@@ -14,12 +13,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Actions & Utils
 import { initializeAuth, refreshToken, logout } from './redux/actions/authActions';
-import { isRefreshing, silentRefresh } from './api/axiosInstance';
-import { LOGIN_SUCCESS } from './redux/actionType/authActionType';
+
 
 export default function App() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   // 1. Initial Synchronization on App Boot
   useEffect(() => {
