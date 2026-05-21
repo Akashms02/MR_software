@@ -102,10 +102,10 @@ export const clearSuccess = () => (dispatch) => {
 /* =======================
    TOGGLE ADMIN STATUS
  ======================= */
-export const toggleAdminStatus = (adminId, enabled) => async (dispatch) => {
+export const toggleAdminStatus = (adminReferenceCode, enabled) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   try {
-    const response = await axios.put(`${API_ROUTE}/admin/${adminId}/status?enabled=${enabled}`);
+    const response = await axios.put(`${API_ROUTE}/admin/${adminReferenceCode}/status?enabled=${enabled}`);
     const { status, message } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {

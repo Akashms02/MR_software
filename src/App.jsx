@@ -1,23 +1,22 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
-import { API_ROUTE } from './data/env';
+
 
 // Components
 import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/login/LoginPage';
+import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
 import DashContainer from './pages/DashContainer';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Actions & Utils
 import { initializeAuth, refreshToken, logout } from './redux/actions/authActions';
-import { isRefreshing, silentRefresh } from './api/axiosInstance';
-import { LOGIN_SUCCESS } from './redux/actionType/authActionType';
+
 
 export default function App() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   // 1. Initial Synchronization on App Boot
   useEffect(() => {
@@ -92,6 +91,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/superadmin/*"
         element={
