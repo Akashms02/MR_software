@@ -5,6 +5,7 @@ import {
   registerAdmin,
   clearErrors,
   clearSuccess,
+  updateAdminDetails,
 } from "../../redux/actions/adminActions";
 import {
   Plus,
@@ -19,13 +20,15 @@ import {
   AlertCircle,
   ToggleLeft,
   ToggleRight,
+  Edit,
 } from "lucide-react";
-import { updateCompanyAccess } from "../../redux/actions/companyAction";
+import { updateCompanyAccess, editCompanyData } from "../../redux/actions/companyAction";
 const AdminManagement = () => {
   const dispatch = useDispatch();
   const { admins, loading, error, success } = useSelector(
     (state) => state.admin,
   );
+  const companyState = useSelector((state) => state.company);
   const [showModal, setShowModal] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
@@ -36,6 +39,18 @@ const AdminManagement = () => {
     password: "",
     phone: "",
     role: "ADMIN",
+  });
+
+  // Edit State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    role: "ADMIN",
+    adminReferenceCode: "",
+    enabled: true,
   });
 
   useEffect(() => {
@@ -54,6 +69,18 @@ const AdminManagement = () => {
           role: "ADMIN",
         });
         setShowModal(false);
+
+        setEditFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          role: "ADMIN",
+          adminReferenceCode: "",
+          enabled: true,
+        });
+        setShowEditModal(false);
+        setSelectedAdmin(null);
+
         dispatch(clearSuccess());
       }, 1500);
       return () => clearTimeout(timer);
@@ -76,6 +103,53 @@ const AdminManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     dispatch(registerAdmin(formData));
+  };
+
+  const handleOpenEditModal = (admin) => {
+    setSelectedAdmin(admin);
+    setEditFormData({
+      fullName: admin.fullName || "",
+      email: admin.email || "",
+      phone: admin.phone || "",
+      role: admin.role || "ADMIN",
+      adminReferenceCode: admin.adminReferenceCode || "",
+      enabled: admin.enabled !== false,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedAdmin) {
+      const payload = {
+        fullName: editFormData.fullName,
+        email: editFormData.email,
+        phone: editFormData.phone,
+        companyCode: editFormData.adminReferenceCode,
+      };
+      try {
+        const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
+        if (res) {
+          setShowEditModal(false);
+          setSelectedAdmin(null);
+          setEditFormData({
+            fullName: "",
+            email: "",
+            phone: "",
+            role: "ADMIN",
+            adminReferenceCode: "",
+            enabled: true,
+          });
+          dispatch(getAdmins());
+        }
+      } catch (err) {
+        console.error("Error updating company details:", err);
+      }
+    }
   };
 
   const handleToggleAdminStatus = async (adminId, currentStatus) => {
@@ -501,48 +575,80 @@ const AdminManagement = () => {
                       </div>
                     </td>
                     <td style={{ padding: "16px 20px" }}>
-                      <button
-                        onClick={() =>
-                          handleToggleAdminStatus(
-                            admin.id,
-                            admin.enabled ?? true
-                          )
-                        }
-                        disabled={updatingStatusId === admin.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          background: admin.enabled ? "#DBEAFE" : "#FEE2E2",
-                          border: "none",
-                          color: admin.enabled ? "#0369A1" : "#991B1B",
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          cursor:
-                            updatingStatusId === admin.id
-                              ? "not-allowed"
-                              : "pointer",
-                          opacity: updatingStatusId === admin.id ? 0.7 : 1,
-                          transition: "all 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (updatingStatusId !== admin.id) {
-                            e.currentTarget.style.transform =
-                              "translateY(-2px)";
-                            e.currentTarget.style.boxShadow =
-                              "0 4px 8px rgba(0,0,0,0.1)";
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <button
+                          onClick={() =>
+                            handleToggleAdminStatus(
+                              admin.id,
+                              admin.enabled ?? true
+                            )
                           }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "none";
-                        }}
-                      >
-                        {getStatusIcon(admin)}
-                        {admin.enabled ? "Enabled" : "Disabled"}
-                      </button>
+                          disabled={updatingStatusId === admin.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            background: admin.enabled ? "#DBEAFE" : "#FEE2E2",
+                            border: "none",
+                            color: admin.enabled ? "#0369A1" : "#991B1B",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            cursor:
+                              updatingStatusId === admin.id
+                                ? "not-allowed"
+                                : "pointer",
+                            opacity: updatingStatusId === admin.id ? 0.7 : 1,
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (updatingStatusId !== admin.id) {
+                              e.currentTarget.style.transform =
+                                "translateY(-2px)";
+                              e.currentTarget.style.boxShadow =
+                                "0 4px 8px rgba(0,0,0,0.1)";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "none";
+                          }}
+                        >
+                          {getStatusIcon(admin)}
+                          {admin.enabled ? "Enabled" : "Disabled"}
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(admin)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            background: "#F3F4F6",
+                            border: "none",
+                            color: "#374151",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#E5E7EB";
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.05)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "#F3F4F6";
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "none";
+                          }}
+                        >
+                          <Edit size={14} />
+                          Edit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -824,8 +930,8 @@ const AdminManagement = () => {
                   </label>
                   <select
                     name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
+                    value="ADMIN"
+                    disabled
                     style={{
                       width: "100%",
                       padding: "12px 16px",
@@ -833,12 +939,11 @@ const AdminManagement = () => {
                       border: "1px solid #E5E7EB",
                       fontSize: "14px",
                       outline: "none",
-                      background: "#fff",
+                      background: "#f3f4f6",
+                      cursor: "not-allowed",
                     }}
                   >
                     <option value="ADMIN">Administrator</option>
-                    <option value="HR">HR Manager</option>
-                    <option value="FINANCE">Finance Head</option>
                   </select>
                 </div>
 
@@ -886,6 +991,382 @@ const AdminManagement = () => {
                       <Loader2 className="animate-spin" size={18} />
                     ) : (
                       "Create Account"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(17, 24, 39, 0.6)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            className="animate-slide-up"
+            style={{
+              background: "#fff",
+              width: "100%",
+              maxWidth: "500px",
+              borderRadius: "24px",
+              boxShadow:
+                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "24px",
+                borderBottom: "1px solid #F3F4F6",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "linear-gradient(to right, #F9FAFB, #fff)",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: 800,
+                    color: "#111827",
+                    margin: 0,
+                  }}
+                >
+                  Edit Administrator
+                </h3>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#6B7280",
+                    marginTop: "4px",
+                  }}
+                >
+                  Modify details for {selectedAdmin?.fullName || "Administrator"}.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedAdmin(null);
+                }}
+                style={{
+                  background: "#F3F4F6",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={18} color="#6B7280" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleEditSubmit} style={{ padding: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
+                {/* Status Messages */}
+                {(companyState.error || error) && (
+                  <div
+                    style={{
+                      background: "#FEF2F2",
+                      border: "1px solid #FEE2E2",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      color: "#B91C1C",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <AlertCircle size={18} /> {companyState.error || error}
+                  </div>
+                )}
+                {(companyState.success || success) && (
+                  <div
+                    style={{
+                      background: "#ECFDF5",
+                      border: "1px solid #D1FAE5",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      color: "#047857",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckCircle2 size={18} /> {companyState.message || success}
+                  </div>
+                )}
+
+                {/* Input Fields */}
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#374151",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    name="fullName"
+                    value={editFormData.fullName}
+                    onChange={handleEditInputChange}
+                    required
+                    placeholder="e.g. John Doe"
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #E5E7EB",
+                      fontSize: "14px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={editFormData.email}
+                      onChange={handleEditInputChange}
+                      required
+                      placeholder="admin@example.com"
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Phone Number
+                    </label>
+                    <input
+                      name="phone"
+                      value={editFormData.phone}
+                      onChange={handleEditInputChange}
+                      required
+                      placeholder="9876543210"
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Admin Reference Code
+                    </label>
+                    <input
+                      name="adminReferenceCode"
+                      value={editFormData.adminReferenceCode}
+                      onChange={handleEditInputChange}
+                      required
+                      placeholder="e.g. GMPM"
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      System Role
+                    </label>
+                    <select
+                      name="role"
+                      value="ADMIN"
+                      disabled
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        fontSize: "14px",
+                        outline: "none",
+                        background: "#f3f4f6",
+                        cursor: "not-allowed",
+                      }}
+                    >
+                      <option value="ADMIN">Administrator</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#374151",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Account Status
+                  </label>
+                  <select
+                    name="enabled"
+                    value={editFormData.enabled ? "true" : "false"}
+                    onChange={(e) => setEditFormData({ ...editFormData, enabled: e.target.value === "true" })}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #E5E7EB",
+                      fontSize: "14px",
+                      outline: "none",
+                      background: "#fff",
+                    }}
+                  >
+                    <option value="true">Active (Access Enabled)</option>
+                    <option value="false">Inactive (Access Suspended)</option>
+                  </select>
+                </div>
+
+                {/* Footer Buttons */}
+                <div
+                  style={{ display: "flex", gap: "12px", marginTop: "10px" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setSelectedAdmin(null);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: "14px",
+                      borderRadius: "14px",
+                      border: "1px solid #E5E7EB",
+                      background: "#fff",
+                      color: "#374151",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      flex: 1.5,
+                      padding: "14px",
+                      borderRadius: "14px",
+                      border: "none",
+                      background: "#111827",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : (
+                      "Update Account"
                     )}
                   </button>
                 </div>

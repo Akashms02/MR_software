@@ -7,6 +7,9 @@ import {
   ADMIN_REGISTER_REQUEST,
   ADMIN_REGISTER_SUCCESS,
   ADMIN_REGISTER_FAILURE,
+  ADMIN_UPDATE_REQUEST,
+  ADMIN_UPDATE_SUCCESS,
+  ADMIN_UPDATE_FAILURE,
   CLEAR_ERRORS,
   CLEAR_SUCCESS
 } from "../actionType/adminActionType";
@@ -116,6 +119,43 @@ export const toggleAdminStatus = (adminReferenceCode, enabled) => async (dispatc
   } catch (error) {
     const message = error.response?.data?.message || error.message || commonError;
     return { ok: false, message };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   UPDATE ADMIN DETAILS
+ ======================= */
+export const updateAdminDetails = (adminId, payload) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: ADMIN_UPDATE_REQUEST });
+  try {
+    const response = await axios.put(`${API_ROUTE}/admin/${adminId}`, payload);
+    const { status, message } = response.data ?? {};
+
+    if (isSuccess(status) || response.status === 200) {
+      dispatch({
+        type: ADMIN_UPDATE_SUCCESS,
+        payload: response.data,
+      });
+      // Refresh the admin list after successful update
+      dispatch(getAdmins());
+      return { status: status || 'SUCCESS', message };
+    }
+
+    dispatch({
+      type: ADMIN_UPDATE_FAILURE,
+      payload: message || commonError,
+    });
+    return { status: 'FAILURE', message: message || commonError };
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || commonError;
+    dispatch({
+      type: ADMIN_UPDATE_FAILURE,
+      payload: message,
+    });
+    return { status: 'FAILURE', message };
   } finally {
     dispatch({ type: LOADING_END });
   }

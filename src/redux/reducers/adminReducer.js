@@ -5,6 +5,9 @@ import {
   ADMIN_REGISTER_REQUEST,
   ADMIN_REGISTER_SUCCESS,
   ADMIN_REGISTER_FAILURE,
+  ADMIN_UPDATE_REQUEST,
+  ADMIN_UPDATE_SUCCESS,
+  ADMIN_UPDATE_FAILURE,
   CLEAR_ERRORS,
   CLEAR_SUCCESS
 } from '../actionType/adminActionType';
@@ -23,6 +26,7 @@ export const adminReducer = (state = initialState, action) => {
     case LOADING_START:
     case ADMIN_LIST_REQUEST:
     case ADMIN_REGISTER_REQUEST:
+    case ADMIN_UPDATE_REQUEST:
       return {
         ...state,
         loading: true,
@@ -59,6 +63,23 @@ export const adminReducer = (state = initialState, action) => {
       };
 
     case ADMIN_REGISTER_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        success: false,
+      };
+
+    case ADMIN_UPDATE_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        success: true,
+        message: action.payload?.message || 'Admin updated successfully',
+      };
+
+    case ADMIN_UPDATE_FAILURE:
       return {
         ...state,
         loading: false,
