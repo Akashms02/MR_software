@@ -6,6 +6,7 @@ import AdminAnalytics from './AdminAnalytics'
 import AdminCompliance from './AdminCompliance'
 import AdminAttendance from './AdminAttendance'
 import MyTeam from './TeamManagement'
+import OnboardingWizard from './OnboardingWizard'
 import WaterCooler from './WaterCooler'
 
 export default function AdminRouter() {
@@ -19,6 +20,7 @@ export default function AdminRouter() {
       <Route path="compliance" element={<AdminCompliance />} />
       <Route path="me" element={<AdminAttendance />} />
       <Route path="myteam" element={<MyTeam />} />
+      <Route path="myteam/onboard" element={<OnboardingWizard />} />
       <Route path="watercooler" element={<WaterCooler />} />
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
