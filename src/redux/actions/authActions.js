@@ -253,19 +253,21 @@ export const requirePasswordChange = (status) => (dispatch) => {
   });
 };
 
-export const forgotPassword = (mobileNo) => async (dispatch) => {
+export const forgotPassword = (email) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FORGOT_PASSWORD_REQUEST });
   try {
-    const response = await axios.post(`${API_ROUTE}/otp/send`, { mobileNo });
+    const response = await axios.post(`${API_ROUTE}/auth/forgot-password`, { email });
 
     if (
       response?.data?.status === 200 ||
-      response?.data?.status === "SUCCESS"
+      response?.data?.status === "SUCCESS" ||
+      response?.data?.success === true ||
+      response.status === 200
     ) {
       dispatch({
         type: FORGOT_PASSWORD_SUCCESS,
-        payload: { message: response.data.message, mobileNo },
+        payload: { message: response.data.message || "Reset link sent! Check your email.", email },
       });
       return true;
     }
@@ -392,6 +394,44 @@ export const changeFirstPassword = (data) => async (dispatch) => {
         payload: response.data.message || "Password changed successfully",
       });
       dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
+      return true;
+    }
+
+    dispatch({
+      type: CHANGE_PASSWORD_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: CHANGE_PASSWORD_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const firstLoginAction = (firstLoginData) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: CHANGE_PASSWORD_REQUEST });
+  try {
+    const response = await axios.post(
+      `${API_ROUTE}/auth/first-login`,
+      firstLoginData,
+    );
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS" ||
+      response?.data?.success === true ||
+      response.status === 200
+    ) {
+      dispatch({
+        type: CHANGE_PASSWORD_SUCCESS,
+        payload: response.data.message || "Password changed successfully. Please login with your new password.",
+      });
       return true;
     }
 
