@@ -49,7 +49,7 @@ export const silentRefresh = async () => {
   _isRefreshing = true;
 
   try {
-    const res = await axios.post(`${API_ROUTE}/auth/refresh`, { refreshToken });
+    const res = await axios.post(`${API_ROUTE}/auth/refresh-token`, { refreshToken });
     const resData = res.data;
 
     const ok = resData?.status === 200 || resData?.status === 'SUCCESS' || resData?.success === true;
@@ -126,18 +126,18 @@ axios.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Handle Normal Token Expiry (Silent Refresh - Disabled for now)
+      // Handle Normal Token Expiry (Silent Refresh)
       if (!originalRequest._retry && !isPublic(originalRequest.url)) {
-        console.warn('[Auth] 401 Unauthorized - Refresh disabled, logging out.');
-        handleLogoutRedirect('session_expired');
-        /*
+        console.warn('[Auth] 401 Unauthorized - Attempting silent token refresh.');
         originalRequest._retry = true;
         const newToken = await silentRefresh();
         if (newToken) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return axios(originalRequest);
+        } else {
+          console.warn('[Auth] 401 Unauthorized - Silent refresh failed. Force logging out.');
+          handleLogoutRedirect('session_expired');
         }
-        */
       }
     }
 

@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/login/LoginPage';
 import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
+import CreatePasswordPage from './pages/create-password/CreatePasswordPage';
 import DashContainer from './pages/DashContainer';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -92,6 +93,7 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/create-password" element={<CreatePasswordPage />} />
       <Route
         path="/superadmin/*"
         element={
