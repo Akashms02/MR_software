@@ -55,6 +55,23 @@ export const login = (credentials) => async (dispatch) => {
       response?.data?.status === "SUCCESS"
     ) {
       const { data } = response.data;
+
+      // Check if password change is required (first-time login)
+      if (data?.requiresPasswordChange === true) {
+        // Clear any old active token/user session from previous sessions
+        setAccessToken(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("expiryTime");
+        localStorage.removeItem("refreshToken");
+
+        dispatch({
+          type: LOGIN_FAILURE,
+          payload: "Password change is required on your first login."
+        });
+        dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: true });
+        return "CHANGE_PASSWORD_REQUIRED";
+      }
+
       const token = data?.accessToken || data?.token;
       const refreshToken = data?.refreshToken || data?.refresh_token;
 
