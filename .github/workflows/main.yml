@@ -1,4 +1,3 @@
-git push
 name: Deploy to S3 and CloudFront
 
 on:
