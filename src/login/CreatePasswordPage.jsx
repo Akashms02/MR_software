@@ -1,25 +1,55 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { forgotPassword, clearErrors } from '../../redux/actions/authActions';
+import { firstLoginAction, clearErrors } from '../redux/actions/authActions';
 
-export default function ForgotPasswordPage() {
+const EyeOpen = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const EyeOff = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22"/>
+  </svg>
+);
+
+export default function CreatePasswordPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
-  const { loading, error: authError, success, message } = useSelector((state) => state.auth);
+  const { loading, error: authError } = useSelector((state) => state.auth);
 
-  const [email, setEmail] = useState('');
+  // Retrieve initial values from LoginPage redirection state
+  const stateEmail = location.state?.email || '';
+  const stateTempPassword = location.state?.tempPassword || '';
+
+  const [email] = useState(stateEmail);
+  const [tempPassword] = useState(stateTempPassword);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
   const [localError, setLocalError] = useState('');
   const [localSuccess, setLocalSuccess] = useState('');
 
   const error = localError || authError;
 
   useEffect(() => {
-    // Clear any previous error/success states on mount
+    // Clear any previous authentication errors on component mount
     dispatch(clearErrors());
-  }, [dispatch]);
+
+    // Redirect to login if email or temporary password is not present
+    if (!stateEmail || !stateTempPassword) {
+      navigate('/login', { replace: true });
+    }
+  }, [dispatch, stateEmail, stateTempPassword, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,14 +60,36 @@ export default function ForgotPasswordPage() {
       setLocalError('Please enter your email.');
       return;
     }
+    if (!tempPassword.trim()) {
+      setLocalError('Please enter your temporary password.');
+      return;
+    }
+    if (!newPassword.trim()) {
+      setLocalError('Please enter a new password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setLocalError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setLocalError('Passwords do not match.');
+      return;
+    }
 
-    const result = await dispatch(forgotPassword(email.trim()));
-    if (result) {
-      setLocalSuccess('Reset link sent successfully! Check your inbox.');
-      // Keep showing the success message, then redirect to login
+    const payload = {
+      email: email.trim(),
+      temporaryPassword: tempPassword.trim(),
+      newPassword: newPassword.trim(),
+      confirmPassword: confirmPassword.trim(),
+    };
+
+    const success = await dispatch(firstLoginAction(payload));
+    if (success) {
+      setLocalSuccess('Password updated successfully! Redirecting to login page...');
       setTimeout(() => {
         navigate('/login', { replace: true });
-      }, 3500);
+      }, 3000);
     }
   };
 
@@ -147,14 +199,14 @@ export default function ForgotPasswordPage() {
             fontSize: 'clamp(40px, 5vw, 56px)', fontWeight: 900, color: 'var(--text-primary)',
             letterSpacing: '-1.5px', lineHeight: 1.1,
           }}>
-            Restore your <span style={{ color: 'var(--lime-dark)' }}>credentials.</span>
+            Secure your new <span style={{ color: 'var(--lime-dark)' }}>workspace.</span>
           </motion.h1>
 
           <motion.p variants={itemVariants} style={{
             fontSize: '18px', color: 'var(--text-secondary)',
             lineHeight: 1.6, maxWidth: '420px', fontWeight: 500
           }}>
-            Enter your email address to receive a secure password reset link to reactivate your access.
+            Please set your new permanent password to activate your employee profile and continue securely.
           </motion.p>
 
           <motion.div variants={itemVariants} style={{
@@ -163,15 +215,15 @@ export default function ForgotPasswordPage() {
              borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
              boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
           }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>PASSWORD RESET SYSTEM</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>SECURITY COMPLIANCE</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--lime-dark)', boxShadow: '0 0 10px var(--lime)' }} />
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>Automatic link expiry</span>
+              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>End-to-End Encrypted</span>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Right Side: Forgot Password Card */}
+        {/* Right Side: Create Password Card */}
         <motion.div
           initial={{ opacity: 0, x: 50, rotateY: -10 }}
           animate={{ opacity: 1, x: 0, rotateY: 0 }}
@@ -191,40 +243,97 @@ export default function ForgotPasswordPage() {
 
             <div style={{ marginBottom: '32px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Reset Password
+                Set New Password
               </h2>
               <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                Please enter your email to receive a recovery link.
+                Required on your first login to ensure account security.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} noValidate>
 
-              {/* Email */}
+
+
+              {/* New Password */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  New Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="create-pw-new"
+                    type={showNewPw ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    style={{
+                      width: '100%', padding: '14px 48px 14px 16px',
+                      background: '#f8fafc',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px', fontSize: '15px',
+                      color: 'var(--text-primary)', outline: 'none',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                      fontWeight: 500,
+                    }}
+                    onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
+                    onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPw(!showNewPw)}
+                    style={{
+                      position: 'absolute', right: '14px', top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-muted)', display: 'flex',
+                      padding: '4px', transition: 'color 0.2s'
+                    }}
+                  >
+                    {showNewPw ? <EyeOff /> : <EyeOpen />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Email Address
+                  Confirm Password
                 </label>
-                <input
-                  id="forgot-email"
-                  type="email"
-                  value={email}
-                  onChange={e => { setEmail(e.target.value); setLocalError('') }}
-                  placeholder="you@gmaxepayhr.in"
-                  autoComplete="email"
-                  style={{
-                    width: '100%', padding: '14px 16px',
-                    background: '#f8fafc',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px', fontSize: '15px',
-                    color: 'var(--text-primary)', outline: 'none',
-                    transition: 'all 0.2s ease',
-                    boxSizing: 'border-box',
-                    fontWeight: 500,
-                  }}
-                  onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
-                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="create-pw-confirm"
+                    type={showConfirmPw ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    style={{
+                      width: '100%', padding: '14px 48px 14px 16px',
+                      background: '#f8fafc',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px', fontSize: '15px',
+                      color: 'var(--text-primary)', outline: 'none',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                      fontWeight: 500,
+                    }}
+                    onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
+                    onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPw(!showConfirmPw)}
+                    style={{
+                      position: 'absolute', right: '14px', top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-muted)', display: 'flex',
+                      padding: '4px', transition: 'color 0.2s'
+                    }}
+                  >
+                    {showConfirmPw ? <EyeOff /> : <EyeOpen />}
+                  </button>
+                </div>
               </div>
 
               {/* Error & Success States */}
@@ -266,11 +375,11 @@ export default function ForgotPasswordPage() {
                 )}
               </AnimatePresence>
 
-              {/* Submit */}
+              {/* Submit Button */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                id="forgot-btn"
+                id="create-pw-btn"
                 type="submit"
                 disabled={loading || !!localSuccess}
                 style={{
@@ -286,29 +395,12 @@ export default function ForgotPasswordPage() {
               >
                 {loading ? (
                   <>
-                    <SpinnerIcon /> Processing Request...
+                    <SpinnerIcon /> Updating Password...
                   </>
                 ) : (
-                  'Send Recovery Link'
+                  'Activate Account & Sign In'
                 )}
               </motion.button>
-
-              {/* Back to Login Link */}
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Remembered your password? </span>
-                <span
-                  onClick={() => navigate('/login')}
-                  style={{
-                    fontSize: '13px', color: 'var(--lime-dark)',
-                    cursor: 'pointer', fontWeight: 700,
-                    transition: 'opacity 0.2s', textDecoration: 'none'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                >
-                  Sign In
-                </span>
-              </div>
             </form>
           </div>
         </motion.div>

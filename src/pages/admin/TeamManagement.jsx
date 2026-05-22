@@ -5,14 +5,17 @@ import { getMyTeam } from '../../redux/actions/teamActions';
 import {
   Plus,
   Search,
-  MoreVertical,
   Mail,
   Phone,
   User,
   Loader2,
   Briefcase,
   RefreshCw,
+  Eye,
+  Trash2,
+  CheckCircle2,
 } from 'lucide-react';
+import EditEmployeeModal from './EditEmployeeModal';
 
 const ROLE_COLORS = {
   MR: { bg: '#ECFDF5', text: '#059669' },
@@ -32,6 +35,32 @@ const TeamManagement = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [resumeId, setResumeId] = useState('');
+
+  // Edit / Delete states
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleEditClick = (employeeId) => {
+    setSelectedEmployeeId(employeeId);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (employeeId, name) => {
+    setDeleteConfirmId(employeeId);
+    setDeleteConfirmName(name);
+  };
+
+  const confirmDelete = () => {
+    setSuccessMessage(`Employee ${deleteConfirmName} (${deleteConfirmId}) delete confirmed (API pending)`);
+    setDeleteConfirmId(null);
+    setDeleteConfirmName(null);
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 4000);
+  };
 
   useEffect(() => {
     dispatch(getMyTeam());
@@ -286,7 +315,7 @@ const TeamManagement = () => {
           >
             <thead>
               <tr style={{ background: '#F9FAFB' }}>
-                {['Member', 'Contact', 'Role', 'Status', ''].map((h) => (
+                {['Member', 'Contact', 'Role', 'Status', 'Action'].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -515,25 +544,60 @@ const TeamManagement = () => {
 
                       {/* Actions */}
                       <td style={{ padding: '16px 20px' }}>
-                        <button
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: '#9CA3AF',
-                            padding: '4px',
-                            borderRadius: '6px',
-                            transition: 'color 0.2s',
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.color = '#374151')
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.color = '#9CA3AF')
-                          }
-                        >
-                          <MoreVertical size={18} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => handleEditClick(member.employeeId || member.id)}
+                            title="View Employee"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#9CA3AF',
+                              padding: '6px',
+                              borderRadius: '8px',
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#4F46E5';
+                              e.currentTarget.style.background = '#EEF2FF';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#9CA3AF';
+                              e.currentTarget.style.background = 'transparent';
+                            }}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(member.employeeId || member.id, member.fullName)}
+                            title="Delete Employee"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#9CA3AF',
+                              padding: '6px',
+                              borderRadius: '8px',
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#DC2626';
+                              e.currentTarget.style.background = '#FEF2F2';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#9CA3AF';
+                              e.currentTarget.style.background = 'transparent';
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -544,9 +608,146 @@ const TeamManagement = () => {
         </div>
       </div>
 
+      {/* Edit Employee Modal */}
+      <EditEmployeeModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedEmployeeId(null);
+        }}
+        employeeId={selectedEmployeeId}
+      />
+
+      {/* Delete Confirmation Popup */}
+      {deleteConfirmId && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '20px',
+            animation: 'fadeIn 0.25s ease-out',
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '20px',
+              width: '100%',
+              maxWidth: '440px',
+              padding: '30px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+              textAlign: 'center',
+              animation: 'scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: '#FEF2F2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px auto',
+                color: '#DC2626',
+              }}
+            >
+              <Trash2 size={28} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '0 0 8px 0' }}>
+              Confirm Deletion
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6B7280', margin: '0 0 24px 0', lineHeight: '1.5' }}>
+              Are you sure you want to delete <strong>{deleteConfirmName}</strong>?<br />
+              This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  setDeleteConfirmId(null);
+                  setDeleteConfirmName(null);
+                }}
+                style={{
+                  padding: '11px 22px',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E5E7EB',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  flex: 1,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  padding: '11px 22px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: '#DC2626',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  flex: 1,
+                  transition: 'opacity 0.2s',
+                  boxShadow: '0 4px 12px rgba(220,38,38,0.2)',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Notification */}
+      {successMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: '#ECFDF5',
+            border: '1.5px solid #A7F3D0',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#047857',
+            fontSize: '13px',
+            fontWeight: 700,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+            zIndex: 1200,
+            animation: 'slideIn 0.3s ease-out',
+          }}
+        >
+          <CheckCircle2 size={18} />
+          {successMessage}
+        </div>
+      )}
+
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
     </div>
   );

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   saveOnboardingStep,
   fetchOnboardingStatus,
+  fetchReportingManagers,
 } from '../../redux/actions/teamActions';
 import {
   ChevronLeft,
@@ -123,6 +124,8 @@ const OnboardingWizard = () => {
   const [resumeLoading, setResumeLoading] = useState(false);
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
+
+  const [reportingManagers, setReportingManagers] = useState([]);
 
   const [formData, setFormData] = useState({
     // Step 1
@@ -278,6 +281,23 @@ const OnboardingWizard = () => {
       }, 0);
     }
   }, []); // eslint-disable-line
+
+  // Fetch reporting managers list for Step 1
+  useEffect(() => {
+    const loadReportingManagers = async () => {
+      try {
+        const res = await dispatch(fetchReportingManagers());
+        const managerList = res?.data || res || [];
+        if (Array.isArray(managerList)) {
+          setReportingManagers(managerList);
+        }
+      } catch (err) {
+        console.error('Failed to load reporting managers:', err);
+      }
+    };
+
+    loadReportingManagers();
+  }, [dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -802,24 +822,24 @@ const OnboardingWizard = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>
-                    Reporting Manager ID{' '}
+                    Reporting Manager{' '}
                     <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>
                       (Optional)
                     </span>
                   </label>
-                  <input
+                  <select
                     name="reportingToId"
                     value={formData.reportingToId}
                     onChange={handleInputChange}
-                    placeholder="e.g. 5"
-                    style={inputStyle}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor = '#6366F1')
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '#E5E7EB')
-                    }
-                  />
+                    style={{ ...inputStyle, background: '#fff' }}
+                  >
+                    <option value="">Select Reporting Manager</option>
+                    {reportingManagers.map((mgr) => (
+                      <option key={mgr.id} value={mgr.id}>
+                        {mgr.fullName || mgr.name || `ID: ${mgr.id}`} {mgr.role ? `(${mgr.role.replace(/_/g, ' ')})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

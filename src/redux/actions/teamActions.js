@@ -149,6 +149,22 @@ export const saveOnboardingStep = (stepNumber, employeeId, payload, isMultipart 
   }
 };
 
+/* =======================
+   FETCH REPORTING MANAGERS
+   ======================= */
+export const fetchReportingManagers = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(`${API_ROUTE}/admin/reporting-managers`);
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || "Failed to fetch reporting managers";
+    throw new Error(msg, { cause: error });
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
 // Clear Errors
 export const clearErrors = () => (dispatch) => {
   dispatch({ type: CLEAR_ERRORS });
@@ -157,4 +173,46 @@ export const clearErrors = () => (dispatch) => {
 // Clear Success
 export const clearSuccess = () => (dispatch) => {
   dispatch({ type: CLEAR_SUCCESS });
+};
+
+/* =======================
+   UPDATE ONBOARDING DETAILS
+   ======================= */
+export const updateOnboardingDetails = (employeeId, payload, isMultipart = false) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: TEAM_ONBOARD_REQUEST });
+  try {
+    const url = `${API_ROUTE}/admin/onboard/update/${employeeId}`;
+    const config = isMultipart 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+
+    const response = await axios.put(url, payload, config);
+    const { status, message } = response.data ?? {};
+
+    if (isSuccess(status) || response.status === 200 || response.status === 201) {
+      dispatch({
+        type: TEAM_ONBOARD_SUCCESS,
+        payload: response.data,
+      });
+      // Refresh my team
+      dispatch(getMyTeam());
+      return response.data;
+    }
+
+    dispatch({
+      type: TEAM_ONBOARD_FAILURE,
+      payload: message || commonError,
+    });
+    throw new Error(message || commonError);
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || commonError;
+    dispatch({
+      type: TEAM_ONBOARD_FAILURE,
+      payload: msg,
+    });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
 };

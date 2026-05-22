@@ -1,114 +1,98 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useDispatch, useSelector } from 'react-redux';
-import { firstLoginAction, clearErrors } from '../../redux/actions/authActions';
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useDispatch, useSelector } from 'react-redux'
+import { login } from '../redux/actions/authActions'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
     <circle cx="12" cy="12" r="3"/>
   </svg>
-);
-
+)
 const EyeOff = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22"/>
   </svg>
-);
+)
 
-export default function CreatePasswordPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useDispatch();
+export default function LoginPage() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { loading, error: authError, user, requiresPasswordChange } = useSelector((state) => state.auth)
 
-  const { loading, error: authError } = useSelector((state) => state.auth);
-
-  // Retrieve initial values from LoginPage redirection state
-  const stateEmail = location.state?.email || '';
-  const stateTempPassword = location.state?.tempPassword || '';
-
-  const [email] = useState(stateEmail);
-  const [tempPassword] = useState(stateTempPassword);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  const [showNewPw, setShowNewPw] = useState(false);
-  const [showConfirmPw, setShowConfirmPw] = useState(false);
-
-  const [localError, setLocalError] = useState('');
-  const [localSuccess, setLocalSuccess] = useState('');
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [showPw, setShowPw]     = useState(false)
+  const [localError, setLocalError] = useState('')
 
   const error = localError || authError;
 
   useEffect(() => {
-    // Clear any previous authentication errors on component mount
-    dispatch(clearErrors());
+    if (user) {
+      if (requiresPasswordChange) { 
+        navigate('/create-password', { replace: true }); 
+        return; 
+      }
+      const roleStr = (user.role || '').toUpperCase().trim();
+      if (roleStr === 'SUPER_ADMIN' || roleStr === 'SUPERADMIN' || roleStr === 'SUPER ADMIN') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else if (roleStr === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (roleStr === 'MR') {
+        navigate('/mr/dashboard', { replace: true });
+      } else if (roleStr === 'HR') {
+        navigate('/hr/dashboard', { replace: true });
+      } else if (roleStr === 'REGIONAL_MANAGER' || roleStr === 'REGIONAL MANAGER') {
+        navigate('/regional-manager/dashboard', { replace: true });
+      } else if (roleStr === 'AREA_MANAGER' || roleStr === 'AREA MANAGER') {
+        navigate('/area-manager/dashboard', { replace: true });
+      } else if (roleStr === 'DOCTOR') {
+        navigate('/doctor/dashboard', { replace: true });
+      } else if (roleStr === 'PHARMACIST') {
+        navigate('/pharmacist/dashboard', { replace: true });
+      } else if (roleStr === 'DISTRIBUTOR') {
+        navigate('/distributor/dashboard', { replace: true });
+      } else if (roleStr === 'PATIENT') {
+        navigate('/patient/dashboard', { replace: true });
+      } else {
+        navigate('/employee/dashboard', { replace: true });
+      }
+    }
+  }, [user, requiresPasswordChange, navigate]);
 
-    // Redirect to login if email or temporary password is not present
-    if (!stateEmail || !stateTempPassword) {
-      navigate('/login', { replace: true });
-    }
-  }, [dispatch, stateEmail, stateTempPassword, navigate]);
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLocalError('')
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLocalError('');
-    setLocalSuccess('');
+    if (!email.trim())    { setLocalError('Please enter your email.'); return }
+    if (!password.trim()) { setLocalError('Please enter your password.'); return }
 
-    if (!email.trim()) {
-      setLocalError('Please enter your email.');
-      return;
+    const result = await dispatch(login({ email: email.trim(), password }));
+    if (result === 'CHANGE_PASSWORD_REQUIRED') {
+      navigate('/create-password', {
+        state: { mode: 'FIRST_LOGIN', email: email.trim(), tempPassword: password },
+      });
     }
-    if (!tempPassword.trim()) {
-      setLocalError('Please enter your temporary password.');
-      return;
-    }
-    if (!newPassword.trim()) {
-      setLocalError('Please enter a new password.');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setLocalError('New password must be at least 6 characters long.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setLocalError('Passwords do not match.');
-      return;
-    }
-
-    const payload = {
-      email: email.trim(),
-      temporaryPassword: tempPassword.trim(),
-      newPassword: newPassword.trim(),
-      confirmPassword: confirmPassword.trim(),
-    };
-
-    const success = await dispatch(firstLoginAction(payload));
-    if (success) {
-      setLocalSuccess('Password updated successfully! Redirecting to login page...');
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 3000);
-    }
-  };
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
+    visible: { 
       opacity: 1,
       transition: { staggerChildren: 0.15, delayChildren: 0.2 }
     }
-  };
+  }
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
+    visible: { 
+      opacity: 1, 
       y: 0,
       transition: { type: 'spring', stiffness: 100, damping: 15 }
     }
-  };
+  }
 
   return (
     <div style={{
@@ -117,13 +101,13 @@ export default function CreatePasswordPage() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'var(--font-sans)',
-      background: '#F8FAFC',
+      background: '#F8FAFC', // Crisp light background
       position: 'relative',
       overflow: 'hidden',
     }}>
 
       {/* ── DYNAMIC BACKGROUND ─────────────────────────────────────── */}
-      <motion.div
+      <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -133,10 +117,10 @@ export default function CreatePasswordPage() {
           background: 'radial-gradient(circle, rgba(200, 240, 74, 0.4) 0%, transparent 70%)',
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }}
+        }} 
       />
-
-      <motion.div
+      
+      <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
@@ -146,7 +130,7 @@ export default function CreatePasswordPage() {
           background: 'radial-gradient(circle, rgba(167, 216, 0, 0.2) 0%, transparent 70%)',
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }}
+        }} 
       />
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────── */}
@@ -161,16 +145,16 @@ export default function CreatePasswordPage() {
         zIndex: 10,
         alignItems: 'center',
       }}>
-
+        
         {/* Left Side: Brand & Messaging */}
-        <motion.div
+        <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
         >
-          <motion.div
-            variants={itemVariants}
+          <motion.div 
+            variants={itemVariants} 
             style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
@@ -199,31 +183,31 @@ export default function CreatePasswordPage() {
             fontSize: 'clamp(40px, 5vw, 56px)', fontWeight: 900, color: 'var(--text-primary)',
             letterSpacing: '-1.5px', lineHeight: 1.1,
           }}>
-            Secure your new <span style={{ color: 'var(--lime-dark)' }}>workspace.</span>
+            Enter the future of <span style={{ color: 'var(--lime-dark)' }}>Pharma HR.</span>
           </motion.h1>
-
+          
           <motion.p variants={itemVariants} style={{
             fontSize: '18px', color: 'var(--text-secondary)',
             lineHeight: 1.6, maxWidth: '420px', fontWeight: 500
           }}>
-            Please set your new permanent password to activate your employee profile and continue securely.
+            Secure, compliant, and lightning-fast. Access your workspace and manage operations from anywhere.
           </motion.p>
-
+          
           <motion.div variants={itemVariants} style={{
              marginTop: '20px', padding: '16px 20px',
              background: '#fff', border: '1px solid var(--border)',
              borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
              boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
           }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>SECURITY COMPLIANCE</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>SYSTEM STATUS</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--lime-dark)', boxShadow: '0 0 10px var(--lime)' }} />
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>End-to-End Encrypted</span>
+              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>All services operational</span>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Right Side: Create Password Card */}
+        {/* Right Side: Login Card */}
         <motion.div
           initial={{ opacity: 0, x: 50, rotateY: -10 }}
           animate={{ opacity: 1, x: 0, rotateY: 0 }}
@@ -240,73 +224,58 @@ export default function CreatePasswordPage() {
             margin: '0 auto',
             width: '100%',
           }}>
-
+            
             <div style={{ marginBottom: '32px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Set New Password
+                Welcome back
               </h2>
               <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                Required on your first login to ensure account security.
+                Please enter your credentials to continue.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} noValidate>
-
-
-
-              {/* New Password */}
+            <form onSubmit={handleLogin} noValidate>
+              
+              {/* Email */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  New Password
+                  Email Address
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="create-pw-new"
-                    type={showNewPw ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Min 6 characters"
-                    style={{
-                      width: '100%', padding: '14px 48px 14px 16px',
-                      background: '#f8fafc',
-                      border: '1px solid var(--border)',
-                      borderRadius: '12px', fontSize: '15px',
-                      color: 'var(--text-primary)', outline: 'none',
-                      transition: 'all 0.2s ease',
-                      boxSizing: 'border-box',
-                      fontWeight: 500,
-                    }}
-                    onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
-                    onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPw(!showNewPw)}
-                    style={{
-                      position: 'absolute', right: '14px', top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--text-muted)', display: 'flex',
-                      padding: '4px', transition: 'color 0.2s'
-                    }}
-                  >
-                    {showNewPw ? <EyeOff /> : <EyeOpen />}
-                  </button>
-                </div>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setLocalError('') }}
+                  placeholder="you@gmaxepayhr.in"
+                  autoComplete="email"
+                  style={{
+                    width: '100%', padding: '14px 16px',
+                    background: '#f8fafc',
+                    border: '1px solid var(--border)',
+                    borderRadius: '12px', fontSize: '15px',
+                    color: 'var(--text-primary)', outline: 'none',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box',
+                    fontWeight: 500,
+                  }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                />
               </div>
 
-              {/* Confirm Password */}
-              <div style={{ marginBottom: '28px' }}>
+              {/* Password */}
+              <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Confirm Password
+                  Password
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
-                    id="create-pw-confirm"
-                    type={showConfirmPw ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
+                    id="login-password"
+                    type={showPw ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setLocalError('') }}
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
                     style={{
                       width: '100%', padding: '14px 48px 14px 16px',
                       background: '#f8fafc',
@@ -322,7 +291,7 @@ export default function CreatePasswordPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowConfirmPw(!showConfirmPw)}
+                    onClick={() => setShowPw(!showPw)}
                     style={{
                       position: 'absolute', right: '14px', top: '50%',
                       transform: 'translateY(-50%)',
@@ -330,16 +299,32 @@ export default function CreatePasswordPage() {
                       color: 'var(--text-muted)', display: 'flex',
                       padding: '4px', transition: 'color 0.2s'
                     }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
                   >
-                    {showConfirmPw ? <EyeOff /> : <EyeOpen />}
+                    {showPw ? <EyeOff /> : <EyeOpen />}
                   </button>
                 </div>
               </div>
 
-              {/* Error & Success States */}
+              {/* Forgot password */}
+              <div style={{ textAlign: 'right', marginBottom: '28px' }}>
+                <Link to="/forgot-password" style={{
+                  fontSize: '13px', color: 'var(--lime-dark)',
+                  textDecoration: 'none', fontWeight: 700,
+                  transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Error */}
               <AnimatePresence>
                 {error && (
-                  <motion.div
+                  <motion.div 
                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -355,39 +340,21 @@ export default function CreatePasswordPage() {
                     </div>
                   </motion.div>
                 )}
-
-                {localSuccess && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
-                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    style={{ overflow: 'hidden' }}
-                  >
-                    <div style={{
-                      padding: '12px 16px', borderRadius: '10px',
-                      background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)',
-                      fontSize: '13px', color: 'var(--lime-dark)', lineHeight: 1.5,
-                      display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600
-                    }}>
-                      <span>✅</span> {localSuccess}
-                    </div>
-                  </motion.div>
-                )}
               </AnimatePresence>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                id="create-pw-btn"
+                id="login-btn"
                 type="submit"
-                disabled={loading || !!localSuccess}
+                disabled={loading}
                 style={{
                   width: '100%', padding: '14px',
-                  background: loading || localSuccess ? 'rgba(200, 240, 74, 0.5)' : 'var(--lime)',
+                  background: loading ? 'rgba(200, 240, 74, 0.5)' : 'var(--lime)',
                   color: '#0F172A', fontWeight: 800, fontSize: '15px',
                   border: 'none', borderRadius: '12px',
-                  cursor: loading || localSuccess ? 'not-allowed' : 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   fontFamily: 'var(--font-sans)',
                   boxShadow: '0 8px 20px rgba(200, 240, 74, 0.2)'
@@ -395,18 +362,63 @@ export default function CreatePasswordPage() {
               >
                 {loading ? (
                   <>
-                    <SpinnerIcon /> Updating Password...
+                    <SpinnerIcon /> Authenticating...
                   </>
                 ) : (
-                  'Activate Account & Sign In'
+                  'Sign In to Dashboard'
                 )}
               </motion.button>
             </form>
+
+              {/* Demo Credentials Hint */}
+            <div style={{
+              marginTop: '36px', paddingTop: '24px',
+              borderTop: '1px solid var(--border)',
+            }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                One-Click Demo Access
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { email: 'superadmin@mrmedical.com', password: 'SuperAdmin@123', role: 'Super Admin' },
+                  { email: 'admin.one@mrmedical.com', password: 'Password@123', role: 'Admin' },
+                  { email: 'employee@mrmedical.com', password: 'password123', role: 'Employee' }
+                ].map((c, i) => (
+                  <motion.div 
+                    whileHover={{ x: 4, background: 'var(--bg-section)' }}
+                    key={i} 
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 12px', borderRadius: '8px',
+                      cursor: 'pointer', transition: 'background 0.2s'
+                    }}
+                    onClick={() => { setEmail(c.email); setPassword(c.password); setLocalError('') }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        width: '8px', height: '8px', borderRadius: '50%',
+                        background: c.role.includes('Admin') ? '#F43F5E' : 'var(--lime-dark)'
+                      }} />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{c.role}</span>
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)' }}>Click to fill</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </motion.div>
       </div>
+
+      <style>{`
+        input:-webkit-autofill {
+          -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+          -webkit-text-fill-color: var(--text-primary) !important;
+        }
+      `}</style>
     </div>
-  );
+  )
 }
 
 function SpinnerIcon() {
@@ -417,5 +429,5 @@ function SpinnerIcon() {
       <path d="M12 2a10 10 0 0110 10" stroke="#0F172A" strokeWidth="3" strokeLinecap="round"/>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </svg>
-  );
+  )
 }
