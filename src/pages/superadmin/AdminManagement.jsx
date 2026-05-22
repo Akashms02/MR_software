@@ -36,9 +36,9 @@ const AdminManagement = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    password: "",
     phone: "",
     role: "ADMIN",
+    companyCode: "",
   });
 
   // Edit State
@@ -64,9 +64,9 @@ const AdminManagement = () => {
         setFormData({
           fullName: "",
           email: "",
-          password: "",
           phone: "",
           role: "ADMIN",
+          companyCode: "",
         });
         setShowModal(false);
 
@@ -887,15 +887,14 @@ const AdminManagement = () => {
                       marginBottom: "8px",
                     }}
                   >
-                    Security Password
+                    Company Code
                   </label>
                   <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
+                    name="companyCode"
+                    value={formData.companyCode}
                     onChange={handleInputChange}
                     required
-                    placeholder="••••••••"
+                    placeholder="e.g. APEX"
                     style={{
                       width: "100%",
                       padding: "12px 16px",
@@ -912,7 +911,7 @@ const AdminManagement = () => {
                       marginTop: "6px",
                     }}
                   >
-                    Password must be at least 8 characters with special symbols.
+                    A unique reference code for the company (e.g. APEX).
                   </p>
                 </div>
 
