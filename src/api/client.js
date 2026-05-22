@@ -9,7 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add Authorization header if token is stored in localStorage
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
