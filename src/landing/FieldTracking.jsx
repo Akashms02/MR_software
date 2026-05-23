@@ -128,7 +128,7 @@ export default function FieldTracking() {
 
       <style>{`
         @media (max-width: 900px) {
-          #field-grid { grid-template-columns: 1fr !important; }
+          #field-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
         }
       `}</style>
     </section>

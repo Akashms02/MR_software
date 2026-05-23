@@ -10,6 +10,7 @@ import AdminAttendance from '../../pages/admin/AdminAttendance'
 import TeamManagement from '../../pages/admin/TeamManagement'
 import OnboardingWizard from '../../pages/admin/OnboardingWizard'
 import WaterCooler from '../../pages/admin/WaterCooler'
+import AdminReports from '../../pages/admin/AdminReports'
 
 export default function AdminLayoutRouter() {
   return (
@@ -19,6 +20,7 @@ export default function AdminLayoutRouter() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="employees" element={<AdminEmployees />} />
         <Route path="finance" element={<AdminPayroll />} />
+        <Route path="reports" element={<AdminReports />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="me" element={<AdminAttendance />} />

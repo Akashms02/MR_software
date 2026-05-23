@@ -153,11 +153,7 @@ export default function DemoPreview() {
             </div>
 
             {/* Footer */}
-            <div style={{
-              padding: '16px 20px', borderTop: '1px solid var(--border)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'var(--bg-section)',
-            }}>
+            <div className="browser-mockup-footer">
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Showing 5 of {tab === 'Compliance' ? '18' : '1,250'} records</span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {['⬇ Export', '🖨 Print', '📊 Report'].map(a => (

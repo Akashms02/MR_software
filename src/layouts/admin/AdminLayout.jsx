@@ -12,7 +12,8 @@ import {
   UsersRound, 
   Coffee, 
   FileText, 
-  Settings 
+  Settings,
+  BarChart2
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
@@ -60,6 +61,7 @@ export default function AdminLayout({ children }) {
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/admin/dashboard' },
     { id: 'employees',    icon: Users,           label: 'Employees',     path: '/admin/employees' },
     { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },
+    { id: 'reports',      icon: BarChart2,       label: 'Reports & Analytics', path: '/admin/reports' },
     { id: 'recruitment',  icon: Briefcase,       label: 'Recruitment',   path: '/admin/recruitment' },
     { id: 'orgstructure', icon: Network,         label: 'Org Structure', path: '/admin/orgstructure' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/admin/me' },

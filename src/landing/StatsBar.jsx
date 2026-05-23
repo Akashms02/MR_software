@@ -12,16 +12,9 @@ export default function StatsBar() {
       borderTop: '1px solid var(--border)', padding: '28px 0',
     }}>
       <div className="section-container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '0',
-        }}>
+        <div className="stats-grid">
           {STATS.map((s, i) => (
-            <div key={i} style={{
-              textAlign: 'center', padding: '12px 16px',
-              borderRight: i < 3 ? '1px solid var(--border)' : 'none',
-            }}>
+            <div key={i} className="stats-item">
               <div style={{ fontSize: '22px', marginBottom: '6px' }}>{s.icon}</div>
               <div className="stat-number" style={{ marginBottom: '4px' }}>{s.value}</div>
               <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</div>

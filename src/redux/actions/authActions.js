@@ -84,14 +84,29 @@ export const login = (credentials) => async (dispatch) => {
       }
 
       // Fetch user profile from /auth/me based on the token
-      const profileResponse = await axios.get(`${API_ROUTE}/auth/me`);
-      const profileData = profileResponse.data?.data || profileResponse.data;
+      let profileData = {};
+      try {
+        const profileResponse = await axios.get(`${API_ROUTE}/auth/me`);
+        profileData = profileResponse.data?.data || profileResponse.data || {};
+      } catch (err) {
+        console.warn("[Auth] Failed to fetch profile from /auth/me:", err.message);
+      }
 
-      localStorage.setItem("user", JSON.stringify(profileData));
+      // Merge: profileData + fallback to login response data (ensures role, fullName, email, etc. are preserved)
+      const mergedUser = {
+        ...data,
+        ...profileData,
+        role: data?.role || profileData?.role || '',
+        fullName: profileData?.fullName || profileData?.name || data?.fullName || '',
+        email: profileData?.email || data?.email || '',
+        id: profileData?.id || profileData?.userId || data?.userId || data?.id || ''
+      };
+
+      localStorage.setItem("user", JSON.stringify(mergedUser));
 
       dispatch({
         type: LOGIN_SUCCESS,
-        payload: { user: profileData, token },
+        payload: { user: mergedUser, token },
       });
 
       dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
@@ -142,14 +157,32 @@ export const fetchProfile = () => async (dispatch) => {
       response?.data?.status === 200 ||
       response?.data?.status === "SUCCESS"
     ) {
-      const profileData = response.data.data || response.data;
-      
+      const profileData = response.data.data || response.data || {};
+
+      // Get existing user in localStorage to preserve key fields (like role)
+      const savedUserStr = localStorage.getItem("user");
+      let existingUser = {};
+      if (savedUserStr) {
+        try {
+          existingUser = JSON.parse(savedUserStr);
+        } catch (e) { }
+      }
+
+      const mergedUser = {
+        ...existingUser,
+        ...profileData,
+        role: existingUser?.role || profileData?.role || '',
+        fullName: profileData?.fullName || profileData?.name || existingUser?.fullName || '',
+        email: profileData?.email || existingUser?.email || '',
+        id: profileData?.id || profileData?.userId || existingUser?.userId || existingUser?.id || ''
+      };
+
       // Update cached user info in localStorage
-      localStorage.setItem("user", JSON.stringify(profileData));
+      localStorage.setItem("user", JSON.stringify(mergedUser));
 
       dispatch({
         type: FETCH_PROFILE_SUCCESS,
-        payload: profileData,
+        payload: mergedUser,
       });
       return { ok: true };
     }

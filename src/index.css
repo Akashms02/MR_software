@@ -379,3 +379,317 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade { animation: fadeIn 0.3s ease forwards; }
+
+/* ─── Responsiveness Updates ────────────────────────────── */
+
+/* Section Container Padding */
+@media (max-width: 768px) {
+  .section-container {
+    padding: 0 20px;
+  }
+  .section-spacing {
+    padding: 48px 0;
+  }
+  .section-title {
+    font-size: 28px;
+  }
+}
+
+/* Login Pages */
+.login-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  background: #F8FAFC;
+  position: relative;
+  overflow: hidden;
+  padding: 40px;
+}
+.login-page-grid {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 60px;
+  position: relative;
+  z-index: 10;
+  align-items: center;
+}
+.login-brand-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.login-card-container {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .login-page-container {
+    padding: 24px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+  .login-page-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin: 40px auto;
+  }
+  .login-brand-section {
+    text-align: center;
+    align-items: center;
+    gap: 20px;
+  }
+  .login-brand-section p {
+    margin: 0 auto;
+  }
+  .login-brand-section > div {
+    align-self: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page-container {
+    padding: 16px;
+  }
+  .login-page-grid {
+    margin: 20px auto;
+    gap: 24px;
+  }
+  .login-card-container {
+    padding: 32px 20px !important;
+  }
+}
+
+/* Navbar Drawer classes */
+.navbar-wrapper {
+  width: 100%;
+  padding: 0 40px;
+}
+.nav-links-desktop {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-primary);
+}
+.nav-mobile-menu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-wrapper {
+    padding: 0 20px;
+  }
+  .nav-links-desktop {
+    display: none;
+  }
+  .nav-mobile-toggle {
+    display: block;
+  }
+  .nav-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 20px;
+    gap: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    z-index: 999;
+  }
+}
+
+/* Hero Section */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 80px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .hero-left-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .hero-left-content h1 br {
+    display: none;
+  }
+  .hero-left-content p {
+    margin: 0 auto 32px !important;
+  }
+  .hero-left-content > div {
+    justify-content: center !important;
+  }
+}
+
+/* Stats Section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.stats-item {
+  text-align: center;
+  padding: 12px 16px;
+  border-right: 1px solid var(--border);
+}
+.stats-item:last-child {
+  border-right: none;
+}
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 0;
+  }
+  .stats-item {
+    border-right: 1px solid var(--border);
+  }
+  .stats-item:nth-child(2n) {
+    border-right: none;
+  }
+}
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .stats-item {
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 16px;
+  }
+  .stats-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+/* Workflow Timeline Stepper */
+.workflow-scroll-wrapper {
+  overflow-x: auto;
+  padding-bottom: 24px;
+  padding-top: 16px;
+  margin-top: -16px;
+}
+.workflow-flex-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 700px;
+}
+.workflow-step-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.workflow-node-element {
+  flex: none;
+  width: 80px;
+}
+.workflow-connector {
+  flex: 1;
+  height: 2px;
+  margin-bottom: 34px;
+  position: relative;
+}
+.workflow-connector-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-top: 2px dashed var(--lime);
+  opacity: 0.5;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .workflow-scroll-wrapper {
+    overflow-x: visible !important;
+  }
+  .workflow-flex-container {
+    flex-direction: column;
+    min-width: 0 !important;
+    gap: 16px;
+    align-items: center;
+    width: 100%;
+  }
+  .workflow-step-wrapper {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .workflow-node-element {
+    width: 100% !important;
+    max-width: 280px;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 16px !important;
+    align-items: center;
+  }
+  .workflow-node-label {
+    text-align: left !important;
+    margin-top: 0 !important;
+    max-width: none !important;
+  }
+  .workflow-connector {
+    width: 2px;
+    height: 24px;
+    margin-bottom: 0;
+    margin-left: 32px; /* centered relative to the 64px circle */
+    align-self: flex-start;
+  }
+  .workflow-connector-line {
+    border-top: none !important;
+    border-left: 2px dashed var(--lime);
+    height: 100%;
+    width: 0 !important;
+  }
+}
+
+/* Why GmaxepayHR Pillars Grid */
+.whyus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Demo Preview Layout */
+.browser-mockup-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-section);
+}
+@media (max-width: 600px) {
+  .browser-mockup-footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

@@ -111,16 +111,7 @@ export default function CreatePasswordPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'var(--font-sans)',
-      background: '#F8FAFC',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div className="login-page-container">
 
       {/* ── DYNAMIC BACKGROUND ─────────────────────────────────────── */}
       <motion.div
@@ -150,24 +141,14 @@ export default function CreatePasswordPage() {
       />
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────── */}
-      <div style={{
-        width: '100%',
-        maxWidth: '1200px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '60px',
-        padding: '40px',
-        position: 'relative',
-        zIndex: 10,
-        alignItems: 'center',
-      }}>
+      <div className="login-page-grid">
 
         {/* Left Side: Brand & Messaging */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
+          className="login-brand-section"
         >
           <motion.div
             variants={itemVariants}
@@ -230,16 +211,7 @@ export default function CreatePasswordPage() {
           transition={{ duration: 0.8, type: 'spring', bounce: 0.4 }}
           style={{ perspective: '1000px' }}
         >
-          <div style={{
-            background: '#fff',
-            border: '1px solid var(--border)',
-            borderRadius: '24px',
-            padding: '48px 40px',
-            boxShadow: '0 30px 60px rgba(0,0,0,0.08)',
-            maxWidth: '440px',
-            margin: '0 auto',
-            width: '100%',
-          }}>
+          <div className="login-card-container">
 
             <div style={{ marginBottom: '32px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>

@@ -7,6 +7,8 @@ export default function Navbar() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
 
+  const [menuOpen, setMenuOpen] = useState(false)
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -21,7 +23,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div style={{ width: '100%', padding: '0 40px' }}>
+      <div className="navbar-wrapper">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '60px' }}>
 
           {/* Logo */}
@@ -47,8 +49,8 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Nav links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+          {/* Nav links (Desktop) */}
+          <div className="nav-links-desktop">
             {NAV_LINKS.map(link => (
               <button key={link} onClick={() => scrollTo(link)}
                 style={{
@@ -62,11 +64,52 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Login */}
-          <button className="btn-primary" style={{ fontSize: '13px', padding: '8px 18px' }}
-            onClick={() => navigate('/login')}>
-            Login
+          {/* Login (Desktop) */}
+          <div className="nav-links-desktop">
+            <button className="btn-primary" style={{ fontSize: '13px', padding: '8px 18px' }}
+              onClick={() => navigate('/login')}>
+              Login
+            </button>
+          </div>
+
+          {/* Mobile Menu Toggle Button */}
+          <button className="nav-mobile-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            )}
           </button>
+
+          {/* Mobile Menu Dropdown */}
+          {menuOpen && (
+            <div className="nav-mobile-menu">
+              {NAV_LINKS.map(link => (
+                <button key={link} onClick={() => { scrollTo(link); setMenuOpen(false); }}
+                  style={{
+                    padding: '10px 16px', background: 'transparent', border: 'none',
+                    color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px',
+                    cursor: 'pointer', borderRadius: '8px', transition: 'all 0.15s',
+                    textAlign: 'left', width: '100%'
+                  }}
+                  onMouseEnter={e => { e.target.style.color = 'var(--green)'; e.target.style.background = 'var(--green-light)' }}
+                  onMouseLeave={e => { e.target.style.color = 'var(--text-muted)'; e.target.style.background = 'transparent' }}
+                >{link}</button>
+              ))}
+              <button className="btn-primary" style={{ fontSize: '14px', padding: '12px', width: '100%', marginTop: '8px' }}
+                onClick={() => { navigate('/login'); setMenuOpen(false); }}>
+                Login
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </nav>

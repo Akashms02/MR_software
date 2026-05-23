@@ -60,14 +60,14 @@ const HRDashboard = () => {
             transition: 'all 0.2s',
             cursor: 'pointer'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
-          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
+            }}
           >
             <div style={{
               width: '48px', height: '48px', borderRadius: '12px', background: s.bg, fontSize: '24px',
@@ -131,7 +131,7 @@ const HRDashboard = () => {
         <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
           <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>HR Operations</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button 
+            <button
               onClick={() => window.location.href = '/admin/onboard'}
               style={{
                 width: '100%', padding: '12px', borderRadius: '12px', border: 'none', background: '#047857', color: '#fff',
@@ -146,8 +146,8 @@ const HRDashboard = () => {
               width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
               fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
             >
               📊 Payroll Calculator
             </button>
@@ -155,8 +155,8 @@ const HRDashboard = () => {
               width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
               fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
             >
               📁 Compliance Documents
             </button>
@@ -164,8 +164,8 @@ const HRDashboard = () => {
               width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
               fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
             >
               🏢 Manage Departments
             </button>

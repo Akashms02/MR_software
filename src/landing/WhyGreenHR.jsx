@@ -19,7 +19,7 @@ export default function WhyGmaxepayHR() {
         </div>
 
         {/* Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div className="whyus-grid">
           {PILLARS.map((p, i) => (
             <div key={i} className="pillar-card">
               <div style={{

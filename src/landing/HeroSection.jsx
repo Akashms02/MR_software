@@ -42,14 +42,11 @@ export default function HeroSection() {
         borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0
       }} />
 
-      <div className="section-container" style={{ position: 'relative', zIndex: 1, padding: '60px 40px 120px' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-          gap: '80px', alignItems: 'center'
-        }}>
+      <div className="section-container" style={{ position: 'relative', zIndex: 1, paddingTop: '60px', paddingBottom: '120px' }}>
+        <div className="hero-grid">
           
           {/* Left Content */}
-          <motion.div variants={containerVars} initial="hidden" animate="show">
+          <motion.div variants={containerVars} initial="hidden" animate="show" className="hero-left-content">
             <motion.div variants={itemVars} className="section-label" style={{ marginBottom: '24px', display: 'inline-flex' }}>
               🌿 Built for Pharma Industry
             </motion.div>

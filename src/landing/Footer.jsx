@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer id="contact" className="footer-bg">
       <div className="section-container" style={{ padding: '56px 24px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', paddingBottom: '48px' }}>
+        <div className="footer-grid">
 
           {/* Brand */}
           <div>
@@ -24,7 +24,7 @@ export default function Footer() {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-primary)' }}>
-                  Green<span style={{ color: 'var(--green)' }}>HR</span>
+                  Gmaxepay<span style={{ color: 'var(--green)' }}>HR</span>
                 </div>
                 <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '1px' }}>PHARMA HRMS</div>
               </div>
@@ -73,7 +73,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div style={{
+        <div className="footer-bottom-bar" style={{
           borderTop: '1px solid var(--border)', padding: '20px 0',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
         }}>
@@ -94,11 +94,25 @@ export default function Footer() {
       </div>
 
       <style>{`
+        .footer-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr;
+          gap: 48px;
+          padding-bottom: 48px;
+        }
         @media (max-width: 900px) {
-          footer .section-container > div { grid-template-columns: 1fr 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 600px) {
-          footer .section-container > div { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .footer-bottom-bar {
+            flex-direction: column !important;
+            text-align: center !important;
+            justify-content: center !important;
+          }
+          .footer-bottom-bar div {
+            justify-content: center !important;
+          }
         }
       `}</style>
     </footer>

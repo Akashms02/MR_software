@@ -44,16 +44,16 @@ export default function WorkflowSection() {
         </motion.div>
 
         {/* Workflow strip */}
-        <div style={{ overflowX: 'auto', paddingBottom: '24px', paddingTop: '16px', marginTop: '-16px' }}>
+        <div className="workflow-scroll-wrapper">
           <motion.div 
             variants={containerVars} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
-            style={{ display: 'flex', alignItems: 'flex-start', gap: '0', minWidth: '700px' }}
+            className="workflow-flex-container"
           >
             {STEPS.map((step, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+              <div key={i} className="workflow-step-wrapper">
                 {/* Node */}
-                <motion.div variants={nodeVars} className="workflow-node" style={{ flex: 'none', width: '80px' }}>
-                  <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ position: 'relative' }}>
+                <motion.div variants={nodeVars} className="workflow-node workflow-node-element">
+                  <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ position: 'relative', flexShrink: 0 }}>
                     <div className="workflow-circle">
                       {step.icon}
                     </div>
@@ -68,7 +68,7 @@ export default function WorkflowSection() {
                       border: '2px solid #fff',
                     }}>{i + 1}</div>
                   </motion.div>
-                  <div style={{
+                  <div className="workflow-node-label" style={{
                     fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)',
                     textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line', maxWidth: '70px',
                     marginTop: '8px'
@@ -77,11 +77,8 @@ export default function WorkflowSection() {
 
                 {/* Connector */}
                 {i < STEPS.length - 1 && (
-                  <div style={{ flex: 1, height: '2px', marginBottom: '34px', position: 'relative' }}>
-                     <motion.div variants={lineVars} style={{ 
-                        position: 'absolute', top: 0, left: 0, height: '100%', 
-                        borderTop: '2px dashed var(--lime)', opacity: 0.5 
-                     }} />
+                  <div className="workflow-connector">
+                     <motion.div variants={lineVars} className="workflow-connector-line" />
                   </div>
                 )}
               </div>

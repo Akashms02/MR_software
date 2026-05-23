@@ -8,7 +8,8 @@ import {
   UsersRound,
   Coffee,
   FileText,
-  Settings
+  Settings,
+  BarChart2
 } from 'lucide-react'
 
 export const SUPER_ADMIN_NAV = [
@@ -23,6 +24,7 @@ export const ADMIN_NAV = [
   { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard'     },
   { id: 'employees',    icon: Users,            label: 'Employees'     },
   { id: 'finance',      icon: Wallet,           label: 'Finance'       },
+  { id: 'reports',      icon: BarChart2,        label: 'Reports & Analytics' },
   { id: 'recruitment',  icon: Briefcase,        label: 'Recruitment'   },
   { id: 'orgstructure', icon: Network,          label: 'Org Structure' },
   { id: 'me',           icon: User,             label: 'Me'            },
