@@ -1,9 +1,8 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import MRLayout from './MRLayout'
-import MRDashboard from '../../pages/mr/MRDashboard'
-import MRDcrPage from '../../pages/mr/MRDcrPage'
-import MRReports from '../../pages/mr/MRReports'
+import MedicalSalesExecutiveLayout from './MedicalSalesExecutiveLayout'
+import MedicalSalesExecutiveDashboard from '../../pages/medical-sales-executive/MedicalSalesExecutiveDashboard'
+import MSEReports from '../../pages/medical-sales-executive/MSEReports'
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
@@ -15,20 +14,19 @@ const SettingsPlaceholder = () => (
   </div>
 )
 
-export default function MRLayoutRouter() {
+export default function MedicalSalesExecutiveLayoutRouter() {
   return (
-    <MRLayout>
+    <MedicalSalesExecutiveLayout>
       <Routes>
-        <Route path="/" element={<MRDashboard />} />
-        <Route path="dashboard" element={<MRDashboard />} />
-        <Route path="dcr" element={<MRDcrPage />} />
-        <Route path="reports" element={<MRReports />} />
+        <Route path="/" element={<MedicalSalesExecutiveDashboard />} />
+        <Route path="dashboard" element={<MedicalSalesExecutiveDashboard />} />
+        <Route path="reports" element={<MSEReports />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />
-        <Route path="*" element={<Navigate to="/mr/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/medical-sales-executive/dashboard" replace />} />
       </Routes>
-    </MRLayout>
+    </MedicalSalesExecutiveLayout>
   )
 }

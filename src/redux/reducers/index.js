@@ -4,6 +4,7 @@ import { adminReducer } from './adminReducer';
 import { teamReducer } from './teamReducer';
 import { companyReducer } from './companyReducer';
 import { reportReducer } from './reportReducer';
+import { dcrReducer } from './dcrReducer';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -11,6 +12,7 @@ const rootReducer = combineReducers({
   team: teamReducer,
   company: companyReducer,
   reports: reportReducer,
+  dcr: dcrReducer,
 });
 
 export default rootReducer;

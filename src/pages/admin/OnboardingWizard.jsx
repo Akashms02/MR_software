@@ -811,6 +811,8 @@ const OnboardingWizard = () => {
                     style={{ ...inputStyle, background: '#fff' }}
                   >
                     <option value="MR">Medical Representative (MR)</option>
+                    <option value="MEDICAL_EXECUTIVE">Medical Executive</option>
+                    <option value="MEDICAL_SALES_EXECUTIVE">Medical Sales Executive</option>
                     <option value="HR">HR Manager</option>
                     <option value="REGIONAL_MANAGER">Regional Manager</option>
                     <option value="AREA_MANAGER">Area Manager</option>

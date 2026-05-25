@@ -7,13 +7,13 @@ import { login } from '../redux/actions/authActions'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 )
 const EyeOff = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22"/>
+    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22" />
   </svg>
 )
 
@@ -22,18 +22,18 @@ export default function LoginPage() {
   const dispatch = useDispatch()
   const { loading, error: authError, user, requiresPasswordChange } = useSelector((state) => state.auth)
 
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPw, setShowPw]     = useState(false)
+  const [showPw, setShowPw] = useState(false)
   const [localError, setLocalError] = useState('')
 
   const error = localError || authError;
 
   useEffect(() => {
     if (user) {
-      if (requiresPasswordChange) { 
-        navigate('/create-password', { replace: true }); 
-        return; 
+      if (requiresPasswordChange) {
+        navigate('/create-password', { replace: true });
+        return;
       }
       const roleStr = (user.role || '').toUpperCase().trim();
       if (roleStr === 'SUPER_ADMIN' || roleStr === 'SUPERADMIN' || roleStr === 'SUPER ADMIN') {
@@ -56,6 +56,17 @@ export default function LoginPage() {
         navigate('/distributor/dashboard', { replace: true });
       } else if (roleStr === 'PATIENT') {
         navigate('/patient/dashboard', { replace: true });
+      } else if (roleStr === 'MEDICAL_EXECUTIVE' || roleStr === 'MEDICAL EXECUTIVE' || roleStr === 'ME') {
+        navigate('/medical-executive/dashboard', { replace: true });
+      } else if (
+        roleStr === 'MEDICAL_SALES_EXECUTIVE' ||
+        roleStr === 'MEDICAL SALES EXECUTIVE' ||
+        roleStr === 'MSE' ||
+        roleStr === 'MEDICAL_SALES_REPRESENTATIVE' ||
+        roleStr === 'MEDICAL SALES REPRESENTATIVE' ||
+        roleStr === 'MSR'
+      ) {
+        navigate('/medical-sales-executive/dashboard', { replace: true });
       } else {
         navigate('/employee/dashboard', { replace: true });
       }
@@ -66,7 +77,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLocalError('')
 
-    if (!email.trim())    { setLocalError('Please enter your email.'); return }
+    if (!email.trim()) { setLocalError('Please enter your email.'); return }
     if (!password.trim()) { setLocalError('Please enter your password.'); return }
 
     const result = await dispatch(login({ email: email.trim(), password }));
@@ -79,7 +90,7 @@ export default function LoginPage() {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
       transition: { staggerChildren: 0.15, delayChildren: 0.2 }
     }
@@ -87,8 +98,8 @@ export default function LoginPage() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { type: 'spring', stiffness: 100, damping: 15 }
     }
@@ -98,7 +109,7 @@ export default function LoginPage() {
     <div className="login-page-container">
 
       {/* ── DYNAMIC BACKGROUND ─────────────────────────────────────── */}
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -108,10 +119,10 @@ export default function LoginPage() {
           background: 'radial-gradient(circle, rgba(200, 240, 74, 0.4) 0%, transparent 70%)',
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }} 
+        }}
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
@@ -121,21 +132,21 @@ export default function LoginPage() {
           background: 'radial-gradient(circle, rgba(167, 216, 0, 0.2) 0%, transparent 70%)',
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }} 
+        }}
       />
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────── */}
       <div className="login-page-grid">
-        
+
         {/* Left Side: Brand & Messaging */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           className="login-brand-section"
         >
-          <motion.div 
-            variants={itemVariants} 
+          <motion.div
+            variants={itemVariants}
             style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
@@ -146,8 +157,8 @@ export default function LoginPage() {
               boxShadow: '0 12px 32px rgba(200, 240, 74, 0.25)'
             }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#0F172A" strokeWidth="2.5" strokeLinejoin="round"/>
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#0F172A" strokeWidth="2.5" strokeLinejoin="round" />
+                <path d="M12 2v20M3 7l9 5 9-5" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
@@ -166,19 +177,19 @@ export default function LoginPage() {
           }}>
             Enter the future of <span style={{ color: 'var(--lime-dark)' }}>Pharma HR.</span>
           </motion.h1>
-          
+
           <motion.p variants={itemVariants} style={{
             fontSize: '18px', color: 'var(--text-secondary)',
             lineHeight: 1.6, maxWidth: '420px', fontWeight: 500
           }}>
             Secure, compliant, and lightning-fast. Access your workspace and manage operations from anywhere.
           </motion.p>
-          
+
           <motion.div variants={itemVariants} style={{
-             marginTop: '20px', padding: '16px 20px',
-             background: '#fff', border: '1px solid var(--border)',
-             borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
-             boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+            marginTop: '20px', padding: '16px 20px',
+            background: '#fff', border: '1px solid var(--border)',
+            borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
           }}>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>SYSTEM STATUS</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -196,7 +207,7 @@ export default function LoginPage() {
           style={{ perspective: '1000px' }}
         >
           <div className="login-card-container">
-            
+
             <div style={{ marginBottom: '32px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
                 Welcome back
@@ -207,7 +218,7 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleLogin} noValidate>
-              
+
               {/* Email */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -286,8 +297,8 @@ export default function LoginPage() {
                   textDecoration: 'none', fontWeight: 700,
                   transition: 'opacity 0.2s'
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
                   Forgot password?
                 </Link>
@@ -296,7 +307,7 @@ export default function LoginPage() {
               {/* Error */}
               <AnimatePresence>
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -342,7 +353,7 @@ export default function LoginPage() {
               </motion.button>
             </form>
 
-              {/* Demo Credentials Hint */}
+            {/* Demo Credentials Hint */}
             <div style={{
               marginTop: '36px', paddingTop: '24px',
               borderTop: '1px solid var(--border)',
@@ -354,11 +365,14 @@ export default function LoginPage() {
                 {[
                   { email: 'superadmin@mrmedical.com', password: 'SuperAdmin@123', role: 'Super Admin' },
                   { email: 'admin.one@mrmedical.com', password: 'Password@123', role: 'Admin' },
-                  { email: 'employee@mrmedical.com', password: 'password123', role: 'Employee' }
+                  { email: 'msakash886100@gmail.com', password: 'Akash@1234', role: 'Medical Representative (MR)' },
+                  { email: 'employee@mrmedical.com', password: 'password123', role: 'Employee' },
+                  { email: 'akashms452002@gmail.com', password: 'Akash@1234', role: 'Medical Executive' },
+                  { email: 'msmadhankumar2002@gmail.com', password: 'Madhan@1234', role: 'Medical Sales Executive' }
                 ].map((c, i) => (
-                  <motion.div 
+                  <motion.div
                     whileHover={{ x: 4, background: 'var(--bg-section)' }}
-                    key={i} 
+                    key={i}
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '8px 12px', borderRadius: '8px',
@@ -397,8 +411,8 @@ function SpinnerIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
       style={{ animation: 'spin 1s linear infinite' }}>
-      <circle cx="12" cy="12" r="10" stroke="rgba(15, 23, 42, 0.2)" strokeWidth="3"/>
-      <path d="M12 2a10 10 0 0110 10" stroke="#0F172A" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="12" cy="12" r="10" stroke="rgba(15, 23, 42, 0.2)" strokeWidth="3" />
+      <path d="M12 2a10 10 0 0110 10" stroke="#0F172A" strokeWidth="3" strokeLinecap="round" />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </svg>
   )

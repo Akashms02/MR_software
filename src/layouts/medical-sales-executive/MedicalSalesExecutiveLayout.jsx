@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3 } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
 
@@ -32,26 +32,25 @@ function SnowflakeLogo() {
   )
 }
 
-export default function MRLayout({ children }) {
+export default function MedicalSalesExecutiveLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
   const { user } = useSelector(state => state.auth)
 
-  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'MR Employee'
-  const displayRole = 'Medical Representative (MR)'
+  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Sales Executive'
+  const displayRole = 'Medical Sales Executive (MSE)'
 
   const pathParts = location.pathname.split('/')
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
   const navItems = [
-    { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/mr/dashboard' },
-    { id: 'dcr',          icon: ClipboardList,   label: 'DCR Reports',   path: '/mr/dcr' },
-    { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/mr/reports' },
-    { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/mr/finance' },
-    { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
-    { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/mr/watercooler' },
-    { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
+    { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/medical-sales-executive/dashboard' },
+    { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-sales-executive/reports' },
+    { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/medical-sales-executive/finance' },
+    { id: 'me',           icon: User,            label: 'Me',            path: '/medical-sales-executive/me' },
+    { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/medical-sales-executive/watercooler' },
+    { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-sales-executive/settings' },
   ]
 
   return (
@@ -71,7 +70,7 @@ export default function MRLayout({ children }) {
         }}>
           <div style={{
             width: '36px', height: '36px', borderRadius: '10px',
-            background: '#111827',
+            background: '#0D9488',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0
           }}>
@@ -95,8 +94,8 @@ export default function MRLayout({ children }) {
                   display: 'flex', alignItems: 'center', gap: '10px',
                   width: '100%', padding: '10px 14px', borderRadius: '10px',
                   marginBottom: '2px', cursor: 'pointer', border: 'none',
-                  background: isActive ? '#C8F04A' : 'transparent',
-                  color: isActive ? '#1A1A1A' : '#6B7280',
+                  background: isActive ? '#E6FFFA' : 'transparent',
+                  color: isActive ? '#0D9488' : '#6B7280',
                   fontWeight: isActive ? 700 : 500,
                   fontSize: '13.5px',
                   fontFamily: 'inherit', textAlign: 'left',
@@ -110,7 +109,7 @@ export default function MRLayout({ children }) {
                 <Icon
                   size={17}
                   strokeWidth={isActive ? 2.5 : 1.8}
-                  color={isActive ? '#1A1A1A' : '#9CA3AF'}
+                  color={isActive ? '#0D9488' : '#9CA3AF'}
                 />
                 <span>{item.label}</span>
               </button>

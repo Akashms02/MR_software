@@ -298,7 +298,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"Legacy Onboard\",\n  \"email\": \"legacy@mrmedical.com\",\n  \"phone\": \"9876543213\",\n  \"role\": \"MR\",\n  \"reportingToId\": null\n}",
+							"raw": "{\n  \"fullName\": \"Legacy Onboard\",\n  \"email\": \"legacy@mrmedical.com\",\n  \"phone\": \"9876543213\",\n  \"role\": \"MEDICAL_REPRESENTATIVE\",\n  \"reportingToId\": null\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -564,7 +564,7 @@
 					"response": []
 				},
 				{
-					"name": "Step 1: Account Setup & Credentials",
+					"name": "Step 1: Account Setup - Medical Representative",
 					"event": [
 						{
 							"listen": "test",
@@ -597,7 +597,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"TempPassword123!\",\n  \"phone\": \"9876543210\",\n  \"role\": \"MR\",\n  \"reportingToId\": null\n}",
+							"raw": "{\n  \"fullName\": \"John Representative\",\n  \"email\": \"rep@example.com\",\n  \"password\": \"TempPassword123!\",\n  \"phone\": \"9876543210\",\n  \"role\": \"MEDICAL_REPRESENTATIVE\",\n  \"reportingToId\": null\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -617,7 +617,123 @@
 								"step1"
 							]
 						},
-						"description": "Step 1: Register the base user, encode password, trigger welcome email, and generate a unique `employeeId` format `EMP-YYYY-000X`. The generated `employeeId` is automatically stored in collection variables.\n\n*Note on `reportingToId`*:\n- If `reportingToId` is omitted or set to `null`, the system automatically defaults the employee to report directly to the Admin who created them.\n- If you want to assign them to another manager, use the `Get Reporting Managers` endpoint under \"Admin Management\" to retrieve all eligible manager IDs, names, and details to render a dropdown select menu in your client app, avoiding manual typing."
+						"description": "Step 1 of 7 Onboarding: Register the base user with the MEDICAL_REPRESENTATIVE role. Triggers a credentials email and saves the generated employeeId in collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 1: Account Setup - Medical Executive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.status === true && jsonData.data && jsonData.data.employeeId) {",
+									"    pm.collectionVariables.set(\"employeeId\", jsonData.data.employeeId);",
+									"    pm.test(\"Step 1 completed. Employee ID saved for subsequent steps\", function () {",
+									"        pm.expect(jsonData.data.employeeId).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Executive\",\n  \"email\": \"executive@example.com\",\n  \"password\": \"TempPassword123!\",\n  \"phone\": \"9876543210\",\n  \"role\": \"MEDICAL_EXECUTIVE\",\n  \"reportingToId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/onboard/step1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"onboard",
+								"step1"
+							]
+						},
+						"description": "Step 1 of 7 Onboarding: Register the base user with the MEDICAL_EXECUTIVE role. Triggers a credentials email and saves the generated employeeId in collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 1: Account Setup - Medical Sales Executive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.status === true && jsonData.data && jsonData.data.employeeId) {",
+									"    pm.collectionVariables.set(\"employeeId\", jsonData.data.employeeId);",
+									"    pm.test(\"Step 1 completed. Employee ID saved for subsequent steps\", function () {",
+									"        pm.expect(jsonData.data.employeeId).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Sales\",\n  \"email\": \"salesexec@example.com\",\n  \"password\": \"TempPassword123!\",\n  \"phone\": \"9876543210\",\n  \"role\": \"MEDICAL_SALES_EXECUTIVE\",\n  \"reportingToId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/onboard/step1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"onboard",
+								"step1"
+							]
+						},
+						"description": "Step 1 of 7 Onboarding: Register the base user with the MEDICAL_SALES_EXECUTIVE role. Triggers a credentials email and saves the generated employeeId in collection variables."
 					},
 					"response": []
 				},
@@ -2580,7 +2696,7 @@
 								}
 							]
 						},
-						"description": "Generates visit summary analytics for an MR ID. Restricted to ADMIN/MANAGER roles."
+						"description": "Generates visit summary analytics for an MR ID. Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				},
@@ -2622,7 +2738,7 @@
 								}
 							]
 						},
-						"description": "Generates day-by-day logs metrics. Restricted to ADMIN/MANAGER roles."
+						"description": "Generates day-by-day logs metrics. Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				},
@@ -2664,7 +2780,7 @@
 								}
 							]
 						},
-						"description": "Generates comparative doctor call metrics reports. Restricted to ADMIN/MANAGER roles."
+						"description": "Generates comparative doctor call metrics reports. Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				},
@@ -2702,7 +2818,7 @@
 								}
 							]
 						},
-						"description": "Generates a comprehensive DCR day analytics sheet for an MR. Restricted to ADMIN/MANAGER roles."
+						"description": "Generates a comprehensive DCR day analytics sheet for an MR. Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				},
@@ -2740,7 +2856,7 @@
 								}
 							]
 						},
-						"description": "Generates summary of daily activities (visits, plans, reports). Restricted to ADMIN/MANAGER roles."
+						"description": "Generates summary of daily activities (visits, plans, reports). Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				},
@@ -2778,7 +2894,7 @@
 								}
 							]
 						},
-						"description": "Generates cross-table weekly logs analysis. Restricted to ADMIN/MANAGER roles."
+						"description": "Generates cross-table weekly logs analysis. Accessible by ADMIN, MANAGER, and MR roles (MR can only query their own ID)."
 					},
 					"response": []
 				}
