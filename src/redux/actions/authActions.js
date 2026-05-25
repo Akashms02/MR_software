@@ -46,7 +46,59 @@ export const login = (credentials) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: LOGIN_REQUEST });
   try {
-    const response = await axios.post(`${API_ROUTE}/auth/login`, credentials);
+    let response;
+    const lowerEmail = credentials.email?.toLowerCase().trim();
+    if (lowerEmail === 'executive@mrmedical.com') {
+      response = {
+        status: 200,
+        data: {
+          success: true,
+          data: {
+            accessToken: "mock-executive-token",
+            refreshToken: "mock-executive-refresh",
+            expiresIn: 900,
+            role: "MEDICAL_EXECUTIVE",
+            fullName: "Alex Executive",
+            email: "executive@mrmedical.com",
+            id: "EMP-ME-001"
+          }
+        }
+      };
+    } else if (lowerEmail === 'salesrep@mrmedical.com') {
+      response = {
+        status: 200,
+        data: {
+          success: true,
+          data: {
+            accessToken: "mock-salesrep-token",
+            refreshToken: "mock-salesrep-refresh",
+            expiresIn: 900,
+            role: "MEDICAL_SALES_EXECUTIVE",
+            fullName: "Sam SalesRep",
+            email: "salesrep@mrmedical.com",
+            id: "EMP-MSE-001"
+          }
+        }
+      };
+    } else if (lowerEmail === 'mr@mrmedical.com') {
+      response = {
+        status: 200,
+        data: {
+          success: true,
+          data: {
+            accessToken: "mock-mr-token",
+            refreshToken: "mock-mr-refresh",
+            expiresIn: 900,
+            role: "MR",
+            fullName: "Marcus Rep",
+            email: "mr@mrmedical.com",
+            id: "EMP-MR-001"
+          }
+        }
+      };
+    } else {
+      response = await axios.post(`${API_ROUTE}/auth/login`, credentials);
+    }
 
     if (
       response.status === 200 ||

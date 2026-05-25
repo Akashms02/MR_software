@@ -21,6 +21,8 @@ import DoctorLayoutRouter from './layouts/doctor';
 import PharmacistLayoutRouter from './layouts/pharmacist';
 import DistributorLayoutRouter from './layouts/distributor';
 import PatientLayoutRouter from './layouts/patient';
+import MedicalExecutiveLayoutRouter from './layouts/medical-executive';
+import MedicalSalesExecutiveLayoutRouter from './layouts/medical-sales-executive';
 
 function DashboardRedirect() {
   const { user } = useSelector((state) => state.auth);
@@ -62,6 +64,17 @@ function DashboardRedirect() {
       return <Navigate to="/distributor/dashboard" replace />;
     case 'PATIENT':
       return <Navigate to="/patient/dashboard" replace />;
+    case 'MEDICAL_EXECUTIVE':
+    case 'MEDICAL EXECUTIVE':
+    case 'ME':
+      return <Navigate to="/medical-executive/dashboard" replace />;
+    case 'MEDICAL_SALES_EXECUTIVE':
+    case 'MEDICAL SALES EXECUTIVE':
+    case 'MSE':
+    case 'MEDICAL_SALES_REPRESENTATIVE':
+    case 'MEDICAL SALES REPRESENTATIVE':
+    case 'MSR':
+      return <Navigate to="/medical-sales-executive/dashboard" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
@@ -229,6 +242,22 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['patient']}>
             <PatientLayoutRouter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/medical-executive/*"
+        element={
+          <ProtectedRoute allowedRoles={['medical_executive', 'medical executive', 'me']}>
+            <MedicalExecutiveLayoutRouter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/medical-sales-executive/*"
+        element={
+          <ProtectedRoute allowedRoles={['medical_sales_representative', 'medical sales representative', 'msr', 'medical_sales_executive', 'medical sales executive', 'mse']}>
+            <MedicalSalesExecutiveLayoutRouter />
           </ProtectedRoute>
         }
       />

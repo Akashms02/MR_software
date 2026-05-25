@@ -26,6 +26,8 @@ const ROLE_COLORS = {
   PHARMACIST: { bg: '#FEFCE8', text: '#CA8A04' },
   DISTRIBUTOR: { bg: '#F0FDF4', text: '#16A34A' },
   PATIENT: { bg: '#F0F9FF', text: '#0284C7' },
+  MEDICAL_EXECUTIVE: { bg: '#EEF2FF', text: '#4F46E5' },
+  MEDICAL_SALES_EXECUTIVE: { bg: '#F0FDFA', text: '#0D9488' },
 };
 
 const TeamManagement = () => {
@@ -171,36 +173,69 @@ const TeamManagement = () => {
           </button>
         </form>
 
-        {/* New onboarding button */}
-        <button
-          onClick={() => navigate('/admin/myteam/onboard')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#111827',
-            color: '#fff',
-            padding: '12px 22px',
-            borderRadius: '12px',
-            border: 'none',
-            fontWeight: 700,
-            fontSize: '14px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(17,24,39,0.18)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(17,24,39,0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 14px rgba(17,24,39,0.18)';
-          }}
-        >
-          <Plus size={18} strokeWidth={3} />
-          Onboard New Member
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* New onboarding button */}
+          <button
+            onClick={() => navigate('/admin/myteam/onboard')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#111827',
+              color: '#fff',
+              padding: '12px 22px',
+              borderRadius: '12px',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(17,24,39,0.18)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(17,24,39,0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(17,24,39,0.18)';
+            }}
+          >
+            <Plus size={18} strokeWidth={3} />
+            Onboard New Member
+          </button>
+
+          {/* New doctor onboarding button */}
+          <button
+            onClick={() => navigate('/admin/myteam/onboard-doctor')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#C8F04A',
+              color: '#111827',
+              padding: '12px 22px',
+              borderRadius: '12px',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(200, 240, 74, 0.25)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(200, 240, 74, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(200, 240, 74, 0.25)';
+            }}
+          >
+            <Plus size={18} strokeWidth={3} />
+            Onboard Doctor
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Bar ─────────────────────────────────────────────── */}
