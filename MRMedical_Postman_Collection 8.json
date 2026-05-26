@@ -1494,7 +1494,7 @@
 								"doctor"
 							]
 						},
-						"description": "Returns list of all active doctors. Accessible by ADMIN/MANAGER/MR."
+						"description": "Returns a list of all active doctors registered under the same company (adminReferenceCode) as the authenticated user. If logged in as a Super Admin, retrieves all doctors globally. Accessible by ADMIN, MANAGER, and MR. This endpoint has a built-in self-healing safeguard that automatically creates basic clinical profiles for registered Doctor role users if they don't exist yet."
 					},
 					"response": []
 				},

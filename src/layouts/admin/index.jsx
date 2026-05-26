@@ -12,6 +12,7 @@ import OnboardingWizard from '../../pages/admin/OnboardingWizard'
 import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminReports from '../../pages/admin/AdminReports'
+import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -22,6 +23,7 @@ export default function AdminLayoutRouter() {
         <Route path="employees" element={<AdminEmployees />} />
         <Route path="finance" element={<AdminPayroll />} />
         <Route path="reports" element={<AdminReports />} />
+        <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="me" element={<AdminAttendance />} />

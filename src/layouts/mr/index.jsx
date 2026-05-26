@@ -7,6 +7,7 @@ import MRReports from '../../pages/mr/MRReports'
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
+import MRTourPlanPage from '../../pages/mr/MRTourPlanPage'
 
 const SettingsPlaceholder = () => (
   <div style={{ padding: '24px', background: '#fff', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
@@ -22,6 +23,7 @@ export default function MRLayoutRouter() {
         <Route path="/" element={<MRDashboard />} />
         <Route path="dashboard" element={<MRDashboard />} />
         <Route path="dcr" element={<MRDcrPage />} />
+        <Route path="tourplan" element={<MRTourPlanPage />} />
         <Route path="reports" element={<MRReports />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
