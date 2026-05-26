@@ -693,3 +693,76 @@ body {
     text-align: center;
   }
 }
+
+/* ─── Global Print Styles ─────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important; /* Force zero browser margins */
+  }
+
+  /* Hide the sidebar layout, header navigation, control panels, buttons, and other non-document elements */
+  aside,
+  header,
+  nav,
+  footer,
+  .no-print,
+  .no-print *,
+  [role="navigation"],
+  [role="banner"],
+  button,
+  .btn-primary,
+  .btn-outline,
+  .btn-lime {
+    display: none !important;
+  }
+
+  /* Reset all outer layout wrappers to occupy exactly the printable viewport */
+  html, body, #root, #root > div, aside ~ div, main, .document-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    min-height: 100% !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    overflow: hidden !important; /* Force browser to clip any minor rendering overflow */
+    display: block !important;
+    position: static !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Full-bleed canvas sheet filling the print canvas exactly */
+  .printable-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important; /* Disallow secondary overflow pages */
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+  }
+
+  /* Avoid page breaks inside paragraphs, signature blocks, etc. */
+  .printable-sheet table,
+  .printable-sheet tr,
+  .printable-sheet img,
+  .printable-sheet .signature-block {
+    page-break-inside: avoid !important;
+  }
+}
+

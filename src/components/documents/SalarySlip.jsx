@@ -361,30 +361,6 @@ export default function SalarySlip({ onBack }) {
           </div>
         </div>
       </div>
-
-      {/* Print CSS styling embedded natively */}
-      <style>{`
-        @media print {
-          body {
-            background: #fff !important;
-            color: #000 !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .printable-sheet {
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-          }
-          .document-container {
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }
