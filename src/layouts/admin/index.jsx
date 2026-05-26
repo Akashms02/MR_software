@@ -12,6 +12,7 @@ import OnboardingWizard from '../../pages/admin/OnboardingWizard'
 import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminReports from '../../pages/admin/AdminReports'
+import Documents from '../../pages/admin/Documents'
 
 export default function AdminLayoutRouter() {
   return (
@@ -29,6 +30,7 @@ export default function AdminLayoutRouter() {
         <Route path="myteam/onboard" element={<OnboardingWizard />} />
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
         <Route path="watercooler" element={<WaterCooler />} />
+        <Route path="hrdocuments" element={<Documents />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </AdminLayout>
