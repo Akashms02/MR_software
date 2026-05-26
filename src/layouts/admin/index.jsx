@@ -12,7 +12,11 @@ import OnboardingWizard from '../../pages/admin/OnboardingWizard'
 import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminReports from '../../pages/admin/AdminReports'
+<<<<<<< HEAD
 import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
+=======
+import Documents from '../../pages/admin/Documents'
+>>>>>>> 120115dd884c72478437f2c1d329748702533505
 
 export default function AdminLayoutRouter() {
   return (
@@ -31,6 +35,7 @@ export default function AdminLayoutRouter() {
         <Route path="myteam/onboard" element={<OnboardingWizard />} />
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
         <Route path="watercooler" element={<WaterCooler />} />
+        <Route path="hrdocuments" element={<Documents />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </AdminLayout>
