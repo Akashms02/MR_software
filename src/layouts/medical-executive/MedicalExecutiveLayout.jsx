@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3 } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3, MapPin } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
 
@@ -46,6 +46,7 @@ export default function MedicalExecutiveLayout({ children }) {
 
   const navItems = [
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/medical-executive/dashboard' },
+    { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/medical-executive/tourplan' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-executive/reports' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/medical-executive/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/medical-executive/me' },

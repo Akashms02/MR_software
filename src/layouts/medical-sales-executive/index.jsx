@@ -6,6 +6,7 @@ import MSEReports from '../../pages/medical-sales-executive/MSEReports'
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
+import MSETourPlanPage from '../../pages/medical-sales-executive/MSETourPlanPage'
 
 const SettingsPlaceholder = () => (
   <div style={{ padding: '24px', background: '#fff', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
@@ -20,6 +21,7 @@ export default function MedicalSalesExecutiveLayoutRouter() {
       <Routes>
         <Route path="/" element={<MedicalSalesExecutiveDashboard />} />
         <Route path="dashboard" element={<MedicalSalesExecutiveDashboard />} />
+        <Route path="tourplan" element={<MSETourPlanPage />} />
         <Route path="reports" element={<MSEReports />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
