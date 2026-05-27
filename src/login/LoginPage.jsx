@@ -48,6 +48,8 @@ export default function LoginPage() {
         navigate('/regional-manager/dashboard', { replace: true });
       } else if (roleStr === 'AREA_MANAGER' || roleStr === 'AREA MANAGER') {
         navigate('/area-manager/dashboard', { replace: true });
+      } else if (roleStr === 'MEDICAL_MANAGER' || roleStr === 'MEDICAL MANAGER') {
+        navigate('/medical-manager/dashboard', { replace: true });
       } else if (roleStr === 'DOCTOR') {
         navigate('/doctor/dashboard', { replace: true });
       } else if (roleStr === 'PHARMACIST') {

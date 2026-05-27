@@ -50,7 +50,12 @@ export const saveTourPlanDraftAction = (payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: SAVE_TOUR_PLAN_DRAFT_REQUEST });
   try {
-    const response = await axios.post(`${API_ROUTE}/tour-plan/draft`, payload);
+    console.log("Saving tour plan draft. URL:", `${API_ROUTE}/tour-plan/draft`, "Payload:", JSON.stringify(payload));
+    const response = await axios.post(`${API_ROUTE}/tour-plan/draft`, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: SAVE_TOUR_PLAN_DRAFT_SUCCESS,

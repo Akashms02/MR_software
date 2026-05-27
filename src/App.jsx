@@ -17,6 +17,7 @@ import MRLayoutRouter from './layouts/mr';
 import HRLayoutRouter from './layouts/hr';
 import RegionalManagerLayoutRouter from './layouts/regional-manager';
 import AreaManagerLayoutRouter from './layouts/area-manager';
+import MedicalManagerLayoutRouter from './layouts/medical-manager';
 import DoctorLayoutRouter from './layouts/doctor';
 import PharmacistLayoutRouter from './layouts/pharmacist';
 import DistributorLayoutRouter from './layouts/distributor';
@@ -56,6 +57,9 @@ function DashboardRedirect() {
     case 'AREA_MANAGER':
     case 'AREA MANAGER':
       return <Navigate to="/area-manager/dashboard" replace />;
+    case 'MEDICAL_MANAGER':
+    case 'MEDICAL MANAGER':
+      return <Navigate to="/medical-manager/dashboard" replace />;
     case 'DOCTOR':
       return <Navigate to="/doctor/dashboard" replace />;
     case 'PHARMACIST':
@@ -210,6 +214,14 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['area_manager', 'area manager']}>
             <AreaManagerLayoutRouter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/medical-manager/*"
+        element={
+          <ProtectedRoute allowedRoles={['medical_manager', 'medical manager']}>
+            <MedicalManagerLayoutRouter />
           </ProtectedRoute>
         }
       />

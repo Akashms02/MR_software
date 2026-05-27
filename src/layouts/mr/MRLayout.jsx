@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
 
@@ -49,6 +49,7 @@ export default function MRLayout({ children }) {
     { id: 'dcr',          icon: ClipboardList,   label: 'DCR Reports',   path: '/mr/dcr' },
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/mr/tourplan' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/mr/reports' },
+    { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/mr/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
     { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/mr/watercooler' },

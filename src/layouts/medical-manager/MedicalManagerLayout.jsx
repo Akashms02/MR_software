@@ -1,31 +1,16 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { 
-  LogOut, 
-  LayoutDashboard, 
-  Users, 
-  Wallet, 
-  Briefcase, 
-  Network, 
-  User, 
-  UsersRound, 
-  Coffee, 
-  FileText, 
-  Settings,
-  BarChart2,
-  Map,
-  Calendar
-} from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, UserPlus } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
 
 function SidebarAvatar({ name, size = 38 }) {
-  const initials = name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
+  const initials = name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'MM'
   return (
     <div style={{
       width: `${size}px`, height: `${size}px`, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #CBD5E1 0%, #94A3B8 100%)',
+      background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: `${size * 0.36}px`, fontWeight: 700, color: '#fff',
       flexShrink: 0, overflow: 'hidden'
@@ -47,32 +32,25 @@ function SnowflakeLogo() {
   )
 }
 
-export default function AdminLayout({ children }) {
+export default function MedicalManagerLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
   const { user } = useSelector(state => state.auth)
 
-  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Admin'
-  const displayRole = 'Admin'
+  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Medical Manager'
+  const displayRole = 'Medical Manager'
 
   const pathParts = location.pathname.split('/')
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
   const navItems = [
-    { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/admin/dashboard' },
-    { id: 'employees',    icon: Users,           label: 'Employees',     path: '/admin/employees' },
-    { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },
-    { id: 'reports',      icon: BarChart2,       label: 'Reports & Analytics', path: '/admin/reports' },
-    { id: 'tourplans',    icon: Map,             label: 'Tour Plans',    path: '/admin/tourplans' },
-    { id: 'leaves',       icon: Calendar,        label: 'Leave Approvals', path: '/admin/leaves' },
-    { id: 'recruitment',  icon: Briefcase,       label: 'Recruitment',   path: '/admin/recruitment' },
-    { id: 'orgstructure', icon: Network,         label: 'Org Structure', path: '/admin/orgstructure' },
-    { id: 'me',           icon: User,            label: 'Me',            path: '/admin/me' },
-    { id: 'myteam',       icon: UsersRound,      label: 'My Team',       path: '/admin/myteam' },
-    { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/admin/watercooler' },
-    { id: 'hrdocuments',  icon: FileText,        label: 'HR Documents',  path: '/admin/hrdocuments' },
-    { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/admin/settings' },
+    { id: 'dashboard',      icon: LayoutDashboard, label: 'Dashboard',      path: '/medical-manager/dashboard' },
+    { id: 'onboard-doctor', icon: UserPlus,        label: 'Onboard Doctor', path: '/medical-manager/onboard-doctor' },
+    { id: 'finance',        icon: FileText,        label: 'My Payslips',    path: '/medical-manager/finance' },
+    { id: 'me',             icon: User,            label: 'Me',             path: '/medical-manager/me' },
+    { id: 'watercooler',    icon: Coffee,          label: 'Water Cooler',   path: '/medical-manager/watercooler' },
+    { id: 'settings',       icon: Settings,        label: 'Settings',       path: '/medical-manager/settings' },
   ]
 
   return (
@@ -116,8 +94,8 @@ export default function AdminLayout({ children }) {
                   display: 'flex', alignItems: 'center', gap: '10px',
                   width: '100%', padding: '10px 14px', borderRadius: '10px',
                   marginBottom: '2px', cursor: 'pointer', border: 'none',
-                  background: isActive ? '#C8F04A' : 'transparent',
-                  color: isActive ? '#1A1A1A' : '#6B7280',
+                  background: isActive ? '#7C3AED' : 'transparent',
+                  color: isActive ? '#FFFFFF' : '#6B7280',
                   fontWeight: isActive ? 700 : 500,
                   fontSize: '13.5px',
                   fontFamily: 'inherit', textAlign: 'left',
@@ -131,7 +109,7 @@ export default function AdminLayout({ children }) {
                 <Icon
                   size={17}
                   strokeWidth={isActive ? 2.5 : 1.8}
-                  color={isActive ? '#1A1A1A' : '#9CA3AF'}
+                  color={isActive ? '#FFFFFF' : '#9CA3AF'}
                 />
                 <span>{item.label}</span>
               </button>
@@ -173,7 +151,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       <div style={{ marginLeft: '220px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Header role="ADMIN" />
+        <Header role="EMPLOYEE" />
         <main style={{ flex: 1, padding: '0 32px 32px 32px', overflowY: 'auto' }}>
           {children}
         </main>

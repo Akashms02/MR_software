@@ -22,6 +22,7 @@ const ROLE_COLORS = {
   HR: { bg: '#EFF6FF', text: '#2563EB' },
   REGIONAL_MANAGER: { bg: '#FDF4FF', text: '#9333EA' },
   AREA_MANAGER: { bg: '#FFF7ED', text: '#EA580C' },
+  MEDICAL_MANAGER: { bg: '#F5F3FF', text: '#7C3AED' },
   DOCTOR: { bg: '#FEF2F2', text: '#DC2626' },
   PHARMACIST: { bg: '#FEFCE8', text: '#CA8A04' },
   DISTRIBUTOR: { bg: '#F0FDF4', text: '#16A34A' },
