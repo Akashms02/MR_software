@@ -949,6 +949,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                             <option value="HR">HR Manager</option>
                             <option value="REGIONAL_MANAGER">Regional Manager</option>
                             <option value="AREA_MANAGER">Area Manager</option>
+                            <option value="MEDICAL_MANAGER">Medical Manager</option>
                             <option value="DOCTOR">Doctor</option>
                             <option value="PHARMACIST">Pharmacist</option>
                             <option value="DISTRIBUTOR">Distributor</option>

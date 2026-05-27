@@ -14,6 +14,7 @@ import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminReports from '../../pages/admin/AdminReports'
 import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
 import Documents from '../../pages/admin/Documents'
+import AdminLeaveReviewPage from '../../pages/admin/AdminLeaveReviewPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -25,6 +26,7 @@ export default function AdminLayoutRouter() {
         <Route path="finance" element={<AdminPayroll />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
+        <Route path="leaves" element={<AdminLeaveReviewPage />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="me" element={<AdminAttendance />} />

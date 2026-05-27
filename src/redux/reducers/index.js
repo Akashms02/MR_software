@@ -6,6 +6,7 @@ import { companyReducer } from './companyReducer';
 import { reportReducer } from './reportReducer';
 import { dcrReducer } from './dcrReducer';
 import { tourPlanReducer } from './tourPlanReducer';
+import { leaveReducer } from './leaveReducer';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   reports: reportReducer,
   dcr: dcrReducer,
   tourPlan: tourPlanReducer,
+  leave: leaveReducer,
 });
 
 export default rootReducer;

@@ -1,14 +1,11 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import MRLayout from './MRLayout'
-import MRDashboard from '../../pages/mr/MRDashboard'
-import MRDcrPage from '../../pages/mr/MRDcrPage'
-import MRReports from '../../pages/mr/MRReports'
+import MedicalManagerLayout from './MedicalManagerLayout'
+import MedicalManagerDashboard from '../../pages/medical-manager/MedicalManagerDashboard'
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
-import MRTourPlanPage from '../../pages/mr/MRTourPlanPage'
-import MRLeavePage from '../../pages/mr/MRLeavePage'
+import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
 
 const SettingsPlaceholder = () => (
   <div style={{ padding: '24px', background: '#fff', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
@@ -17,22 +14,19 @@ const SettingsPlaceholder = () => (
   </div>
 )
 
-export default function MRLayoutRouter() {
+export default function MedicalManagerLayoutRouter() {
   return (
-    <MRLayout>
+    <MedicalManagerLayout>
       <Routes>
-        <Route path="/" element={<MRDashboard />} />
-        <Route path="dashboard" element={<MRDashboard />} />
-        <Route path="dcr" element={<MRDcrPage />} />
-        <Route path="tourplan" element={<MRTourPlanPage />} />
-        <Route path="reports" element={<MRReports />} />
-        <Route path="leaves" element={<MRLeavePage />} />
+        <Route path="/" element={<MedicalManagerDashboard />} />
+        <Route path="dashboard" element={<MedicalManagerDashboard />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
+        <Route path="onboard-doctor" element={<DoctorOnboarding />} />
         <Route path="settings" element={<SettingsPlaceholder />} />
-        <Route path="*" element={<Navigate to="/mr/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/medical-manager/dashboard" replace />} />
       </Routes>
-    </MRLayout>
+    </MedicalManagerLayout>
   )
 }

@@ -1327,6 +1327,110 @@
 			"name": "5. Doctor Management",
 			"item": [
 				{
+					"name": "Admin Add Doctor (No Login)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Dr. Ravi\",\n  \"email\": \"ravi@apollo.com\",\n  \"phone\": \"9876543222\",\n  \"speciality\": \"CARDIOLOGY\",\n  \"qualification\": \"MD, DM (Cardiology)\",\n  \"licenseNumber\": \"MCI-55443\",\n  \"yearsOfExperience\": 15,\n  \"hospitalName\": \"Apollo Clinic\",\n  \"hospitalId\": \"HOSP-APOLLO-001\",\n  \"latitude\": 12.9715987,\n  \"longitude\": 77.5945627,\n  \"clinicName\": \"Cardio Care Clinic\",\n  \"address\": \"123, Whitefield Main Road\",\n  \"city\": \"Bangalore\",\n  \"state\": \"Karnataka\",\n  \"pincode\": \"560066\",\n  \"consultationFee\": 1000.00,\n  \"category\": \"A\",\n  \"prescriptionBehavior\": \"HIGH_PRESCRIBER\",\n  \"communicationPreference\": \"IN_PERSON_VISIT\",\n  \"visitFrequencyPerMonth\": 4,\n  \"availableDays\": \"Monday to Friday\",\n  \"availableTimeSlots\": \"10:00 AM - 04:00 PM\",\n  \"notes\": \"Prefers afternoon calls.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/doctor/admin-add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctor",
+								"admin-add"
+							]
+						},
+						"description": "Accessible by Admin / Manager. Registers a doctor directly with name, specialization, hospital details, and GPS coordinates (latitude/longitude) without generating a user account/login."
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Doctor to MR",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/doctor/{{doctorId}}/assign/{{mrId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctor",
+								"{{doctorId}}",
+								"assign",
+								"{{mrId}}"
+							]
+						},
+						"description": "Accessible by Admin / Manager. Assigns a Doctor to a specific MR in the dedicated doctor_assignments join table."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Assigned Doctors (MR only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/doctor/my-assigned",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctor",
+								"my-assigned"
+							]
+						},
+						"description": "Accessible by MR. Fetches the list of Doctors specifically assigned to the currently authenticated MR."
+					},
+					"response": []
+				},
+				{
 					"name": "Create Doctor Profile",
 					"request": {
 						"auth": {
