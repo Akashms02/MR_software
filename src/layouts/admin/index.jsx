@@ -15,6 +15,7 @@ import AdminReports from '../../pages/admin/AdminReports'
 import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
 import Documents from '../../pages/admin/Documents'
 import AdminLeaveReviewPage from '../../pages/admin/AdminLeaveReviewPage'
+import Settings from '../../pages/admin/Settings'
 
 export default function AdminLayoutRouter() {
   return (
@@ -35,6 +36,7 @@ export default function AdminLayoutRouter() {
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="hrdocuments" element={<Documents />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </AdminLayout>

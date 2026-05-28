@@ -41,7 +41,10 @@ export const editCompanyData = (adminId, payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_EDIT_DATA_REQUEST_REQUEST });
   try {
-    const response = await axios.put(`${API_ROUTE}/admin/company/${adminId}`, payload);
+    const config = payload instanceof FormData 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+    const response = await axios.put(`${API_ROUTE}/admin/company/${adminId}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {

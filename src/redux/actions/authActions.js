@@ -301,6 +301,55 @@ export const updateProfile = (formData) => async (dispatch) => {
   }
 };
 
+export const updateAdminSettings = (formDataPayload) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: UPDATE_PROFILE_REQUEST });
+  try {
+    const response = await axios.put(`${API_ROUTE}/admin/profile`, formDataPayload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (
+      response?.data?.status === 200 ||
+      response?.data?.status === "SUCCESS" ||
+      response.status === 200
+    ) {
+      const { data } = response.data;
+
+      dispatch({
+        type: UPDATE_PROFILE_SUCCESS,
+        payload: data,
+      });
+
+      // Update cached user info in localStorage
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        const currentUser = JSON.parse(savedUser);
+        const updatedUser = { ...currentUser, ...data };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      return response.data;
+    }
+
+    dispatch({
+      type: UPDATE_PROFILE_FAILURE,
+      payload: response?.data?.message || commonError,
+    });
+    return false;
+  } catch (error) {
+    dispatch({
+      type: UPDATE_PROFILE_FAILURE,
+      payload: error.response?.data?.message || error.message || commonError,
+    });
+    return false;
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
 export const updateProfileAdmin = (clientId, formData) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: UPDATE_PROFILE_ADMIN_REQUEST });
