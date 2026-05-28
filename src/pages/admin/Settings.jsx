@@ -318,9 +318,15 @@ const Settings = () => {
             
             <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-gray-50 border border-gray-100">
               <div className="relative">
-                <div className="w-18 h-18 rounded-2xl bg-gray-900 text-white font-extrabold text-3xl flex items-center justify-center shadow-md">
-                  {user.fullName?.charAt(0)}
-                </div>
+                {logoPreview ? (
+                  <div className="w-18 h-18 rounded-2xl bg-white border border-gray-200 p-1 flex items-center justify-center overflow-hidden shadow-md">
+                    <img src={logoPreview} alt="Logo" className="max-w-full max-h-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="w-18 h-18 rounded-2xl bg-gray-900 text-white font-extrabold text-3xl flex items-center justify-center shadow-md">
+                    {user.fullName?.charAt(0)}
+                  </div>
+                )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-emerald-500 border-[3px] border-white" title="Active" />
               </div>
               <h4 className="text-[15px] font-extrabold text-gray-900 mt-3 mb-0.5">{user.fullName}</h4>
