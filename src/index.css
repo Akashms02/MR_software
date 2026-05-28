@@ -47,7 +47,7 @@
 }
 
 /* ─── Reset & Base ─────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
 body {
@@ -763,6 +763,46 @@ body {
   .printable-sheet img,
   .printable-sheet .signature-block {
     page-break-inside: avoid !important;
+  }
+
+  /* Support for multi-page documents (Offer Letters, etc.) */
+  body:has(.multipage-print),
+  html:has(.multipage-print),
+  #root:has(.multipage-print),
+  #root > div:has(.multipage-print),
+  aside ~ div:has(.multipage-print),
+  main:has(.multipage-print),
+  .document-container:has(.multipage-print) {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .multipage-print {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .multipage-print .printable-sheet {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
   }
 }
 

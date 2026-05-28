@@ -1,7 +1,21 @@
-import React, { useState } from 'react'
-import { ArrowLeft, Printer, Landmark, FileText } from 'lucide-react'
-import { EMPLOYEES } from '../../data/hrmsData'
-import { Card, PrimaryBtn, OutlineBtn } from '../ui'
+import React, { useState, useEffect, useRef } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import html2pdf from 'html2pdf.js'
+import { ArrowLeft, Printer, RefreshCw, CheckCircle2, X, Mail, FileText, ExternalLink } from 'lucide-react'
+import { PrimaryBtn, OutlineBtn } from '../ui'
+import { fetchProfile } from '../../redux/actions/authActions'
+import { CompanyPayslip } from '../../redux/actions/companyAction'
+import { getMyTeam } from '../../redux/actions/teamActions'
+
+const getFullAssetUrl = (relativeUrl) => {
+  if (!relativeUrl) return "";
+  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
+    return relativeUrl;
+  }
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
+  return `${base}${relativeUrl}`;
+};
 
 // Helper to convert number to Indian Rupees words
 function numberToRupeesWords(amount) {
@@ -28,339 +42,599 @@ function numberToRupeesWords(amount) {
     const hundreds = Math.floor(num / 100)
     const rest = num % 100
     let res = ''
-    if (hundreds > 0) {
-      res += words[hundreds] + ' Hundred '
-    }
-    if (rest > 0) {
-      res += getBelowHundred(rest)
-    }
+    if (hundreds > 0) res += words[hundreds] + ' Hundred '
+    if (rest > 0) res += getBelowHundred(rest)
     return res.trim()
   }
 
-  // Crores
-  if (n >= 10000000) {
-    const cr = Math.floor(n / 10000000)
-    str += getBelowThousand(cr) + ' Crore '
-    n %= 10000000
-  }
-
-  // Lakhs
-  if (n >= 100000) {
-    const lk = Math.floor(n / 100000)
-    str += getBelowThousand(lk) + ' Lakh '
-    n %= 100000
-  }
-
-  // Thousands
-  if (n >= 1000) {
-    const th = Math.floor(n / 1000)
-    str += getBelowThousand(th) + ' Thousand '
-    n %= 1000
-  }
-
-  // Remainder
-  if (n > 0) {
-    str += getBelowThousand(n)
-  }
+  if (n >= 10000000) { str += getBelowThousand(Math.floor(n / 10000000)) + ' Crore '; n %= 10000000 }
+  if (n >= 100000)   { str += getBelowThousand(Math.floor(n / 100000)) + ' Lakh ';   n %= 100000 }
+  if (n >= 1000)     { str += getBelowThousand(Math.floor(n / 1000)) + ' Thousand '; n %= 1000 }
+  if (n > 0)         { str += getBelowThousand(n) }
 
   return 'Rupees ' + str.trim() + ' Only'
 }
 
 export default function SalarySlip({ onBack }) {
-  const [selectedId, setSelectedId] = useState(EMPLOYEES[0]?.id || '')
+  const dispatch = useDispatch()
+  const { user } = useSelector((state) => state.auth)
+  const { team: employees = [] } = useSelector((state) => state.team)
+
+  // Fetch admin profile and team on mount
+  useEffect(() => {
+    dispatch(fetchProfile())
+    dispatch(getMyTeam())
+  }, [dispatch])
+
+  const [selectedId, setSelectedId] = useState('')
   const [month, setMonth] = useState('May 2026')
 
-  const employee = EMPLOYEES.find(e => e.id === selectedId) || EMPLOYEES[0]
+  // Set first employee as default once team loads
+  useEffect(() => {
+    if (employees.length > 0 && !selectedId) {
+      setSelectedId(employees[0]?.employeeId || employees[0]?.id || '')
+    }
+  }, [employees])
 
-  if (!employee) return <div>No employee records available.</div>
+  // Company info from API (read-only)
+  const [companyName, setCompanyName] = useState('')
+  const [companyAddress, setCompanyAddress] = useState('')
 
-  const handlePrint = () => {
-    window.print()
-  }
+  // Modal / generation state
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [modalData, setModalData] = useState({ emailSentTo: '', previewUrl: '', status: '' })
+  const [modalError, setModalError] = useState('')
 
-  // Exact breakdown matches what is processed in AdminPayroll.jsx
-  const sal = employee.salary
+  // Ref to the printable document
+  const printableRef = useRef(null)
+
+  // Sync company details from Redux profile
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) setCompanyName(user.fullName.toUpperCase())
+      if (user.address) setCompanyAddress(user.address)
+    }
+  }, [user])
+
+  const employee = employees.find(e => (e.employeeId || e.id) === selectedId) || employees[0]
+  if (employees.length > 0 && !employee) return <div>No employee records available.</div>
+  if (!employee) return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading team data…</div>
+
+  // Salary breakdown
+  const sal = employee.salary || employee.salaryAmount || 25000
   const basic = Math.round(sal * 0.50)
   const hra = Math.round(sal * 0.20)
   const da = Math.round(sal * 0.05)
   const allowances = Math.round(sal * 0.05)
   const gross = Math.round(sal * 0.80)
-
   const pf = Math.round(sal * 0.12)
   const esi = Math.round(sal * 0.0075)
   const tds = Math.round(sal * 0.05)
   const totalDeductions = pf + esi + tds
   const netPay = gross - totalDeductions
 
+  const handlePrint = () => window.print()
+
+  const handleGenerate = async () => {
+    const empEmail = employee.email
+    if (!empEmail || !empEmail.includes('@')) {
+      setModalError('No valid email found for this employee. Please update the employee\'s email in the system.')
+      setShowModal(true)
+      return
+    }
+
+    setIsGenerating(true)
+    setModalError('')
+
+    try {
+      const sheetElement = printableRef.current
+      if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
+
+      const empName = employee.fullName || employee.name || 'employee'
+      const fileName = `payslip_${empName.replace(/\s+/g, '_').toLowerCase()}_${month.replace(/\s+/g, '_')}_${Date.now()}.pdf`
+
+      // Configure html2pdf options
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+          onclone: (clonedDoc) => {
+            const elements = clonedDoc.getElementsByTagName('*');
+            
+            const oklchToRgb = (l, c, h, a = 1) => {
+              const hRad = (h * Math.PI) / 180;
+              const L = l;
+              const a_ = c * Math.cos(hRad);
+              const b_ = c * Math.sin(hRad);
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const oklabToRgb = (l, a_, b_, a = 1) => {
+              const L = l;
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const resolveModernColors = (colorStr) => {
+              if (!colorStr || typeof colorStr !== 'string') return colorStr;
+              let resolved = colorStr;
+              
+              if (resolved.includes('oklch')) {
+                try {
+                  resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const c = parseFloat(parts[1]);
+                      const h = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
+                        return oklchToRgb(l, c, h, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              if (resolved.includes('oklab')) {
+                try {
+                  resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const a_coord = parseFloat(parts[1]);
+                      const b_coord = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
+                        return oklabToRgb(l, a_coord, b_coord, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              return resolved;
+            };
+
+            const properties = [
+              'color', 'backgroundColor', 'borderColor', 
+              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
+              'fill', 'stroke', 'backgroundImage', 'boxShadow'
+            ];
+
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i];
+              const computed = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
+              
+              properties.forEach(prop => {
+                const val = computed[prop];
+                if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    el.style[prop] = resolveModernColors(val);
+                  } catch (err) {}
+                }
+              });
+            }
+
+            // Force single page A4 layout constraints
+            const sheet = clonedDoc.querySelector('.printable-sheet');
+            if (sheet) {
+              sheet.style.width = '210mm';
+              sheet.style.height = '295mm';
+              sheet.style.minHeight = '295mm';
+              sheet.style.maxHeight = '295mm';
+              sheet.style.paddingTop = '24px';
+              sheet.style.paddingBottom = '24px';
+              sheet.style.boxSizing = 'border-box';
+              sheet.style.borderRadius = '0px';
+              sheet.style.border = 'none';
+              sheet.style.boxShadow = 'none';
+              sheet.style.overflow = 'hidden';
+            }
+          }
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate PDF as a blob
+      const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
+
+      const formData = new FormData()
+      formData.append('email', empEmail)
+      formData.append('file', pdfBlob, fileName)
+
+      const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData))
+
+      if (res && res.data) {
+        setModalData({
+          emailSentTo: res.data.emailSentTo || empEmail,
+          previewUrl: res.data.previewUrl || '',
+          status: res.data.status || 'SENT'
+        })
+        setModalError('')
+        setShowModal(true)
+      } else {
+        setModalError(res?.message || 'Failed to generate payslip. Backend did not return expected data.')
+        setShowModal(true)
+      }
+    } catch (err) {
+      setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
+      setShowModal(true)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   return (
-    <div className="document-container">
-      {/* Control Panel (Screen-only) */}
-      <div className="no-print" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: '#fff',
-        padding: '16px 24px',
-        borderRadius: '16px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
-        border: '1px solid #e5e7eb',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-          <OutlineBtn onClick={onBack} style={{ padding: '8px 16px', fontSize: '13px' }}>
-            <ArrowLeft size={16} /> Back to Hub
-          </OutlineBtn>
-          <div style={{ height: '24px', width: '1px', background: '#e5e7eb' }}></div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280' }}>Employee:</label>
-            <select
-              value={selectedId}
-              onChange={e => setSelectedId(e.target.value)}
-              style={{
-                background: '#f9fafb',
-                border: '1.5px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '13.5px',
-                fontWeight: 600,
-                color: '#111827',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {EMPLOYEES.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name} ({emp.id})
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+  {/* Control Panel */}
+  <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    
+    <div className="flex flex-wrap items-center gap-4">
+      
+      <OutlineBtn
+        onClick={onBack}
+        className="flex items-center gap-2 px-4 py-2 text-sm"
+      >
+        <ArrowLeft size={16} />
+        Back to Hub
+      </OutlineBtn>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280' }}>Payslip Cycle:</label>
-            <select
-              value={month}
-              onChange={e => setMonth(e.target.value)}
-              style={{
-                background: '#f9fafb',
-                border: '1.5px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '13px',
-                fontWeight: 500,
-                color: '#111827',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="May 2026">May 2026</option>
-              <option value="April 2026">April 2026</option>
-              <option value="March 2026">March 2026</option>
-              <option value="February 2026">February 2026</option>
-            </select>
-          </div>
-        </div>
+      <div className="hidden h-6 w-px bg-gray-200 md:block"></div>
 
-        <PrimaryBtn onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '13.5px' }}>
-          <Printer size={16} /> Print Payslip
-        </PrimaryBtn>
+      {/* Employee Select */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-semibold text-gray-500">
+          Employee:
+        </label>
+
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        >
+          {employees.map((emp) => (
+            <option
+              key={emp.employeeId || emp.id}
+              value={emp.employeeId || emp.id}
+            >
+              {emp.fullName || emp.name} ({emp.employeeId || emp.id})
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Document Sheet View */}
-      <div className="printable-sheet" style={{
-        background: '#fff',
-        margin: '0 auto',
-        maxWidth: '800px',
-        padding: '48px 60px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
-        border: '1px solid #e2e8f0',
-        borderRadius: '8px',
-        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-        color: '#1f2937',
-        lineHeight: 1.5,
-        position: 'relative'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #e5e7eb', paddingBottom: '16px', marginBottom: '20px' }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '20px', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              🔬 GmaxepayHR Pharma Ltd.
-            </div>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
-              Plot 42, Biotech Enclave, BKC, Mumbai - 400051
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, fontSize: '16px', color: '#111827' }}>PAYSLIP CERTIFICATE</div>
-            <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, marginTop: '2px' }}>Cycle: {month}</div>
-          </div>
-        </div>
+      {/* Month Select */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-semibold text-gray-500">
+          Payslip Cycle:
+        </label>
 
-        {/* Employee details matrix */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '24px',
-          background: '#f9fafb',
-          border: '1px solid #e5e7eb',
-          borderRadius: '10px',
-          padding: '16px 20px',
-          fontSize: '12.5px',
-          marginBottom: '24px'
-        }}>
-          <div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280', width: '120px' }}>Employee Name:</td>
-                  <td style={{ padding: '4px 0', fontWeight: 700, color: '#111827' }}>{employee.name}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Employee ID:</td>
-                  <td style={{ padding: '4px 0', fontWeight: 600, color: '#374151' }}>{employee.id}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Designation:</td>
-                  <td style={{ padding: '4px 0', color: '#374151' }}>{employee.designation}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Department:</td>
-                  <td style={{ padding: '4px 0', color: '#374151' }}>{employee.dept}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div style={{ borderLeft: '1px solid #e5e7eb', paddingLeft: '24px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280', width: '120px' }}>Bank Account:</td>
-                  <td style={{ padding: '4px 0', fontWeight: 600, color: '#374151' }}>HDFC Bank · *******{4820 + parseInt(employee.id.slice(-2) || '1')}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>PF Number (UAN):</td>
-                  <td style={{ padding: '4px 0', color: '#374151' }}>10098273{employee.id.slice(-3)}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Days in Month:</td>
-                  <td style={{ padding: '4px 0', color: '#374151' }}>31 Days</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Worked Days:</td>
-                  <td style={{ padding: '4px 0', color: '#059669', fontWeight: 600 }}>31 Days (0 LOP)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        >
+          <option value="May 2026">May 2026</option>
+          <option value="April 2026">April 2026</option>
+          <option value="March 2026">March 2026</option>
+          <option value="February 2026">February 2026</option>
+        </select>
+      </div>
+    </div>
 
-        {/* Ledger Table */}
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          fontSize: '12.5px',
-          border: '1px solid #e5e7eb',
-          marginBottom: '24px'
-        }}>
-          <thead>
-            <tr style={{ background: '#f3f4f6', borderBottom: '1.5px solid #e5e7eb', fontWeight: 700 }}>
-              <th style={{ padding: '10px 14px', textAlign: 'left', borderRight: '1px solid #e5e7eb', width: '35%' }}>Earnings</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', width: '15%' }}>Amount (₹)</th>
-              <th style={{ padding: '10px 14px', textAlign: 'left', borderRight: '1px solid #e5e7eb', width: '35%' }}>Deductions</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right', width: '15%' }}>Amount (₹)</th>
-            </tr>
-          </thead>
+    {/* Actions */}
+    <div className="flex flex-wrap gap-3">
+      <OutlineBtn
+        onClick={handleGenerate}
+        disabled={isGenerating}
+        className="flex items-center gap-2 px-5 py-2 text-sm"
+      >
+        <RefreshCw
+          size={16}
+          className={isGenerating ? "animate-spin" : ""}
+        />
+
+        {isGenerating ? "Generating..." : "Generate & Send Payslip"}
+      </OutlineBtn>
+
+      <PrimaryBtn
+        onClick={handlePrint}
+        className="flex items-center gap-2 px-5 py-2 text-sm"
+      >
+        <Printer size={16} />
+        Print Payslip
+      </PrimaryBtn>
+    </div>
+  </div>
+
+  {/* Payslip Document */}
+  <div
+    ref={printableRef}
+    className="printable-sheet mx-auto max-w-4xl rounded-lg border border-gray-200 bg-white p-6 shadow-lg md:p-12"
+  >
+    
+    {/* Header */}
+    <div className="mb-6 flex flex-col justify-between gap-4 border-b-2 border-gray-200 pb-4 md:flex-row">
+      
+      <div className="flex items-start gap-4">
+        
+        {user?.logoUrl ? (
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+            <img
+              src={getFullAssetUrl(user.logoUrl)}
+              alt="Logo"
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-600 text-2xl">
+            🔬
+          </div>
+        )}
+
+        <div>
+          <h1 className="text-lg font-extrabold uppercase tracking-wide text-emerald-800">
+            {companyName || "Company Name"}
+          </h1>
+
+          {companyAddress && (
+            <p className="mt-1 max-w-sm text-xs text-gray-500">
+              {companyAddress}
+            </p>
+          )}
+
+          {user?.adminReferenceCode && (
+            <p className="mt-1 text-[11px] font-semibold text-gray-400">
+              Code: {user.adminReferenceCode}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="text-right">
+        <h2 className="text-lg font-extrabold text-gray-900">
+          PAYSLIP CERTIFICATE
+        </h2>
+
+        <p className="mt-1 text-sm font-semibold text-emerald-600">
+          Cycle: {month}
+        </p>
+      </div>
+    </div>
+
+    {/* Employee Info */}
+    <div className="mb-6 grid gap-6 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm md:grid-cols-2">
+      
+      <div>
+        <table className="w-full border-collapse">
           <tbody>
-            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>Basic Salary</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontWeight: 500 }}>{basic.toLocaleString('en-IN')}</td>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>Provident Fund (PF)</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', color: '#dc2626' }}>{pf.toLocaleString('en-IN')}</td>
+            <tr>
+              <td className="py-1 text-gray-500">Employee Name:</td>
+              <td className="py-1 font-bold text-gray-900">
+                {employee.fullName || employee.name}
+              </td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>House Rent Allowance (HRA)</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontWeight: 500 }}>{hra.toLocaleString('en-IN')}</td>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>ESI Contribution</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', color: '#dc2626' }}>{esi.toLocaleString('en-IN')}</td>
+
+            <tr>
+              <td className="py-1 text-gray-500">Employee ID:</td>
+              <td className="py-1 font-semibold text-gray-700">
+                {employee.employeeId || employee.id}
+              </td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>Dearness Allowance (DA)</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontWeight: 500 }}>{da.toLocaleString('en-IN')}</td>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>TDS / Income Tax</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', color: '#dc2626' }}>{tds.toLocaleString('en-IN')}</td>
+
+            <tr>
+              <td className="py-1 text-gray-500">Designation:</td>
+              <td className="py-1 text-gray-700">
+                {employee.designation}
+              </td>
             </tr>
-            <tr style={{ borderBottom: '1.5px solid #e5e7eb' }}>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>Other Allowances</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontWeight: 500 }}>{allowances.toLocaleString('en-IN')}</td>
-              <td style={{ padding: '8px 14px', borderRight: '1px solid #e5e7eb', color: '#4b5563' }}>Professional Tax (PT)</td>
-              <td style={{ padding: '8px 14px', textAlign: 'right', color: '#dc2626' }}>0</td>
-            </tr>
-            <tr style={{ fontWeight: 'bold', background: '#f9fafb' }}>
-              <td style={{ padding: '10px 14px', borderRight: '1px solid #e5e7eb' }}>Total Gross Earnings</td>
-              <td style={{ padding: '10px 14px', textAlign: 'right', borderRight: '1px solid #e5e7eb', color: '#065f46' }}>{gross.toLocaleString('en-IN')}</td>
-              <td style={{ padding: '10px 14px', borderRight: '1px solid #e5e7eb' }}>Total Deductions</td>
-              <td style={{ padding: '10px 14px', textAlign: 'right', color: '#dc2626' }}>{totalDeductions.toLocaleString('en-IN')}</td>
+
+            <tr>
+              <td className="py-1 text-gray-500">Department:</td>
+              <td className="py-1 text-gray-700">
+                {employee.department || employee.dept}
+              </td>
             </tr>
           </tbody>
         </table>
+      </div>
 
-        {/* Net payout row */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: '#f0fdf4',
-          border: '1.5px solid #bbf7d0',
-          borderRadius: '10px',
-          padding: '16px 20px',
-          marginBottom: '20px'
-        }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#047857', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Net Take-Home Salary</div>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px', fontWeight: 500 }}>
-              <strong>In Words:</strong> {numberToRupeesWords(netPay)}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '26px', fontWeight: 900, color: '#047857', letterSpacing: '-0.5px' }}>
-              ₹{netPay.toLocaleString('en-IN')}
-            </div>
-          </div>
-        </div>
+      <div className="border-t border-gray-200 pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+        <table className="w-full border-collapse">
+          <tbody>
+            <tr>
+              <td className="py-1 text-gray-500">Bank Account:</td>
+              <td className="py-1 font-semibold text-gray-700">
+                HDFC Bank · *******4820
+              </td>
+            </tr>
 
-        {/* Note / Disclaimer */}
-        <div style={{
-          borderTop: '1px dashed #e5e7eb',
-          paddingTop: '16px',
-          marginTop: '32px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '11px',
-          color: '#9ca3af'
-        }}>
-          <div>
-            📍 Mode of Payment: Direct Corporate Bank Transfer (NEFT)<br />
-            ⚠️ This is an digitally approved computer-generated payslip, no signature required.
-          </div>
-          <div style={{
-            border: '1.5px solid rgba(5, 150, 105, 0.2)',
-            borderRadius: '6px',
-            padding: '4px 8px',
-            color: 'rgba(5, 150, 105, 0.45)',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            transform: 'rotate(-4deg)',
-            userSelect: 'none'
-          }}>
-            PAID · GPHR
-          </div>
-        </div>
+            <tr>
+              <td className="py-1 text-gray-500">PF Number:</td>
+              <td className="py-1 text-gray-700">
+                10098273
+              </td>
+            </tr>
+
+            <tr>
+              <td className="py-1 text-gray-500">Days in Month:</td>
+              <td className="py-1 text-gray-700">
+                31 Days
+              </td>
+            </tr>
+
+            <tr>
+              <td className="py-1 text-gray-500">Worked Days:</td>
+              <td className="py-1 font-semibold text-emerald-600">
+                31 Days (0 LOP)
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+
+    {/* Salary Table */}
+    <div className="overflow-x-auto">
+      <table className="mb-6 w-full border border-gray-200 text-sm">
+        
+        <thead className="bg-gray-100">
+          <tr className="border-b border-gray-200">
+            <th className="border-r border-gray-200 px-4 py-3 text-left">
+              Earnings
+            </th>
+
+            <th className="border-r border-gray-200 px-4 py-3 text-right">
+              Amount (₹)
+            </th>
+
+            <th className="border-r border-gray-200 px-4 py-3 text-left">
+              Deductions
+            </th>
+
+            <th className="px-4 py-3 text-right">
+              Amount (₹)
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr className="border-b border-gray-200">
+            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+              Basic Salary
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
+              {basic.toLocaleString("en-IN")}
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+              Provident Fund (PF)
+            </td>
+
+            <td className="px-4 py-3 text-right text-red-600">
+              {pf.toLocaleString("en-IN")}
+            </td>
+          </tr>
+
+          <tr className="border-b border-gray-200">
+            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+              House Rent Allowance
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
+              {hra.toLocaleString("en-IN")}
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+              ESI Contribution
+            </td>
+
+            <td className="px-4 py-3 text-right text-red-600">
+              {esi.toLocaleString("en-IN")}
+            </td>
+          </tr>
+
+          <tr className="border-b border-gray-200 bg-gray-50 font-bold">
+            <td className="border-r border-gray-200 px-4 py-3">
+              Total Gross Earnings
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3 text-right text-emerald-700">
+              {gross.toLocaleString("en-IN")}
+            </td>
+
+            <td className="border-r border-gray-200 px-4 py-3">
+              Total Deductions
+            </td>
+
+            <td className="px-4 py-3 text-right text-red-600">
+              {totalDeductions.toLocaleString("en-IN")}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {/* Net Salary */}
+    <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-xl border border-green-200 bg-green-50 p-5 md:flex-row md:items-center">
+      
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+          Net Take-Home Salary
+        </p>
+
+        <p className="mt-2 text-sm text-gray-600">
+          <span className="font-semibold">In Words:</span>{" "}
+          {numberToRupeesWords(netPay)}
+        </p>
+      </div>
+
+      <div className="text-right">
+        <h2 className="text-3xl font-black tracking-tight text-emerald-700">
+          ₹{netPay.toLocaleString("en-IN")}
+        </h2>
+      </div>
+    </div>
+
+    {/* Footer */}
+    <div className="mt-4 flex flex-col justify-between gap-4 border-t border-dashed border-gray-300 pt-4 text-xs text-gray-400 md:flex-row md:items-center">
+      
+      <div>
+        📍 Mode of Payment: Direct Corporate Bank Transfer (NEFT)
+        <br />
+        ⚠️ Digitally approved computer-generated payslip.
+      </div>
+
+      <div className="rotate-[-4deg] rounded-md border border-emerald-200 px-3 py-1 font-bold uppercase tracking-wide text-emerald-600">
+        PAID · {user?.adminReferenceCode || "GPHR"}
+      </div>
+    </div>
+  </div>
+</div>
   )
 }
