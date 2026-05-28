@@ -18,7 +18,8 @@ import {
   Loader2,
   Trash2,
   Compass,
-  FileCheck
+  FileCheck,
+  Lock
 } from "lucide-react";
 
 // Helper to resolve backend relative file upload paths to absolute URLs using the API origin
@@ -36,7 +37,7 @@ const getFullAssetUrl = (relativeUrl) => {
   }
 };
 
-// Inline styled interactive uploader supporting drag-and-drop, direct file uploads, base64 visual previews
+// Tailwind CSS styled interactive uploader supporting drag-and-drop, direct file uploads, base64 previews
 const FileUploader = ({ label, value, onChange, onClear, id }) => {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
@@ -75,52 +76,22 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
-      <label style={{ fontSize: "11px", fontWeight: 700, color: "#6B7280", uppercase: "true", letterSpacing: "0.5px" }}>
-        {label.toUpperCase()}
+    <div className="flex flex-col gap-2 flex-1 min-w-[280px]">
+      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+        {label}
       </label>
       
       {value ? (
-        <div style={{
-          position: "relative",
-          borderRadius: "16px",
-          border: "1.5px solid #E5E7EB",
-          background: "#F9FAFB",
-          padding: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          transition: "all 0.2s ease"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "12px",
-              background: "#FFFFFF",
-              border: "1px solid #E5E7EB",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden"
-            }}>
-              <img src={value} alt={label} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        <div className="relative rounded-2xl border border-gray-200 bg-gray-50 p-4 flex items-center justify-between transition-all duration-200 hover:border-gray-300">
+          <div className="flex items-center gap-3">
+            <div className="w-16 h-16 rounded-xl bg-white border border-gray-200 p-1 flex items-center justify-center overflow-hidden">
+              <img src={value} alt={label} className="max-w-full max-h-full object-contain" />
             </div>
             <div>
-              <span style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                color: "#059669",
-                background: "#ECFDF5",
-                padding: "2px 8px",
-                borderRadius: "999px",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}>
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider border border-emerald-200">
                 Configured
               </span>
-              <p style={{ fontSize: "12px", fontWeight: 700, color: "#374151", marginTop: "4px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <p className="text-xs font-bold text-gray-700 mt-1 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {value.startsWith("data:") ? "Local File Selected" : "Server Asset Image"}
               </p>
             </div>
@@ -128,26 +99,7 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
           <button
             type="button"
             onClick={onClear}
-            style={{
-              padding: "8px",
-              borderRadius: "8px",
-              background: "#FFF1F2",
-              border: "none",
-              color: "#F43F5E",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease"
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "#FFE4E6";
-              e.currentTarget.style.color = "#E11D48";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "#FFF1F2";
-              e.currentTarget.style.color = "#F43F5E";
-            }}
+            className="p-2 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-600 border-none cursor-pointer flex items-center justify-center transition-colors duration-200"
             title="Remove Image"
           >
             <Trash2 size={16} />
@@ -162,21 +114,11 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
           onClick={() => fileInputRef.current?.click()}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{
-            border: dragActive || isHovered ? "2px dashed #C8F04A" : "2px dashed #E5E7EB",
-            borderRadius: "16px",
-            padding: "24px",
-            textAlign: "center",
-            cursor: "pointer",
-            background: dragActive || isHovered ? "rgba(200, 240, 74, 0.04)" : "#F9FAFB",
-            transition: "all 0.2s ease",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            minHeight: "120px"
-          }}
+          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] ${
+            dragActive || isHovered 
+              ? "border-[#C8F04A] bg-[#C8F04A]/5 shadow-sm" 
+              : "border-gray-200 bg-gray-50 hover:border-[#C8F04A] hover:bg-gray-50/50"
+          }`}
         >
           <input
             ref={fileInputRef}
@@ -188,9 +130,14 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
             className="hidden"
             id={id}
           />
-          <Upload size={24} color={dragActive || isHovered ? "#8BB800" : "#9CA3AF"} style={{ transition: "transform 0.2s ease", transform: isHovered ? "translateY(-3px)" : "translateY(0)" }} />
-          <p style={{ fontSize: "13px", fontWeight: 700, color: "#374151", margin: 0 }}>Drag & drop or click to upload</p>
-          <p style={{ fontSize: "11px", color: "#9CA3AF", margin: 0 }}>PNG, JPG, SVG up to 2MB</p>
+          <Upload 
+            size={24} 
+            className={`transition-transform duration-200 ${
+              dragActive || isHovered ? "text-[#8BB800] -translate-y-1" : "text-gray-400"
+            }`}
+          />
+          <p className="text-sm font-semibold text-gray-700 m-0">Drag & drop or click to upload</p>
+          <p className="text-xs text-gray-400 m-0">PNG, JPG, SVG up to 2MB</p>
         </div>
       )}
     </div>
@@ -218,7 +165,6 @@ const Settings = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
-  const [focusField, setFocusField] = useState(null);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -341,245 +287,83 @@ const Settings = () => {
 
   if (!user) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "400px", gap: "12px" }}>
-        <Loader2 className="animate-spin" color="#C8F04A" size={36} />
-        <p style={{ color: "#6B7280", fontWeight: 600, fontSize: "14px" }}>Loading system settings...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Loader2 className="animate-spin text-[#C8F04A]" size={36} />
+        <p className="text-gray-500 font-semibold text-sm">Loading system settings...</p>
       </div>
     );
   }
 
-  // Base style for all cards to keep consistency with the App design
-  const cardStyle = {
-    background: "#FFFFFF",
-    borderRadius: "24px",
-    border: "1.5px solid #E5E7EB",
-    padding: "28px",
-    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    boxSizing: "border-box"
-  };
-
-  const inputContainerStyle = (fieldName) => ({
-    width: "100%",
-    padding: "12px 16px 12px 40px",
-    borderRadius: "12px",
-    border: "1.5px solid",
-    borderColor: focusField === fieldName ? "#C8F04A" : "#E5E7EB",
-    background: focusField === fieldName ? "#FFFFFF" : "#F9FAFB",
-    boxShadow: focusField === fieldName ? "0 0 0 3.5px rgba(200, 240, 74, 0.15)" : "none",
-    fontSize: "14px",
-    fontWeight: 500,
-    color: "#1F2937",
-    outline: "none",
-    transition: "all 0.18s ease",
-    boxSizing: "border-box"
-  });
+  // Check if form has actual modifications (is dirty)
+  const hasChanges =
+    formState.phone.trim() !== (user.phone || "").trim() ||
+    formState.address.trim() !== (user.address || "").trim() ||
+    logoFile !== null ||
+    stampFile !== null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingBottom: "40px", fontFamily: "'Inter', sans-serif" }}>
-      
-      {/* Top Banner / Welcome Header */}
-      <div style={{
-        position: "relative",
-        borderRadius: "24px",
-        background: "#111827",
-        color: "#FFFFFF",
-        padding: "32px",
-        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "24px"
-      }}>
-        <div style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "300px",
-          height: "300px",
-          background: "radial-gradient(circle, rgba(200, 240, 74, 0.08) 0%, transparent 70%)",
-          pointerEvents: "none"
-        }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 10, maxWidth: "680px" }}>
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 12px",
-            borderRadius: "999px",
-            fontSize: "11px",
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            background: "rgba(200, 240, 74, 0.15)",
-            color: "#C8F04A",
-            alignSelf: "flex-start"
-          }}>
-            <Shield size={12} /> System Console
-          </span>
-          <h1 style={{ fontSize: "28px", fontWeight: 850, color: "#FFFFFF", margin: 0, letterSpacing: "-0.5px" }}>Corporate Settings</h1>
-          <p style={{ fontSize: "13.5px", color: "#9CA3AF", margin: 0, lineHeight: 1.6 }}>
-            Configure company identification credentials, branding assets, custom logos, stamp metrics, and view available metadata attributes.
-          </p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", position: "relative", zIndex: 10 }}>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: "11px", color: "#9CA3AF", margin: 0, fontWeight: 500 }}>Logged in as</p>
-            <p style={{ fontSize: "13.5px", fontWeight: 700, color: "#FFFFFF", margin: "2px 0 0 0" }}>{user.fullName}</p>
-          </div>
-          <div style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "14px",
-            background: "linear-gradient(135deg, #C8F04A 0%, #B4A0FA 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#111827",
-            fontWeight: 800,
-            fontSize: "18px"
-          }}>
-            {user.fullName?.charAt(0)}
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6 pb-10 font-sans box-border w-full animate-fade">
 
       {/* Main Content Layout - Flex wrapper for robust responsive spacing */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", boxSizing: "border-box" }}>
+      <div className="flex flex-col lg:flex-row gap-6 w-full box-border">
         
         {/* LEFT COLUMN: System Attributes & Live branding previews */}
-        <div style={{ flex: "1 1 360px", display: "flex", flexDirection: "column", gap: "24px", boxSizing: "border-box" }}>
+        <div className="w-full lg:w-[380px] flex flex-col gap-6 shrink-0 box-border">
           
           {/* Identity Card */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#111827", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-              <Compass size={18} color="#4F46E5" /> Identity & Status
+          <div className="bg-white rounded-3xl border border-gray-200 p-7 shadow-sm flex flex-col gap-5 box-border">
+            <h3 className="text-base font-extrabold text-gray-900 m-0 flex items-center gap-2">
+              <Compass size={18} className="text-indigo-600" /> Identity & Status
             </h3>
             
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              padding: "20px",
-              borderRadius: "16px",
-              background: "#F9FAFB",
-              border: "1px solid #F3F4F6",
-            }}>
-              <div style={{ position: "relative" }}>
-                <div style={{
-                  width: "72px",
-                  height: "72px",
-                  borderRadius: "20px",
-                  background: "#111827",
-                  color: "#FFFFFF",
-                  fontWeight: 800,
-                  fontSize: "28px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.06)"
-                }}>
+            <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-gray-50 border border-gray-100">
+              <div className="relative">
+                <div className="w-18 h-18 rounded-2xl bg-gray-900 text-white font-extrabold text-3xl flex items-center justify-center shadow-md">
                   {user.fullName?.charAt(0)}
                 </div>
-                <div style={{
-                  position: "absolute",
-                  bottom: "-2px",
-                  right: "-2px",
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  background: "#10B981",
-                  border: "3px solid #FFFFFF"
-                }} title="Active" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-emerald-500 border-[3px] border-white" title="Active" />
               </div>
-              <h4 style={{ fontSize: "15px", fontWeight: 800, color: "#111827", margin: "12px 0 2px 0" }}>{user.fullName}</h4>
-              <p style={{ fontSize: "12px", color: "#6B7280", margin: 0, fontWeight: 500 }}>{user.email}</p>
+              <h4 className="text-[15px] font-extrabold text-gray-900 mt-3 mb-0.5">{user.fullName}</h4>
+              <p className="text-xs text-gray-500 font-medium m-0">{user.email}</p>
               
-              <div style={{
-                marginTop: "12px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                background: "#EEF2FF",
-                color: "#4F46E5",
-                padding: "4px 12px",
-                borderRadius: "8px",
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}>
+              <div className="mt-3 inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider">
                 <Shield size={11} /> {user.role}
               </div>
             </div>
 
             {/* Read-only system metadata attributes as requested */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{
-                fontSize: "10.5px",
-                fontWeight: 800,
-                color: "#9CA3AF",
-                textTransform: "uppercase",
-                letterSpacing: "0.8px",
-                borderBottom: "1px solid #F3F4F6",
-                paddingBottom: "8px",
-                margin: 0
-              }}>
+            <div className="flex flex-col gap-3">
+              <div className="text-[10.5px] font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 m-0">
                 Available Attributes
               </div>
               
               {[
-                { label: "Admin ID", value: `#${user.id}`, icon: <Code size={14} color="#9CA3AF" /> },
-                { label: "Reference Code", value: user.adminReferenceCode || "GMPY", icon: <Building size={14} color="#9CA3AF" />, highlight: true },
-                { label: "Phone Contact", value: user.phone || "N/A", icon: <Phone size={14} color="#9CA3AF" /> },
-                { label: "Account State", value: user.enabled ? "Active / Enabled" : "Disabled", icon: <FileCheck size={14} color="#9CA3AF" />, badge: user.enabled ? "success" : "danger" },
-                { label: "Creation Date", value: formatDate(user.createdAt), icon: <Calendar size={14} color="#9CA3AF" /> },
-                { label: "Reporting Structure", value: user.reportingToName || "Root Admin", icon: <User size={14} color="#9CA3AF" /> }
+                { label: "Admin ID", value: `#${user.id}`, icon: <Code size={14} className="text-gray-400" /> },
+                { label: "Reference Code", value: user.adminReferenceCode || "GMPY", icon: <Building size={14} className="text-gray-400" />, highlight: true },
+                { label: "Phone Contact", value: user.phone || "N/A", icon: <Phone size={14} className="text-gray-400" /> },
+                { label: "Account State", value: user.enabled ? "Active / Enabled" : "Disabled", icon: <FileCheck size={14} className="text-gray-400" />, badge: user.enabled ? "success" : "danger" },
+                { label: "Creation Date", value: formatDate(user.createdAt), icon: <Calendar size={14} className="text-gray-400" /> },
+                { label: "Reporting Structure", value: user.reportingToName || "Root Admin", icon: <User size={14} className="text-gray-400" /> }
               ].map((attr, idx) => (
-                <div key={idx} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 0",
-                  borderBottom: "1px solid #F9FAFB",
-                  fontSize: "12.5px"
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-[12.5px]">
+                  <div className="flex items-center gap-2">
                     {attr.icon}
-                    <span style={{ color: "#6B7280", fontWeight: 500 }}>{attr.label}</span>
+                    <span className="text-gray-500 font-medium">{attr.label}</span>
                   </div>
                   {attr.badge ? (
-                    <span style={{
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      padding: "2px 8px",
-                      borderRadius: "999px",
-                      background: attr.badge === "success" ? "#ECFDF5" : "#FEF2F2",
-                      color: attr.badge === "success" ? "#047857" : "#B91C1C",
-                      border: attr.badge === "success" ? "1px solid #A7F3D0" : "1px solid #FCA5A5"
-                    }}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      attr.badge === "success" 
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                    }`}>
                       {attr.value}
                     </span>
                   ) : attr.highlight ? (
-                    <span style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#1A1A1A",
-                      background: "rgba(200, 240, 74, 0.25)",
-                      padding: "2px 8px",
-                      borderRadius: "6px",
-                      border: "1px solid rgba(200, 240, 74, 0.4)"
-                    }}>
+                    <span className="text-xs font-bold text-gray-950 bg-[#C8F04A]/30 px-2 py-0.5 rounded-md border border-[#C8F04A]/50">
                       {attr.value}
                     </span>
                   ) : (
-                    <span style={{ fontWeight: 700, color: "#374151", textAlign: "right" }}>{attr.value}</span>
+                    <span className="text-xs font-bold text-gray-800 text-right">{attr.value}</span>
                   )}
                 </div>
               ))}
@@ -587,65 +371,38 @@ const Settings = () => {
           </div>
 
           {/* Branding Live Preview Mockups */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#111827", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-              <ImageIcon size={18} color="#4F46E5" /> Branding Live Preview
+          <div className="bg-white rounded-3xl border border-gray-200 p-7 shadow-sm flex flex-col gap-5 box-border">
+            <h3 className="text-base font-extrabold text-gray-900 m-0 flex items-center gap-2">
+              <ImageIcon size={18} className="text-indigo-600" /> Branding Live Preview
             </h3>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="flex flex-col gap-4">
               {/* Logo Preview */}
-              <div style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: "16px", padding: "16px" }}>
-                <p style={{ fontSize: "11.5px", fontWeight: 700, color: "#4B5563", margin: "0 0 10px 0" }}>Live Corporate Logo</p>
-                <div style={{
-                  height: "80px",
-                  background: "#FFFFFF",
-                  border: "1px solid #E5E7EB",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "12px"
-                }}>
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-bold text-gray-500 mb-2.5 m-0">Live Corporate Logo</p>
+                <div className="h-20 rounded-xl bg-white border border-gray-200 flex items-center justify-center p-3">
                   {logoPreview ? (
-                    <img src={logoPreview} alt="Logo" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                    <img src={logoPreview} alt="Logo" className="max-h-full max-w-full object-contain" />
                   ) : (
-                    <div style={{ textAlign: "center", color: "#9CA3AF" }}>
-                      <ImageIcon size={20} style={{ margin: "0 auto 4px auto", opacity: 0.5 }} />
-                      <span style={{ fontSize: "11.5px", fontWeight: 500, display: "block" }}>No Logo configured</span>
+                    <div className="text-center text-gray-400">
+                      <ImageIcon size={20} className="mx-auto mb-1 opacity-50" />
+                      <span className="text-[11.5px] font-medium block">No Logo configured</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Stamp Preview */}
-              <div style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: "16px", padding: "16px" }}>
-                <p style={{ fontSize: "11.5px", fontWeight: 700, color: "#4B5563", margin: "0 0 10px 0" }}>Live Signature/Company Stamp</p>
-                <div style={{
-                  height: "90px",
-                  background: "#FFFFFF",
-                  border: "1px solid #E5E7EB",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "10px",
-                  position: "relative",
-                  overflow: "hidden"
-                }}>
-                  <div style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundImage: "radial-gradient(#E5E7EB 1px, transparent 1px)",
-                    backgroundSize: "12px 12px",
-                    opacity: 0.4,
-                    pointerEvents: "none"
-                  }} />
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-bold text-gray-500 mb-2.5 m-0">Live Signature/Company Stamp</p>
+                <div className="h-24 rounded-xl bg-white border border-gray-200 flex items-center justify-center p-3 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:12px_12px] opacity-40 pointer-events-none" />
                   {stampPreview ? (
-                    <img src={stampPreview} alt="Stamp" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
+                    <img src={stampPreview} alt="Stamp" className="max-h-full max-w-full object-contain mix-blend-multiply relative z-10" />
                   ) : (
-                    <div style={{ textAlign: "center", color: "#9CA3AF", position: "relative", zIndex: 10 }}>
-                      <ImageIcon size={20} style={{ margin: "0 auto 4px auto", opacity: 0.5 }} />
-                      <span style={{ fontSize: "11.5px", fontWeight: 500, display: "block" }}>No Stamp configured</span>
+                    <div className="text-center text-slate-400 relative z-10">
+                      <ImageIcon size={20} className="mx-auto mb-1 opacity-50" />
+                      <span className="text-[11.5px] font-medium block">No Stamp configured</span>
                     </div>
                   )}
                 </div>
@@ -655,165 +412,120 @@ const Settings = () => {
         </div>
 
         {/* RIGHT COLUMN: Profile & Branding Settings Form */}
-        <div style={{ flex: "2 1 640px", display: "flex", flexDirection: "column", gap: "24px", boxSizing: "border-box" }}>
-          <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "24px", margin: 0 }}>
+        <div className="flex-1 flex flex-col gap-6 box-border">
+          <form onSubmit={handleSave} className="flex flex-col gap-6 m-0 w-full box-border">
             
             {/* Status Feedback Notification */}
             {saveStatus && (
-              <div style={{
-                padding: "16px",
-                borderRadius: "16px",
-                border: "1.5px solid",
-                borderColor: saveStatus.type === "success" ? "#A7F3D0" : "#FCA5A5",
-                background: saveStatus.type === "success" ? "#ECFDF5" : "#FEF2F2",
-                color: saveStatus.type === "success" ? "#065F46" : "#991B1B",
-                display: "flex",
-                alignItems: "start",
-                gap: "12px",
-                boxSizing: "border-box"
-              }}>
-                {saveStatus.type === "success" ? <Check size={18} style={{ marginTop: "2px", flexShrink: 0 }} /> : <AlertCircle size={18} style={{ marginTop: "2px", flexShrink: 0 }} />}
+              <div className={`p-4 rounded-2xl border flex items-start gap-3 box-border animate-fade ${
+                saveStatus.type === "success" 
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
+                  : "bg-rose-50 border-rose-200 text-rose-800"
+              }`}>
+                {saveStatus.type === "success" ? <Check size={18} className="mt-0.5 shrink-0" /> : <AlertCircle size={18} className="mt-0.5 shrink-0" />}
                 <div>
-                  <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800 }}>{saveStatus.type === "success" ? "Changes Applied Successfully" : "Validation Error"}</h4>
-                  <p style={{ margin: "2px 0 0 0", fontSize: "12px", fontWeight: 500, opacity: 0.9 }}>{saveStatus.message}</p>
+                  <h4 className="m-0 text-sm font-extrabold">{saveStatus.type === "success" ? "Changes Applied Successfully" : "Validation Error"}</h4>
+                  <p className="m-0 mt-0.5 text-xs font-semibold opacity-90">{saveStatus.message}</p>
                 </div>
               </div>
             )}
 
             {/* General Profile Info Section */}
-            <div style={cardStyle}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid #F3F4F6", paddingBottom: "16px" }}>
-                <div style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "#EEF2FF",
-                  color: "#4F46E5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0
-                }}>
+            <div className="bg-white rounded-3xl border border-gray-200 p-7 shadow-sm flex flex-col gap-5 box-border">
+              <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                   <User size={18} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 850, color: "#111827", margin: 0 }}>General Information</h3>
-                  <p style={{ fontSize: "12px", color: "#6B7280", margin: "2px 0 0 0" }}>Update your core administrative profile credentials.</p>
+                  <h3 className="text-[15px] font-extrabold text-gray-900 m-0">General Information</h3>
+                  <p className="text-xs text-gray-500 m-0 mt-0.5">Update your core administrative profile credentials.</p>
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", boxSizing: "border-box" }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 box-border">
                 
                 {/* Full Name */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#4B5563", uppercase: "true", letterSpacing: "0.5px" }}>FULL NAME</label>
-                  <div style={{ position: "relative" }}>
-                    <User size={15} color="#9CA3AF" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">FULL NAME</label>
+                  <div className="relative">
+                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
                     <input
                       type="text"
                       name="fullName"
                       value={formState.fullName}
-                      onChange={handleInputChange}
-                      onFocus={() => setFocusField("fullName")}
-                      onBlur={() => setFocusField(null)}
-                      required
+                      disabled={true}
                       placeholder="e.g. Gmaxepay Superadmin"
-                      style={inputContainerStyle("fullName")}
+                      className="w-full pl-10 pr-10 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed outline-none transition-all box-border"
                     />
+                    <Lock size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   </div>
                 </div>
 
                 {/* Email */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#4B5563", uppercase: "true", letterSpacing: "0.5px" }}>EMAIL ADDRESS</label>
-                  <div style={{ position: "relative" }}>
-                    <Mail size={15} color="#9CA3AF" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">EMAIL ADDRESS</label>
+                  <div className="relative">
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
                     <input
                       type="email"
                       name="email"
                       value={formState.email}
-                      onChange={handleInputChange}
-                      onFocus={() => setFocusField("email")}
-                      onBlur={() => setFocusField(null)}
-                      required
+                      disabled={true}
                       placeholder="e.g. admin@mrmedical.com"
-                      style={inputContainerStyle("email")}
+                      className="w-full pl-10 pr-10 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed outline-none transition-all box-border"
                     />
+                    <Lock size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   </div>
                 </div>
 
                 {/* Phone */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#4B5563", uppercase: "true", letterSpacing: "0.5px" }}>PHONE NUMBER</label>
-                  <div style={{ position: "relative" }}>
-                    <Phone size={15} color="#9CA3AF" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">PHONE NUMBER</label>
+                  <div className="relative">
+                    <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="tel"
                       name="phone"
                       value={formState.phone}
                       onChange={handleInputChange}
-                      onFocus={() => setFocusField("phone")}
-                      onBlur={() => setFocusField(null)}
                       placeholder="e.g. 9876543210"
-                      style={inputContainerStyle("phone")}
+                      className="w-full pl-10 pr-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-50 text-gray-800 hover:bg-gray-50/50 focus:bg-white focus:border-[#C8F04A] focus:ring-[3.5px] focus:ring-[#C8F04A]/15 outline-none transition-all duration-180 box-border"
                     />
                   </div>
                 </div>
 
                 {/* Reference Code */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#4B5563", uppercase: "true", letterSpacing: "0.5px" }}>ADMIN REFERENCE CODE</label>
-                  <div style={{ position: "relative" }}>
-                    <Code size={15} color="#9CA3AF" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">ADMIN REFERENCE CODE</label>
+                  <div className="relative">
+                    <Code size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
                     <input
                       type="text"
                       name="adminReferenceCode"
                       value={formState.adminReferenceCode}
-                      onChange={handleInputChange}
-                      onFocus={() => setFocusField("adminReferenceCode")}
-                      onBlur={() => setFocusField(null)}
+                      disabled={true}
                       placeholder="GMPY"
-                      style={{
-                        ...inputContainerStyle("adminReferenceCode"),
-                        fontFamily: "monospace",
-                        fontWeight: 700
-                      }}
+                      className="w-full pl-10 pr-10 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed outline-none transition-all box-border font-mono font-bold"
                     />
+                    <Lock size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   </div>
                 </div>
 
-                {/* Address field mapping for Spring Boot update */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", gridColumn: "1 / -1" }}>
-                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#4B5563", uppercase: "true", letterSpacing: "0.5px" }}>CORPORATE ADDRESS</label>
-                  <div style={{ position: "relative" }}>
-                    <MapPin size={15} color="#9CA3AF" style={{ position: "absolute", left: "14px", top: "16px", pointerEvents: "none" }} />
+                {/* Address */}
+                <div className="flex flex-col gap-1.5 md:col-span-2">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">CORPORATE ADDRESS</label>
+                  <div className="relative">
+                    <MapPin size={15} className="absolute left-3.5 top-4 text-gray-400 pointer-events-none" />
                     <textarea
                       name="address"
                       value={formState.address}
                       onChange={handleInputChange}
-                      onFocus={() => setFocusField("address")}
-                      onBlur={() => setFocusField(null)}
                       rows={3}
                       placeholder="Enter company head office or corporate address here..."
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px 12px 40px",
-                        borderRadius: "12px",
-                        border: "1.5px solid",
-                        borderColor: focusField === "address" ? "#C8F04A" : "#E5E7EB",
-                        background: focusField === "address" ? "#FFFFFF" : "#F9FAFB",
-                        boxShadow: focusField === "address" ? "0 0 0 3.5px rgba(200, 240, 74, 0.15)" : "none",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        color: "#1F2937",
-                        outline: "none",
-                        transition: "all 0.18s ease",
-                        resize: "none",
-                        boxSizing: "border-box"
-                      }}
+                      className="w-full pl-10 pr-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-50 text-gray-800 hover:bg-gray-50/50 focus:bg-white focus:border-[#C8F04A] focus:ring-[3.5px] focus:ring-[#C8F04A]/15 outline-none transition-all duration-180 box-border resize-none"
                     />
                   </div>
-                  <span style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "2px" }}>
+                  <span className="text-[11px] text-gray-400 mt-1 block leading-normal">
                     This corporate address is used in dynamic document headings, salary payslips, and experience letters generated by the hub.
                   </span>
                 </div>
@@ -822,29 +534,19 @@ const Settings = () => {
             </div>
 
             {/* Corporate Branding Assets Section */}
-            <div style={cardStyle}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid #F3F4F6", paddingBottom: "16px" }}>
-                <div style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "#EEF2FF",
-                  color: "#4F46E5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0
-                }}>
+            <div className="bg-white rounded-3xl border border-gray-200 p-7 shadow-sm flex flex-col gap-5 box-border">
+              <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                   <ImageIcon size={18} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 850, color: "#111827", margin: 0 }}>Corporate Branding Assets</h3>
-                  <p style={{ fontSize: "12px", color: "#6B7280", margin: "2px 0 0 0" }}>Configure corporate stamp and logos for PDF compiling.</p>
+                  <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Corporate Branding Assets</h3>
+                  <p className="text-xs text-gray-500 m-0 mt-0.5">Configure corporate stamp and logos for PDF compiling.</p>
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", boxSizing: "border-box" }}>
-                {/* Logo Uploader */}
+              <div className="flex flex-wrap gap-5 box-border">
+                {/* Company Logo Uploader */}
                 <FileUploader
                   label="Company Logo"
                   value={logoPreview}
@@ -865,79 +567,41 @@ const Settings = () => {
             </div>
 
             {/* Actions Bar */}
-            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "8px", boxSizing: "border-box" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  if (user) {
-                    setFormState({
-                      fullName: user.fullName || "",
-                      email: user.email || "",
-                      phone: user.phone || "",
-                      address: user.address || "",
-                      adminReferenceCode: user.adminReferenceCode || "",
-                    });
-                    setLogoPreview(user.logoUrl || "");
-                    setStampPreview(user.companyStampUrl || "");
-                    setLogoFile(null);
-                    setStampFile(null);
-                    setSaveStatus(null);
-                  }
-                }}
-                disabled={isSaving}
-                style={{
-                  padding: "12px 24px",
-                  background: "transparent",
-                  color: "#4B5563",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                  borderRadius: "12px",
-                  border: "1.5px solid #E5E7EB",
-                  cursor: isSaving ? "not-allowed" : "pointer",
-                  transition: "all 0.18s ease",
-                }}
-                onMouseEnter={e => {
-                  if (!isSaving) {
-                    e.currentTarget.style.background = "#F9FAFB";
-                    e.currentTarget.style.borderColor = "#9CA3AF";
-                  }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#E5E7EB";
-                }}
-              >
-                Reset Changes
-              </button>
+            <div className="flex justify-end items-center gap-3 mt-2 box-border">
+              {hasChanges && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (user) {
+                      setFormState({
+                        fullName: user.fullName || "",
+                        email: user.email || "",
+                        phone: user.phone || "",
+                        address: user.address || "",
+                        adminReferenceCode: user.adminReferenceCode || "",
+                      });
+                      setLogoPreview(getFullAssetUrl(user.logoUrl) || "");
+                      setStampPreview(getFullAssetUrl(user.companyStampUrl) || "");
+                      setLogoFile(null);
+                      setStampFile(null);
+                      setSaveStatus(null);
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="px-6 py-3 border border-gray-200 text-gray-600 bg-transparent font-bold text-sm rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  Reset Changes
+                </button>
+              )}
 
               <button
                 type="submit"
-                disabled={isSaving}
-                style={{
-                  padding: "12px 28px",
-                  background: "#C8F04A",
-                  color: "#111827",
-                  fontWeight: 800,
-                  fontSize: "14px",
-                  borderRadius: "12px",
-                  border: "none",
-                  cursor: isSaving ? "not-allowed" : "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 4px 14px rgba(200, 240, 74, 0.25)",
-                  transition: "all 0.18s ease",
-                }}
-                onMouseEnter={e => {
-                  if (!isSaving) {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(200, 240, 74, 0.35)";
-                  }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(200, 240, 74, 0.25)";
-                }}
+                disabled={isSaving || !hasChanges}
+                className={`px-8 py-3 font-extrabold text-sm rounded-xl transition-all flex items-center gap-2 border-none ${
+                  (!hasChanges || isSaving) 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none" 
+                    : "bg-[#C8F04A] text-gray-900 shadow-md shadow-[#C8F04A]/10 hover:shadow-[#C8F04A]/25 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                }`}
               >
                 {isSaving ? (
                   <>
