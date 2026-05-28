@@ -220,7 +220,140 @@ export default function OfferLetter({ onBack }) {
           scale: 2, 
           useCORS: true,
           logging: false,
-          letterRendering: true
+          letterRendering: true,
+          onclone: (clonedDoc) => {
+            const elements = clonedDoc.getElementsByTagName('*');
+            
+            const oklchToRgb = (l, c, h, a = 1) => {
+              const hRad = (h * Math.PI) / 180;
+              const L = l;
+              const a_ = c * Math.cos(hRad);
+              const b_ = c * Math.sin(hRad);
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const oklabToRgb = (l, a_, b_, a = 1) => {
+              const L = l;
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const resolveModernColors = (colorStr) => {
+              if (!colorStr || typeof colorStr !== 'string') return colorStr;
+              let resolved = colorStr;
+              
+              if (resolved.includes('oklch')) {
+                try {
+                  resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const c = parseFloat(parts[1]);
+                      const h = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
+                        return oklchToRgb(l, c, h, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              if (resolved.includes('oklab')) {
+                try {
+                  resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const a_coord = parseFloat(parts[1]);
+                      const b_coord = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
+                        return oklabToRgb(l, a_coord, b_coord, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              return resolved;
+            };
+
+            const properties = [
+              'color', 'backgroundColor', 'borderColor', 
+              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
+              'fill', 'stroke', 'backgroundImage', 'boxShadow'
+            ];
+
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i];
+              const computed = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
+              
+              properties.forEach(prop => {
+                const val = computed[prop];
+                if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    el.style[prop] = resolveModernColors(val);
+                  } catch (err) {}
+                }
+              });
+            }
+
+            // Force A4 layout constraints for all sheets in the offer letter (both Page 1 and Page 2)
+            const sheets = clonedDoc.querySelectorAll('.printable-sheet');
+            sheets.forEach(sheet => {
+              sheet.style.width = '210mm';
+              sheet.style.height = '295mm';
+              sheet.style.minHeight = '295mm';
+              sheet.style.maxHeight = '295mm';
+              sheet.style.paddingLeft = '50px';
+              sheet.style.paddingRight = '50px';
+              sheet.style.paddingTop = '24px';
+              sheet.style.paddingBottom = '24px';
+              sheet.style.boxSizing = 'border-box';
+              sheet.style.borderRadius = '0px';
+              sheet.style.border = 'none';
+              sheet.style.boxShadow = 'none';
+              sheet.style.overflow = 'hidden';
+            });
+          }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
@@ -537,176 +670,354 @@ export default function OfferLetter({ onBack }) {
         </div>
       )}
 
-      {/* Live Document Sheet View */}
+      {/* Live Document Sheet View (2-Page Stacked Print View) */}
       <div
         ref={printableRef}
-        className="printable-sheet relative mx-auto flex w-full max-w-[800px] min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
+        className="printable-sheet-container mx-auto flex flex-col gap-8 max-w-[800px] multipage-print"
       >
-        {/* Top-Right Decorative Accents */}
+        {/* PAGE 1: Formal Offer Letter */}
         <div
-          className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
-          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
-        />
-        <div
-          className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
-          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
-        />
+          className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
+        >
+          {/* Top-Right Decorative Accents */}
+          <div
+            className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
+            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', backgroundColor: '#d97706' }}
+          />
+          <div
+            className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
+            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', background: 'linear-gradient(to bottom right, #15803d, #166534)' }}
+          />
 
-        {/* Bottom Decorative Slanted Accents */}
-        <div
-          className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
-          style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)' }}
-        />
-        <div
-          className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
-          style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)' }}
-        />
+          {/* Bottom Decorative Slanted Accents */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
+            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', backgroundColor: '#d97706' }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
+            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', background: 'linear-gradient(to right, #15803d, #166534)' }}
+          />
 
-        {/* Main content wrapper containing header, body and signature block */}
-        <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
-          {/* Letterhead Header */}
-          <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            {/* Logo & Brand */}
-            <div className="flex items-center gap-3.5">
-              {user?.logoUrl ? (
-                <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+          {/* Main content wrapper containing header, body and signature block */}
+          <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
+            {/* Letterhead Header */}
+            <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+              {/* Logo & Brand */}
+              <div className="flex items-center gap-3.5">
+                {user?.logoUrl ? (
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                    <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                    <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                    <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                )}
+                <div>
+                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                    {companyName}
+                  </div>
                 </div>
-              ) : (
-                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
-                  <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
-                  <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
-                  <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              )}
-              <div>
-                <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800">
-                  {companyName}
-                </div>
+              </div>
+
+              {/* Document Date */}
+              <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
+                Date: {formatDateIN(joiningDate)}
               </div>
             </div>
 
-            {/* Document Date */}
-            <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
-              Date: {formatDateIN(joiningDate)}
+            {/* Recipient Block */}
+            <div className="mb-4 text-xs leading-relaxed text-gray-800">
+              <div className="font-bold">To,</div>
+              <div className="mt-0.5 text-[13px] font-extrabold uppercase tracking-wide text-gray-900">{candidateName}</div>
+              <div className="mt-0.5">S/o {parentName} {addressLine1}</div>
+              {addressLine2 && <div>{addressLine2}</div>}
+              <div>{addressLine3}</div>
+              {mobile && <div>Mobile: {mobile}</div>}
+              {email && <div>Email: {email}</div>}
+            </div>
+
+            {/* Salutation */}
+            <div className="mb-2 text-xs font-bold text-gray-800">
+              Dear Mr. {candidateName.split(' ')[0]},
+            </div>
+
+            {/* Subject Header */}
+            <div className="mb-4 text-center text-xs font-extrabold uppercase tracking-wider text-gray-900 underline">
+              Sub: Offer Letter
+            </div>
+
+            {/* Body Paragraphs */}
+            <div className="flex flex-col gap-3 text-justify text-xs leading-relaxed text-gray-800 font-medium">
+              <p className="margin-0 indent-8">
+                We are pleased to offer you employment in the capacity of <strong>{designation}</strong>, in <strong>{department}</strong> in M/s. <strong>{companyName}</strong>, {companyRegAddress}.
+              </p>
+
+              <p className="margin-0">
+                Please report to duty <strong>on or before {formatDateIN(joiningDate)}</strong>. Your base location will be <strong>{baseLocation}</strong>. You will be governed by the policies of the Company. Please be noted that if you fail to report on or before the said date, this offer will cease to exist.
+              </p>
+
+              <p className="margin-0">
+                We believe that your skills and background would be a valuable asset to our organization.
+              </p>
+
+              <p className="margin-0 font-bold">
+                Your monthly and annual consolidated compensation structure is detailed in the attached **Annexure A** of this offer letter.
+              </p>
+
+              <p className="margin-0">
+                On your joining date, please bring/send (<strong>{hrEmail}</strong>) the following documents: A) 2 Passport size photographs. B) Photocopy of all Educational and Technical Qualification Certificates. C) Relieving Letter and Experience Certificate from your present employer. D) Last drawn Salary Slip/Certificate showing monthly salary and annual benefits from the present employer, PAN card, Aadhar card, Driving License copy, etc.
+              </p>
+
+              <p className="margin-0">
+                This is a provisional offer letter. The detailed letter with terms and conditions of employment will be handed over to you on your joining date.
+              </p>
+
+              <p className="mt-1">
+                We look forward to your joining the company and becoming a productive member of the team.<br />
+                <strong>Welcome to {companyName},</strong>
+              </p>
+            </div>
+
+            {/* Signatures Footer */}
+            <div className="signature-block mt-auto flex flex-row items-end justify-between pt-6 text-xs text-gray-800">
+              <div>
+                <div className="font-bold">Yours Sincerely,</div>
+                <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
+
+                {/* Stamp Image if configured, fallback to Simulated Sign */}
+                {user?.companyStampUrl ? (
+                  <div className="mb-1 flex h-14 items-center">
+                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                  </div>
+                ) : (
+                  /* Ink Blue Sign Simulation */
+                  <div
+                    className="mb-0.5 h-8 select-none font-serif text-xl font-bold text-blue-900 rotate-[-4deg] translate-x-2.5"
+                    style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                  >
+                    {hrHeadName}
+                  </div>
+                )}
+
+                <div className="mb-1 w-40 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{hrHeadName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
+              </div>
             </div>
           </div>
 
-          {/* Recipient Block */}
-          <div className="mb-4 text-xs leading-relaxed text-gray-800">
-            <div className="font-bold">To,</div>
-            <div className="mt-0.5 text-[13px] font-extrabold uppercase tracking-wide text-gray-900">{candidateName}</div>
-            <div className="mt-0.5">S/o {parentName} {addressLine1}</div>
-            {addressLine2 && <div>{addressLine2}</div>}
-            <div>{addressLine3}</div>
-            {mobile && <div>Mobile: {mobile}</div>}
-            {email && <div>Email: {email}</div>}
-          </div>
-
-          {/* Salutation */}
-          <div className="mb-2 text-xs font-bold text-gray-800">
-            Dear Mr. {candidateName.split(' ')[0]},
-          </div>
-
-          {/* Subject Header */}
-          <div className="mb-4 text-center text-xs font-extrabold uppercase tracking-wider text-gray-900 underline">
-            Sub: Offer Letter
-          </div>
-
-          {/* Body Paragraphs */}
-          <div className="flex flex-col gap-3 text-justify text-xs leading-relaxed text-gray-800 font-medium">
-            <p className="margin-0 indent-8">
-              We are pleased to offer you an employment in the capacity of <strong>{designation}</strong>, in <strong>{department}</strong> in M/s. <strong>{companyName}</strong>, {companyRegAddress}.
-            </p>
-
-            <p className="margin-0">
-              Please report to duty <strong>on or before {formatDateIN(joiningDate)}</strong>. Your base location will be <strong>{baseLocation}</strong>. You will be governed by policies of the Company. Please be noted that fail to report on or before the said date, this offer will be ceased.
-            </p>
-
-            <p className="margin-0">
-              We believe that your skills and background would be a valuable asset to our organization.
-            </p>
-
-            <p className="margin-0">
-              You will be entitled to a consolidated salary of <strong>INR {Number(salaryAmount).toLocaleString('en-IN')}/- ({salaryWords} only)</strong> per month. Apart from the salary you will be entitled to get HQs.{hqAllowance}/-, Ex. Station Allowances Rs.{exStationAllowance}/-, Out Station Allowances Rs.{outStationAllowance}/- per day and Rs.{conveyanceRate} paise per KM for Ex. Station and Out station work.
-            </p>
-
-            <p className="margin-0">
-              On your joining date please bring/send (<strong>{hrEmail}</strong>) the documents i.e A) 2 Passport size photographs. B) Photocopy of all Educational and Technical Qualification Certificates. C) Relieving Letter and Experience Certificate from your present employer. D) Last drawn Salary Slip /Certificate showing monthly salary and Annual benefits, from the present employer, Pan card, Aadhar card, Driving License copy etc.
-            </p>
-
-            <p className="margin-0">
-              This is a provisional offer letter. The detailed letter with terms and conditions of employment will be handed over to you on your joining date.
-            </p>
-
-            <div className="mt-1">
-              <div className="font-bold mb-1">Please review this offer and to confirm your acceptance.</div>
-              <ul className="pl-5 list-disc flex flex-col gap-1">
-                <li>Please confirm your acceptance <strong>before {formatDateIN(joiningDate)}</strong>, via an email, failing which this offer will cease to exist.</li>
-                <li>Any change of joining date request must be intimated in advance and should be agreed mutually.</li>
-                <li>Your will be reporting your <strong>{reportingManager} ({reportingPhone})</strong>.</li>
-                <li>Reporting: <strong>Reporting time & location</strong> will be communicated by your Reporting Manager at the time of joining.</li>
-              </ul>
+          {/* Letter Footer Address - Rendered as flex child below content, ensuring zero overlap */}
+          <div className="relative z-30 mt-6 border-t border-gray-100 pt-3 pb-12 text-center text-[10px] leading-relaxed text-gray-500">
+            <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700" style={{ color: '#b45309' }}>
+              {companyName}
             </div>
-            <p className="mt-1">
-              We look forward to your joining the company and become a productive member of the team.<br />
-              <strong>Welcome to {companyName},</strong>
-            </p>
-          </div>
-
-          {/* Signatures Footer */}
-          <div className="signature-block mt-auto flex flex-row items-end justify-between pt-6 text-xs text-gray-800">
             <div>
-              <div className="font-bold">Yours Sincerely,</div>
-              <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
-
-              {/* Stamp Image if configured, fallback to Simulated Sign */}
-              {user?.companyStampUrl ? (
-                <div className="mb-1 flex h-14 items-center">
-                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
-                </div>
-              ) : (
-                /* Ink Blue Sign Simulation */
-                <div
-                  className="mb-0.5 h-8 select-none font-serif text-xl font-bold text-blue-900 rotate-[-4deg] translate-x-2.5"
-                  style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
-                >
-                  {hrHeadName}
-                </div>
-              )}
-
-              <div className="mb-1 w-40 border-t border-gray-400"></div>
-              <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{hrHeadName}</div>
-              <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
+              Regd. Office: {companyRegAddress}
             </div>
-
-            <div className="text-right flex flex-col items-end">
-              <div className="h-14"></div>
-
-              <div className="mb-1 w-40 border-t border-gray-400"></div>
-              <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">Candidate Signature</div>
-              <div className="text-[9px] font-semibold text-gray-500">Date: ________________</div>
+            <div className="font-bold text-gray-600" style={{ color: '#4b5563' }}>
+              {user?.phone && `Ph: ${user.phone} | `}Email: {hrEmail}
             </div>
           </div>
         </div>
 
-        {/* Letter Footer Address - Rendered as flex child below content, ensuring zero overlap */}
-        <div className="relative z-30 mt-6 border-t border-gray-100 pt-3 pb-12 text-center text-[10px] leading-relaxed text-gray-500">
-          <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700">
-            {companyName}
+        {/* Page Break for html2pdf rendering */}
+        <div className="html2pdf__page-break"></div>
+
+        {/* PAGE 2: Annexure A (Salary Table & Terms) */}
+        <div
+          className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
+        >
+          {/* Top-Right Decorative Accents */}
+          <div
+            className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
+            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', backgroundColor: '#d97706' }}
+          />
+          <div
+            className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
+            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', background: 'linear-gradient(to bottom right, #15803d, #166534)' }}
+          />
+
+          {/* Bottom Decorative Slanted Accents */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
+            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', backgroundColor: '#d97706' }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
+            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', background: 'linear-gradient(to right, #15803d, #166534)' }}
+          />
+
+          <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
+            {/* Annexure Header */}
+            <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+              <div className="flex items-center gap-3.5">
+                {user?.logoUrl ? (
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                    <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                  </svg>
+                )}
+                <div>
+                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                    {companyName}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
+                Date: {formatDateIN(joiningDate)}
+              </div>
+            </div>
+
+            <div className="text-center text-sm font-extrabold uppercase tracking-wider text-gray-900 underline mb-2">
+              Annexure A: Compensation & Allowances Structure
+            </div>
+
+            {/* Candidate & Designation Details */}
+            <div className="mb-4 grid grid-cols-2 gap-3 text-xs bg-gray-50 border border-gray-100 rounded-lg p-3">
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Employee Name:</span>
+                <span className="block font-extrabold text-gray-800">{candidateName}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Designation / Role:</span>
+                <span className="block font-extrabold text-gray-800">{designation}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Department:</span>
+                <span className="block font-semibold text-gray-700">{department}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Base Work Location:</span>
+                <span className="block font-semibold text-gray-700">{baseLocation}</span>
+              </div>
+            </div>
+
+            {/* Compensation Table */}
+            <div className="mb-4">
+              <div className="font-bold text-xs text-gray-800 mb-1.5 uppercase tracking-wide">A. Monthly Salary Breakdown</div>
+              <table className="w-full border-collapse border border-gray-200 text-xs">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Salary Component</th>
+                    <th className="border border-gray-200 px-4 py-2 text-right font-bold text-gray-700">Percentage</th>
+                    <th className="border border-gray-200 px-4 py-2 text-right font-bold text-gray-700">Monthly Amount (INR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Basic Salary</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">50%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.50).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">House Rent Allowance (HRA)</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">20%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.20).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Special & Conveyance Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">30%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.30).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr className="bg-emerald-50 font-bold">
+                    <td className="border border-gray-200 px-4 py-2 text-emerald-800">Gross Monthly Salary</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-emerald-800">100%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-emerald-800">₹{Number(salaryAmount).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className="text-[10px] text-gray-500 font-semibold mt-1">
+                * Consolidated Salary: <strong>₹{Number(salaryAmount).toLocaleString('en-IN')}/- per month ({salaryWords} Only)</strong>.
+              </div>
+            </div>
+
+            {/* Field Allowances Table */}
+            <div className="mb-4">
+              <div className="font-bold text-xs text-gray-800 mb-1.5 uppercase tracking-wide">B. Field Work Allowances & Conveyance</div>
+              <table className="w-full border-collapse border border-gray-200 text-xs">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Allowance Parameter</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Description / Rates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">HQ Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{hqAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Ex-Station Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{exStationAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Out-Station Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{outStationAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Conveyance Rate per KM</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{conveyanceRate}/- per KM for Ex-station and Out-station work</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Reporting & Acceptance Rules */}
+            <div className="text-[11px] leading-normal text-gray-800 border-l-4 border-amber-500 pl-3 py-1 bg-amber-50/50 rounded-r-lg mb-2">
+              <strong>Reporting & Acceptance:</strong> You will report to <strong>{reportingManager} ({reportingPhone})</strong>. Please confirm your formal acceptance on or before <strong>{formatDateIN(joiningDate)}</strong>.
+            </div>
+
+            {/* Signature Blocks */}
+            <div className="signature-block mt-auto flex flex-row items-end justify-between pt-6 text-xs text-gray-800">
+              <div>
+                <div className="font-bold">Yours Sincerely,</div>
+                <div className="mb-4 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
+
+                {user?.companyStampUrl ? (
+                  <div className="mb-1 flex h-12 items-center">
+                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="mb-0.5 h-6 select-none font-serif text-lg font-bold text-blue-900 rotate-[-4deg] translate-x-2">
+                    {hrHeadName}
+                  </div>
+                )}
+                <div className="mb-1 w-36 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase text-gray-950">{hrHeadName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
+              </div>
+
+              <div className="text-right flex flex-col items-end">
+                <div className="font-bold mb-8">Candidate Acceptance Signature</div>
+                <div className="mb-1 w-40 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{candidateName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">Date: ________________</div>
+              </div>
+            </div>
           </div>
-          <div>
-            Regd. Office: {companyRegAddress}
-          </div>
-          <div className="font-bold text-gray-600">
-            {user?.phone && `Ph: ${user.phone} | `}Email: {hrEmail}
+
+          {/* Letter Footer Address */}
+          <div className="relative z-30 mt-6 border-t border-gray-100 pt-3 pb-12 text-center text-[10px] leading-relaxed text-gray-500">
+            <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700" style={{ color: '#b45309' }}>
+              {companyName}
+            </div>
+            <div>
+              Regd. Office: {companyRegAddress}
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   )

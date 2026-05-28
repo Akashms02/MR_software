@@ -126,7 +126,153 @@ export default function RelievingLetter({ onBack }) {
           scale: 2, 
           useCORS: true,
           logging: false,
-          letterRendering: true
+          letterRendering: true,
+          onclone: (clonedDoc) => {
+            const elements = clonedDoc.getElementsByTagName('*');
+            
+            const oklchToRgb = (l, c, h, a = 1) => {
+              const hRad = (h * Math.PI) / 180;
+              const L = l;
+              const a_ = c * Math.cos(hRad);
+              const b_ = c * Math.sin(hRad);
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const oklabToRgb = (l, a_, b_, a = 1) => {
+              const L = l;
+              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+              const l3 = l_ * l_ * l_;
+              const m3 = m_ * m_ * m_;
+              const s3 = s_ * s_ * s_;
+              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+            };
+
+            const resolveModernColors = (colorStr) => {
+              if (!colorStr || typeof colorStr !== 'string') return colorStr;
+              let resolved = colorStr;
+              
+              if (resolved.includes('oklch')) {
+                try {
+                  resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const c = parseFloat(parts[1]);
+                      const h = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
+                        return oklchToRgb(l, c, h, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              if (resolved.includes('oklab')) {
+                try {
+                  resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
+                    const parts = p1.trim().split(/[\s/]+/);
+                    if (parts.length >= 3) {
+                      let l = parseFloat(parts[0]);
+                      if (parts[0].includes('%')) l /= 100;
+                      const a_coord = parseFloat(parts[1]);
+                      const b_coord = parseFloat(parts[2]);
+                      let a = 1;
+                      if (parts[3]) {
+                        a = parseFloat(parts[3]);
+                        if (parts[3].includes('%')) a /= 100;
+                      }
+                      if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
+                        return oklabToRgb(l, a_coord, b_coord, a);
+                      }
+                    }
+                    return match;
+                  });
+                } catch (e) {}
+              }
+
+              return resolved;
+            };
+
+            const properties = [
+              'color', 'backgroundColor', 'borderColor', 
+              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
+              'fill', 'stroke', 'backgroundImage', 'boxShadow'
+            ];
+
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i];
+              const computed = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
+              
+              properties.forEach(prop => {
+                const val = computed[prop];
+                if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    el.style[prop] = resolveModernColors(val);
+                  } catch (err) {}
+                }
+              });
+            }
+
+            // Force single page A4 layout constraints
+            const sheet = clonedDoc.querySelector('.printable-sheet');
+            if (sheet) {
+              sheet.style.width = '210mm';
+              sheet.style.height = '295mm';
+              sheet.style.minHeight = '295mm';
+              sheet.style.maxHeight = '295mm';
+              sheet.style.paddingLeft = '50px';
+              sheet.style.paddingRight = '50px';
+              sheet.style.paddingTop = '16px';
+              sheet.style.paddingBottom = '16px';
+              sheet.style.boxSizing = 'border-box';
+              sheet.style.borderRadius = '0px';
+              sheet.style.border = 'none';
+              sheet.style.boxShadow = 'none';
+              sheet.style.overflow = 'hidden';
+
+              // Compact internal spacing
+              const bodyDiv = sheet.querySelector('.letter-body-content');
+              if (bodyDiv) {
+                bodyDiv.style.gap = '8px';
+                bodyDiv.style.lineHeight = '1.35';
+                bodyDiv.style.fontSize = '11px';
+              }
+              const signatureBlock = sheet.querySelector('.signature-block');
+              if (signatureBlock) {
+                signatureBlock.style.marginTop = '10px';
+                signatureBlock.style.paddingTop = '10px';
+              }
+            }
+          }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
@@ -537,7 +683,7 @@ export default function RelievingLetter({ onBack }) {
           </h3>
 
           {/* Body Text */}
-          <div style={{ fontSize: '12.5px', color: '#1f2937', textAlign: 'justify', display: 'flex', flexDirection: 'column', gap: '14px', textIndent: '40px', lineHeight: 1.6 }}>
+          <div className="letter-body-content" style={{ fontSize: '12.5px', color: '#1f2937', textAlign: 'justify', display: 'flex', flexDirection: 'column', gap: '14px', textIndent: '40px', lineHeight: 1.6 }}>
             <p style={{ margin: 0 }}>
               This is to certify that Mr. <strong>{candidateName}</strong> (Employee ID: <strong>{selectedId}</strong>) was employed with M/s. <strong>{companyName}</strong> as <strong>{designation}</strong> in the <strong>{department}</strong> Department.
             </p>
