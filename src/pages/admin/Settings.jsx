@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProfile, updateAdminSettings } from "../../redux/actions/authActions";
+import { API_ROUTE } from "../../data/env";
 import {
   User,
   Mail,
@@ -19,6 +20,21 @@ import {
   Compass,
   FileCheck
 } from "lucide-react";
+
+// Helper to resolve backend relative file upload paths to absolute URLs using the API origin
+const getFullAssetUrl = (relativeUrl) => {
+  if (!relativeUrl) return "";
+  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
+    return relativeUrl;
+  }
+  try {
+    const url = new URL(API_ROUTE);
+    return `${url.origin}${relativeUrl}`;
+  } catch (e) {
+    // Fallback path mapping for dev and production
+    return `https://api-mr-software.gmaxepay.in${relativeUrl}`;
+  }
+};
 
 // Inline styled interactive uploader supporting drag-and-drop, direct file uploads, base64 visual previews
 const FileUploader = ({ label, value, onChange, onClear, id }) => {
@@ -219,8 +235,8 @@ const Settings = () => {
         address: user.address || "",
         adminReferenceCode: user.adminReferenceCode || "",
       });
-      setLogoPreview(user.logoUrl || "");
-      setStampPreview(user.companyStampUrl || "");
+      setLogoPreview(getFullAssetUrl(user.logoUrl) || "");
+      setStampPreview(getFullAssetUrl(user.companyStampUrl) || "");
       setLogoFile(null);
       setStampFile(null);
     }
