@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { EMPLOYEES } from '../../data/hrmsData'
 import { PrimaryBtn, OutlineBtn } from '../ui'
-
+import { CompanyReleivingLetter } from '../../redux/actions/companyAction'
+import { fetchProfile } from '../../redux/actions/authActions'
 export default function RelievingLetter({ onBack }) {
   const [selectedId, setSelectedId] = useState(EMPLOYEES[0]?.id || '')
   

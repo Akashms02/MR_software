@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Printer, RefreshCw } from 'lucide-react'
 import { EMPLOYEES } from '../../data/hrmsData'
 import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { API_ROUTE } from '../../data/env'
-
+import { CompanyOfferLetter } from '../../redux/actions/companyAction'
 // Helper to resolve backend relative file upload paths to absolute URLs using the API origin
 const getFullAssetUrl = (relativeUrl) => {
   if (!relativeUrl) return "";
@@ -106,6 +106,9 @@ export default function OfferLetter({ onBack }) {
   const [hrHeadName, setHrHeadName] = useState('CH. MURTHY')
   const [hrHeadDesignation, setHrHeadDesignation] = useState('Head - HR')
 
+  const [probationPeriod, setProbationPeriod] = useState('3 months')
+  const [isGenerating, setIsGenerating] = useState(false)
+
   // Dynamic company assets sync when user profile loads
   useEffect(() => {
     if (user) {
@@ -166,6 +169,34 @@ export default function OfferLetter({ onBack }) {
       setJoiningDate(new Date().toISOString().split('T')[0])
     }
     window.print()
+  }
+
+  const handleGenerateOfferLetter = async () => {
+    setIsGenerating(true)
+    const payload = {
+      fullName: candidateName,
+      email: email,
+      phone: mobile,
+      designation: designation,
+      department: department,
+      dateOfJoining: joiningDate,
+      workLocation: baseLocation,
+      probationPeriod: probationPeriod,
+      salaryDetails: Number(salaryAmount)
+    }
+
+    try {
+      const res = await dispatch(CompanyOfferLetter(payload))
+      if (res) {
+        alert("Offer letter generated successfully on the backend!")
+      } else {
+        alert("Failed to generate offer letter on the backend.")
+      }
+    } catch (err) {
+      alert("Error: " + (err.response?.data?.message || err.message || "An unexpected error occurred."))
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   // Editor Inputs Styles
@@ -304,6 +335,10 @@ export default function OfferLetter({ onBack }) {
             <label style={labelStyle}>Base Location (uppercase)</label>
             <input type="text" value={baseLocation} onChange={e => setBaseLocation(e.target.value.toUpperCase())} style={inpStyle} />
           </div>
+          <div>
+            <label style={labelStyle}>Probation Period</label>
+            <input type="text" value={probationPeriod} onChange={e => setProbationPeriod(e.target.value)} style={inpStyle} />
+          </div>
 
           <div style={sectionHeaderStyle}>Remuneration & Allowances</div>
           <div>
@@ -352,7 +387,11 @@ export default function OfferLetter({ onBack }) {
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
+          <OutlineBtn onClick={handleGenerateOfferLetter} disabled={isGenerating} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
+            <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
+            {isGenerating ? "Generating..." : "Generate Offer Letter"}
+          </OutlineBtn>
           <PrimaryBtn onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
             <Printer size={16} /> Print / Export PDF
           </PrimaryBtn>

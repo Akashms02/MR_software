@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { ArrowLeft, Printer, Landmark, FileText } from 'lucide-react'
 import { EMPLOYEES } from '../../data/hrmsData'
 import { Card, PrimaryBtn, OutlineBtn } from '../ui'
-
+import { fetchProfile } from '../../redux/actions/authActions'
+import { CompanyPayslip } from '../../redux/actions/companyAction'
 // Helper to convert number to Indian Rupees words
 function numberToRupeesWords(amount) {
   const words = {
