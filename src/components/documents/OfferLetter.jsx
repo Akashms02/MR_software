@@ -1,34 +1,30 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { ArrowLeft, Printer, RefreshCw } from 'lucide-react'
-import { EMPLOYEES } from '../../data/hrmsData'
+import html2pdf from 'html2pdf.js'
+import { ArrowLeft, Printer, RefreshCw, CheckCircle2, X, ExternalLink, Mail, FileText } from 'lucide-react'
 import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
-import { API_ROUTE } from '../../data/env'
-import { CompanyOfferLetter } from '../../redux/actions/companyAction'
-// Helper to resolve backend relative file upload paths to absolute URLs using the API origin
+import { CompanyOfferLetter, CompanyRoles, CompanyDepartments } from '../../redux/actions/companyAction'
+import { getMyTeam } from '../../redux/actions/teamActions'
+
 const getFullAssetUrl = (relativeUrl) => {
   if (!relativeUrl) return "";
   if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
     return relativeUrl;
   }
-  try {
-    const url = new URL(API_ROUTE);
-    return `${url.origin}${relativeUrl}`;
-  } catch (e) {
-    // Fallback path mapping for dev and production
-    return `https://api-mr-software.gmaxepay.in${relativeUrl}`;
-  }
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
+  return `${base}${relativeUrl}`;
 };
 
 // Helper to convert salary numbers to Indian currency words
 function numberToWordsINR(num) {
   const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
   const b = ['', '', 'Twenty ', 'Thirty ', 'Forty ', 'Fifty ', 'Sixty ', 'Seventy ', 'Eighty ', 'Ninety '];
-  
+
   num = Math.floor(Number(num) || 0);
   if (num === 0) return 'Zero';
-  
+
   function translate(n) {
     let word = '';
     if (n < 20) {
@@ -40,7 +36,7 @@ function numberToWordsINR(num) {
     }
     return word;
   }
-  
+
   let result = '';
   if (num >= 10000000) {
     result += translate(Math.floor(num / 10000000)) + 'Crore ';
@@ -61,17 +57,22 @@ function numberToWordsINR(num) {
       result += translate(num);
     }
   }
-  
+
   return result.trim();
 }
 
 export default function OfferLetter({ onBack }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { team: employees = [] } = useSelector((state) => state.team);
+  const { getRoles = [], getDepartments = [] } = useSelector((state) => state.company);
 
-  // Fetch admin profile on mount to sync dynamic company assets
+  // Fetch profile, team, and roles on mount
   useEffect(() => {
     dispatch(fetchProfile());
+    dispatch(getMyTeam());
+    dispatch(CompanyRoles());
+    dispatch(CompanyDepartments());
   }, [dispatch]);
 
   // Prepopulated state defaults mapping the Noel Pharma sample letter
@@ -84,12 +85,12 @@ export default function OfferLetter({ onBack }) {
   const [email, setEmail] = useState('amaresh.dond1@gmail.com')
 
   // Offer Details
-  const [designation, setDesignation] = useState('TSE')
+  const [designation, setDesignation] = useState('');
   const [department, setDepartment] = useState('Sales & Marketing Department')
   const [companyName, setCompanyName] = useState('NOEL PHARMA (INDIA) PRIVATE LIMITED')
   const [companyRegAddress, setCompanyRegAddress] = useState('Survey Nos: 1 to 40, Plot No. 109, Uppal Bhagagayath Revenue Village, Uppal-Mandal, Medchal-Malkajgiri, Hyderabad-500039')
   const [joiningDate, setJoiningDate] = useState('2025-12-18')
-  const [baseLocation, setBaseLocation] = useState('SHAHAPUR, KARNATAKA')
+  const [baseLocation, setBaseLocation] = useState('SURVEY NOS: 1 TO 40, PLOT NO. 109, UPPAL BHAGAGAYATH REVENUE VILLAGE, UPPAL-MANDAL, MEDCHAL-MALKAJGIRI, HYDERABAD-500039')
 
   // Salary & Allowance Specs
   const [salaryAmount, setSalaryAmount] = useState(25000)
@@ -108,12 +109,21 @@ export default function OfferLetter({ onBack }) {
 
   const [probationPeriod, setProbationPeriod] = useState('3 months')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [modalData, setModalData] = useState({ emailSentTo: '', previewUrl: '', status: '' })
+  const [modalError, setModalError] = useState('')
+
+  // Ref to the printable live document sheet
+  const printableRef = useRef(null)
 
   // Dynamic company assets sync when user profile loads
   useEffect(() => {
     if (user) {
       if (user.fullName) setCompanyName(user.fullName.toUpperCase());
-      if (user.address) setCompanyRegAddress(user.address);
+      if (user.address) {
+        setCompanyRegAddress(user.address);
+        setBaseLocation(user.address.toUpperCase());
+      }
       if (user.email) setHrEmail(user.email);
     }
   }, [user]);
@@ -141,28 +151,41 @@ export default function OfferLetter({ onBack }) {
     }
   }
 
-  // Load a pre-existing employee database record into states
+  // Load a live employee record from API team into form states
   const handleLoadEmployee = (empId) => {
-    const emp = EMPLOYEES.find(e => e.id === empId)
+    const emp = employees.find(e => (e.employeeId || e.id) === empId)
     if (emp) {
-      setCandidateName(emp.name.toUpperCase())
-      setParentName('_______________') // Default blank for father
-      setAddressLine1('R/o ' + emp.location)
+      setCandidateName((emp.fullName || emp.name || '').toUpperCase())
+      setParentName('_______________')
+      setAddressLine1('R/o ' + (emp.location || emp.city || '_______________'))
       setAddressLine2('_______________')
-      setAddressLine3(emp.location + ' DIST.')
-      setMobile(emp.phone || '9999999999')
+      setAddressLine3((emp.location || emp.city || '') + ' DIST.')
+      setMobile(emp.phone || emp.mobileNumber || '9999999999')
       setEmail(emp.email || '')
-      setDesignation(emp.designation === 'Sr. Medical Officer' ? 'TSE' : emp.designation)
-      setDepartment(emp.dept || 'Sales & Marketing Department')
-      setBaseLocation(emp.location.toUpperCase() + ', KARNATAKA')
-      
-      const sal = emp.salary || 25000
+      setDesignation(emp.designation === 'Sr. Medical Officer' ? 'TSE' : (emp.designation || 'TSE'))
+      setDepartment(emp.department || emp.dept || 'Sales & Marketing Department')
+      setBaseLocation(companyRegAddress.toUpperCase())
+
+      const sal = emp.salary || emp.salaryAmount || 25000
       setSalaryAmount(sal)
       const words = numberToWordsINR(sal)
       const formattedWords = words.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
       setSalaryWords(formattedWords)
     }
   }
+
+  // Handle preloading of reporting manager from team list
+  const handleSelectManager = (empId) => {
+    const mgr = employees.find(e => (e.employeeId || e.id) === empId || e.id?.toString() === empId);
+    if (mgr) {
+      const formattedRole = mgr.role 
+        ? mgr.role.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') 
+        : 'Manager';
+      
+      setReportingManager(`${formattedRole}, ${mgr.fullName}`);
+      setReportingPhone(mgr.phone || '');
+    }
+  };
 
   const handlePrint = () => {
     if (!joiningDate) {
@@ -172,113 +195,92 @@ export default function OfferLetter({ onBack }) {
   }
 
   const handleGenerateOfferLetter = async () => {
-    setIsGenerating(true)
-    const payload = {
-      fullName: candidateName,
-      email: email,
-      phone: mobile,
-      designation: designation,
-      department: department,
-      dateOfJoining: joiningDate,
-      workLocation: baseLocation,
-      probationPeriod: probationPeriod,
-      salaryDetails: Number(salaryAmount)
+    if (!email || !email.includes('@')) {
+      setModalError('Please enter a valid candidate email address before generating.')
+      setShowModal(true)
+      return
     }
 
+    setIsGenerating(true)
+    setModalError('')
+
     try {
-      const res = await dispatch(CompanyOfferLetter(payload))
-      if (res) {
-        alert("Offer letter generated successfully on the backend!")
+      // 1. Capture the live rendered document HTML from the printable sheet ref
+      const sheetElement = printableRef.current
+      if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
+
+      const fileName = `offer_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
+
+      // 2. Configure html2pdf options
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // 3. Generate PDF as a blob
+      const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
+
+      // 4. Build FormData with email and file
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('file', pdfBlob, fileName)
+
+      // 5. Dispatch the FormData to the API
+      const res = await dispatch(CompanyOfferLetter(formData))
+
+      if (res && res.data) {
+        setModalData({
+          emailSentTo: res.data.emailSentTo || email,
+          previewUrl: res.data.previewUrl || '',
+          status: res.data.status || 'SENT'
+        })
+        setModalError('')
+        setShowModal(true)
       } else {
-        alert("Failed to generate offer letter on the backend.")
+        setModalError(res?.message || 'Failed to generate offer letter. Backend did not return expected data.')
+        setShowModal(true)
       }
     } catch (err) {
-      alert("Error: " + (err.response?.data?.message || err.message || "An unexpected error occurred."))
+      setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
+      setShowModal(true)
     } finally {
       setIsGenerating(false)
     }
   }
 
-  // Editor Inputs Styles
-  const inpStyle = {
-    background: '#f9fafb',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '8px 12px',
-    fontSize: '13px',
-    color: '#111827',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    fontFamily: 'inherit',
-    transition: 'border-color 0.15s ease'
-  }
-
-  const labelStyle = {
-    display: 'block',
-    fontSize: '11px',
-    fontWeight: 700,
-    color: '#4b5563',
-    marginBottom: '5px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  }
-
-  const sectionHeaderStyle = {
-    fontSize: '13px',
-    fontWeight: 800,
-    color: '#0f766e',
-    borderBottom: '2px solid #e2e8f0',
-    paddingBottom: '4px',
-    marginBottom: '12px',
-    marginTop: '16px',
-    gridColumn: '1 / -1',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  }
-
   return (
-    <div className="document-container">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 font-sans">
       {/* Editor Control Console (Screen-only) */}
-      <div className="no-print" style={{
-        background: '#fff',
-        padding: '24px',
-        borderRadius: '20px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-        border: '1px solid #e5e7eb',
-        marginBottom: '28px'
-      }}>
+      <div className="no-print mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         {/* Navigation & Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f3f4f6', paddingBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <OutlineBtn onClick={onBack} style={{ padding: '8px 16px', fontSize: '13px' }}>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+          <div className="flex items-center gap-3">
+            <OutlineBtn onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-sm">
               <ArrowLeft size={16} /> Back to Hub
             </OutlineBtn>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Noel Pharma Offer Customizer</h3>
+            <h3 className="text-base font-extrabold text-gray-900">Noel Pharma Offer Customizer</h3>
           </div>
-          
+
           {/* Quick Preload */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12.5px', color: '#6b7280', fontWeight: 500 }}>Load Database Template:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-500">Load Database Template:</span>
             <select
               onChange={e => handleLoadEmployee(e.target.value)}
               defaultValue=""
-              style={{
-                background: '#f3f4f6',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                color: '#111827',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer"
             >
               <option value="" disabled>Select Employee Template…</option>
-              {EMPLOYEES.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name} ({emp.designation})
+              {employees.map(emp => (
+                <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
+                  {emp.fullName || emp.name} ({emp.designation || 'Employee'})
                 </option>
               ))}
             </select>
@@ -286,192 +288,289 @@ export default function OfferLetter({ onBack }) {
         </div>
 
         {/* Input Matrix Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          
-          <div style={sectionHeaderStyle}>Candidate Profile</div>
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+
+          <div className="col-span-full mt-4 mb-2 border-b border-gray-100 pb-1 text-xs font-black uppercase tracking-wider text-teal-700">Candidate Profile</div>
           <div>
-            <label style={labelStyle}>Candidate Name (uppercase)</label>
-            <input type="text" value={candidateName} onChange={e => setCandidateName(e.target.value.toUpperCase())} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Father Name (S/o)</label>
-            <input type="text" value={parentName} onChange={e => setParentName(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Candidate Name (uppercase)</label>
+            <input type="text" value={candidateName} onChange={e => setCandidateName(e.target.value.toUpperCase())} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>Mobile Number</label>
-            <input type="text" value={mobile} onChange={e => setMobile(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Father Name (S/o)</label>
+            <input type="text" value={parentName} onChange={e => setParentName(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>Email Address</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Mobile Number</label>
+            <input type="text" value={mobile} onChange={e => setMobile(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Address Line 1 (Residence)</label>
-            <input type="text" value={addressLine1} onChange={e => setAddressLine1(e.target.value)} style={inpStyle} placeholder="e.g. R/o Basavanilaya" />
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Email Address</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Address Line 2 (Locality/St)</label>
-            <input type="text" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} style={inpStyle} placeholder="e.g. Near Gadderaya Temple" />
+          <div className="col-span-1 sm:col-span-2">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Address Line 1 (Residence)</label>
+            <input type="text" value={addressLine1} onChange={e => setAddressLine1(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="e.g. R/o Basavanilaya" />
           </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Address Line 3 (District/PIN)</label>
-            <input type="text" value={addressLine3} onChange={e => setAddressLine3(e.target.value)} style={inpStyle} placeholder="e.g. SHAHAPUR DIST. Yadagiri - 585223" />
+          <div className="col-span-1 sm:col-span-2">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Address Line 2 (Locality/St)</label>
+            <input type="text" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="e.g. Near Gadderaya Temple" />
+          </div>
+          <div className="col-span-1 sm:col-span-2">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Address Line 3 (District/PIN)</label>
+            <input type="text" value={addressLine3} onChange={e => setAddressLine3(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="e.g. SHAHAPUR DIST. Yadagiri - 585223" />
           </div>
 
-          <div style={sectionHeaderStyle}>Offer & Base details</div>
+          <div className="col-span-full mt-4 mb-2 border-b border-gray-100 pb-1 text-xs font-black uppercase tracking-wider text-teal-700">Offer & Base details</div>
           <div>
-            <label style={labelStyle}>Designation / Capacity</label>
-            <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Designation / Capacity</label>
+             <select
+               value={designation}
+               onChange={e => setDesignation(e.target.value)}
+               className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+             >
+               <option value="" disabled>Select Role…</option>
+               {getRoles.map((role) => (
+                 <option key={role} value={role}>
+                   {role.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                 </option>
+               ))}
+             </select>
           </div>
           <div>
-            <label style={labelStyle}>Department</label>
-            <input type="text" value={department} onChange={e => setDepartment(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Department</label>
+            <select
+               value={department}
+               onChange={e => setDepartment(e.target.value)}
+               className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+             >
+               <option value="" disabled>Select Department…</option>
+               {getDepartments.map((dept) => (
+                 <option key={dept} value={dept}>
+                   {dept.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                 </option>
+               ))}
+            </select>
           </div>
           <div>
-            <label style={labelStyle}>Joining / Offer Date</label>
-            <input type="date" value={joiningDate} onChange={e => setJoiningDate(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Joining / Offer Date</label>
+            <input type="date" value={joiningDate} onChange={e => setJoiningDate(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>Base Location (uppercase)</label>
-            <input type="text" value={baseLocation} onChange={e => setBaseLocation(e.target.value.toUpperCase())} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Base Location (uppercase)</label>
+            <input type="text" value={baseLocation} onChange={e => setBaseLocation(e.target.value.toUpperCase())} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>Probation Period</label>
-            <input type="text" value={probationPeriod} onChange={e => setProbationPeriod(e.target.value)} style={inpStyle} />
-          </div>
-
-          <div style={sectionHeaderStyle}>Remuneration & Allowances</div>
-          <div>
-            <label style={labelStyle}>Monthly Consolidated Salary (₹)</label>
-            <input type="number" value={salaryAmount} onChange={e => handleSalaryChange(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Salary in Words</label>
-            <input type="text" value={salaryWords} onChange={e => setSalaryWords(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>HQ Allowance (Daily ₹)</label>
-            <input type="number" value={hqAllowance} onChange={e => setHqAllowance(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Ex-Station Allowance (Daily ₹)</label>
-            <input type="number" value={exStationAllowance} onChange={e => setExStationAllowance(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Out-Station Allowance (Daily ₹)</label>
-            <input type="number" value={outStationAllowance} onChange={e => setOutStationAllowance(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Conveyance Rate per KM (₹)</label>
-            <input type="number" step="0.01" value={conveyanceRate} onChange={e => setConveyanceRate(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Probation Period</label>
+            <input type="text" value={probationPeriod} onChange={e => setProbationPeriod(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
 
-          <div style={sectionHeaderStyle}>Reporting & HR Signature Info</div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Reporting Manager Title & Name</label>
-            <input type="text" value={reportingManager} onChange={e => setReportingManager(e.target.value)} style={inpStyle} />
+          <div className="col-span-full mt-4 mb-2 border-b border-gray-100 pb-1 text-xs font-black uppercase tracking-wider text-teal-700">Remuneration & Allowances</div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Monthly Consolidated Salary (₹)</label>
+            <input type="number" value={salaryAmount} onChange={e => handleSalaryChange(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>Reporting Phone</label>
-            <input type="text" value={reportingPhone} onChange={e => setReportingPhone(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Salary in Words</label>
+            <input type="text" value={salaryWords} onChange={e => setSalaryWords(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>HR Signatory Name</label>
-            <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">HQ Allowance (Daily ₹)</label>
+            <input type="number" value={hqAllowance} onChange={e => setHqAllowance(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
           <div>
-            <label style={labelStyle}>HR Signatory Title</label>
-            <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} style={inpStyle} />
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Ex-Station Allowance (Daily ₹)</label>
+            <input type="number" value={exStationAllowance} onChange={e => setExStationAllowance(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Out-Station Allowance (Daily ₹)</label>
+            <input type="number" value={outStationAllowance} onChange={e => setOutStationAllowance(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Conveyance Rate per KM (₹)</label>
+            <input type="number" step="0.01" value={conveyanceRate} onChange={e => setConveyanceRate(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+
+          <div className="col-span-full mt-4 mb-2 border-b border-gray-100 pb-1 text-xs font-black uppercase tracking-wider text-teal-700">Reporting & HR Signature Info</div>
+          <div className="col-span-1 sm:col-span-2">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Choose Reporting Manager</label>
+            <select
+              onChange={e => handleSelectManager(e.target.value)}
+              defaultValue=""
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+            >
+              <option value="" disabled>Select manager to autofill…</option>
+              {employees.map(emp => (
+                <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
+                  {emp.fullName || emp.name} ({emp.role ? emp.role.replace(/_/g, ' ') : 'Employee'})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-span-1 sm:col-span-2">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Reporting Manager Title & Name</label>
+            <input type="text" value={reportingManager} onChange={e => setReportingManager(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Reporting Phone</label>
+            <input type="text" value={reportingPhone} onChange={e => setReportingPhone(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">HR Signatory Name</label>
+            <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">HR Signatory Title</label>
+            <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
           </div>
 
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
-          <OutlineBtn onClick={handleGenerateOfferLetter} disabled={isGenerating} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
+        <div className="flex flex-wrap justify-end gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+          <OutlineBtn onClick={handleGenerateOfferLetter} disabled={isGenerating} className="flex items-center gap-2 px-5 py-2 text-sm">
             <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
             {isGenerating ? "Generating..." : "Generate Offer Letter"}
           </OutlineBtn>
-          <PrimaryBtn onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
+          <PrimaryBtn onClick={handlePrint} className="flex items-center gap-2 px-5 py-2 text-sm">
             <Printer size={16} /> Print / Export PDF
           </PrimaryBtn>
         </div>
 
       </div>
 
+      {/* Success / Error Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl transition-all">
+            {/* Close */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            >
+              <X size={18} />
+            </button>
+
+            {modalError ? (
+              /* Error State */
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                  <X size={24} className="text-red-500" />
+                </div>
+                <h3 className="text-base font-extrabold text-gray-900">Generation Failed</h3>
+                <p className="text-xs text-gray-500 leading-relaxed max-w-sm">{modalError}</p>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="mt-2 w-full rounded-xl bg-gray-950 px-5 py-3 text-xs font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              /* Success State */
+              <>
+                {/* Header */}
+                <div className="flex flex-col items-center gap-2 text-center mb-6">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                    <CheckCircle2 size={28} className="text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900">Offer Letter Dispatched!</h3>
+                  <p className="text-xs text-gray-500">The document has been emailed successfully to the candidate.</p>
+                </div>
+
+                {/* Info Rows */}
+                <div className="flex flex-col gap-3 mb-6">
+                  {/* Email Sent To */}
+                  <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                      <Mail size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Email Sent To</p>
+                      <p className="text-sm font-bold text-gray-800">{modalData.emailSentTo}</p>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Delivery Status</p>
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-2xs font-extrabold uppercase text-emerald-600 tracking-wider inline-block mt-0.5">
+                        {modalData.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Preview URL */}
+                  {modalData.previewUrl && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                        <FileText size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Preview URL</p>
+                        <a
+                          href={getFullAssetUrl(modalData.previewUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition overflow-hidden text-overflow-ellipsis whitespace-nowrap"
+                        >
+                          Open Document <ExternalLink size={12} className="shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action */}
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
+                >
+                  Done
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Live Document Sheet View */}
-      <div className="printable-sheet" style={{
-        background: '#fff',
-        margin: '0 auto',
-        maxWidth: '800px',
-        minHeight: '297mm', // Fits A4 print page aspect ratio exactly
-        padding: '45px 70px 0 70px', // Bottom padding removed as footer margins handle page clearance
-        boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
-        border: '1px solid #e2e8f0',
-        borderRadius: '8px',
-        fontFamily: "'Inter', sans-serif",
-        color: '#1f2937',
-        lineHeight: 1.5,
-        position: 'relative',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between'
-      }}>
+      <div
+        ref={printableRef}
+        className="printable-sheet relative mx-auto flex w-full max-w-[800px] min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
+      >
         {/* Top-Right Decorative Accents */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '280px',
-          height: '80px',
-          background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
-          zIndex: 2
-        }} />
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '295px',
-          height: '86px',
-          background: '#d97706',
-          clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
-          zIndex: 1
-        }} />
+        <div
+          className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
+          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
+        />
+        <div
+          className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
+          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
+        />
 
         {/* Bottom Decorative Slanted Accents */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '40px',
-          background: 'linear-gradient(90deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)',
-          zIndex: 2
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '47px',
-          background: '#d97706',
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)',
-          zIndex: 1
-        }} />
+        <div
+          className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
+          style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)' }}
+        />
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
+          style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)' }}
+        />
 
         {/* Main content wrapper containing header, body and signature block */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: 10 }}>
+        <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
           {/* Letterhead Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+          <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             {/* Logo & Brand */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="flex items-center gap-3.5">
               {user?.logoUrl ? (
-                <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
                 </div>
               ) : (
                 <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -485,26 +584,23 @@ export default function OfferLetter({ onBack }) {
                 </svg>
               )}
               <div>
-                <div style={{ fontSize: '18px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', lineHeight: 1.1, textTransform: 'uppercase', maxWidth: '280px' }}>
+                <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800">
                   {companyName}
-                </div>
-                <div style={{ fontSize: '9.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.5px', marginTop: '2px' }}>
-                  {user?.adminReferenceCode ? `Ref: ${user.adminReferenceCode}` : 'Since 1975'}
                 </div>
               </div>
             </div>
-            
+
             {/* Document Date */}
-            <div style={{ paddingRight: '120px', marginTop: '16px', fontSize: '12.5px', color: '#1f2937', fontWeight: 600 }}>
+            <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
               Date: {formatDateIN(joiningDate)}
             </div>
           </div>
 
           {/* Recipient Block */}
-          <div style={{ marginBottom: '14px', fontSize: '12px', color: '#1f2937', lineHeight: 1.45 }}>
-            <div style={{ fontWeight: 700 }}>To,</div>
-            <div style={{ fontWeight: 800, fontSize: '13.5px', marginTop: '2px', textTransform: 'uppercase' }}>{candidateName}</div>
-            <div>S/o {parentName} {addressLine1}</div>
+          <div className="mb-4 text-xs leading-relaxed text-gray-800">
+            <div className="font-bold">To,</div>
+            <div className="mt-0.5 text-[13px] font-extrabold uppercase tracking-wide text-gray-900">{candidateName}</div>
+            <div className="mt-0.5">S/o {parentName} {addressLine1}</div>
             {addressLine2 && <div>{addressLine2}</div>}
             <div>{addressLine3}</div>
             {mobile && <div>Mobile: {mobile}</div>}
@@ -512,141 +608,101 @@ export default function OfferLetter({ onBack }) {
           </div>
 
           {/* Salutation */}
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#1f2937', marginBottom: '10px' }}>
+          <div className="mb-2 text-xs font-bold text-gray-800">
             Dear Mr. {candidateName.split(' ')[0]},
           </div>
 
           {/* Subject Header */}
-          <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#111827', textDecoration: 'underline', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Sub: Offer Letter
-            </span>
+          <div className="mb-4 text-center text-xs font-extrabold uppercase tracking-wider text-gray-900 underline">
+            Sub: Offer Letter
           </div>
 
           {/* Body Paragraphs */}
-          <div style={{ fontSize: '12px', color: '#1f2937', textAlign: 'justify', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <p style={{ margin: 0, textIndent: '30px' }}>
+          <div className="flex flex-col gap-3 text-justify text-xs leading-relaxed text-gray-800 font-medium">
+            <p className="margin-0 indent-8">
               We are pleased to offer you an employment in the capacity of <strong>{designation}</strong>, in <strong>{department}</strong> in M/s. <strong>{companyName}</strong>, {companyRegAddress}.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="margin-0">
               Please report to duty <strong>on or before {formatDateIN(joiningDate)}</strong>. Your base location will be <strong>{baseLocation}</strong>. You will be governed by policies of the Company. Please be noted that fail to report on or before the said date, this offer will be ceased.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="margin-0">
               We believe that your skills and background would be a valuable asset to our organization.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="margin-0">
               You will be entitled to a consolidated salary of <strong>INR {Number(salaryAmount).toLocaleString('en-IN')}/- ({salaryWords} only)</strong> per month. Apart from the salary you will be entitled to get HQs.{hqAllowance}/-, Ex. Station Allowances Rs.{exStationAllowance}/-, Out Station Allowances Rs.{outStationAllowance}/- per day and Rs.{conveyanceRate} paise per KM for Ex. Station and Out station work.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="margin-0">
               On your joining date please bring/send (<strong>{hrEmail}</strong>) the documents i.e A) 2 Passport size photographs. B) Photocopy of all Educational and Technical Qualification Certificates. C) Relieving Letter and Experience Certificate from your present employer. D) Last drawn Salary Slip /Certificate showing monthly salary and Annual benefits, from the present employer, Pan card, Aadhar card, Driving License copy etc.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="margin-0">
               This is a provisional offer letter. The detailed letter with terms and conditions of employment will be handed over to you on your joining date.
             </p>
 
-            <div style={{ margin: '4px 0 0 0' }}>
-              <div style={{ fontWeight: 700, marginBottom: '4px' }}>Please review this offer and to confirm your acceptance.</div>
-              <ul style={{ paddingLeft: '18px', margin: 0, listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div className="mt-1">
+              <div className="font-bold mb-1">Please review this offer and to confirm your acceptance.</div>
+              <ul className="pl-5 list-disc flex flex-col gap-1">
                 <li>Please confirm your acceptance <strong>before {formatDateIN(joiningDate)}</strong>, via an email, failing which this offer will cease to exist.</li>
                 <li>Any change of joining date request must be intimated in advance and should be agreed mutually.</li>
                 <li>Your will be reporting your <strong>{reportingManager} ({reportingPhone})</strong>.</li>
                 <li>Reporting: <strong>Reporting time & location</strong> will be communicated by your Reporting Manager at the time of joining.</li>
               </ul>
             </div>
-            <p style={{ margin: '4px 0 0 0' }}>
+            <p className="mt-1">
               We look forward to your joining the company and become a productive member of the team.<br />
               <strong>Welcome to {companyName},</strong>
             </p>
           </div>
 
           {/* Signatures Footer */}
-          <div className="signature-block" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-end',
-            marginTop: 'auto',
-            paddingTop: '20px',
-            fontSize: '12px',
-            color: '#1f2937'
-          }}>
+          <div className="signature-block mt-auto flex flex-row items-end justify-between pt-6 text-xs text-gray-800">
             <div>
-              <div style={{ fontWeight: 600 }}>Yours Sincerely,</div>
-              <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', marginBottom: '24px' }}>for {companyName},</div>
-              
+              <div className="font-bold">Yours Sincerely,</div>
+              <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
+
               {/* Stamp Image if configured, fallback to Simulated Sign */}
               {user?.companyStampUrl ? (
-                <div style={{ height: '56px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                <div className="mb-1 flex h-14 items-center">
+                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
                 </div>
               ) : (
                 /* Ink Blue Sign Simulation */
-                <div style={{
-                  fontFamily: "'Brush Script MT', cursive, sans-serif",
-                  fontSize: '24px',
-                  color: '#1e3a8a',
-                  height: '32px',
-                  lineHeight: 1,
-                  transform: 'rotate(-4deg) translateX(10px)',
-                  marginBottom: '2px',
-                  userSelect: 'none'
-                }}>
+                <div
+                  className="mb-0.5 h-8 select-none font-serif text-xl font-bold text-blue-900 rotate-[-4deg] translate-x-2.5"
+                  style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                >
                   {hrHeadName}
                 </div>
               )}
-              
-              <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px' }}></div>
-              <div style={{ fontWeight: 800, fontSize: '11px' }}>{hrHeadName}</div>
-              <div style={{ fontSize: '10px', color: '#4b5563' }}>{hrHeadDesignation}</div>
+
+              <div className="mb-1 w-40 border-t border-gray-400"></div>
+              <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{hrHeadName}</div>
+              <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ height: '56px' }}></div>
-              
-              {/* Candidate Ink Sign Simulation */}
-              <div style={{
-                fontFamily: "'Brush Script MT', cursive, sans-serif",
-                fontSize: '24px',
-                color: '#1e3a8a',
-                height: '32px',
-                lineHeight: 1,
-                transform: 'rotate(-2deg) translateX(-10px)',
-                marginBottom: '2px',
-                userSelect: 'none'
-              }}>
-                {candidateName.split(' ')[0]}
-              </div>
+            <div className="text-right flex flex-col items-end">
+              <div className="h-14"></div>
 
-              <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px', marginLeft: 'auto' }}></div>
-              <div style={{ fontWeight: 800, fontSize: '11px' }}>Candidate Signature</div>
-              <div style={{ fontSize: '10px', color: '#4b5563' }}>Date: {formatDateIN(joiningDate)}</div>
+              <div className="mb-1 w-40 border-t border-gray-400"></div>
+              <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">Candidate Signature</div>
+              <div className="text-[9px] font-semibold text-gray-500">Date: ________________</div>
             </div>
           </div>
         </div>
 
         {/* Letter Footer Address - Rendered as flex child below content, ensuring zero overlap */}
-        <div style={{
-          textAlign: 'center',
-          borderTop: '1px solid #e2e8f0',
-          paddingTop: '8px',
-          fontSize: '9px',
-          color: '#4b5563',
-          lineHeight: 1.35,
-          zIndex: 10,
-          marginTop: '20px', // Small margin below the signatures
-          paddingBottom: '50px' // Clear space for the absolute background accent triangles
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 900, color: '#b45309', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '2px' }}>
+        <div className="relative z-30 mt-6 border-t border-gray-100 pt-3 pb-12 text-center text-[10px] leading-relaxed text-gray-500">
+          <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700">
             {companyName}
           </div>
           <div>
             Regd. Office: {companyRegAddress}
           </div>
-          <div style={{ fontWeight: 600 }}>
+          <div className="font-bold text-gray-600">
             {user?.phone && `Ph: ${user.phone} | `}Email: {hrEmail}
           </div>
         </div>

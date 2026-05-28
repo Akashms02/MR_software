@@ -1,53 +1,163 @@
-import React, { useState } from 'react'
-import { ArrowLeft, Printer } from 'lucide-react'
-import { EMPLOYEES } from '../../data/hrmsData'
+import React, { useState, useEffect, useRef } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import html2pdf from 'html2pdf.js'
+import { ArrowLeft, Printer, RefreshCw, CheckCircle2, X, Mail, FileText, ExternalLink } from 'lucide-react'
 import { PrimaryBtn, OutlineBtn } from '../ui'
-import { CompanyReleivingLetter } from '../../redux/actions/companyAction'
 import { fetchProfile } from '../../redux/actions/authActions'
+import { CompanyReleivingLetter } from '../../redux/actions/companyAction'
+import { getMyTeam } from '../../redux/actions/teamActions'
+// Helper to resolve backend relative file upload paths to absolute URLs
+// On localhost (dev) -> use the live API server URL
+// On production (deployed) -> use the app's own origin
+const getFullAssetUrl = (relativeUrl) => {
+  if (!relativeUrl) return "";
+  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
+    return relativeUrl;
+  }
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
+  return `${base}${relativeUrl}`;
+};
+
 export default function RelievingLetter({ onBack }) {
-  const [selectedId, setSelectedId] = useState(EMPLOYEES[0]?.id || '')
-  
-  // Customizer States
+  const dispatch = useDispatch()
+  const { user } = useSelector((state) => state.auth)
+  const { team: employees = [] } = useSelector((state) => state.team)
+
+  // Fetch admin profile and team on mount
+  useEffect(() => {
+    dispatch(fetchProfile())
+    dispatch(getMyTeam())
+  }, [dispatch])
+
+  const [selectedId, setSelectedId] = useState('')
+
+  // Set first employee as default once team loads
+  useEffect(() => {
+    if (employees.length > 0 && !selectedId) {
+      setSelectedId(employees[0]?.employeeId || '')
+    }
+  }, [employees])
+
+  // Employee exit fields
   const [candidateName, setCandidateName] = useState('RAJESH KUMAR')
+  const [candidateEmail, setCandidateEmail] = useState('')
   const [designation, setDesignation] = useState('Sr. Medical Officer')
   const [department, setDepartment] = useState('Medical Affairs')
   const [joinedDate, setJoinedDate] = useState('2021-03-15')
   const [relievingDate, setRelievingDate] = useState(() => new Date().toISOString().split('T')[0])
   const [reason, setReason] = useState('Career Progression')
-  
-  const [companyName, setCompanyName] = useState('NOEL PHARMA (INDIA) PRIVATE LIMITED')
-  const [companyRegAddress, setCompanyRegAddress] = useState('Survey Nos: 1 to 40, Plot No. 109, Uppal Bhagagayath Revenue Village, Uppal-Mandal, Medchal-Malkajgiri, Hyderabad-500039')
-  const [hrEmail, setHrEmail] = useState('mail-noelhr1975@gmail.com')
+
+  // HR Signatory (editable)
   const [hrHeadName, setHrHeadName] = useState('CH. MURTHY')
   const [hrHeadDesignation, setHrHeadDesignation] = useState('Head - HR')
+
+  // Company details — bound from API profile (read-only display)
+  const [companyName, setCompanyName] = useState('NOEL PHARMA (INDIA) PRIVATE LIMITED')
+  const [companyRegAddress, setCompanyRegAddress] = useState('')
+  const [hrEmail, setHrEmail] = useState('')
+
+  // Modal / generation state
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [modalData, setModalData] = useState({ emailSentTo: '', previewUrl: '', status: '' })
+  const [modalError, setModalError] = useState('')
+
+  // Ref to the printable document
+  const printableRef = useRef(null)
+
+  // Sync company data from Redux when profile loads
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) setCompanyName(user.fullName.toUpperCase())
+      if (user.address) setCompanyRegAddress(user.address)
+      if (user.email) setHrEmail(user.email)
+    }
+  }, [user])
 
   // Date Formatter to DD.MM.YYYY
   const formatDateIN = (dateStr) => {
     if (!dateStr) return ''
     const parts = dateStr.split('-')
-    if (parts.length === 3) {
-      return `${parts[2]}.${parts[1]}.${parts[0]}`
-    }
+    if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`
     return dateStr
   }
 
-  // Load a pre-existing employee database record into states
+  // Load employee record into form
   const handleLoadEmployee = (empId) => {
     setSelectedId(empId)
-    const emp = EMPLOYEES.find(e => e.id === empId)
+    const emp = employees.find(e => (e.employeeId || e.id) === empId)
     if (emp) {
-      setCandidateName(emp.name.toUpperCase())
-      setDesignation(emp.designation)
-      setDepartment(emp.dept)
-      setJoinedDate(emp.joined || '2021-03-15')
+      setCandidateName((emp.fullName || emp.name || '').toUpperCase())
+      setDesignation(emp.designation || '')
+      setDepartment(emp.department || emp.dept || '')
+      setJoinedDate(emp.joiningDate || emp.joined || '2021-03-15')
+      setCandidateEmail(emp.email || '')
     }
   }
 
   const handlePrint = () => {
-    if (!relievingDate) {
-      setRelievingDate(new Date().toISOString().split('T')[0])
-    }
+    if (!relievingDate) setRelievingDate(new Date().toISOString().split('T')[0])
     window.print()
+  }
+
+  const handleGenerate = async () => {
+    if (!candidateEmail || !candidateEmail.includes('@')) {
+      setModalError('Please enter a valid candidate email address before generating.')
+      setShowModal(true)
+      return
+    }
+
+    setIsGenerating(true)
+    setModalError('')
+
+    try {
+      const sheetElement = printableRef.current
+      if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
+
+      const fileName = `relieving_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
+
+      // Configure html2pdf options
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate PDF as a blob
+      const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
+
+      const formData = new FormData()
+      formData.append('email', candidateEmail)
+      formData.append('file', pdfBlob, fileName)
+
+      const res = await dispatch(CompanyReleivingLetter(selectedId, formData))
+
+      if (res && res.data) {
+        setModalData({
+          emailSentTo: res.data.emailSentTo || candidateEmail,
+          previewUrl: res.data.previewUrl || '',
+          status: res.data.status || 'SENT'
+        })
+        setModalError('')
+        setShowModal(true)
+      } else {
+        setModalError(res?.message || 'Failed to generate relieving letter. Backend did not return expected data.')
+        setShowModal(true)
+      }
+    } catch (err) {
+      setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
+      setShowModal(true)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   // Input styles
@@ -105,15 +215,15 @@ export default function RelievingLetter({ onBack }) {
             <OutlineBtn onClick={onBack} style={{ padding: '8px 16px', fontSize: '13px' }}>
               <ArrowLeft size={16} /> Back to Hub
             </OutlineBtn>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Noel Relieving Certificate Customizer</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Relieving Certificate Customizer</h3>
           </div>
-          
+
           {/* Quick Preload */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12.5px', color: '#6b7280', fontWeight: 500 }}>Select Employee:</span>
+            <span style={{ fontSize: '12.5px', color: '#6b7280', fontWeight: 500 }}>Load Employee:</span>
             <select
-              value={selectedId}
               onChange={e => handleLoadEmployee(e.target.value)}
+              value={selectedId}
               style={{
                 background: '#f3f4f6',
                 border: '1px solid #e5e7eb',
@@ -126,9 +236,10 @@ export default function RelievingLetter({ onBack }) {
                 cursor: 'pointer'
               }}
             >
-              {EMPLOYEES.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name} ({emp.id})
+              <option value="" disabled>Select Employee…</option>
+              {employees.map(emp => (
+                <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
+                  {emp.fullName || emp.name} ({emp.designation || 'Employee'})
                 </option>
               ))}
             </select>
@@ -137,7 +248,7 @@ export default function RelievingLetter({ onBack }) {
 
         {/* Input Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          
+
           <div style={sectionHeaderStyle}>Employee Exit Details</div>
           <div>
             <label style={labelStyle}>Employee Name (uppercase)</label>
@@ -146,6 +257,10 @@ export default function RelievingLetter({ onBack }) {
           <div>
             <label style={labelStyle}>Employee ID</label>
             <input type="text" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={inpStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Candidate Email</label>
+            <input type="email" value={candidateEmail} onChange={e => setCandidateEmail(e.target.value)} style={inpStyle} placeholder="employee@example.com" />
           </div>
           <div>
             <label style={labelStyle}>Designation</label>
@@ -165,11 +280,7 @@ export default function RelievingLetter({ onBack }) {
           </div>
           <div>
             <label style={labelStyle}>Reason for Leaving</label>
-            <select
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              style={inpStyle}
-            >
+            <select value={reason} onChange={e => setReason(e.target.value)} style={inpStyle}>
               <option value="Career Progression">Career Progression</option>
               <option value="Personal Endeavors">Personal Endeavors</option>
               <option value="Higher Studies">Higher Studies</option>
@@ -177,7 +288,7 @@ export default function RelievingLetter({ onBack }) {
             </select>
           </div>
 
-          <div style={sectionHeaderStyle}>HR & Signatory Details</div>
+          <div style={sectionHeaderStyle}>HR Signatory Details</div>
           <div>
             <label style={labelStyle}>HR Signatory Name</label>
             <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} style={inpStyle} />
@@ -186,35 +297,150 @@ export default function RelievingLetter({ onBack }) {
             <label style={labelStyle}>HR Signatory Designation</label>
             <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} style={inpStyle} />
           </div>
-          <div>
-            <label style={labelStyle}>Contact Email</label>
-            <input type="email" value={hrEmail} onChange={e => setHrEmail(e.target.value)} style={inpStyle} />
-          </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Company Registered Entity</label>
-            <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} style={inpStyle} />
-          </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Company Registered Address</label>
-            <input type="text" value={companyRegAddress} onChange={e => setCompanyRegAddress(e.target.value)} style={inpStyle} />
-          </div>
 
+          {/* Read-only Company Info from API */}
+          <div style={sectionHeaderStyle}>Company Info (from Profile)</div>
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={labelStyle}>Company Name</label>
+            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed' }}>{companyName || '—'}</div>
+          </div>
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={labelStyle}>Registered Address</label>
+            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed', whiteSpace: 'pre-wrap' }}>{companyRegAddress || '—'}</div>
+          </div>
+          <div>
+            <label style={labelStyle}>HR / Contact Email</label>
+            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed' }}>{hrEmail || '—'}</div>
+          </div>
         </div>
 
         {/* Action controls */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
+          <OutlineBtn onClick={handleGenerate} disabled={isGenerating} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
+            <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
+            {isGenerating ? "Generating..." : "Generate & Send Letter"}
+          </OutlineBtn>
           <PrimaryBtn onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '13.5px' }}>
             <Printer size={16} /> Print / Export PDF
           </PrimaryBtn>
         </div>
       </div>
 
+      {/* Success / Error Modal */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '20px',
+            padding: '32px',
+            maxWidth: '460px',
+            width: '100%',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
+            position: 'relative',
+            fontFamily: "'Inter', sans-serif"
+          }}>
+            <button
+              onClick={() => setShowModal(false)}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px', borderRadius: '6px' }}
+            >
+              <X size={18} />
+            </button>
+
+            {modalError ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={24} color="#ef4444" />
+                </div>
+                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111827', margin: 0 }}>Generation Failed</h3>
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{modalError}</p>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{ marginTop: '8px', padding: '10px 24px', background: '#111827', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '24px', textAlign: 'center' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckCircle2 size={28} color="#059669" />
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: 0 }}>Relieving Letter Dispatched!</h3>
+                  <p style={{ fontSize: '12.5px', color: '#6b7280', margin: 0 }}>The certificate has been emailed successfully to the employee.</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Mail size={16} color="#3b82f6" />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Email Sent To</p>
+                      <p style={{ fontSize: '13.5px', fontWeight: 700, color: '#111827', margin: 0 }}>{modalData.emailSentTo}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CheckCircle2 size={16} color="#059669" />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Delivery Status</p>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#059669', background: '#d1fae5', padding: '2px 10px', borderRadius: '999px', border: '1px solid #a7f3d0' }}>
+                        {modalData.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {modalData.previewUrl && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <FileText size={16} color="#d97706" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Preview URL</p>
+                        <a
+                          href={getFullAssetUrl(modalData.previewUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontSize: '12.5px', fontWeight: 700, color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          Open Document <ExternalLink size={12} style={{ flexShrink: 0 }} />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{ width: '100%', padding: '12px', background: '#111827', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px', cursor: 'pointer' }}
+                >
+                  Done
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Live Document Sheet View */}
-      <div className="printable-sheet" style={{
+      <div ref={printableRef} className="printable-sheet" style={{
         background: '#fff',
         margin: '0 auto',
         maxWidth: '800px',
-        minHeight: '297mm', // Fits A4 print page aspect ratio exactly
+        minHeight: '297mm',
         padding: '45px 70px 0 70px',
         boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
         border: '1px solid #e2e8f0',
@@ -231,74 +457,58 @@ export default function RelievingLetter({ onBack }) {
       }}>
         {/* Top-Right Decorative Accents */}
         <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '280px',
-          height: '80px',
+          position: 'absolute', top: 0, right: 0, width: '280px', height: '80px',
           background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
-          zIndex: 2
+          clipPath: 'polygon(100% 0, 0 0, 100% 100%)', zIndex: 2
         }} />
         <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '295px',
-          height: '86px',
-          background: '#d97706',
-          clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
-          zIndex: 1
+          position: 'absolute', top: 0, right: 0, width: '295px', height: '86px',
+          background: '#d97706', clipPath: 'polygon(100% 0, 0 0, 100% 100%)', zIndex: 1
         }} />
 
         {/* Bottom Decorative Slanted Accents */}
         <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '40px',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px',
           background: 'linear-gradient(90deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)',
-          zIndex: 2
+          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', zIndex: 2
         }} />
         <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '47px',
-          background: '#d97706',
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)',
-          zIndex: 1
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '47px',
+          background: '#d97706', clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', zIndex: 1
         }} />
 
         {/* Main Content Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: 10 }}>
-          
+
           {/* Letterhead Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
             {/* Logo & Brand */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
-                <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
-                <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
-                <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-              <div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '1.2px', lineHeight: 1.1 }}>
-                  NOEL
+              {user?.logoUrl ? (
+                <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
-                <div style={{ fontSize: '10.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.8px', marginTop: '1px' }}>
-                  Since 1975
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                  <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                  <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                  <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+              )}
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', lineHeight: 1.1, textTransform: 'uppercase', maxWidth: '280px' }}>
+                  {companyName}
+                </div>
+                <div style={{ fontSize: '9.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.5px', marginTop: '2px' }}>
+                  {user?.adminReferenceCode ? `Ref: ${user.adminReferenceCode}` : 'Since 1975'}
                 </div>
               </div>
             </div>
-            
+
             {/* Document Date */}
             <div style={{ paddingRight: '120px', marginTop: '16px', fontSize: '12.5px', color: '#1f2937', fontWeight: 600 }}>
               Date: {formatDateIN(relievingDate)}
@@ -323,7 +533,7 @@ export default function RelievingLetter({ onBack }) {
             marginBottom: '24px',
             letterSpacing: '1px'
           }}>
-            Relieving Order & Experience Certificate
+            Relieving Order &amp; Experience Certificate
           </h3>
 
           {/* Body Text */}
@@ -362,20 +572,26 @@ export default function RelievingLetter({ onBack }) {
             <div>
               <div style={{ fontWeight: 600 }}>Yours Sincerely,</div>
               <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', marginBottom: '24px' }}>for {companyName},</div>
-              
-              {/* HR Head Sign Simulation */}
-              <div style={{
-                fontFamily: "'Brush Script MT', cursive, sans-serif",
-                fontSize: '24px',
-                color: '#1e3a8a',
-                height: '32px',
-                lineHeight: 1,
-                transform: 'rotate(-4deg) translateX(10px)',
-                marginBottom: '2px',
-                userSelect: 'none'
-              }}>
-                Ch. Murthy
-              </div>
+
+              {/* Stamp or Simulated Signature */}
+              {user?.companyStampUrl ? (
+                <div style={{ height: '56px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                </div>
+              ) : (
+                <div style={{
+                  fontFamily: "'Brush Script MT', cursive, sans-serif",
+                  fontSize: '24px',
+                  color: '#1e3a8a',
+                  height: '32px',
+                  lineHeight: 1,
+                  transform: 'rotate(-4deg) translateX(10px)',
+                  marginBottom: '2px',
+                  userSelect: 'none'
+                }}>
+                  {hrHeadName}
+                </div>
+              )}
 
               <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px' }}></div>
               <div style={{ fontWeight: 800, fontSize: '11px' }}>{hrHeadName}</div>
@@ -385,7 +601,7 @@ export default function RelievingLetter({ onBack }) {
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: '40px' }}>Received Certificate Copy:</div>
               <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px', marginLeft: 'auto' }}></div>
-              <div style={{ fontWeight: 800, fontSize: '11px' }}>{candidateName}</div>
+              <div style={{ fontWeight: 800, fontSize: '11px' }}>Candidate Signature</div>
               <div style={{ fontSize: '10px', color: '#4b5563' }}>Date: {formatDateIN(relievingDate)}</div>
             </div>
           </div>
@@ -405,14 +621,10 @@ export default function RelievingLetter({ onBack }) {
           paddingBottom: '50px'
         }}>
           <div style={{ fontSize: '13px', fontWeight: 900, color: '#b45309', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '2px' }}>
-            NOEL PHARMA (INDIA) PVT. LTD.
+            {companyName}
           </div>
-          <div>
-            Regd. Office: 24-85/7, Laxmi Narayana Nagar Colony, New IDA, Uppal, Hyderabad - 500 039 (T.S.), B.O: Mumbai - 400057.
-          </div>
-          <div style={{ fontWeight: 600 }}>
-            Ph: 766 99 88 444 | Email: bipinnoel@gmail.com, hrnoelpharmapvtltd@gmail.com
-          </div>
+          {companyRegAddress && <div>{companyRegAddress}</div>}
+          {hrEmail && <div style={{ fontWeight: 600 }}>Email: {hrEmail} {user?.phone ? `| Ph: ${user.phone}` : ''}</div>}
         </div>
 
       </div>
