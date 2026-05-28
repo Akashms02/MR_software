@@ -1,7 +1,25 @@
-import React, { useState } from 'react'
-import { ArrowLeft, Printer, RefreshCw } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { ArrowLeft, Printer } from 'lucide-react'
 import { EMPLOYEES } from '../../data/hrmsData'
 import { PrimaryBtn, OutlineBtn } from '../ui'
+import { fetchProfile } from '../../redux/actions/authActions'
+import { API_ROUTE } from '../../data/env'
+
+// Helper to resolve backend relative file upload paths to absolute URLs using the API origin
+const getFullAssetUrl = (relativeUrl) => {
+  if (!relativeUrl) return "";
+  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
+    return relativeUrl;
+  }
+  try {
+    const url = new URL(API_ROUTE);
+    return `${url.origin}${relativeUrl}`;
+  } catch (e) {
+    // Fallback path mapping for dev and production
+    return `https://api-mr-software.gmaxepay.in${relativeUrl}`;
+  }
+};
 
 // Helper to convert salary numbers to Indian currency words
 function numberToWordsINR(num) {
@@ -48,6 +66,14 @@ function numberToWordsINR(num) {
 }
 
 export default function OfferLetter({ onBack }) {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+  // Fetch admin profile on mount to sync dynamic company assets
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
+
   // Prepopulated state defaults mapping the Noel Pharma sample letter
   const [candidateName, setCandidateName] = useState('AMARESH')
   const [parentName, setParentName] = useState('Timmanagouda')
@@ -79,6 +105,15 @@ export default function OfferLetter({ onBack }) {
   const [hrEmail, setHrEmail] = useState('mail-noelhr1975@gmail.com')
   const [hrHeadName, setHrHeadName] = useState('CH. MURTHY')
   const [hrHeadDesignation, setHrHeadDesignation] = useState('Head - HR')
+
+  // Dynamic company assets sync when user profile loads
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) setCompanyName(user.fullName.toUpperCase());
+      if (user.address) setCompanyRegAddress(user.address);
+      if (user.email) setHrEmail(user.email);
+    }
+  }, [user]);
 
   // Format date helper to DD.MM.YYYY
   const formatDateIN = (dateStr) => {
@@ -306,24 +341,12 @@ export default function OfferLetter({ onBack }) {
             <input type="text" value={reportingPhone} onChange={e => setReportingPhone(e.target.value)} style={inpStyle} />
           </div>
           <div>
-            <label style={labelStyle}>HR / Exit Email</label>
-            <input type="email" value={hrEmail} onChange={e => setHrEmail(e.target.value)} style={inpStyle} />
-          </div>
-          <div>
             <label style={labelStyle}>HR Signatory Name</label>
             <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} style={inpStyle} />
           </div>
           <div>
             <label style={labelStyle}>HR Signatory Title</label>
             <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} style={inpStyle} />
-          </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Company Registered Address</label>
-            <input type="text" value={companyRegAddress} onChange={e => setCompanyRegAddress(e.target.value)} style={inpStyle} />
-          </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Company Registered Entity</label>
-            <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} style={inpStyle} />
           </div>
 
         </div>
@@ -407,21 +430,27 @@ export default function OfferLetter({ onBack }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
             {/* Logo & Brand */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
-                <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
-                <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
-                <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-              <div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '1.2px', lineHeight: 1.1 }}>
-                  NOEL
+              {user?.logoUrl ? (
+                <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
-                <div style={{ fontSize: '10.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.8px', marginTop: '1px' }}>
-                  Since 1975
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                  <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                  <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                  <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+              )}
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', lineHeight: 1.1, textTransform: 'uppercase', maxWidth: '280px' }}>
+                  {companyName}
+                </div>
+                <div style={{ fontSize: '9.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.5px', marginTop: '2px' }}>
+                  {user?.adminReferenceCode ? `Ref: ${user.adminReferenceCode}` : 'Since 1975'}
                 </div>
               </div>
             </div>
@@ -490,10 +519,9 @@ export default function OfferLetter({ onBack }) {
                 <li>Reporting: <strong>Reporting time & location</strong> will be communicated by your Reporting Manager at the time of joining.</li>
               </ul>
             </div>
-
             <p style={{ margin: '4px 0 0 0' }}>
               We look forward to your joining the company and become a productive member of the team.<br />
-              <strong>Welcome to Noel Pharma (India) Pvt Ltd.,</strong>
+              <strong>Welcome to {companyName},</strong>
             </p>
           </div>
 
@@ -502,7 +530,7 @@ export default function OfferLetter({ onBack }) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
-            marginTop: 'auto', // Pushes the signature block to align nicely above the page footer
+            marginTop: 'auto',
             paddingTop: '20px',
             fontSize: '12px',
             color: '#1f2937'
@@ -511,19 +539,26 @@ export default function OfferLetter({ onBack }) {
               <div style={{ fontWeight: 600 }}>Yours Sincerely,</div>
               <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', marginBottom: '24px' }}>for {companyName},</div>
               
-              {/* Ink Blue Sign Simulation */}
-              <div style={{
-                fontFamily: "'Brush Script MT', cursive, sans-serif",
-                fontSize: '24px',
-                color: '#1e3a8a',
-                height: '32px',
-                lineHeight: 1,
-                transform: 'rotate(-4deg) translateX(10px)',
-                marginBottom: '2px',
-                userSelect: 'none'
-              }}>
-                Ch. Murthy
-              </div>
+              {/* Stamp Image if configured, fallback to Simulated Sign */}
+              {user?.companyStampUrl ? (
+                <div style={{ height: '56px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                </div>
+              ) : (
+                /* Ink Blue Sign Simulation */
+                <div style={{
+                  fontFamily: "'Brush Script MT', cursive, sans-serif",
+                  fontSize: '24px',
+                  color: '#1e3a8a',
+                  height: '32px',
+                  lineHeight: 1,
+                  transform: 'rotate(-4deg) translateX(10px)',
+                  marginBottom: '2px',
+                  userSelect: 'none'
+                }}>
+                  {hrHeadName}
+                </div>
+              )}
               
               <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px' }}></div>
               <div style={{ fontWeight: 800, fontSize: '11px' }}>{hrHeadName}</div>
@@ -567,13 +602,13 @@ export default function OfferLetter({ onBack }) {
           paddingBottom: '50px' // Clear space for the absolute background accent triangles
         }}>
           <div style={{ fontSize: '13px', fontWeight: 900, color: '#b45309', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '2px' }}>
-            NOEL PHARMA (INDIA) PVT. LTD.
+            {companyName}
           </div>
           <div>
-            Regd. Office: 24-85/7, Laxmi Narayana Nagar Colony, New IDA, Uppal, Hyderabad - 500 039 (T.S.), B.O: Mumbai - 400057.
+            Regd. Office: {companyRegAddress}
           </div>
           <div style={{ fontWeight: 600 }}>
-            Ph: 766 99 88 444 | Email: bipinnoel@gmail.com, hrnoelpharmapvtltd@gmail.com
+            {user?.phone && `Ph: ${user.phone} | `}Email: {hrEmail}
           </div>
         </div>
 
