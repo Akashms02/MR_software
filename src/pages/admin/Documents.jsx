@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { FileText, Award, Landmark, ChevronRight } from 'lucide-react'
-import { Card, SectionHeader } from '../../components/ui'
+import { ChevronRight } from 'lucide-react'
+import { SectionHeader } from '../../components/ui'
 import OfferLetter from '../../components/documents/OfferLetter'
 import RelievingLetter from '../../components/documents/RelievingLetter'
 import SalarySlip from '../../components/documents/SalarySlip'
