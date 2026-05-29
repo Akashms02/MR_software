@@ -94,10 +94,26 @@ const isPublic = (url = '') => PUBLIC_ROUTES.some((r) => url.includes(r));
 axios.defaults.withCredentials = false;
 axios.defaults.timeout = 60000;
 
+const getApiOrigin = () => {
+  if (API_ROUTE.startsWith('http://') || API_ROUTE.startsWith('https://')) {
+    try {
+      return new URL(API_ROUTE).origin;
+    } catch {
+      return '';
+    }
+  }
+  return '';
+};
+
 axios.interceptors.request.use(
   (config) => {
-    // Check if it's our API (relative URL or matches API_ROUTE)
-    const isOurApi = !config.url.startsWith('http') || config.url.includes(API_ROUTE);
+    const requestUrl = config.url || '';
+    const apiOrigin = getApiOrigin();
+    // API routes, uploads on API host, or relative paths
+    const isOurApi =
+      !requestUrl.startsWith('http') ||
+      requestUrl.includes(API_ROUTE) ||
+      (apiOrigin && requestUrl.startsWith(apiOrigin));
 
     if (isOurApi) {
       const token = _accessToken;

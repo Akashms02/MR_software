@@ -6,16 +6,7 @@ import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyPayslip } from '../../redux/actions/companyAction'
 import { getMyTeam } from '../../redux/actions/teamActions'
-
-const getFullAssetUrl = (relativeUrl) => {
-  if (!relativeUrl) return "";
-  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
-    return relativeUrl;
-  }
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
-  return `${base}${relativeUrl}`;
-};
+import { inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
 
 // Helper to convert number to Indian Rupees words
 function numberToRupeesWords(amount) {
@@ -58,6 +49,7 @@ function numberToRupeesWords(amount) {
 export default function SalarySlip({ onBack }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
+  const { logoSrc } = useCompanyBrandAssets(user)
   const { team: employees = [] } = useSelector((state) => state.team)
 
   // Fetch admin profile and team on mount
@@ -124,6 +116,9 @@ export default function SalarySlip({ onBack }) {
       return
     }
 
+    setIsGenerating(true)
+    setModalError('')
+
     let originalWindowGetComputedStyle = null;
 
     try {
@@ -167,6 +162,10 @@ export default function SalarySlip({ onBack }) {
 
       const empName = employee.fullName || employee.name || 'employee'
       const fileName = `payslip_${empName.replace(/\s+/g, '_').toLowerCase()}_${month.replace(/\s+/g, '_')}_${Date.now()}.pdf`
+
+      await document.fonts.ready
+      await inlineDocumentImages(sheetElement)
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Configure html2pdf options
       const opt = {
@@ -365,16 +364,16 @@ export default function SalarySlip({ onBack }) {
 
       const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData))
 
-      if (res && res.data) {
+      if (res?.data) {
         setModalData({
           emailSentTo: res.data.emailSentTo || empEmail,
-          previewUrl: res.data.previewUrl || '',
+          previewUrl: res.data.previewUrl || res.data.payslipPDF || '',
           status: res.data.status || 'SENT'
         })
         setModalError('')
         setShowModal(true)
       } else {
-        setModalError(res?.message || 'Failed to generate payslip. Backend did not return expected data.')
+        setModalError(res?.message || 'Failed to generate payslip. Please try again.')
         setShowModal(true)
       }
     } catch (err) {
@@ -482,10 +481,11 @@ export default function SalarySlip({ onBack }) {
       
       <div className="flex items-start gap-4">
         
-        {user?.logoUrl ? (
+        {logoSrc ? (
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
             <img
-              src={getFullAssetUrl(user.logoUrl)}
+              crossOrigin="anonymous"
+              src={logoSrc}
               alt="Logo"
               className="max-h-full max-w-full object-contain"
             />

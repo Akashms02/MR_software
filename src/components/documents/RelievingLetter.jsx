@@ -6,18 +6,7 @@ import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyReleivingLetter } from '../../redux/actions/companyAction'
 import { getMyTeam } from '../../redux/actions/teamActions'
-// Helper to resolve backend relative file upload paths to absolute URLs
-// On localhost (dev) -> use the live API server URL
-// On production (deployed) -> use the app's own origin
-const getFullAssetUrl = (relativeUrl) => {
-  if (!relativeUrl) return "";
-  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
-    return relativeUrl;
-  }
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
-  return `${base}${relativeUrl}`;
-};
+import { getFullAssetUrl, inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
 
 const oklchToRgb = (l, c, h, a = 1) => {
   const hRad = (h * Math.PI) / 180;
@@ -115,6 +104,7 @@ export default function RelievingLetter({ onBack }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const { team: employees = [] } = useSelector((state) => state.team)
+  const { logoSrc, stampSrc } = useCompanyBrandAssets(user)
 
   // Fetch admin profile and team on mount
   useEffect(() => {
@@ -245,6 +235,10 @@ export default function RelievingLetter({ onBack }) {
       if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
 
       const fileName = `relieving_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
+
+      await document.fonts.ready
+      await inlineDocumentImages(sheetElement)
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Configure html2pdf options
       const opt = {
@@ -472,16 +466,16 @@ export default function RelievingLetter({ onBack }) {
 
       const res = await dispatch(CompanyReleivingLetter(selectedId, formData))
 
-      if (res && res.data) {
+      if (res?.data) {
         setModalData({
           emailSentTo: res.data.emailSentTo || candidateEmail,
-          previewUrl: res.data.previewUrl || '',
+          previewUrl: res.data.previewUrl || res.data.releivingLetterPDF || '',
           status: res.data.status || 'SENT'
         })
         setModalError('')
         setShowModal(true)
       } else {
-        setModalError(res?.message || 'Failed to generate relieving letter. Backend did not return expected data.')
+        setModalError(res?.message || 'Failed to generate relieving letter. Please try again.')
         setShowModal(true)
       }
     } catch (err) {
@@ -825,11 +819,11 @@ export default function RelievingLetter({ onBack }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
             {/* Logo & Brand */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {user?.logoUrl ? (
-                <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                </div>
-              ) : (
+                {logoSrc ? (
+                  <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    <img crossOrigin="anonymous" src={logoSrc} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  </div>
+                ) : (
                 <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
                   <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
@@ -915,9 +909,9 @@ export default function RelievingLetter({ onBack }) {
               <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', marginBottom: '24px' }}>for {companyName},</div>
 
               {/* Stamp or Simulated Signature */}
-              {user?.companyStampUrl ? (
+              {stampSrc ? (
                 <div style={{ height: '56px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                  <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                  <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
               ) : (
                 <div style={{
