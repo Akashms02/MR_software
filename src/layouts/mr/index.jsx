@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MRLayout from './MRLayout'
 import MRDashboard from '../../pages/mr/MRDashboard'
 import MRDcrPage from '../../pages/mr/MRDcrPage'
+import MRAttendancePage from '../../pages/mr/MRAttendancePage'
 import MRReports from '../../pages/mr/MRReports'
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
@@ -24,6 +25,7 @@ export default function MRLayoutRouter() {
         <Route path="/" element={<MRDashboard />} />
         <Route path="dashboard" element={<MRDashboard />} />
         <Route path="dcr" element={<MRDcrPage />} />
+        <Route path="attendance" element={<MRAttendancePage />} />
         <Route path="tourplan" element={<MRTourPlanPage />} />
         <Route path="reports" element={<MRReports />} />
         <Route path="leaves" element={<MRLeavePage />} />

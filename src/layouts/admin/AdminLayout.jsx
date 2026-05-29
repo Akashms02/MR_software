@@ -15,7 +15,8 @@ import {
   Settings,
   BarChart2,
   Map,
-  Calendar
+  Calendar,
+  Navigation
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
@@ -65,6 +66,7 @@ export default function AdminLayout({ children }) {
     { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },
     { id: 'reports',      icon: BarChart2,       label: 'Reports & Analytics', path: '/admin/reports' },
     { id: 'tourplans',    icon: Map,             label: 'Tour Plans',    path: '/admin/tourplans' },
+    { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/admin/fieldtracking' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Approvals', path: '/admin/leaves' },
     { id: 'recruitment',  icon: Briefcase,       label: 'Recruitment',   path: '/admin/recruitment' },
     { id: 'orgstructure', icon: Network,         label: 'Org Structure', path: '/admin/orgstructure' },
