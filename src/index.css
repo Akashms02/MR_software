@@ -806,3 +806,40 @@ body {
   }
 }
 
+/* PDF Generation Overrides to guarantee exactly 2 pages with zero overflow or double-breaks */
+.printable-sheet-container.generating-pdf {
+  display: block !important;
+  gap: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
+  width: 210mm !important;
+  height: auto !important;
+}
+.printable-sheet-container.generating-pdf .printable-sheet {
+  width: 210mm !important;
+  height: 295mm !important;
+  min-height: 295mm !important;
+  max-height: 295mm !important;
+  margin: 0px !important;
+  padding-left: 50px !important;
+  padding-right: 50px !important;
+  padding-top: 24px !important;
+  padding-bottom: 24px !important;
+  box-sizing: border-box !important;
+  border-radius: 0px !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  page-break-before: avoid !important;
+  page-break-after: avoid !important;
+  break-before: avoid !important;
+  break-after: avoid !important;
+}
+.printable-sheet-container.generating-pdf .html2pdf__page-break {
+  display: block !important;
+  height: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
+

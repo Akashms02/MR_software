@@ -19,6 +19,98 @@ const getFullAssetUrl = (relativeUrl) => {
   return `${base}${relativeUrl}`;
 };
 
+const oklchToRgb = (l, c, h, a = 1) => {
+  const hRad = (h * Math.PI) / 180;
+  const L = l;
+  const a_ = c * Math.cos(hRad);
+  const b_ = c * Math.sin(hRad);
+  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
+const oklabToRgb = (l, a_, b_, a = 1) => {
+  const L = l;
+  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
+const resolveModernColors = (colorStr) => {
+  if (!colorStr || typeof colorStr !== 'string') return colorStr;
+  let resolved = colorStr;
+  
+  if (resolved.includes('oklch')) {
+    try {
+      resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
+        const parts = p1.trim().split(/[\s/,]+/);
+        if (parts.length >= 3) {
+          let l = parseFloat(parts[0]);
+          if (parts[0].includes('%')) l /= 100;
+          const c = parseFloat(parts[1]);
+          const h = parseFloat(parts[2]);
+          let a = 1;
+          if (parts[3]) {
+            a = parseFloat(parts[3]);
+            if (parts[3].includes('%')) a /= 100;
+          }
+          if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
+            return oklchToRgb(l, c, h, a);
+          }
+        }
+        return match;
+      });
+    } catch (e) {}
+  }
+
+  if (resolved.includes('oklab')) {
+    try {
+      resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
+        const parts = p1.trim().split(/[\s/,]+/);
+        if (parts.length >= 3) {
+          let l = parseFloat(parts[0]);
+          if (parts[0].includes('%')) l /= 100;
+          const a_coord = parseFloat(parts[1]);
+          const b_coord = parseFloat(parts[2]);
+          let a = 1;
+          if (parts[3]) {
+            a = parseFloat(parts[3]);
+            if (parts[3].includes('%')) a /= 100;
+          }
+          if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
+            return oklabToRgb(l, a_coord, b_coord, a);
+          }
+        }
+        return match;
+      });
+    } catch (e) {}
+  }
+
+  return resolved;
+};
+
 export default function RelievingLetter({ onBack }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
@@ -111,7 +203,44 @@ export default function RelievingLetter({ onBack }) {
     setIsGenerating(true)
     setModalError('')
 
+    let originalWindowGetComputedStyle = null;
+
     try {
+      // Temporarily override the main window's getComputedStyle to resolve OKLCH/OKLAB colors dynamically
+      originalWindowGetComputedStyle = window.getComputedStyle;
+      window.getComputedStyle = function (el, pseudoEl) {
+        const style = originalWindowGetComputedStyle.call(window, el, pseudoEl);
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === 'getPropertyValue') {
+              return function(key) {
+                const val = target.getPropertyValue(key);
+                if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    return resolveModernColors(val);
+                  } catch (e) {
+                    return val;
+                  }
+                }
+                return val;
+              };
+            }
+            const val = target[prop];
+            if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+              try {
+                return resolveModernColors(val);
+              } catch (e) {
+                return val;
+              }
+            }
+            if (typeof val === 'function') {
+              return val.bind(target);
+            }
+            return val;
+          }
+        });
+      };
+
       const sheetElement = printableRef.current
       if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
 
@@ -176,7 +305,7 @@ export default function RelievingLetter({ onBack }) {
               if (resolved.includes('oklch')) {
                 try {
                   resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -199,7 +328,7 @@ export default function RelievingLetter({ onBack }) {
               if (resolved.includes('oklab')) {
                 try {
                   resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -221,6 +350,50 @@ export default function RelievingLetter({ onBack }) {
 
               return resolved;
             };
+
+            // Override getComputedStyle inside the iframe to dynamically convert all OKLCH/OKLAB colors on the fly!
+            if (clonedDoc.defaultView) {
+              const originalGetComputedStyle = clonedDoc.defaultView.getComputedStyle;
+              clonedDoc.defaultView.getComputedStyle = function (el, pseudoEl) {
+                const style = originalGetComputedStyle.call(clonedDoc.defaultView, el, pseudoEl);
+                return new Proxy(style, {
+                  get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                      return function(key) {
+                        const val = target.getPropertyValue(key);
+                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                          try {
+                            return resolveModernColors(val);
+                          } catch (e) {
+                            return val;
+                          }
+                        }
+                        return val;
+                      };
+                    }
+                    const val = target[prop];
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                      try {
+                        return resolveModernColors(val);
+                      } catch (e) {
+                        return val;
+                      }
+                    }
+                    if (typeof val === 'function') {
+                      return val.bind(target);
+                    }
+                    return val;
+                  }
+                });
+              };
+            }
+
+            // Preprocess stylesheets inside the iframe to replace oklch references with fallback rgb
+            clonedDoc.querySelectorAll('style').forEach(styleTag => {
+              if (styleTag.textContent) {
+                styleTag.textContent = resolveModernColors(styleTag.textContent);
+              }
+            });
 
             const properties = [
               'color', 'backgroundColor', 'borderColor', 
@@ -302,6 +475,9 @@ export default function RelievingLetter({ onBack }) {
       setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
       setShowModal(true)
     } finally {
+      if (originalWindowGetComputedStyle) {
+        window.getComputedStyle = originalWindowGetComputedStyle;
+      }
       setIsGenerating(false)
     }
   }
@@ -601,27 +777,21 @@ export default function RelievingLetter({ onBack }) {
         flexDirection: 'column',
         justifyContent: 'space-between'
       }}>
-        {/* Top-Right Decorative Accents */}
-        <div style={{
-          position: 'absolute', top: 0, right: 0, width: '280px', height: '80px',
-          background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(100% 0, 0 0, 100% 100%)', zIndex: 2
-        }} />
-        <div style={{
-          position: 'absolute', top: 0, right: 0, width: '295px', height: '86px',
-          background: '#d97706', clipPath: 'polygon(100% 0, 0 0, 100% 100%)', zIndex: 1
-        }} />
+        {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
+        <svg style={{ position: 'absolute', top: 0, right: 0, zIndex: 1, userSelect: 'none', pointerEvents: 'none' }} width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="0,0 295,0 295,86" fill="#d97706" />
+        </svg>
+        <svg style={{ position: 'absolute', top: 0, right: 0, zIndex: 2, userSelect: 'none', pointerEvents: 'none' }} width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="0,0 280,0 280,80" fill="#166534" />
+        </svg>
 
-        {/* Bottom Decorative Slanted Accents */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px',
-          background: 'linear-gradient(90deg, #15803d 0%, #166534 100%)',
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', zIndex: 2
-        }} />
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '47px',
-          background: '#d97706', clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', zIndex: 1
-        }} />
+        {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
+        <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1, width: '100%', userSelect: 'none', pointerEvents: 'none' }} height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
+        </svg>
+        <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2, width: '100%', userSelect: 'none', pointerEvents: 'none' }} height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
+        </svg>
 
         {/* Main Content Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: 10 }}>

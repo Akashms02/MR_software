@@ -61,6 +61,98 @@ function numberToWordsINR(num) {
   return result.trim();
 }
 
+const oklchToRgb = (l, c, h, a = 1) => {
+  const hRad = (h * Math.PI) / 180;
+  const L = l;
+  const a_ = c * Math.cos(hRad);
+  const b_ = c * Math.sin(hRad);
+  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
+const oklabToRgb = (l, a_, b_, a = 1) => {
+  const L = l;
+  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
+  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
+  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
+  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
+  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
+  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
+const resolveModernColors = (colorStr) => {
+  if (!colorStr || typeof colorStr !== 'string') return colorStr;
+  let resolved = colorStr;
+  
+  if (resolved.includes('oklch')) {
+    try {
+      resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
+        const parts = p1.trim().split(/[\s/,]+/);
+        if (parts.length >= 3) {
+          let l = parseFloat(parts[0]);
+          if (parts[0].includes('%')) l /= 100;
+          const c = parseFloat(parts[1]);
+          const h = parseFloat(parts[2]);
+          let a = 1;
+          if (parts[3]) {
+            a = parseFloat(parts[3]);
+            if (parts[3].includes('%')) a /= 100;
+          }
+          if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
+            return oklchToRgb(l, c, h, a);
+          }
+        }
+        return match;
+      });
+    } catch (e) {}
+  }
+
+  if (resolved.includes('oklab')) {
+    try {
+      resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
+        const parts = p1.trim().split(/[\s/,]+/);
+        if (parts.length >= 3) {
+          let l = parseFloat(parts[0]);
+          if (parts[0].includes('%')) l /= 100;
+          const a_coord = parseFloat(parts[1]);
+          const b_coord = parseFloat(parts[2]);
+          let a = 1;
+          if (parts[3]) {
+            a = parseFloat(parts[3]);
+            if (parts[3].includes('%')) a /= 100;
+          }
+          if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
+            return oklabToRgb(l, a_coord, b_coord, a);
+          }
+        }
+        return match;
+      });
+    } catch (e) {}
+  }
+
+  return resolved;
+};
+
 export default function OfferLetter({ onBack }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -204,10 +296,52 @@ export default function OfferLetter({ onBack }) {
     setIsGenerating(true)
     setModalError('')
 
+    let originalWindowGetComputedStyle = null;
+
     try {
+      // Temporarily override the main window's getComputedStyle to resolve OKLCH/OKLAB colors dynamically
+      originalWindowGetComputedStyle = window.getComputedStyle;
+      window.getComputedStyle = function (el, pseudoEl) {
+        const style = originalWindowGetComputedStyle.call(window, el, pseudoEl);
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === 'getPropertyValue') {
+              return function(key) {
+                const val = target.getPropertyValue(key);
+                if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    return resolveModernColors(val);
+                  } catch (e) {
+                    return val;
+                  }
+                }
+                return val;
+              };
+            }
+            const val = target[prop];
+            if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+              try {
+                return resolveModernColors(val);
+              } catch (e) {
+                return val;
+              }
+            }
+            if (typeof val === 'function') {
+              return val.bind(target);
+            }
+            return val;
+          }
+        });
+      };
+
       // 1. Capture the live rendered document HTML from the printable sheet ref
       const sheetElement = printableRef.current
       if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
+
+      // Temporarily inject print class to force perfect layout heights and strip gaps/margins
+      sheetElement.classList.add('generating-pdf');
+      // Await style computation and rendering settlement
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const fileName = `offer_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
 
@@ -270,7 +404,7 @@ export default function OfferLetter({ onBack }) {
               if (resolved.includes('oklch')) {
                 try {
                   resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -293,7 +427,7 @@ export default function OfferLetter({ onBack }) {
               if (resolved.includes('oklab')) {
                 try {
                   resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -316,6 +450,50 @@ export default function OfferLetter({ onBack }) {
               return resolved;
             };
 
+            // Override getComputedStyle inside the iframe to dynamically convert all OKLCH/OKLAB colors on the fly!
+            if (clonedDoc.defaultView) {
+              const originalGetComputedStyle = clonedDoc.defaultView.getComputedStyle;
+              clonedDoc.defaultView.getComputedStyle = function (el, pseudoEl) {
+                const style = originalGetComputedStyle.call(clonedDoc.defaultView, el, pseudoEl);
+                return new Proxy(style, {
+                  get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                      return function(key) {
+                        const val = target.getPropertyValue(key);
+                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                          try {
+                            return resolveModernColors(val);
+                          } catch (e) {
+                            return val;
+                          }
+                        }
+                        return val;
+                      };
+                    }
+                    const val = target[prop];
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                      try {
+                        return resolveModernColors(val);
+                      } catch (e) {
+                        return val;
+                      }
+                    }
+                    if (typeof val === 'function') {
+                      return val.bind(target);
+                    }
+                    return val;
+                  }
+                });
+              };
+            }
+
+            // Preprocess stylesheets inside the iframe to replace oklch references with fallback rgb
+            clonedDoc.querySelectorAll('style').forEach(styleTag => {
+              if (styleTag.textContent) {
+                styleTag.textContent = resolveModernColors(styleTag.textContent);
+              }
+            });
+
             const properties = [
               'color', 'backgroundColor', 'borderColor', 
               'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
@@ -336,9 +514,27 @@ export default function OfferLetter({ onBack }) {
               });
             }
 
-            // Force A4 layout constraints for all sheets in the offer letter (both Page 1 and Page 2)
+            // Force A4 layout constraints for the container to remove gaps on the continuous print canvas
+            const container = clonedDoc.querySelector('.printable-sheet-container');
+            if (container) {
+              container.style.display = 'block';
+              container.style.gap = '0px';
+              container.style.margin = '0px';
+              container.style.padding = '0px';
+            }
+
+            // Ensure the page break element has zero height and spacing but remains in DOM for html2pdf to detect
+            const pageBreaks = clonedDoc.querySelectorAll('.html2pdf__page-break');
+            pageBreaks.forEach(pb => {
+              pb.style.display = 'block';
+              pb.style.height = '0px';
+              pb.style.margin = '0px';
+              pb.style.padding = '0px';
+            });
+
+            // Force exactly 295mm on all sheets to perfectly fit within the A4 boundary without fractional overflow
             const sheets = clonedDoc.querySelectorAll('.printable-sheet');
-            sheets.forEach(sheet => {
+            sheets.forEach((sheet) => {
               sheet.style.width = '210mm';
               sheet.style.height = '295mm';
               sheet.style.minHeight = '295mm';
@@ -352,39 +548,41 @@ export default function OfferLetter({ onBack }) {
               sheet.style.border = 'none';
               sheet.style.boxShadow = 'none';
               sheet.style.overflow = 'hidden';
+
+              // Clear CSS page breaks in cloned DOM to prevent double page breaks
+              sheet.style.pageBreakAfter = 'avoid';
+              sheet.style.pageBreakBefore = 'avoid';
+              sheet.style.breakAfter = 'auto';
+              sheet.style.breakBefore = 'auto';
             });
           }
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: 'legacy' }
       };
 
-      // 3. Generate PDF as a blob
-      const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
+      // 3. Download the PDF locally for manual layout testing
+      await html2pdf().set(opt).from(sheetElement).save();
 
-      // 4. Build FormData with email and file
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('file', pdfBlob, fileName)
-
-      // 5. Dispatch the FormData to the API
-      const res = await dispatch(CompanyOfferLetter(formData))
-
-      if (res && res.data) {
-        setModalData({
-          emailSentTo: res.data.emailSentTo || email,
-          previewUrl: res.data.previewUrl || '',
-          status: res.data.status || 'SENT'
-        })
-        setModalError('')
-        setShowModal(true)
-      } else {
-        setModalError(res?.message || 'Failed to generate offer letter. Backend did not return expected data.')
-        setShowModal(true)
-      }
+      // Show success modal for local download
+      setModalData({
+        emailSentTo: 'LOCAL DOWNLOAD (No Email Sent)',
+        previewUrl: '',
+        status: 'DOWNLOADED'
+      })
+      setModalError('')
+      setShowModal(true)
     } catch (err) {
-      setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
+      setModalError(err.message || 'An unexpected error occurred.')
       setShowModal(true)
     } finally {
+      if (originalWindowGetComputedStyle) {
+        window.getComputedStyle = originalWindowGetComputedStyle;
+      }
+      const sheetElement = printableRef.current;
+      if (sheetElement) {
+        sheetElement.classList.remove('generating-pdf');
+      }
       setIsGenerating(false)
     }
   }
@@ -679,30 +877,26 @@ export default function OfferLetter({ onBack }) {
         <div
           className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
         >
-          {/* Top-Right Decorative Accents */}
-          <div
-            className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
-            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', backgroundColor: '#d97706' }}
-          />
-          <div
-            className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
-            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', background: 'linear-gradient(to bottom right, #15803d, #166534)' }}
-          />
+          {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
+          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 295,0 295,86" fill="#d97706" />
+          </svg>
+          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 280,0 280,80" fill="#166534" />
+          </svg>
 
-          {/* Bottom Decorative Slanted Accents */}
-          <div
-            className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
-            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', backgroundColor: '#d97706' }}
-          />
-          <div
-            className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
-            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', background: 'linear-gradient(to right, #15803d, #166534)' }}
-          />
+          {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '100%', height: '47px' }} className="select-none pointer-events-none" width="100%" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
+          </svg>
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '100%', height: '40px' }} className="select-none pointer-events-none" width="100%" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
+          </svg>
 
           {/* Main content wrapper containing header, body and signature block */}
           <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
             {/* Letterhead Header */}
-            <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="mb-4 flex flex-row justify-between items-start gap-4">
               {/* Logo & Brand */}
               <div className="flex items-center gap-3.5">
                 {user?.logoUrl ? (
@@ -728,7 +922,7 @@ export default function OfferLetter({ onBack }) {
               </div>
 
               {/* Document Date */}
-              <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
+              <div className="text-sm font-semibold text-gray-700 pt-3">
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
@@ -835,29 +1029,25 @@ export default function OfferLetter({ onBack }) {
         <div
           className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
         >
-          {/* Top-Right Decorative Accents */}
-          <div
-            className="absolute top-0 right-0 z-10 h-[86px] w-[295px] bg-amber-600"
-            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', backgroundColor: '#d97706' }}
-          />
-          <div
-            className="absolute top-0 right-0 z-20 h-20 w-[280px] bg-gradient-to-br from-green-700 to-green-800"
-            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)', background: 'linear-gradient(to bottom right, #15803d, #166534)' }}
-          />
-
-          {/* Bottom Decorative Slanted Accents */}
-          <div
-            className="absolute bottom-0 left-0 right-0 z-10 h-[47px] bg-amber-600"
-            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 35%)', backgroundColor: '#d97706' }}
-          />
-          <div
-            className="absolute bottom-0 left-0 right-0 z-20 h-10 bg-gradient-to-r from-green-700 to-green-800"
-            style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 45%)', background: 'linear-gradient(to right, #15803d, #166534)' }}
-          />
+          {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
+          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 295,0 295,86" fill="#d97706" />
+          </svg>
+          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "280px", height: "80px" }}>
+            <polygon points="0,0 280,0 280,80" fill="#166534" />
+          </svg>
+          
+          {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
+          <svg className="absolute bottom-0 left-0 right-0 z-10 w-full select-none pointer-events-none" width="300" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
+          </svg>
+          <svg className="absolute bottom-0 left-0 right-0 z-20 w-full select-none pointer-events-none" width="300" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
+          </svg>
 
           <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
             {/* Annexure Header */}
-            <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="mb-4 flex flex-row justify-between items-start gap-4">
               <div className="flex items-center gap-3.5">
                 {user?.logoUrl ? (
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
@@ -867,6 +1057,11 @@ export default function OfferLetter({ onBack }) {
                   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
                     <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                    <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                    <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 )}
                 <div>
@@ -875,7 +1070,7 @@ export default function OfferLetter({ onBack }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-2 text-sm font-semibold text-gray-700 sm:mt-4 sm:pr-24">
+              <div className="text-sm font-semibold text-gray-700 pt-3">
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
