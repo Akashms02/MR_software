@@ -22,20 +22,7 @@ import {
   Lock
 } from "lucide-react";
 
-// Helper to resolve backend relative file upload paths to absolute URLs using the API origin
-const getFullAssetUrl = (relativeUrl) => {
-  if (!relativeUrl) return "";
-  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
-    return relativeUrl;
-  }
-  try {
-    const url = new URL(API_ROUTE);
-    return `${url.origin}${relativeUrl}`;
-  } catch (e) {
-    // Fallback path mapping for dev and production
-    return `https://api-mr-software.gmaxepay.in${relativeUrl}`;
-  }
-};
+import { getFullAssetUrl } from "../../utils/getFullAssetUrl";
 
 // Tailwind CSS styled interactive uploader supporting drag-and-drop, direct file uploads, base64 previews
 const FileUploader = ({ label, value, onChange, onClear, id }) => {

@@ -6,15 +6,99 @@ import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyOfferLetter, CompanyRoles, CompanyDepartments } from '../../redux/actions/companyAction'
 import { getMyTeam } from '../../redux/actions/teamActions'
+import { getFullAssetUrl, inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
 
-const getFullAssetUrl = (relativeUrl) => {
-  if (!relativeUrl) return "";
-  if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
-    return relativeUrl;
-  }
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
-  return `${base}${relativeUrl}`;
+// Base64 SVG images render reliably in html2canvas/html2pdf (inline SVG often does not)
+const OFFER_THEME_SVG = {
+  topGold:
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOTUiIGhlaWdodD0iODYiIHZpZXdCb3g9IjAgMCAyOTUgODYiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0gMCAwIEwgMjk1IDAgTCAyOTUgODYgWiIgZmlsbD0iI2Q5NzcwNiIvPjwvc3ZnPg==',
+  topGreen:
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAyODAgODAiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0gMCAwIEwgMjgwIDAgTCAyODAgODAgWiIgZmlsbD0iIzE2NjUzNCIvPjwvc3ZnPg==',
+  bottomGold:
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTSAwIDM1IEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgWiIgZmlsbD0iI2Q5NzcwNiIvPjwvc3ZnPg==',
+  bottomGreen:
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTSAwIDQ1IEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgWiIgZmlsbD0iIzE2NjUzNCIvPjwvc3ZnPg==',
+};
+
+const offerLetterDateClass =
+  'relative z-[60] shrink-0 self-start pt-2 ml-auto mr-[100px] text-right text-sm font-semibold text-gray-900 bg-white/95 px-2 py-1 rounded';
+
+const offerLetterCompanyNameClass =
+  'font-serif text-sm font-black uppercase leading-none tracking-wide whitespace-nowrap';
+
+function OfferLetterThemeDecorations({ bottomWidth = '100%' }) {
+  const bottomBase = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    userSelect: 'none',
+    pointerEvents: 'none',
+    width: bottomWidth,
+  };
+
+  return (
+    <>
+      <img
+        src={OFFER_THEME_SVG.topGold}
+        alt=""
+        className="offer-theme-decor"
+        style={{ position: 'absolute', top: 0, right: 0, zIndex: 40, width: '295px', height: '86px' }}
+      />
+      <img
+        src={OFFER_THEME_SVG.topGreen}
+        alt=""
+        className="offer-theme-decor"
+        style={{ position: 'absolute', top: 0, right: 0, zIndex: 50, width: '280px', height: '80px' }}
+      />
+      <img
+        src={OFFER_THEME_SVG.bottomGold}
+        alt=""
+        className="offer-theme-decor offer-theme-bottom"
+        data-decor-position="bottom"
+        style={{ ...bottomBase, zIndex: 40, height: '47px' }}
+        height="47"
+      />
+      <img
+        src={OFFER_THEME_SVG.bottomGreen}
+        alt=""
+        className="offer-theme-decor offer-theme-bottom"
+        data-decor-position="bottom"
+        style={{ ...bottomBase, zIndex: 50, height: '40px' }}
+        height="40"
+      />
+    </>
+  );
+}
+
+const waitForImages = async (rootEl, { timeoutMs = 4000 } = {}) => {
+  if (!rootEl) return;
+
+  const imgs = Array.from(rootEl.querySelectorAll('img'));
+  if (imgs.length === 0) return;
+
+  const waitOne = (img) =>
+    new Promise((resolve) => {
+      if (img.complete && img.naturalWidth > 0) return resolve();
+
+      let settled = false;
+      const cleanup = () => {
+        if (settled) return;
+        settled = true;
+        img.removeEventListener('load', onDone);
+        img.removeEventListener('error', onDone);
+        resolve();
+      };
+      const onDone = () => cleanup();
+
+      img.addEventListener('load', onDone, { once: true });
+      img.addEventListener('error', onDone, { once: true });
+
+      // Avoid hanging forever on slow/broken assets
+      window.setTimeout(cleanup, timeoutMs);
+    });
+
+  await Promise.all(imgs.map(waitOne));
 };
 
 // Helper to convert salary numbers to Indian currency words
@@ -158,6 +242,7 @@ export default function OfferLetter({ onBack }) {
   const { user } = useSelector((state) => state.auth);
   const { team: employees = [] } = useSelector((state) => state.team);
   const { getRoles = [], getDepartments = [] } = useSelector((state) => state.company);
+  const { logoSrc, stampSrc } = useCompanyBrandAssets(user);
 
   // Fetch profile, team, and roles on mount
   useEffect(() => {
@@ -298,6 +383,7 @@ export default function OfferLetter({ onBack }) {
     setModalError('')
 
     let originalWindowGetComputedStyle = null;
+    let captureRoot = null;
 
     try {
       // Temporarily override the main window's getComputedStyle to resolve OKLCH/OKLAB colors dynamically
@@ -335,151 +421,164 @@ export default function OfferLetter({ onBack }) {
         });
       };
 
-      const container = printableRef.current
-      if (!container) throw new Error('Document preview not ready. Please try again.')
+      captureRoot = printableRef.current
+      if (!captureRoot) throw new Error('Document preview not ready. Please try again.')
 
-      const sheets = Array.from(container.querySelectorAll('.printable-sheet'))
+      const sheets = captureRoot.querySelectorAll('.printable-sheet')
       if (sheets.length === 0) throw new Error('No printable pages found.')
 
-      await new Promise(resolve => setTimeout(resolve, 80))
+      await document.fonts.ready
+      await inlineDocumentImages(captureRoot)
+      await waitForImages(captureRoot)
+      await new Promise((resolve) => setTimeout(resolve, 120))
 
       const fileName = `offer_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
 
-      const { jsPDF } = await import('jspdf')
-      const html2canvas = (await import('html2canvas')).default
+      const applyColorFixesInClone = (clonedDoc) => {
+        clonedDoc.querySelectorAll('style').forEach((styleTag) => {
+          if (styleTag.textContent) {
+            styleTag.textContent = resolveModernColors(styleTag.textContent)
+          }
+        })
 
-      const PDF_W = 794
-      const PDF_H = 1123
+        if (clonedDoc.defaultView) {
+          const origGCS = clonedDoc.defaultView.getComputedStyle
+          clonedDoc.defaultView.getComputedStyle = function (el, pseudo) {
+            const s = origGCS.call(clonedDoc.defaultView, el, pseudo)
+            return new Proxy(s, {
+              get(target, prop) {
+                if (prop === 'getPropertyValue') {
+                  return function (key) {
+                    const val = target.getPropertyValue(key)
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                      try { return resolveModernColors(val) } catch { return val }
+                    }
+                    return val
+                  }
+                }
+                const val = target[prop]
+                if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try { return resolveModernColors(val) } catch { return val }
+                }
+                if (typeof val === 'function') return val.bind(target)
+                return val
+              }
+            })
+          }
+        }
 
-      const pdf = new jsPDF({
-        unit: 'px',
-        format: [PDF_W, PDF_H],
-        orientation: 'portrait',
-        hotfixes: ['px_scaling']
-      })
+        const colorProps = [
+          'color', 'backgroundColor', 'borderColor',
+          'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+          'fill', 'stroke', 'backgroundImage', 'boxShadow'
+        ]
 
-      for (let i = 0; i < sheets.length; i++) {
-        const sheet = sheets[i]
+        const allElements = clonedDoc.getElementsByTagName('*')
+        for (let j = 0; j < allElements.length; j++) {
+          const el = allElements[j]
+          const computed = clonedDoc.defaultView
+            ? clonedDoc.defaultView.getComputedStyle(el)
+            : window.getComputedStyle(el)
+          colorProps.forEach((prop) => {
+            const val = computed[prop]
+            if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+              try { el.style[prop] = resolveModernColors(val) } catch (_) {}
+            }
+          })
+        }
 
-        const canvas = await html2canvas(sheet, {
+        const clonedContainer = clonedDoc.querySelector('.printable-sheet-container')
+        if (clonedContainer) {
+          clonedContainer.classList.add('generating-pdf')
+          clonedContainer.style.display = 'block'
+          clonedContainer.style.gap = '0'
+          clonedContainer.style.margin = '0'
+          clonedContainer.style.padding = '0'
+          clonedContainer.style.width = '210mm'
+          clonedContainer.style.maxWidth = '210mm'
+        }
+
+        clonedDoc.querySelectorAll('.printable-sheet').forEach((sheet) => {
+          sheet.style.width = '210mm'
+          sheet.style.height = '297mm'
+          sheet.style.minHeight = '297mm'
+          sheet.style.maxHeight = '297mm'
+          sheet.style.margin = '0'
+          sheet.style.borderRadius = '0'
+          sheet.style.border = 'none'
+          sheet.style.boxShadow = 'none'
+          sheet.style.overflow = 'hidden'
+          sheet.style.boxSizing = 'border-box'
+          sheet.style.background = '#ffffff'
+        })
+
+        clonedDoc.querySelectorAll('.offer-theme-bottom').forEach((img) => {
+          img.style.width = '794px'
+          img.setAttribute('width', '794')
+        })
+
+        clonedDoc.querySelectorAll('.printable-sheet svg, .printable-sheet img').forEach((el) => {
+          const widthAttr = el.getAttribute('width')
+          if (widthAttr === '100%' || el.style.width === '100%') {
+            el.setAttribute('width', '794')
+            el.style.width = '794px'
+          }
+          el.style.display = 'block'
+          el.style.visibility = 'visible'
+        })
+      }
+
+      captureRoot.classList.add('generating-pdf')
+
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           logging: false,
           letterRendering: true,
-          width: PDF_W,
-          height: PDF_H,
-          windowWidth: PDF_W,
-          windowHeight: PDF_H,
+          imageTimeout: 15000,
           backgroundColor: '#ffffff',
-          onclone: (clonedDoc, clonedEl) => {
-            clonedDoc.querySelectorAll('style').forEach(styleTag => {
-              if (styleTag.textContent) {
-                styleTag.textContent = resolveModernColors(styleTag.textContent)
-              }
-            })
-
-            if (clonedDoc.defaultView) {
-              const origGCS = clonedDoc.defaultView.getComputedStyle
-              clonedDoc.defaultView.getComputedStyle = function (el, pseudo) {
-                const s = origGCS.call(clonedDoc.defaultView, el, pseudo)
-                return new Proxy(s, {
-                  get(target, prop) {
-                    if (prop === 'getPropertyValue') {
-                      return function (key) {
-                        const val = target.getPropertyValue(key)
-                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                          try { return resolveModernColors(val) } catch { return val }
-                        }
-                        return val
-                      }
-                    }
-                    const val = target[prop]
-                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                      try { return resolveModernColors(val) } catch { return val }
-                    }
-                    if (typeof val === 'function') return val.bind(target)
-                    return val
-                  }
-                })
-              }
-            }
-
-            const allElements = clonedDoc.getElementsByTagName('*')
-            const colorProps = [
-              'color', 'backgroundColor', 'borderColor',
-              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
-              'fill', 'stroke', 'backgroundImage', 'boxShadow'
-            ]
-            for (let j = 0; j < allElements.length; j++) {
-              const el = allElements[j]
-              const computed = clonedDoc.defaultView
-                ? clonedDoc.defaultView.getComputedStyle(el)
-                : window.getComputedStyle(el)
-              colorProps.forEach(prop => {
-                const val = computed[prop]
-                if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                  try { el.style[prop] = resolveModernColors(val) } catch (_) {}
-                }
-              })
-            }
-
-            const clonedContainer = clonedDoc.querySelector('.printable-sheet-container')
-            if (clonedContainer) {
-              clonedContainer.style.display = 'block'
-              clonedContainer.style.gap = '0'
-              clonedContainer.style.margin = '0'
-              clonedContainer.style.padding = '0'
-              clonedContainer.style.width = '794px'
-              clonedContainer.style.maxWidth = 'none'
-            }
-
-            clonedDoc.querySelectorAll('.html2pdf__page-break').forEach(pb => {
-              pb.style.display = 'none'
-            })
-
-            clonedDoc.querySelectorAll('.printable-sheet').forEach(s => {
-              if (s !== clonedEl) s.style.display = 'none'
-            })
-
-            if (clonedEl) {
-              clonedEl.style.position = 'relative'
-              clonedEl.style.width = '794px'
-              clonedEl.style.height = '1123px'
-              clonedEl.style.minHeight = '1123px'
-              clonedEl.style.maxHeight = '1123px'
-              clonedEl.style.overflow = 'hidden'
-              clonedEl.style.boxSizing = 'border-box'
-              clonedEl.style.margin = '0'
-              clonedEl.style.borderRadius = '0'
-              clonedEl.style.border = 'none'
-              clonedEl.style.boxShadow = 'none'
-            }
-          }
-        })
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.98)
-        if (i > 0) pdf.addPage()
-        pdf.addImage(imgData, 'JPEG', 0, 0, PDF_W, PDF_H)
+          onclone: (clonedDoc) => applyColorFixesInClone(clonedDoc)
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], before: '.html2pdf__page-break' }
       }
 
-      pdf.save(fileName)
+      const pdfBlob = await html2pdf().set(opt).from(captureRoot).output('blob')
 
-      setModalData({
-        emailSentTo: 'LOCAL DOWNLOAD (No Email Sent)',
-        previewUrl: '',
-        status: 'DOWNLOADED'
-      })
-      setModalError('')
-      setShowModal(true)
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('file', pdfBlob, fileName)
+
+      const res = await dispatch(CompanyOfferLetter(formData))
+
+      if (res?.data) {
+        setModalData({
+          emailSentTo: res.data.emailSentTo || email,
+          previewUrl: res.data.previewUrl || res.data.offerLetterPDF || '',
+          status: res.data.status || 'SENT'
+        })
+        setModalError('')
+        setShowModal(true)
+      } else {
+        setModalError(res?.message || 'Failed to generate offer letter. Please try again.')
+        setShowModal(true)
+      }
     } catch (err) {
-      setModalError(err.message || 'An unexpected error occurred.')
+      setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
       setShowModal(true)
     } finally {
+      if (captureRoot) {
+        captureRoot.classList.remove('generating-pdf')
+      }
       if (originalWindowGetComputedStyle) {
         window.getComputedStyle = originalWindowGetComputedStyle
       }
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
   }
 
@@ -773,31 +872,17 @@ export default function OfferLetter({ onBack }) {
         <div
           className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
         >
-          {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
-          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 295,0 295,86" fill="#d97706" />
-          </svg>
-          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 280,0 280,80" fill="#166534" />
-          </svg>
-
-          {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '100%', height: '47px' }} className="select-none pointer-events-none" width="100%" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
-          </svg>
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '100%', height: '40px' }} className="select-none pointer-events-none" width="100%" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
-          </svg>
+          <OfferLetterThemeDecorations />
 
           {/* Main content wrapper containing header, body and signature block */}
-          <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
+          <div className="relative z-10 flex flex-1 flex-col gap-2 md:gap-3">
             {/* Letterhead Header */}
             <div className="mb-4 flex flex-row justify-between items-start gap-4">
               {/* Logo & Brand */}
-              <div className="flex items-center gap-3.5">
-                {user?.logoUrl ? (
+              <div className="flex min-w-0 flex-1 items-center gap-3.5 pr-3">
+                {logoSrc ? (
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    <img crossOrigin="anonymous" src={logoSrc} alt="Logo" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -811,14 +896,14 @@ export default function OfferLetter({ onBack }) {
                   </svg>
                 )}
                 <div>
-                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                  <div className={offerLetterCompanyNameClass} style={{ color: '#166534' }}>
                     {companyName}
                   </div>
                 </div>
               </div>
 
-              {/* Document Date */}
-              <div className="text-sm font-semibold text-gray-700 pt-3">
+              {/* Document Date — offset from top-right theme wedge */}
+              <div className={offerLetterDateClass}>
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
@@ -883,9 +968,9 @@ export default function OfferLetter({ onBack }) {
                 <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
 
                 {/* Stamp Image if configured, fallback to Simulated Sign */}
-                {user?.companyStampUrl ? (
+                {stampSrc ? (
                   <div className="mb-1 flex h-14 items-center">
-                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                    <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" className="max-h-full object-contain" />
                   </div>
                 ) : (
                   /* Ink Blue Sign Simulation */
@@ -925,29 +1010,15 @@ export default function OfferLetter({ onBack }) {
         <div
           className="printable-sheet relative flex w-full min-h-[297mm] flex-col justify-between overflow-hidden rounded-lg border border-gray-200 bg-white px-12 md:px-16 pt-12 md:pt-14 pb-4 md:pb-6 shadow-xl leading-relaxed text-gray-800 box-border"
         >
-          {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
-          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 295,0 295,86" fill="#d97706" />
-          </svg>
-          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "280px", height: "80px" }}>
-            <polygon points="0,0 280,0 280,80" fill="#166534" />
-          </svg>
-          
-          {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
-          <svg className="absolute bottom-0 left-0 right-0 z-10 w-full select-none pointer-events-none" width="300" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
-          </svg>
-          <svg className="absolute bottom-0 left-0 right-0 z-20 w-full select-none pointer-events-none" width="300" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
-          </svg>
+          <OfferLetterThemeDecorations />
 
-          <div className="relative z-30 flex flex-1 flex-col gap-2 md:gap-3">
+          <div className="relative z-10 flex flex-1 flex-col gap-2 md:gap-3">
             {/* Annexure Header */}
             <div className="mb-4 flex flex-row justify-between items-start gap-4">
-              <div className="flex items-center gap-3.5">
-                {user?.logoUrl ? (
+              <div className="flex min-w-0 flex-1 items-center gap-3.5 pr-3">
+                {logoSrc ? (
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    <img crossOrigin="anonymous" src={logoSrc} alt="Logo" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -961,12 +1032,12 @@ export default function OfferLetter({ onBack }) {
                   </svg>
                 )}
                 <div>
-                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                  <div className={offerLetterCompanyNameClass} style={{ color: '#166534' }}>
                     {companyName}
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-semibold text-gray-700 pt-3">
+              <div className={offerLetterDateClass}>
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
@@ -1076,9 +1147,9 @@ export default function OfferLetter({ onBack }) {
                 <div className="font-bold">Yours Sincerely,</div>
                 <div className="mb-4 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
 
-                {user?.companyStampUrl ? (
+                {stampSrc ? (
                   <div className="mb-1 flex h-12 items-center">
-                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                    <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" className="max-h-full object-contain" />
                   </div>
                 ) : (
                   <div className="mb-0.5 h-6 select-none font-serif text-lg font-bold text-blue-900 rotate-[-4deg] translate-x-2">
@@ -1140,30 +1211,16 @@ export default function OfferLetter({ onBack }) {
             position: 'relative'
           }}
         >
-          {/* Top-Right Decorative Accents */}
-          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 295,0 295,86" fill="#d97706" />
-          </svg>
-          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 280,0 280,80" fill="#166534" />
-          </svg>
-
-          {/* Bottom Decorative Slanted Accents */}
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '794px', height: '47px' }} className="select-none pointer-events-none" width="794" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
-          </svg>
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '794px', height: '40px' }} className="select-none pointer-events-none" width="794" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
-          </svg>
+          <OfferLetterThemeDecorations bottomWidth="794px" />
 
           {/* Main content wrapper */}
-          <div className="relative z-30 flex flex-1 flex-col justify-start gap-2.5">
+          <div className="relative z-10 flex flex-1 flex-col justify-start gap-2.5">
             {/* Letterhead Header */}
             <div className="mb-3 flex flex-row justify-between items-start gap-4">
-              <div className="flex items-center gap-3.5">
-                {user?.logoUrl ? (
+              <div className="flex min-w-0 flex-1 items-center gap-3.5 pr-3">
+                {logoSrc ? (
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    <img crossOrigin="anonymous" src={logoSrc} alt="Logo" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1177,12 +1234,12 @@ export default function OfferLetter({ onBack }) {
                   </svg>
                 )}
                 <div>
-                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                  <div className={offerLetterCompanyNameClass} style={{ color: '#166534' }}>
                     {companyName}
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-semibold text-gray-700 pt-3">
+              <div className={offerLetterDateClass}>
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
@@ -1242,9 +1299,9 @@ export default function OfferLetter({ onBack }) {
               <div>
                 <div className="font-bold">Yours Sincerely,</div>
                 <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
-                {user?.companyStampUrl ? (
+                {stampSrc ? (
                   <div className="mb-1 flex h-14 items-center">
-                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                    <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" className="max-h-full object-contain" />
                   </div>
                 ) : (
                   <div
@@ -1291,29 +1348,15 @@ export default function OfferLetter({ onBack }) {
             position: 'relative'
           }}
         >
-          {/* Top-Right Decorative Accents */}
-          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 295,0 295,86" fill="#d97706" />
-          </svg>
-          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,0 280,0 280,80" fill="#166534" />
-          </svg>
+          <OfferLetterThemeDecorations bottomWidth="794px" />
 
-          {/* Bottom Decorative Slanted Accents */}
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '794px', height: '47px' }} className="select-none pointer-events-none" width="794" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
-          </svg>
-          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '794px', height: '40px' }} className="select-none pointer-events-none" width="794" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
-          </svg>
-
-          <div className="relative z-30 flex flex-1 flex-col justify-start gap-2.5">
+          <div className="relative z-10 flex flex-1 flex-col justify-start gap-2.5">
             {/* Annexure Header */}
             <div className="mb-3 flex flex-row justify-between items-start gap-4">
-              <div className="flex items-center gap-3.5">
-                {user?.logoUrl ? (
+              <div className="flex min-w-0 flex-1 items-center gap-3.5 pr-3">
+                {logoSrc ? (
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    <img crossOrigin="anonymous" src={logoSrc} alt="Logo" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1327,12 +1370,12 @@ export default function OfferLetter({ onBack }) {
                   </svg>
                 )}
                 <div>
-                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                  <div className={offerLetterCompanyNameClass} style={{ color: '#166534' }}>
                     {companyName}
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-semibold text-gray-700 pt-3">
+              <div className={offerLetterDateClass}>
                 Date: {formatDateIN(joiningDate)}
               </div>
             </div>
@@ -1445,9 +1488,9 @@ export default function OfferLetter({ onBack }) {
                 <div className="font-bold">Yours Sincerely,</div>
                 <div className="mb-4 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
 
-                {user?.companyStampUrl ? (
+                {stampSrc ? (
                   <div className="mb-1 flex h-12 items-center">
-                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                    <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" className="max-h-full object-contain" />
                   </div>
                 ) : (
                   <div className="mb-0.5 h-6 select-none font-serif text-lg font-bold text-blue-900 rotate-[-4deg] translate-x-2">

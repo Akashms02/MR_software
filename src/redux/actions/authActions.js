@@ -206,6 +206,7 @@ export const fetchProfile = () => async (dispatch) => {
     if (
       response.status === 200 ||
       response?.data?.success === true ||
+      response?.data?.status === true ||
       response?.data?.status === 200 ||
       response?.data?.status === "SUCCESS"
     ) {
