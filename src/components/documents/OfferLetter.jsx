@@ -12,8 +12,7 @@ const getFullAssetUrl = (relativeUrl) => {
   if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://") || relativeUrl.startsWith("data:")) {
     return relativeUrl;
   }
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const base = isLocalhost ? 'https://api-mr-software.gmaxepay.in' : window.location.origin;
+  const base = window.location.origin;
   return `${base}${relativeUrl}`;
 };
 
