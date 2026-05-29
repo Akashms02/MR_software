@@ -698,7 +698,7 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0 !important; /* Force zero browser margins */
+    margin: 0; /* Force zero browser margins - !important is invalid in @page and causes browser to ignore it */
   }
 
   /* Hide the sidebar layout, header navigation, control panels, buttons, and other non-document elements */
@@ -718,8 +718,16 @@ body {
   }
 
   /* Reset all outer layout wrappers to occupy exactly the printable viewport */
-  html, body, #root, #root > div, aside ~ div, main, .document-container {
+  html, body, #root, #root > div, aside ~ div, main, .document-container, .document-page-container, .printable-sheet-container,
+  div[style*="margin-left"],
+  div[style*="marginLeft"],
+  main[style*="padding"],
+  div[style*="padding-bottom"],
+  div[style*="paddingBottom"],
+  div:has(> .document-page-container),
+  div:has(> .printable-sheet-container) {
     margin: 0 !important;
+    margin-left: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     height: 100% !important;
@@ -741,11 +749,13 @@ body {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
+    max-width: 100% !important; /* Prevent layout constraint gaps */
     height: 100% !important;
     min-height: 100% !important;
     max-height: 100% !important;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0px !important; /* Remove bottom/top border-radius */
     margin: 0 !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
@@ -765,6 +775,17 @@ body {
     page-break-inside: avoid !important;
   }
 
+  /* Ensure decorative SVGs are visible and span correctly in print */
+  .printable-sheet svg {
+    display: block !important;
+    visibility: visible !important;
+  }
+  .printable-sheet svg[width="100%"],
+  .printable-sheet svg[style*="width: 100%"],
+  .printable-sheet svg[style*="width:100%"] {
+    width: 100% !important;
+  }
+
   /* Support for multi-page documents (Offer Letters, etc.) */
   body:has(.multipage-print),
   html:has(.multipage-print),
@@ -772,15 +793,26 @@ body {
   #root > div:has(.multipage-print),
   aside ~ div:has(.multipage-print),
   main:has(.multipage-print),
-  .document-container:has(.multipage-print) {
+  .document-container:has(.multipage-print),
+  .document-page-container:has(.multipage-print),
+  .printable-sheet-container,
+  .multipage-print,
+  div[style*="margin-left"]:has(.multipage-print),
+  div[style*="marginLeft"]:has(.multipage-print),
+  div[style*="padding-bottom"]:has(.multipage-print),
+  div[style*="paddingBottom"]:has(.multipage-print),
+  div:has(> .document-page-container):has(.multipage-print),
+  div:has(> .printable-sheet-container):has(.multipage-print) {
     height: auto !important;
     max-height: none !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
   .multipage-print {
     display: block !important;
     width: 100% !important;
+    max-width: 100% !important; /* Prevent layout constraint gaps */
     height: auto !important;
   }
 
@@ -788,21 +820,31 @@ body {
     position: relative !important;
     left: auto !important;
     top: auto !important;
-    width: 210mm !important;
+    width: 100% !important;
+    max-width: 100% !important; /* Prevent layout constraint gaps */
     height: 297mm !important;
     min-height: 297mm !important;
     max-height: 297mm !important;
-    page-break-after: always !important;
-    break-after: page !important;
     box-shadow: none !important;
     border: none !important;
-    margin: 0 auto !important;
+    border-radius: 0px !important; /* Remove bottom/top border-radius */
+    margin: 0 !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     overflow: hidden !important;
+  }
+
+  .multipage-print .printable-sheet:not(:last-child) {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .multipage-print .printable-sheet:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }
 
@@ -835,11 +877,14 @@ body {
   break-before: avoid !important;
   break-after: avoid !important;
 }
-.printable-sheet-container.generating-pdf .html2pdf__page-break {
+.html2pdf__page-break {
   display: block !important;
   height: 0px !important;
+  min-height: 0px !important;
+  max-height: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
+  border: none !important;
 }
 
 
