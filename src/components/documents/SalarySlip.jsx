@@ -124,10 +124,44 @@ export default function SalarySlip({ onBack }) {
       return
     }
 
-    setIsGenerating(true)
-    setModalError('')
+    let originalWindowGetComputedStyle = null;
 
     try {
+      // Temporarily override the main window's getComputedStyle to resolve OKLCH/OKLAB colors dynamically
+      originalWindowGetComputedStyle = window.getComputedStyle;
+      window.getComputedStyle = function (el, pseudoEl) {
+        const style = originalWindowGetComputedStyle.call(window, el, pseudoEl);
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === 'getPropertyValue') {
+              return function(key) {
+                const val = target.getPropertyValue(key);
+                if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                  try {
+                    return resolveModernColors(val);
+                  } catch (e) {
+                    return val;
+                  }
+                }
+                return val;
+              };
+            }
+            const val = target[prop];
+            if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+              try {
+                return resolveModernColors(val);
+              } catch (e) {
+                return val;
+              }
+            }
+            if (typeof val === 'function') {
+              return val.bind(target);
+            }
+            return val;
+          }
+        });
+      };
+
       const sheetElement = printableRef.current
       if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
 
@@ -146,7 +180,6 @@ export default function SalarySlip({ onBack }) {
           letterRendering: true,
           onclone: (clonedDoc) => {
             const elements = clonedDoc.getElementsByTagName('*');
-            
             const oklchToRgb = (l, c, h, a = 1) => {
               const hRad = (h * Math.PI) / 180;
               const L = l;
@@ -193,7 +226,7 @@ export default function SalarySlip({ onBack }) {
               if (resolved.includes('oklch')) {
                 try {
                   resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -216,7 +249,7 @@ export default function SalarySlip({ onBack }) {
               if (resolved.includes('oklab')) {
                 try {
                   resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/]+/);
+                    const parts = p1.trim().split(/[\s/,]+/);
                     if (parts.length >= 3) {
                       let l = parseFloat(parts[0]);
                       if (parts[0].includes('%')) l /= 100;
@@ -238,6 +271,50 @@ export default function SalarySlip({ onBack }) {
 
               return resolved;
             };
+
+            // Override getComputedStyle inside the iframe to dynamically convert all OKLCH/OKLAB colors on the fly!
+            if (clonedDoc.defaultView) {
+              const originalGetComputedStyle = clonedDoc.defaultView.getComputedStyle;
+              clonedDoc.defaultView.getComputedStyle = function (el, pseudoEl) {
+                const style = originalGetComputedStyle.call(clonedDoc.defaultView, el, pseudoEl);
+                return new Proxy(style, {
+                  get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                      return function(key) {
+                        const val = target.getPropertyValue(key);
+                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                          try {
+                            return resolveModernColors(val);
+                          } catch (e) {
+                            return val;
+                          }
+                        }
+                        return val;
+                      };
+                    }
+                    const val = target[prop];
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                      try {
+                        return resolveModernColors(val);
+                      } catch (e) {
+                        return val;
+                      }
+                    }
+                    if (typeof val === 'function') {
+                      return val.bind(target);
+                    }
+                    return val;
+                  }
+                });
+              };
+            }
+
+            // Preprocess stylesheets inside the iframe to replace oklch references with fallback rgb
+            clonedDoc.querySelectorAll('style').forEach(styleTag => {
+              if (styleTag.textContent) {
+                styleTag.textContent = resolveModernColors(styleTag.textContent);
+              }
+            });
 
             const properties = [
               'color', 'backgroundColor', 'borderColor', 
@@ -304,6 +381,9 @@ export default function SalarySlip({ onBack }) {
       setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
       setShowModal(true)
     } finally {
+      if (originalWindowGetComputedStyle) {
+        window.getComputedStyle = originalWindowGetComputedStyle;
+      }
       setIsGenerating(false)
     }
   }
