@@ -340,9 +340,9 @@ export default function SalarySlip({ onBack }) {
             const sheet = clonedDoc.querySelector('.printable-sheet');
             if (sheet) {
               sheet.style.width = '210mm';
-              sheet.style.height = '295mm';
-              sheet.style.minHeight = '295mm';
-              sheet.style.maxHeight = '295mm';
+              sheet.style.height = '296mm';
+              sheet.style.minHeight = '296mm';
+              sheet.style.maxHeight = '296mm';
               sheet.style.paddingTop = '24px';
               sheet.style.paddingBottom = '24px';
               sheet.style.boxSizing = 'border-box';
@@ -389,7 +389,7 @@ export default function SalarySlip({ onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 document-page-container">
   {/* Control Panel */}
   <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
     

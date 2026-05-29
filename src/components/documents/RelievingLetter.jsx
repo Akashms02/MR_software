@@ -419,9 +419,9 @@ export default function RelievingLetter({ onBack }) {
             const sheet = clonedDoc.querySelector('.printable-sheet');
             if (sheet) {
               sheet.style.width = '210mm';
-              sheet.style.height = '295mm';
-              sheet.style.minHeight = '295mm';
-              sheet.style.maxHeight = '295mm';
+              sheet.style.height = '296mm';
+              sheet.style.minHeight = '296mm';
+              sheet.style.maxHeight = '296mm';
               sheet.style.paddingLeft = '50px';
               sheet.style.paddingRight = '50px';
               sheet.style.paddingTop = '16px';
@@ -431,6 +431,19 @@ export default function RelievingLetter({ onBack }) {
               sheet.style.border = 'none';
               sheet.style.boxShadow = 'none';
               sheet.style.overflow = 'hidden';
+
+              // Force A4 layout width for bottom SVGs/images to fix the html2canvas width="100%" bug
+              const svgOrImgs = sheet.querySelectorAll('svg, img');
+              svgOrImgs.forEach((el) => {
+                const widthAttr = el.getAttribute('width');
+                const srcAttr = el.getAttribute('src') || '';
+                if (widthAttr === '100%' || el.style.width === '100%' || srcAttr.startsWith('data:image/svg+xml')) {
+                  if (el.style.width === '100%' || widthAttr === '100%') {
+                    el.setAttribute('width', '794');
+                    el.style.width = '794px';
+                  }
+                }
+              });
 
               // Compact internal spacing
               const bodyDiv = sheet.querySelector('.letter-body-content');
@@ -521,7 +534,7 @@ export default function RelievingLetter({ onBack }) {
   }
 
   return (
-    <div className="document-container">
+    <div className="document-container document-page-container">
       {/* Control Panel (Screen-only) */}
       <div className="no-print" style={{
         background: '#fff',
@@ -777,21 +790,33 @@ export default function RelievingLetter({ onBack }) {
         flexDirection: 'column',
         justifyContent: 'space-between'
       }}>
-        {/* Top-Right Decorative Accents (Pure SVGs for perfect html2canvas/PDF rendering compatibility) */}
-        <svg style={{ position: 'absolute', top: 0, right: 0, zIndex: 1, userSelect: 'none', pointerEvents: 'none' }} width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="0,0 295,0 295,86" fill="#d97706" />
-        </svg>
-        <svg style={{ position: 'absolute', top: 0, right: 0, zIndex: 2, userSelect: 'none', pointerEvents: 'none' }} width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="0,0 280,0 280,80" fill="#166534" />
-        </svg>
+        {/* Top-Right Decorative Accents (Base64 SVGs for perfect html2canvas/PDF rendering compatibility) */}
+        <img 
+          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOTUiIGhlaWdodD0iODYiIHZpZXdCb3g9IjAgMCAyOTUgODYiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0gMCAwIEwgMjk1IDAgTCAyOTUgODYgWiIgZmlsbD0iI2Q5NzcwNiIvPjwvc3ZnPg==" 
+          style={{ position: 'absolute', top: 0, right: 0, zIndex: 40, width: '295px', height: '86px', userSelect: 'none', pointerEvents: 'none' }}
+          alt="" 
+        />
+        <img 
+          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAyODAgODAiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0gMCAwIEwgMjgwIDAgTCAyODAgODAgWiIgZmlsbD0iIzE2NjUzNCIvPjwvc3ZnPg==" 
+          style={{ position: 'absolute', top: 0, right: 0, zIndex: 50, width: '280px', height: '80px', userSelect: 'none', pointerEvents: 'none' }}
+          alt="" 
+        />
 
         {/* Bottom Decorative Slanted Accents (Responsive stretching SVGs for clean print dimensions) */}
-        <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1, width: '100%', userSelect: 'none', pointerEvents: 'none' }} height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
-        </svg>
-        <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2, width: '100%', userSelect: 'none', pointerEvents: 'none' }} height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
-        </svg>
+        <img 
+          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTSAwIDM1IEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgWiIgZmlsbD0iI2Q5NzcwNiIvPjwvc3ZnPg==" 
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40, width: '100%', height: '47px', userSelect: 'none', pointerEvents: 'none' }}
+          width="100%"
+          height="47"
+          alt="" 
+        />
+        <img 
+          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTSAwIDQ1IEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgWiIgZmlsbD0iIzE2NjUzNCIvPjwvc3ZnPg==" 
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50, width: '100%', height: '40px', userSelect: 'none', pointerEvents: 'none' }}
+          width="100%"
+          height="40"
+          alt="" 
+        />
 
         {/* Main Content Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: 10 }}>

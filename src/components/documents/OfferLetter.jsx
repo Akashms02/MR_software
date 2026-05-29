@@ -207,6 +207,7 @@ export default function OfferLetter({ onBack }) {
 
   // Ref to the printable live document sheet
   const printableRef = useRef(null)
+  const pdfPrintRef = useRef(null)
 
   // Dynamic company assets sync when user profile loads
   useEffect(() => {
@@ -334,237 +335,136 @@ export default function OfferLetter({ onBack }) {
         });
       };
 
-      // 1. Capture the live rendered document HTML from the printable sheet ref
-      const sheetElement = printableRef.current
-      if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
+      const container = printableRef.current
+      if (!container) throw new Error('Document preview not ready. Please try again.')
 
-      // Temporarily inject print class to force perfect layout heights and strip gaps/margins
-      sheetElement.classList.add('generating-pdf');
-      // Await style computation and rendering settlement
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      const sheets = Array.from(container.querySelectorAll('.printable-sheet'))
+      if (sheets.length === 0) throw new Error('No printable pages found.')
+
+      await new Promise(resolve => setTimeout(resolve, 80))
 
       const fileName = `offer_letter_${candidateName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`
 
-      // 2. Configure html2pdf options
-      const opt = {
-        margin: [0, 0, 0, 0],
-        filename: fileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
+      const { jsPDF } = await import('jspdf')
+      const html2canvas = (await import('html2canvas')).default
+
+      const PDF_W = 794
+      const PDF_H = 1123
+
+      const pdf = new jsPDF({
+        unit: 'px',
+        format: [PDF_W, PDF_H],
+        orientation: 'portrait',
+        hotfixes: ['px_scaling']
+      })
+
+      for (let i = 0; i < sheets.length; i++) {
+        const sheet = sheets[i]
+
+        const canvas = await html2canvas(sheet, {
+          scale: 2,
           useCORS: true,
+          allowTaint: true,
           logging: false,
           letterRendering: true,
-          onclone: (clonedDoc) => {
-            const elements = clonedDoc.getElementsByTagName('*');
-            
-            const oklchToRgb = (l, c, h, a = 1) => {
-              const hRad = (h * Math.PI) / 180;
-              const L = l;
-              const a_ = c * Math.cos(hRad);
-              const b_ = c * Math.sin(hRad);
-              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-              const l3 = l_ * l_ * l_;
-              const m3 = m_ * m_ * m_;
-              const s3 = s_ * s_ * s_;
-              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-            };
-
-            const oklabToRgb = (l, a_, b_, a = 1) => {
-              const L = l;
-              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-              const l3 = l_ * l_ * l_;
-              const m3 = m_ * m_ * m_;
-              const s3 = s_ * s_ * s_;
-              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-            };
-
-            const resolveModernColors = (colorStr) => {
-              if (!colorStr || typeof colorStr !== 'string') return colorStr;
-              let resolved = colorStr;
-              
-              if (resolved.includes('oklch')) {
-                try {
-                  resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/,]+/);
-                    if (parts.length >= 3) {
-                      let l = parseFloat(parts[0]);
-                      if (parts[0].includes('%')) l /= 100;
-                      const c = parseFloat(parts[1]);
-                      const h = parseFloat(parts[2]);
-                      let a = 1;
-                      if (parts[3]) {
-                        a = parseFloat(parts[3]);
-                        if (parts[3].includes('%')) a /= 100;
-                      }
-                      if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
-                        return oklchToRgb(l, c, h, a);
-                      }
-                    }
-                    return match;
-                  });
-                } catch (e) {}
-              }
-
-              if (resolved.includes('oklab')) {
-                try {
-                  resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/,]+/);
-                    if (parts.length >= 3) {
-                      let l = parseFloat(parts[0]);
-                      if (parts[0].includes('%')) l /= 100;
-                      const a_coord = parseFloat(parts[1]);
-                      const b_coord = parseFloat(parts[2]);
-                      let a = 1;
-                      if (parts[3]) {
-                        a = parseFloat(parts[3]);
-                        if (parts[3].includes('%')) a /= 100;
-                      }
-                      if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
-                        return oklabToRgb(l, a_coord, b_coord, a);
-                      }
-                    }
-                    return match;
-                  });
-                } catch (e) {}
-              }
-
-              return resolved;
-            };
-
-            // Override getComputedStyle inside the iframe to dynamically convert all OKLCH/OKLAB colors on the fly!
-            if (clonedDoc.defaultView) {
-              const originalGetComputedStyle = clonedDoc.defaultView.getComputedStyle;
-              clonedDoc.defaultView.getComputedStyle = function (el, pseudoEl) {
-                const style = originalGetComputedStyle.call(clonedDoc.defaultView, el, pseudoEl);
-                return new Proxy(style, {
-                  get(target, prop) {
-                    if (prop === 'getPropertyValue') {
-                      return function(key) {
-                        const val = target.getPropertyValue(key);
-                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                          try {
-                            return resolveModernColors(val);
-                          } catch (e) {
-                            return val;
-                          }
-                        }
-                        return val;
-                      };
-                    }
-                    const val = target[prop];
-                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                      try {
-                        return resolveModernColors(val);
-                      } catch (e) {
-                        return val;
-                      }
-                    }
-                    if (typeof val === 'function') {
-                      return val.bind(target);
-                    }
-                    return val;
-                  }
-                });
-              };
-            }
-
-            // Preprocess stylesheets inside the iframe to replace oklch references with fallback rgb
+          width: PDF_W,
+          height: PDF_H,
+          windowWidth: PDF_W,
+          windowHeight: PDF_H,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc, clonedEl) => {
             clonedDoc.querySelectorAll('style').forEach(styleTag => {
               if (styleTag.textContent) {
-                styleTag.textContent = resolveModernColors(styleTag.textContent);
+                styleTag.textContent = resolveModernColors(styleTag.textContent)
               }
-            });
+            })
 
-            const properties = [
-              'color', 'backgroundColor', 'borderColor', 
-              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
+            if (clonedDoc.defaultView) {
+              const origGCS = clonedDoc.defaultView.getComputedStyle
+              clonedDoc.defaultView.getComputedStyle = function (el, pseudo) {
+                const s = origGCS.call(clonedDoc.defaultView, el, pseudo)
+                return new Proxy(s, {
+                  get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                      return function (key) {
+                        const val = target.getPropertyValue(key)
+                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                          try { return resolveModernColors(val) } catch { return val }
+                        }
+                        return val
+                      }
+                    }
+                    const val = target[prop]
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
+                      try { return resolveModernColors(val) } catch { return val }
+                    }
+                    if (typeof val === 'function') return val.bind(target)
+                    return val
+                  }
+                })
+              }
+            }
+
+            const allElements = clonedDoc.getElementsByTagName('*')
+            const colorProps = [
+              'color', 'backgroundColor', 'borderColor',
+              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
               'fill', 'stroke', 'backgroundImage', 'boxShadow'
-            ];
-
-            for (let i = 0; i < elements.length; i++) {
-              const el = elements[i];
-              const computed = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
-              
-              properties.forEach(prop => {
-                const val = computed[prop];
+            ]
+            for (let j = 0; j < allElements.length; j++) {
+              const el = allElements[j]
+              const computed = clonedDoc.defaultView
+                ? clonedDoc.defaultView.getComputedStyle(el)
+                : window.getComputedStyle(el)
+              colorProps.forEach(prop => {
+                const val = computed[prop]
                 if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                  try {
-                    el.style[prop] = resolveModernColors(val);
-                  } catch (err) {}
+                  try { el.style[prop] = resolveModernColors(val) } catch (_) {}
                 }
-              });
+              })
             }
 
-            // Force A4 layout constraints for the container to remove gaps on the continuous print canvas
-            const container = clonedDoc.querySelector('.printable-sheet-container');
-            if (container) {
-              container.style.display = 'block';
-              container.style.gap = '0px';
-              container.style.margin = '0px';
-              container.style.padding = '0px';
+            const clonedContainer = clonedDoc.querySelector('.printable-sheet-container')
+            if (clonedContainer) {
+              clonedContainer.style.display = 'block'
+              clonedContainer.style.gap = '0'
+              clonedContainer.style.margin = '0'
+              clonedContainer.style.padding = '0'
+              clonedContainer.style.width = '794px'
+              clonedContainer.style.maxWidth = 'none'
             }
 
-            // Ensure the page break element has zero height and spacing but remains in DOM for html2pdf to detect
-            const pageBreaks = clonedDoc.querySelectorAll('.html2pdf__page-break');
-            pageBreaks.forEach(pb => {
-              pb.style.display = 'block';
-              pb.style.height = '0px';
-              pb.style.margin = '0px';
-              pb.style.padding = '0px';
-            });
+            clonedDoc.querySelectorAll('.html2pdf__page-break').forEach(pb => {
+              pb.style.display = 'none'
+            })
 
-            // Force exactly 295mm on all sheets to perfectly fit within the A4 boundary without fractional overflow
-            const sheets = clonedDoc.querySelectorAll('.printable-sheet');
-            sheets.forEach((sheet) => {
-              sheet.style.width = '210mm';
-              sheet.style.height = '295mm';
-              sheet.style.minHeight = '295mm';
-              sheet.style.maxHeight = '295mm';
-              sheet.style.paddingLeft = '50px';
-              sheet.style.paddingRight = '50px';
-              sheet.style.paddingTop = '24px';
-              sheet.style.paddingBottom = '24px';
-              sheet.style.boxSizing = 'border-box';
-              sheet.style.borderRadius = '0px';
-              sheet.style.border = 'none';
-              sheet.style.boxShadow = 'none';
-              sheet.style.overflow = 'hidden';
+            clonedDoc.querySelectorAll('.printable-sheet').forEach(s => {
+              if (s !== clonedEl) s.style.display = 'none'
+            })
 
-              // Clear CSS page breaks in cloned DOM to prevent double page breaks
-              sheet.style.pageBreakAfter = 'avoid';
-              sheet.style.pageBreakBefore = 'avoid';
-              sheet.style.breakAfter = 'auto';
-              sheet.style.breakBefore = 'auto';
-            });
+            if (clonedEl) {
+              clonedEl.style.position = 'relative'
+              clonedEl.style.width = '794px'
+              clonedEl.style.height = '1123px'
+              clonedEl.style.minHeight = '1123px'
+              clonedEl.style.maxHeight = '1123px'
+              clonedEl.style.overflow = 'hidden'
+              clonedEl.style.boxSizing = 'border-box'
+              clonedEl.style.margin = '0'
+              clonedEl.style.borderRadius = '0'
+              clonedEl.style.border = 'none'
+              clonedEl.style.boxShadow = 'none'
+            }
           }
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: 'legacy' }
-      };
+        })
 
-      // 3. Download the PDF locally for manual layout testing
-      await html2pdf().set(opt).from(sheetElement).save();
+        const imgData = canvas.toDataURL('image/jpeg', 0.98)
+        if (i > 0) pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, 0, PDF_W, PDF_H)
+      }
 
-      // Show success modal for local download
+      pdf.save(fileName)
+
       setModalData({
         emailSentTo: 'LOCAL DOWNLOAD (No Email Sent)',
         previewUrl: '',
@@ -577,11 +477,7 @@ export default function OfferLetter({ onBack }) {
       setShowModal(true)
     } finally {
       if (originalWindowGetComputedStyle) {
-        window.getComputedStyle = originalWindowGetComputedStyle;
-      }
-      const sheetElement = printableRef.current;
-      if (sheetElement) {
-        sheetElement.classList.remove('generating-pdf');
+        window.getComputedStyle = originalWindowGetComputedStyle
       }
       setIsGenerating(false)
     }
@@ -1205,6 +1101,385 @@ export default function OfferLetter({ onBack }) {
 
           {/* Letter Footer Address */}
           <div className="relative z-30 mt-6 border-t border-gray-100 pt-3 pb-12 text-center text-[10px] leading-relaxed text-gray-500">
+            <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700" style={{ color: '#b45309' }}>
+              {companyName}
+            </div>
+            <div>
+              Regd. Office: {companyRegAddress}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden PDF template container */}
+      <div
+        ref={pdfPrintRef}
+        className="no-print"
+        style={{
+          position: 'fixed',
+          top: '-9999px',
+          left: '-9999px',
+          width: '794px',
+          pointerEvents: 'none',
+          zIndex: -1000
+        }}
+      >
+        {/* PAGE 1: Formal Offer Letter */}
+        <div
+          className="printable-sheet relative flex flex-col justify-between overflow-hidden bg-white text-gray-800"
+          style={{
+            width: '794px',
+            height: '1123px',
+            minHeight: '1123px',
+            maxHeight: '1123px',
+            paddingLeft: '64px',
+            paddingRight: '64px',
+            paddingTop: '56px',
+            paddingBottom: '24px',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}
+        >
+          {/* Top-Right Decorative Accents */}
+          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 295,0 295,86" fill="#d97706" />
+          </svg>
+          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 280,0 280,80" fill="#166534" />
+          </svg>
+
+          {/* Bottom Decorative Slanted Accents */}
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '794px', height: '47px' }} className="select-none pointer-events-none" width="794" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
+          </svg>
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '794px', height: '40px' }} className="select-none pointer-events-none" width="794" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
+          </svg>
+
+          {/* Main content wrapper */}
+          <div className="relative z-30 flex flex-1 flex-col justify-start gap-2.5">
+            {/* Letterhead Header */}
+            <div className="mb-3 flex flex-row justify-between items-start gap-4">
+              <div className="flex items-center gap-3.5">
+                {user?.logoUrl ? (
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                    <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                    <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                    <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                )}
+                <div>
+                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                    {companyName}
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm font-semibold text-gray-700 pt-3">
+                Date: {formatDateIN(joiningDate)}
+              </div>
+            </div>
+
+            {/* Recipient Block */}
+            <div className="mb-3 text-xs leading-normal text-gray-800">
+              <div className="font-bold">To,</div>
+              <div className="mt-0.5 text-[13px] font-extrabold uppercase tracking-wide text-gray-900">{candidateName}</div>
+              <div className="mt-0.5">S/o {parentName} {addressLine1}</div>
+              {addressLine2 && <div>{addressLine2}</div>}
+              <div>{addressLine3}</div>
+              {mobile && <div>Mobile: {mobile}</div>}
+              {email && <div>Email: {email}</div>}
+            </div>
+
+            {/* Salutation */}
+            <div className="mb-1 text-xs font-bold text-gray-800">
+              Dear Mr. {candidateName.split(' ')[0]},
+            </div>
+
+            {/* Subject Header */}
+            <div className="mb-3 text-center text-xs font-extrabold uppercase tracking-wider text-gray-900 underline">
+              Sub: Offer Letter
+            </div>
+
+            {/* Body Paragraphs */}
+            <div className="flex flex-col gap-2.5 text-justify text-xs leading-normal text-gray-800 font-medium">
+              <p className="margin-0 indent-8">
+                We are pleased to offer you employment in the capacity of <strong>{designation}</strong>, in <strong>{department}</strong> in M/s. <strong>{companyName}</strong>, {companyRegAddress}.
+              </p>
+              <p className="margin-0">
+                Please report to duty <strong>on or before {formatDateIN(joiningDate)}</strong>. Your base location will be <strong>{baseLocation}</strong>. You will be governed by the policies of the Company. Please be noted that if you fail to report on or before the said date, this offer will cease to exist.
+              </p>
+              <p className="margin-0">
+                We believe that your skills and background would be a valuable asset to our organization.
+              </p>
+              <p className="margin-0 font-bold">
+                Your monthly and annual consolidated compensation structure is detailed in the attached **Annexure A** of this offer letter.
+              </p>
+              <p className="margin-0">
+                On your joining date, please bring/send (<strong>{hrEmail}</strong>) the following documents: A) 2 Passport size photographs. B) Photocopy of all Educational and Technical Qualification Certificates. C) Relieving Letter and Experience Certificate from your present employer. D) Last drawn Salary Slip/Certificate showing monthly salary and annual benefits from the present employer, PAN card, Aadhar card, Driving License copy, etc.
+              </p>
+              <p className="margin-0">
+                This is a provisional offer letter. The detailed letter with terms and conditions of employment will be handed over to you on your joining date.
+              </p>
+              <p className="mt-0.5">
+                We look forward to your joining the company and becoming a productive member of the team.<br />
+                <strong>Welcome to {companyName},</strong>
+              </p>
+            </div>
+
+            {/* Flex Spacer to push signatures to the bottom */}
+            <div className="flex-1" style={{ minHeight: '30px' }} />
+
+            {/* Signatures Footer */}
+            <div className="signature-block flex flex-row items-end justify-between pt-4 text-xs text-gray-800">
+              <div>
+                <div className="font-bold">Yours Sincerely,</div>
+                <div className="mb-6 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
+                {user?.companyStampUrl ? (
+                  <div className="mb-1 flex h-14 items-center">
+                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                  </div>
+                ) : (
+                  <div
+                    className="mb-0.5 h-8 select-none font-serif text-xl font-bold text-blue-900 rotate-[-4deg] translate-x-2.5"
+                    style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                  >
+                    {hrHeadName}
+                  </div>
+                )}
+                <div className="mb-1 w-40 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{hrHeadName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Letter Footer Address */}
+          <div className="relative z-30 mt-4 border-t border-gray-100 pt-3 pb-8 text-center text-[10px] leading-relaxed text-gray-500">
+            <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700" style={{ color: '#b45309' }}>
+              {companyName}
+            </div>
+            <div>
+              Regd. Office: {companyRegAddress}
+            </div>
+            <div className="font-bold text-gray-600" style={{ color: '#4b5563' }}>
+              {user?.phone && `Ph: ${user.phone} | `}Email: {hrEmail}
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 2: Annexure A (Salary Table & Terms) */}
+        <div
+          className="printable-sheet relative flex flex-col justify-between overflow-hidden bg-white text-gray-800"
+          style={{
+            width: '794px',
+            height: '1123px',
+            minHeight: '1123px',
+            maxHeight: '1123px',
+            paddingLeft: '64px',
+            paddingRight: '64px',
+            paddingTop: '56px',
+            paddingBottom: '24px',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}
+        >
+          {/* Top-Right Decorative Accents */}
+          <svg className="absolute top-0 right-0 z-10 select-none pointer-events-none" width="295" height="86" viewBox="0 0 295 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 295,0 295,86" fill="#d97706" />
+          </svg>
+          <svg className="absolute top-0 right-0 z-20 select-none pointer-events-none" width="280" height="80" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,0 280,0 280,80" fill="#166534" />
+          </svg>
+
+          {/* Bottom Decorative Slanted Accents */}
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, width: '794px', height: '47px' }} className="select-none pointer-events-none" width="794" height="47" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,35 100,0 100,100 0,100" fill="#d97706" />
+          </svg>
+          <svg style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, width: '794px', height: '40px' }} className="select-none pointer-events-none" width="794" height="40" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,45 100,0 100,100 0,100" fill="#166534" />
+          </svg>
+
+          <div className="relative z-30 flex flex-1 flex-col justify-start gap-2.5">
+            {/* Annexure Header */}
+            <div className="mb-3 flex flex-row justify-between items-start gap-4">
+              <div className="flex items-center gap-3.5">
+                {user?.logoUrl ? (
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
+                    <img src={getFullAssetUrl(user.logoUrl)} alt="Logo" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15 C38 28, 16 38, 16 58 C16 78, 50 88, 50 88 C50 88, 84 78, 84 58 C84 38, 62 28, 50 15 Z" fill="#166534" />
+                    <path d="M50 19 C42 31, 25 40, 25 56 C25 71, 50 78, 50 78 C50 78, 75 71, 75 56 C75 40, 58 31, 50 19 Z" fill="#ffffff" />
+                    <path d="M50 19 L50 78" stroke="#166534" strokeWidth="3" />
+                    <path d="M50 36 C42 41, 38 48, 38 56" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 46 C58 51, 62 58, 62 66" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 28 C58 33, 62 40, 62 48" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M50 54 C42 59, 38 66, 38 74" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                )}
+                <div>
+                  <div className="max-w-[280px] font-serif text-lg font-black uppercase leading-none tracking-wider text-green-800" style={{ color: '#166534' }}>
+                    {companyName}
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm font-semibold text-gray-700 pt-3">
+                Date: {formatDateIN(joiningDate)}
+              </div>
+            </div>
+
+            <div className="text-center text-sm font-extrabold uppercase tracking-wider text-gray-900 underline mb-2">
+              Annexure A: Compensation & Allowances Structure
+            </div>
+
+            {/* Candidate & Designation Details */}
+            <div className="mb-3 grid grid-cols-2 gap-3 text-xs bg-gray-50 border border-gray-100 rounded-lg p-3">
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Employee Name:</span>
+                <span className="block font-extrabold text-gray-800">{candidateName}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Designation / Role:</span>
+                <span className="block font-extrabold text-gray-800">{designation}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Department:</span>
+                <span className="block font-semibold text-gray-700">{department}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Base Work Location:</span>
+                <span className="block font-semibold text-gray-700">{baseLocation}</span>
+              </div>
+            </div>
+
+            {/* Compensation Table */}
+            <div className="mb-3">
+              <div className="font-bold text-xs text-gray-800 mb-1.5 uppercase tracking-wide">A. Monthly Salary Breakdown</div>
+              <table className="w-full border-collapse border border-gray-200 text-xs">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Salary Component</th>
+                    <th className="border border-gray-200 px-4 py-2 text-right font-bold text-gray-700">Percentage</th>
+                    <th className="border border-gray-200 px-4 py-2 text-right font-bold text-gray-700">Monthly Amount (INR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Basic Salary</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">50%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.50).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">House Rent Allowance (HRA)</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">20%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.20).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Special & Conveyance Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-gray-600">30%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right font-semibold text-gray-800">₹{Math.round(salaryAmount * 0.30).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                  <tr className="bg-emerald-50 font-bold">
+                    <td className="border border-gray-200 px-4 py-2 text-emerald-800">Gross Monthly Salary</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-emerald-800">100%</td>
+                    <td className="border border-gray-200 px-4 py-2 text-right text-emerald-800">₹{Number(salaryAmount).toLocaleString('en-IN')}/-</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className="text-[10px] text-gray-500 font-semibold mt-1">
+                * Consolidated Salary: <strong>₹{Number(salaryAmount).toLocaleString('en-IN')}/- per month ({salaryWords} Only)</strong>.
+              </div>
+            </div>
+
+            {/* Field Allowances Table */}
+            <div className="mb-3">
+              <div className="font-bold text-xs text-gray-800 mb-1.5 uppercase tracking-wide">B. Field Work Allowances & Conveyance</div>
+              <table className="w-full border-collapse border border-gray-200 text-xs">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Allowance Parameter</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left font-bold text-gray-700">Description / Rates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">HQ Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{hqAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Ex-Station Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{exStationAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Out-Station Allowance</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{outStationAllowance}/- per day</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-600">Conveyance Rate per KM</td>
+                    <td className="border border-gray-200 px-4 py-2 text-gray-800 font-semibold">₹{conveyanceRate}/- per KM for Ex-station and Out-station work</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Reporting & Acceptance Rules */}
+            <div className="text-[11px] leading-normal text-gray-800 border-l-4 border-amber-500 pl-3 py-1 bg-amber-50/50 rounded-r-lg mb-2" style={{ fontSize: '9.5px', marginBottom: '4px', paddingTop: '2px', paddingBottom: '2px' }}>
+              <strong>Reporting & Acceptance:</strong> You will report to <strong>{reportingManager} ({reportingPhone})</strong>. Please confirm your formal acceptance on or before <strong>{formatDateIN(joiningDate)}</strong>.
+            </div>
+
+            {/* Flex Spacer to push signatures to the bottom */}
+            <div className="flex-1" style={{ minHeight: '20px' }} />
+
+            {/* Signature Blocks */}
+            <div className="signature-block flex flex-row items-end justify-between pt-6 text-xs text-gray-800" style={{ marginTop: '24px', paddingTop: '2px' }}>
+              <div>
+                <div className="font-bold">Yours Sincerely,</div>
+                <div className="mb-4 text-[10px] font-black uppercase text-gray-900">for {companyName},</div>
+
+                {user?.companyStampUrl ? (
+                  <div className="mb-1 flex h-12 items-center">
+                    <img src={getFullAssetUrl(user.companyStampUrl)} alt="Stamp" className="max-h-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="mb-0.5 h-6 select-none font-serif text-lg font-bold text-blue-900 rotate-[-4deg] translate-x-2">
+                    {hrHeadName}
+                  </div>
+                )}
+                <div className="mb-1 w-36 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase text-gray-950">{hrHeadName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">{hrHeadDesignation}</div>
+              </div>
+
+              <div className="text-right flex flex-col items-end">
+                <div className="font-bold mb-8">Candidate Acceptance Signature</div>
+                <div className="mb-1 w-40 border-t border-gray-400"></div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-gray-950">{candidateName}</div>
+                <div className="text-[9px] font-semibold text-gray-500">Date: ________________</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Letter Footer Address */}
+          <div
+            className="border-t border-gray-100 text-center text-[10px] leading-relaxed text-gray-500"
+            style={{
+              marginTop: '0px',
+              paddingBottom: '50px',
+              paddingTop: '6px',
+              flexShrink: '0',
+              position: 'relative',
+              zIndex: 30
+            }}
+          >
             <div className="mb-0.5 font-sans text-sm font-black uppercase tracking-widest text-amber-700" style={{ color: '#b45309' }}>
               {companyName}
             </div>
