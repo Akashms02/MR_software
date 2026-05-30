@@ -6,7 +6,6 @@ const NAV_LINKS = ['Features', 'Workflow', 'Why Us', 'Contact']
 export default function Navbar() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
-
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -22,58 +21,56 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="navbar">
-      <div className="navbar-wrapper">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '60px' }}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-150 py-2.5 shadow-sm' : 'bg-transparent py-4'}`}>
+      <div className="max-w-6xl mx-auto px-4 md:px-8">
+        <div className="flex items-center justify-between h-14">
 
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '10px',
-              background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}>
+          <div
+            className="flex items-center gap-2.5 cursor-pointer select-none"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center shadow-md">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#C8F04A" strokeWidth="2.5" strokeLinejoin="round"/>
                 <path d="M12 2v20M3 7l9 5 9-5" stroke="#C8F04A" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
             </div>
             <div>
-              <span style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-                Gmaxepay<span style={{ color: 'var(--green)' }}>HR</span>
+              <span className="font-extrabold text-[17px] text-gray-900 tracking-tight leading-none">
+                Gmaxepay<span className="text-green-600">HR</span>
               </span>
-              <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '1px', lineHeight: 1 }}>
+              <div className="text-[9px] text-gray-400 font-bold tracking-[1px] leading-none mt-0.5 uppercase">
                 PHARMA HRMS
               </div>
             </div>
           </div>
 
           {/* Nav links (Desktop) */}
-          <div className="nav-links-desktop">
+          <div className="hidden md:flex items-center gap-2.5">
             {NAV_LINKS.map(link => (
-              <button key={link} onClick={() => scrollTo(link)}
-                style={{
-                  padding: '7px 14px', background: 'transparent', border: 'none',
-                  color: 'var(--text-muted)', fontWeight: 500, fontSize: '14px',
-                  cursor: 'pointer', borderRadius: '6px', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { e.target.style.color = 'var(--green)'; e.target.style.background = 'var(--green-light)' }}
-                onMouseLeave={e => { e.target.style.color = 'var(--text-muted)'; e.target.style.background = 'transparent' }}
-              >{link}</button>
+              <button
+                key={link}
+                onClick={() => scrollTo(link)}
+                className="px-3.5 py-1.5 bg-transparent border-none text-gray-500 font-bold text-[14px] cursor-pointer rounded-lg hover:text-green-600 hover:bg-green-50/55 transition-all duration-200"
+              >
+                {link}
+              </button>
             ))}
           </div>
 
           {/* Login (Desktop) */}
-          <div className="nav-links-desktop">
-            <button className="btn-primary" style={{ fontSize: '13px', padding: '8px 18px' }}
-              onClick={() => navigate('/login')}>
+          <div className="hidden md:block">
+            <button
+              className="btn-lime text-[13px] py-2 px-5"
+              onClick={() => navigate('/login')}
+            >
               Login
             </button>
           </div>
 
           {/* Mobile Menu Toggle Button */}
-          <button className="nav-mobile-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+          <button className="md:hidden text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer p-1" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -87,30 +84,28 @@ export default function Navbar() {
               </svg>
             )}
           </button>
-
-          {/* Mobile Menu Dropdown */}
-          {menuOpen && (
-            <div className="nav-mobile-menu">
-              {NAV_LINKS.map(link => (
-                <button key={link} onClick={() => { scrollTo(link); setMenuOpen(false); }}
-                  style={{
-                    padding: '10px 16px', background: 'transparent', border: 'none',
-                    color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px',
-                    cursor: 'pointer', borderRadius: '8px', transition: 'all 0.15s',
-                    textAlign: 'left', width: '100%'
-                  }}
-                  onMouseEnter={e => { e.target.style.color = 'var(--green)'; e.target.style.background = 'var(--green-light)' }}
-                  onMouseLeave={e => { e.target.style.color = 'var(--text-muted)'; e.target.style.background = 'transparent' }}
-                >{link}</button>
-              ))}
-              <button className="btn-primary" style={{ fontSize: '14px', padding: '12px', width: '100%', marginTop: '8px' }}
-                onClick={() => { navigate('/login'); setMenuOpen(false); }}>
-                Login
-              </button>
-            </div>
-          )}
-
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {menuOpen && (
+          <div className="md:hidden mt-2.5 bg-white border border-gray-150 rounded-2xl p-3 shadow-lg flex flex-col gap-1.5">
+            {NAV_LINKS.map(link => (
+              <button
+                key={link}
+                onClick={() => { scrollTo(link); setMenuOpen(false); }}
+                className="w-full text-left px-4 py-2.5 bg-transparent border-none text-gray-500 font-bold text-[15px] cursor-pointer rounded-xl hover:text-green-600 hover:bg-green-50/55 transition-all duration-200"
+              >
+                {link}
+              </button>
+            ))}
+            <button
+              className="btn-lime w-full text-center py-3 text-[14px] mt-2"
+              onClick={() => { navigate('/login'); setMenuOpen(false); }}
+            >
+              Login
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   )

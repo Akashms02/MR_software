@@ -13,22 +13,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   // 1. Handle Initialization / Initial Loading
   if (isInitializing || (loading && !user && token)) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <div 
-          style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '4px solid #2563eb', 
-            borderTopColor: 'transparent', 
-            borderRadius: '50%',
-            animation: 'protected-spin 1s linear infinite'
-          }} 
-        />
-        <style>{`
-          @keyframes protected-spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
+      <div className="h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

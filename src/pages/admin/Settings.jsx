@@ -28,7 +28,6 @@ import { getFullAssetUrl } from "../../utils/getFullAssetUrl";
 const FileUploader = ({ label, value, onChange, onClear, id }) => {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -99,12 +98,10 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
           onDragLeave={handleDrag}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] ${
-            dragActive || isHovered 
+          className={`group border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] ${
+            dragActive
               ? "border-[#C8F04A] bg-[#C8F04A]/5 shadow-sm" 
-              : "border-gray-200 bg-gray-50 hover:border-[#C8F04A] hover:bg-gray-50/50"
+              : "border-gray-200 bg-gray-50 hover:border-[#C8F04A] hover:bg-[#C8F04A]/5 hover:shadow-sm"
           }`}
         >
           <input
@@ -120,7 +117,9 @@ const FileUploader = ({ label, value, onChange, onClear, id }) => {
           <Upload 
             size={24} 
             className={`transition-transform duration-200 ${
-              dragActive || isHovered ? "text-[#8BB800] -translate-y-1" : "text-gray-400"
+              dragActive 
+                ? "text-[#8BB800] -translate-y-1" 
+                : "text-gray-400 group-hover:text-[#8BB800] group-hover:-translate-y-1"
             }`}
           />
           <p className="text-sm font-semibold text-gray-700 m-0">Drag & drop or click to upload</p>

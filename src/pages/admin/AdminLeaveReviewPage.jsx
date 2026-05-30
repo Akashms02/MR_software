@@ -81,7 +81,7 @@ const AdminLeaveReviewPage = () => {
   const totalCount = teamLeaves.length;
 
   const stats = [
-    { label: 'Pending Approvals', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Review required' : 'All caught up!', color: pendingCount > 0 ? '#D97706' : '#10B981', bg: pendingCount > 0 ? '#FFFBEB' : '#ECFDF5', icon: '📋' },
+    { label: 'Pending Approvals', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Review required' : 'All caught up!', color: '#D97706', bg: '#FFFBEB', icon: '📋' },
     { label: 'Approved Leaves', value: `${approvedCount}`, sub: 'This month', color: '#10B981', bg: '#ECFDF5', icon: '✅' },
     { label: 'Active Team Size', value: '4 Field Staff', sub: 'Under management', color: '#6366F1', bg: '#EEF2FF', icon: '👥' },
     { label: 'Total Leaves Managed', value: `${totalCount}`, sub: 'All-time history', color: '#06B6D4', bg: '#ECFEFF', icon: '📅' },
@@ -99,93 +99,75 @@ const AdminLeaveReviewPage = () => {
       ?.replace(/\b\w/g, (char) => char.toUpperCase()) || 'Leave';
   };
 
-  const getStatusBadgeStyle = (status) => {
+  const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'APPROVED':
-        return { bg: '#ECFDF5', text: '#059669', border: '1px solid #A7F3D0' };
+        return 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]';
       case 'REJECTED':
-        return { bg: '#FEF2F2', text: '#DC2626', border: '1px solid #FCA5A5' };
+        return 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]';
       default: // PENDING
-        return { bg: '#FFFBEB', text: '#D97706', border: '1px solid #FDE68A' };
+        return 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]';
     }
   };
 
   return (
-    <div style={{ animation: 'fadeIn 0.4s ease-out', padding: '10px' }}>
+    <div className="animate-[fadeIn_0.4s_ease-out] p-[10px]">
       {/* Welcome Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
-        borderRadius: '20px',
-        padding: '30px',
-        color: '#fff',
-        marginBottom: '28px',
-        boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <span style={{ background: 'rgba(255,255,255,0.15)', color: '#C8F04A', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '1px' }}>
+      <div className="bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-[20px] p-[30px] text-white mb-[28px] shadow-[0_10px_25px_rgba(15,23,42,0.15)] relative overflow-hidden">
+        <div className="relative z-[2]">
+          <span className="bg-white/15 text-[#C8F04A] px-3 py-1.5 rounded-[20px] text-[11px] font-extrabold tracking-[1px]">
             PORTAL: SYSTEM ADMIN
           </span>
-          <h2 style={{ fontSize: '28px', fontWeight: 800, margin: '14px 0 6px 0', letterSpacing: '-0.5px' }}>
+          <h2 className="text-[28px] font-extrabold mt-3.5 mb-1.5 tracking-[-0.5px]">
             Leave Approvals & Administration
           </h2>
-          <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', maxWidth: '500px' }}>
+          <p className="m-0 text-sm text-white/80 max-w-[500px]">
             Process and review leave applications requested by medical representatives and executives under your line management.
           </p>
         </div>
-        <div style={{
-          position: 'absolute', right: '-40px', bottom: '-40px', fontSize: '180px', opacity: 0.08, userSelect: 'none', pointerEvents: 'none'
-        }}>
+        <div className="absolute -right-10 -bottom-10 text-[180px] opacity-[0.08] select-none pointer-events-none">
           📅
         </div>
       </div>
 
       {/* Notifications */}
       {localSuccess && (
-        <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#047857', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
           <CheckCircle2 size={16} />
           {localSuccess}
         </div>
       )}
       {localError && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#B91C1C', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
           <AlertCircle size={16} />
           {localError}
         </div>
       )}
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[28px]">
         {stats.map((s, i) => (
-          <div key={i} style={{
-            background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '20px',
-            display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
-            transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
-          }}
+          <div
+            key={i}
+            className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] cursor-pointer"
           >
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '12px', background: s.bg, fontSize: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
+            <div
+              className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0"
+              style={{ background: s.bg }}
+            >
               {s.icon}
             </div>
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px]">
                 {s.label}
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', margin: '2px 0' }}>
+              <div className="text-[20px] font-extrabold text-[#1F2937] my-0.5">
                 {s.value}
               </div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: s.color }}>
+              <div
+                className="text-[11px] font-semibold"
+                style={{ color: s.color }}
+              >
                 {s.sub}
               </div>
             </div>
@@ -194,32 +176,32 @@ const AdminLeaveReviewPage = () => {
       </div>
 
       {/* Main content grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #F3F4F6', paddingBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>Team Leave Applications</h3>
-            <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#D97706', background: '#FFFBEB', padding: '4px 12px', borderRadius: '20px' }}>
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
+            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Team Leave Applications</h3>
+            <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1 rounded-[20px]">
               Pending: {pendingCount} requests
             </span>
           </div>
 
           {loading && teamLeaves.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px', gap: '10px' }}>
-              <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', color: '#111827' }} />
-              <span style={{ fontSize: '13px', color: '#9CA3AF' }}>Loading team leaves...</span>
+            <div className="flex flex-col items-center py-[60px] gap-2.5">
+              <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
+              <span className="text-[13px] text-[#9CA3AF]">Loading team leaves...</span>
             </div>
           ) : teamLeaves.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', background: '#FAFAFA', borderRadius: '12px', border: '1px dashed #E5E7EB' }}>
-              <CheckCircle2 size={36} style={{ margin: '0 auto 10px auto', color: '#10B981' }} />
-              <p style={{ margin: 0, fontSize: '13.5px', fontWeight: 600, color: '#4B5563' }}>All caught up! No leave requests pending approval.</p>
+            <div className="py-[60px] text-center text-[#9CA3AF] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB]">
+              <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
+              <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">All caught up! No leave requests pending approval.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr style={{ borderBottom: '1.5px solid #F3F4F6' }}>
+                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
                     {['Staff Member', 'Leave Category', 'Duration', 'Dates', 'Status', 'Actions'].map((h) => (
-                      <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
                         {h}
                       </th>
                     ))}
@@ -229,61 +211,48 @@ const AdminLeaveReviewPage = () => {
                   {teamLeaves.map((leave) => {
                     const reporterInitial = leave.employeeName ? leave.employeeName.charAt(0).toUpperCase() : 'E';
                     const daysCount = calculateDays(leave.startDate, leave.endDate);
-                    const badgeStyle = getStatusBadgeStyle(leave.status);
                     return (
-                      <tr key={leave.id} style={{ borderBottom: '1px solid #FAFAFA', transition: 'background 0.15s' }}>
+                      <tr key={leave.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
                         {/* Staff member name */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
-                              color: '#fff', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
                               {reporterInitial}
                             </div>
                             <div>
-                              <div style={{ fontSize: '13.5px', fontWeight: 750, color: '#1F2937' }}>{leave.employeeName || 'Field staff'}</div>
-                              <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{leave.employeeRole || 'Medical Representative'}</div>
+                              <div className="text-[13.5px] font-extrabold text-[#1F2937]">{leave.employeeName || 'Field staff'}</div>
+                              <div className="text-[11px] text-[#9CA3AF]">{leave.employeeRole || 'Medical Representative'}</div>
                             </div>
                           </div>
                         </td>
 
                         {/* Leave Type */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>
+                        <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
                           {formatLeaveType(leave.leaveType)}
                         </td>
 
                         {/* Duration */}
-                        <td style={{ padding: '16px 16px', fontSize: '13px', color: '#1F2937', fontWeight: 700 }}>
+                        <td className="p-4 text-[13px] text-[#1F2937] font-bold">
                           {daysCount} Day{daysCount !== 1 ? 's' : ''}
                         </td>
 
                         {/* Dates */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', color: '#4B5563', fontWeight: 600 }}>
+                        <td className="p-4 text-[13.5px] text-[#4B5563] font-semibold">
                           {leave.startDate} to {leave.endDate}
                         </td>
 
                         {/* Status */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <span style={{
-                            display: 'inline-flex', padding: '4px 10px', borderRadius: '20px',
-                            fontSize: '11px', fontWeight: 800, ...badgeStyle
-                          }}>
+                        <td className="p-4">
+                          <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold ${getStatusBadgeClass(leave.status)}`}>
                             {leave.status}
                           </span>
                         </td>
 
                         {/* Actions */}
-                        <td style={{ padding: '16px 16px' }}>
+                        <td className="p-4">
                           <button
                             onClick={() => handleInspect(leave)}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: '4px', background: '#111827', color: '#fff',
-                              border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
-                              fontWeight: 700, fontSize: '12px', transition: 'background 0.15s'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#374151'}
-                            onMouseLeave={e => e.currentTarget.style.background = '#111827'}
+                            className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
                           >
                             <Eye size={12} /> Inspect Request
                           </button>
@@ -300,58 +269,46 @@ const AdminLeaveReviewPage = () => {
 
       {/* Inspect & Review Modal */}
       {inspectModalOpen && inspectLeave && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px',
-          animation: 'fadeIn 0.2s'
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '580px', maxHeight: '85vh',
-            display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-            animation: 'scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', overflow: 'hidden'
-          }}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-[6px] flex items-center justify-center z-[1100] p-5 animate-[fadeIn_0.2s]">
+          <div className="bg-white rounded-[20px] w-full max-w-[580px] max-h-[85vh] flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-[scaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden">
             {/* Modal Header */}
-            <div style={{ padding: '20px 24px', borderBottom: '1.5px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div className="px-6 py-5 border-b-[1.5px] border-[#F3F4F6] flex justify-between items-center shrink-0">
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111827', margin: 0 }}>
+                <h3 className="text-[17px] font-extrabold text-[#111827] m-0">
                   Review Leave Request
                 </h3>
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                <span className="text-xs text-[#9CA3AF]">
                   Requested by: {inspectLeave.employeeName} ({inspectLeave.employeeRole})
                 </span>
               </div>
-              <span style={{
-                fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px',
-                ...getStatusBadgeStyle(inspectLeave.status)
-              }}>{inspectLeave.status}</span>
+              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[20px] ${getStatusBadgeClass(inspectLeave.status)}`}>
+                {inspectLeave.status}
+              </span>
             </div>
 
             {/* Modal Scroll Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
               {/* Leave Info Card */}
-              <div style={{ border: '1.5px solid #F3F4F6', padding: '20px', borderRadius: '12px', background: '#FAFAFA' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="border-[1.5px] border-[#F3F4F6] p-5 rounded-xl bg-[#FAFAFA]">
+                <div className="flex justify-between items-center mb-3.5">
+                  <span className="text-sm font-bold text-[#1F2937] flex items-center gap-1.5">
                     📅 {inspectLeave.startDate} to {inspectLeave.endDate}
                   </span>
-                  <span style={{
-                    fontSize: '10.5px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px',
-                    background: '#1E293B', color: '#C8F04A'
-                  }}>
+                  <span className="text-[10.5px] font-extrabold px-2 py-[3px] rounded-md bg-[#1E293B] text-[#C8F04A]">
                     {formatLeaveType(inspectLeave.leaveType).toUpperCase()}
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', borderTop: '1px solid #F3F4F6', paddingTop: '12px', marginTop: '6px' }}>
+                <div className="grid grid-cols-[1fr_2fr] gap-4 border-t border-[#F3F4F6] pt-3 mt-1.5">
                   <div>
-                    <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Duration</div>
-                    <div style={{ fontSize: '13px', color: '#1F2937', fontWeight: 700, marginTop: '2px' }}>
+                    <div className="text-[10px] font-bold text-[#9CA3AF] uppercase">Duration</div>
+                    <div className="text-[13px] text-[#1F2937] font-bold mt-0.5">
                       {calculateDays(inspectLeave.startDate, inspectLeave.endDate)} Day{calculateDays(inspectLeave.startDate, inspectLeave.endDate) !== 1 ? 's' : ''}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Application Reason</div>
-                    <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '2px', lineHeight: 1.4 }}>
+                    <div className="text-[10px] font-bold text-[#9CA3AF] uppercase">Application Reason</div>
+                    <div className="text-[12.5px] text-[#4B5563] mt-0.5 leading-normal">
                       {inspectLeave.reason}
                     </div>
                   </div>
@@ -360,40 +317,35 @@ const AdminLeaveReviewPage = () => {
 
               {/* Already reviewed message */}
               {inspectLeave.status !== 'PENDING' && (
-                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '14px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Manager Feedback Remarks</div>
-                  <div style={{ fontSize: '13px', color: '#78350F', marginTop: '4px', fontStyle: 'italic' }}>"{inspectLeave.managerRemarks || inspectLeave.remarks || 'No feedback left.'}"</div>
+                <div className="bg-[#FFFBEB] border border-[#FDE68A] p-3.5 rounded-xl">
+                  <div className="text-[11px] font-extrabold text-[#B45309] uppercase tracking-[0.5px]">Manager Feedback Remarks</div>
+                  <div className="text-[13px] text-[#78350F] mt-1 italic">"{inspectLeave.managerRemarks || inspectLeave.remarks || 'No feedback left.'}"</div>
                 </div>
               )}
             </div>
 
             {/* Modal Review input + Footer */}
-            <div style={{ padding: '20px 24px', borderTop: '1.5px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: '16px', flexShrink: 0, background: '#FAFAFA' }}>
+            <div className="px-6 py-5 border-t-[1.5px] border-[#F3F4F6] flex flex-col gap-4 shrink-0 bg-[#FAFAFA]">
               
               {/* Remarks input */}
               {inspectLeave.status === 'PENDING' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 750, color: '#374151' }}>Approval/Rejection Comments</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#374151]">Approval/Rejection Comments</label>
                   <input
                     type="text"
                     placeholder="Enter review remarks here..."
                     value={remarksMap[inspectLeave.id] || ''}
                     onChange={(e) => setRemarksMap(prev => ({ ...prev, [inspectLeave.id]: e.target.value }))}
-                    style={{
-                      padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13px', outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%'
-                    }}
+                    className="px-3.5 py-2.5 rounded-lg border border-[#E5E7EB] text-[13px] outline-none bg-white w-full box-border focus:border-[#C8F04A]"
                   />
                 </div>
               )}
 
               {/* Action buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', width: '100%' }}>
+              <div className="flex justify-end gap-2.5 w-full">
                 <button
                   onClick={() => setInspectModalOpen(false)}
-                  style={{
-                    padding: '10px 20px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff',
-                    color: '#374151', fontWeight: 700, fontSize: '13px', cursor: 'pointer'
-                  }}
+                  className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
                 >
                   Close
                 </button>
@@ -402,22 +354,14 @@ const AdminLeaveReviewPage = () => {
                     <button
                       onClick={() => handleReview(inspectLeave.id, 'REJECTED')}
                       disabled={reviewingId !== null}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '4px', background: '#EF4444', color: '#fff',
-                        border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer',
-                        fontWeight: 700, fontSize: '13px'
-                      }}
+                      className="flex items-center gap-1 bg-[#EF4444] text-white border-0 px-5 py-2.5 rounded-xl cursor-pointer font-bold text-[13px] hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                     >
                       <X size={14} /> Reject Request
                     </button>
                     <button
                       onClick={() => handleReview(inspectLeave.id, 'APPROVED')}
                       disabled={reviewingId !== null}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '4px', background: '#10B981', color: '#fff',
-                        border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer',
-                        fontWeight: 800, fontSize: '13px'
-                      }}
+                      className="flex items-center gap-1 bg-[#10B981] text-white border-0 px-5 py-2.5 rounded-xl cursor-pointer font-extrabold text-[13px] hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                     >
                       <Check size={14} /> Approve Request
                     </button>

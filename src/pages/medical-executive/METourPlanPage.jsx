@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList, Clock } from 'lucide-react';
+import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList } from 'lucide-react';
 import {
   fetchMyTourPlansAction,
   saveTourPlanDraftAction,
@@ -16,41 +16,30 @@ const METourPlanPage = () => {
   const dispatch = useDispatch();
   const { tourPlans, loading, error, success, currentTourPlan } = useSelector((state) => state.tourPlan);
 
-  const [activeTab, setActiveTab] = useState('list'); // 'list' or 'new'
+  const [activeTab, setActiveTab] = useState('list');
   const [doctors, setDoctors] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
-  // Form State
   const [targetMonth, setTargetMonth] = useState(() => {
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    return nextMonth.toISOString().slice(0, 7); // YYYY-MM
+    return nextMonth.toISOString().slice(0, 7);
   });
   const [planDays, setPlanDays] = useState([
     { plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }
   ]);
 
-  // ME theme: Indigo / Blue
-  const theme = {
-    label: 'MEDICAL EXECUTIVE',
-    primary: '#4F46E5',
-    hoverOpacity: '0.9',
-    activeBg: '#EEF2FF',
-    activeText: '#4F46E5',
-    shadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
-    textOnPrimary: '#ffffff'
-  };
+  // ME theme: Indigo
+  const primaryColor = '#4F46E5';
+  const primaryShadow = '0 4px 12px rgba(79, 70, 229, 0.25)';
 
   useEffect(() => {
     if (success) {
       setSuccessMsg(success);
-      const timer = setTimeout(() => {
-        dispatch(clearTourPlanSuccessAction());
-        setSuccessMsg(null);
-      }, 4000);
+      const timer = setTimeout(() => { dispatch(clearTourPlanSuccessAction()); setSuccessMsg(null); }, 4000);
       return () => clearTimeout(timer);
     }
   }, [success, dispatch]);
@@ -58,10 +47,7 @@ const METourPlanPage = () => {
   useEffect(() => {
     if (error) {
       setErrorMsg(error);
-      const timer = setTimeout(() => {
-        dispatch(clearTourPlanErrorsAction());
-        setErrorMsg(null);
-      }, 4000);
+      const timer = setTimeout(() => { dispatch(clearTourPlanErrorsAction()); setErrorMsg(null); }, 4000);
       return () => clearTimeout(timer);
     }
   }, [error, dispatch]);
@@ -71,153 +57,84 @@ const METourPlanPage = () => {
     const loadDoctors = async () => {
       try {
         const res = await axios.get(`${API_ROUTE}/doctor`);
-        if (res.data && res.data.data) {
-          setDoctors(res.data.data);
-        }
-      } catch (err) {
-        console.warn('Could not load doctors database.');
-      }
+        if (res.data && res.data.data) setDoctors(res.data.data);
+      } catch (err) { console.warn('Could not load doctors database.'); }
     };
     loadDoctors();
   }, [dispatch]);
 
   const triggerLocalNotification = (type, msg) => {
-    if (type === 'success') {
-      setSuccessMsg(msg);
-      setTimeout(() => setSuccessMsg(null), 4000);
-    } else {
-      setErrorMsg(msg);
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
+    if (type === 'success') { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(null), 4000); }
+    else { setErrorMsg(msg); setTimeout(() => setErrorMsg(null), 4000); }
   };
 
   const addDayField = () => {
     let nextDateStr = '';
     if (planDays.length > 0) {
       const lastDate = planDays[planDays.length - 1].plannedDate;
-      if (lastDate) {
-        const d = new Date(lastDate);
-        d.setDate(d.getDate() + 1);
-        nextDateStr = d.toISOString().split('T')[0];
-      }
+      if (lastDate) { const d = new Date(lastDate); d.setDate(d.getDate() + 1); nextDateStr = d.toISOString().split('T')[0]; }
     }
-    setPlanDays([
-      ...planDays,
-      { plannedDate: nextDateStr, targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }
-    ]);
+    setPlanDays([...planDays, { plannedDate: nextDateStr, targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }]);
   };
 
   const removeDayField = (idx) => {
-    if (planDays.length === 1) {
-      triggerLocalNotification('error', 'A tour plan must contain at least one planned day.');
-      return;
-    }
+    if (planDays.length === 1) { triggerLocalNotification('error', 'A tour plan must contain at least one planned day.'); return; }
     setPlanDays(planDays.filter((_, i) => i !== idx));
   };
 
   const handleDayChange = (idx, field, value) => {
-    const updated = [...planDays];
-    updated[idx][field] = value;
-    setPlanDays(updated);
+    const updated = [...planDays]; updated[idx][field] = value; setPlanDays(updated);
   };
 
   const handleDoctorCheckboxChange = (dayIdx, docId, checked) => {
     const updated = [...planDays];
     const currentDocIds = [...updated[dayIdx].plannedDoctorIds];
-    if (checked) {
-      if (!currentDocIds.includes(docId)) {
-        currentDocIds.push(docId);
-      }
-    } else {
-      const pos = currentDocIds.indexOf(docId);
-      if (pos > -1) {
-        currentDocIds.splice(pos, 1);
-      }
-    }
+    if (checked) { if (!currentDocIds.includes(docId)) currentDocIds.push(docId); }
+    else { const pos = currentDocIds.indexOf(docId); if (pos > -1) currentDocIds.splice(pos, 1); }
     updated[dayIdx].plannedDoctorIds = currentDocIds;
     setPlanDays(updated);
   };
 
   const handleSaveDraft = async (e, andSubmit = false) => {
     if (e) e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    const invalidDate = planDays.some(d => !d.plannedDate);
-    const invalidTerritory = planDays.some(d => d.activityType === 'FIELD_WORK' && !d.targetTerritory);
-    
-    if (invalidDate) {
-      triggerLocalNotification('error', 'Please select a planned date for all days.');
-      return;
-    }
-    if (invalidTerritory) {
-      triggerLocalNotification('error', 'Please specify a target territory for field work days.');
-      return;
-    }
+    setErrorMsg(null); setSuccessMsg(null);
+    if (planDays.some(d => !d.plannedDate)) { triggerLocalNotification('error', 'Please select a planned date for all days.'); return; }
+    if (planDays.some(d => d.activityType === 'FIELD_WORK' && !d.targetTerritory)) { triggerLocalNotification('error', 'Please specify a target territory for field work days.'); return; }
 
     setActionLoading(true);
     try {
       const payload = {
         targetMonth: `${targetMonth}-01`,
-        planDays: planDays.map(d => ({
-          plannedDate: d.plannedDate,
-          targetTerritory: d.targetTerritory || 'N/A',
-          plannedDoctorIds: d.plannedDoctorIds.map(id => parseInt(id)),
-          activityType: d.activityType,
-          remarks: d.remarks || ''
-        }))
+        planDays: planDays.map(d => ({ plannedDate: d.plannedDate, targetTerritory: d.targetTerritory || 'N/A', plannedDoctorIds: d.plannedDoctorIds.map(id => parseInt(id)), activityType: d.activityType, remarks: d.remarks || '' }))
       };
-
       const res = await dispatch(saveTourPlanDraftAction(payload));
       const createdPlan = res?.data || res;
-
       if (createdPlan && createdPlan.id) {
-        const planId = createdPlan.id;
-        if (andSubmit) {
-          await dispatch(submitTourPlanAction(planId));
-        }
+        if (andSubmit) await dispatch(submitTourPlanAction(createdPlan.id));
         dispatch(fetchMyTourPlansAction());
         setPlanDays([{ plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }]);
         setActiveTab('list');
       }
-    } catch (err) {
-      // Caught in store
-    } finally {
-      setActionLoading(false);
-    }
+    } catch (err) { /* Caught in store */ } finally { setActionLoading(false); }
   };
 
   const handleSubmitExistingDraft = async (planId) => {
     setActionLoading(true);
-    try {
-      await dispatch(submitTourPlanAction(planId));
-      dispatch(fetchMyTourPlansAction());
-    } catch (err) {
-      // Handled by store
-    } finally {
-      setActionLoading(false);
-    }
+    try { await dispatch(submitTourPlanAction(planId)); dispatch(fetchMyTourPlansAction()); }
+    catch (err) { /* Handled by store */ } finally { setActionLoading(false); }
   };
 
   const handleViewPlanDetails = async (planId) => {
-    try {
-      await dispatch(fetchTourPlanDetailsAction(planId));
-      setDetailModalOpen(true);
-    } catch (err) {
-      triggerLocalNotification('error', 'Failed to retrieve tour plan details.');
-    }
+    try { await dispatch(fetchTourPlanDetailsAction(planId)); setDetailModalOpen(true); }
+    catch (err) { triggerLocalNotification('error', 'Failed to retrieve tour plan details.'); }
   };
 
   const getStatusBadgeStyle = (status) => {
     switch (status) {
-      case 'APPROVED':
-        return { bg: '#ECFDF5', text: '#059669', border: '1px solid #A7F3D0' };
-      case 'REJECTED':
-        return { bg: '#FEF2F2', text: '#DC2626', border: '1px solid #FCA5A5' };
-      case 'SUBMITTED':
-        return { bg: '#FFFBEB', text: '#D97706', border: '1px solid #FDE68A' };
-      default: // DRAFT
-        return { bg: '#F3F4F6', text: '#4B5563', border: '1px solid #D1D5DB' };
+      case 'APPROVED': return { bg: '#ECFDF5', text: '#059669', border: '1px solid #A7F3D0' };
+      case 'REJECTED': return { bg: '#FEF2F2', text: '#DC2626', border: '1px solid #FCA5A5' };
+      case 'SUBMITTED': return { bg: '#FFFBEB', text: '#D97706', border: '1px solid #FDE68A' };
+      default: return { bg: '#F3F4F6', text: '#4B5563', border: '1px solid #D1D5DB' };
     }
   };
 
@@ -230,109 +147,90 @@ const METourPlanPage = () => {
 
   const formatMonthLabel = (dateStr) => {
     if (!dateStr) return '—';
-    try {
-      const parts = dateStr.split('-');
-      const d = new Date(parts[0], parts[1] - 1, 1);
-      return d.toLocaleDateString('default', { month: 'long', year: 'numeric' });
-    } catch (e) {
-      return dateStr;
-    }
+    try { const parts = dateStr.split('-'); const d = new Date(parts[0], parts[1] - 1, 1); return d.toLocaleDateString('default', { month: 'long', year: 'numeric' }); }
+    catch (e) { return dateStr; }
   };
 
   return (
-    <div style={{ animation: 'fadeSlideIn 0.35s ease-out' }}>
-      {/* Header section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-7">
         <div>
-          <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            PORTAL: {theme.label}
-          </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', margin: '4px 0 0 0' }}>Tour Plan Management</h2>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '3px 0 0 0' }}>Draft and schedule your monthly field activities and doctor calls.</p>
+          <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest">PORTAL: MEDICAL EXECUTIVE</span>
+          <h2 className="text-2xl font-extrabold text-gray-900 mt-1 mb-0">Tour Plan Management</h2>
+          <p className="text-[13px] text-gray-500 mt-0.5 mb-0">Draft and schedule your monthly field activities and doctor calls.</p>
         </div>
       </div>
 
       {/* Notifications */}
       {successMsg && (
-        <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#047857', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
-          <CheckCircle2 size={16} />
-          {successMsg}
+        <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl flex items-center gap-2 text-emerald-700 text-[13px] font-semibold mb-5">
+          <CheckCircle2 size={16} />{successMsg}
         </div>
       )}
       {errorMsg && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#B91C1C', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
-          <AlertCircle size={16} />
-          {errorMsg}
+        <div className="bg-red-50 border border-red-200 px-4 py-3 rounded-xl flex items-center gap-2 text-red-700 text-[13px] font-semibold mb-5">
+          <AlertCircle size={16} />{errorMsg}
         </div>
       )}
 
       {/* Tab controls */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+      <div className="flex gap-2.5 mb-6">
         <button
           onClick={() => setActiveTab('list')}
+          className="py-2.5 px-[22px] rounded-xl cursor-pointer font-bold text-[13.5px] transition-all duration-200 outline-none"
           style={{
-            padding: '10px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-            background: activeTab === 'list' ? theme.primary : '#fff',
-            color: activeTab === 'list' ? theme.textOnPrimary : '#111827',
-            fontWeight: 700, fontSize: '13.5px',
-            boxShadow: activeTab === 'list' ? theme.shadow : 'none',
+            background: activeTab === 'list' ? primaryColor : '#fff',
+            color: activeTab === 'list' ? '#fff' : '#111827',
+            boxShadow: activeTab === 'list' ? primaryShadow : 'none',
             border: activeTab === 'list' ? 'none' : '1px solid #E5E7EB',
-            transition: 'all 0.2s', outline: 'none'
           }}
         >
           My Tour Plans
         </button>
         <button
           onClick={() => setActiveTab('new')}
+          className="flex items-center gap-1.5 py-2.5 px-[22px] rounded-xl cursor-pointer font-bold text-[13.5px] transition-all duration-200 outline-none"
           style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '10px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-            background: activeTab === 'new' ? theme.primary : '#fff',
-            color: activeTab === 'new' ? theme.textOnPrimary : '#111827',
-            fontWeight: 700, fontSize: '13.5px',
-            boxShadow: activeTab === 'new' ? theme.shadow : 'none',
+            background: activeTab === 'new' ? primaryColor : '#fff',
+            color: activeTab === 'new' ? '#fff' : '#111827',
+            boxShadow: activeTab === 'new' ? primaryShadow : 'none',
             border: activeTab === 'new' ? 'none' : '1px solid #E5E7EB',
-            transition: 'all 0.2s', outline: 'none'
           }}
         >
           <Plus size={15} strokeWidth={2.5} /> Set Monthly Plan
         </button>
       </div>
 
-      {/* Content wrapper */}
-      <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', padding: '28px' }}>
-        
+      {/* Content */}
+      <div className="bg-white rounded-[20px] border border-gray-100 p-7" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+
         {/* Tab 1: Tour Plans List */}
         {activeTab === 'list' && (
           loading && tourPlans.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px', gap: '12px' }}>
-              <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', color: '#111827' }} />
-              <span style={{ fontSize: '13.5px', color: '#9CA3AF' }}>Loading tour plans...</span>
+            <div className="flex flex-col items-center py-[60px] gap-3">
+              <Loader2 size={24} className="animate-spin text-gray-800" />
+              <span className="text-[13.5px] text-gray-400">Loading tour plans...</span>
             </div>
           ) : tourPlans.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF' }}>
-              <ClipboardList size={40} style={{ margin: '0 auto 12px auto', strokeWidth: 1.5 }} />
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>No monthly tour plans created yet.</p>
+            <div className="py-[60px] text-center text-gray-400">
+              <ClipboardList size={40} className="mx-auto mb-3" strokeWidth={1.5} />
+              <p className="m-0 text-sm font-medium">No monthly tour plans created yet.</p>
               <button
                 onClick={() => setActiveTab('new')}
-                style={{
-                  marginTop: '14px', border: 'none', padding: '8px 16px', borderRadius: '10px',
-                  fontWeight: 700, fontSize: '12.5px', cursor: 'pointer',
-                  background: theme.primary, color: theme.textOnPrimary, boxShadow: theme.shadow
-                }}
+                className="mt-3.5 border-none py-2 px-4 rounded-[10px] font-bold text-[12.5px] cursor-pointer text-white"
+                style={{ background: primaryColor, boxShadow: primaryShadow }}
               >
                 Schedule First Tour Plan
               </button>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr style={{ borderBottom: '1.5px solid #F3F4F6' }}>
+                  <tr className="border-b-2 border-gray-100">
                     {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                      <th key={h} style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {h}
-                      </th>
+                      <th key={h} className="py-3 px-4 text-[11.5px] font-extrabold text-gray-400 uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -340,45 +238,26 @@ const METourPlanPage = () => {
                   {tourPlans.map((plan) => {
                     const statusStyle = getStatusBadgeStyle(plan.status);
                     return (
-                      <tr key={plan.id} style={{ borderBottom: '1px solid #FAFAFA', transition: 'background 0.15s' }}>
-                        {/* Month */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Calendar size={14} color="#9CA3AF" />
-                            {formatMonthLabel(plan.targetMonth)}
-                          </span>
+                      <tr key={plan.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
+                        <td className="py-4 px-4 text-[13.5px] font-bold text-gray-800">
+                          <span className="flex items-center gap-2"><Calendar size={14} color="#9CA3AF" />{formatMonthLabel(plan.targetMonth)}</span>
                         </td>
-                        {/* Total Days */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', color: '#4B5563', fontWeight: 600 }}>
+                        <td className="py-4 px-4 text-[13.5px] text-gray-600 font-semibold">
                           {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
                         </td>
-                        {/* Status */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <span style={{
-                            display: 'inline-flex', padding: '4px 10px', borderRadius: '20px',
-                            fontSize: '11px', fontWeight: 800, ...statusStyle
-                          }}>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex py-1 px-2.5 rounded-full text-[11px] font-extrabold" style={{ background: statusStyle.bg, color: statusStyle.text, border: statusStyle.border }}>
                             {plan.status}
                           </span>
                         </td>
-                        {/* Remarks */}
-                        <td style={{ padding: '16px 16px', fontSize: '13px', color: '#6B7280', fontStyle: 'italic', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td className="py-4 px-4 text-[13px] text-gray-500 italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
                           {plan.remarks || '—'}
                         </td>
-                        {/* Actions */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <td className="py-4 px-4">
+                          <div className="flex gap-2 items-center">
                             <button
                               onClick={() => handleViewPlanDetails(plan.id)}
-                              title="View Details"
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: '4px',
-                                background: '#F3F4F6', border: 'none', padding: '6px 12px', borderRadius: '8px',
-                                cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#374151',
-                                transition: 'all 0.15s'
-                              }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-                              onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
+                              className="flex items-center gap-1 bg-gray-100 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors duration-150"
                             >
                               <Eye size={12} /> Details
                             </button>
@@ -386,16 +265,8 @@ const METourPlanPage = () => {
                               <button
                                 onClick={() => handleSubmitExistingDraft(plan.id)}
                                 disabled={actionLoading}
-                                title="Submit tour plan for review"
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: '4px',
-                                  border: 'none', padding: '6px 12px', borderRadius: '8px',
-                                  cursor: 'pointer', fontSize: '12px', fontWeight: 700,
-                                  background: theme.primary, color: theme.textOnPrimary,
-                                  transition: 'opacity 0.15s'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.opacity = theme.hoverOpacity}
-                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                                className="flex items-center gap-1 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-white transition-opacity hover:opacity-90"
+                                style={{ background: primaryColor }}
                               >
                                 <Send size={11} /> Submit
                               </button>
@@ -413,78 +284,48 @@ const METourPlanPage = () => {
 
         {/* Tab 2: Create New Tour Plan */}
         {activeTab === 'new' && (
-          <form onSubmit={(e) => handleSaveDraft(e, false)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #F3F4F6', paddingBottom: '20px' }}>
+          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex flex-col gap-6">
+            <div className="flex justify-between items-start flex-wrap gap-4 border-b border-gray-100 pb-5">
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Create Monthly Tour Schedule</h4>
-                <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0 0' }}>Plan daily work routes, hospital call visits and seminars in advance.</p>
+                <h4 className="text-base font-extrabold text-gray-900 m-0">Create Monthly Tour Schedule</h4>
+                <p className="text-xs text-gray-500 mt-0.5 mb-0">Plan daily work routes, hospital call visits and seminars in advance.</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Target Month:</label>
+              <div className="flex items-center gap-2">
+                <label className="text-[13px] font-bold text-gray-700">Target Month:</label>
                 <input
                   type="month"
                   value={targetMonth}
                   onChange={(e) => setTargetMonth(e.target.value)}
                   required
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none' }}
+                  className="py-2 px-3 rounded-[10px] border border-gray-200 text-[13.5px] outline-none"
                 />
               </div>
             </div>
 
             {/* Plan Days Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex flex-col gap-5">
               {planDays.map((day, idx) => (
-                <div key={idx} style={{
-                  padding: '24px', border: '1px solid #E5E7EB', borderRadius: '16px', background: '#FAFAFA',
-                  position: 'relative', animation: 'fadeIn 0.25s'
-                }}>
-                  {/* Remove card button */}
+                <div key={idx} className="p-6 border border-gray-200 rounded-2xl bg-gray-50 relative animate-[fadeIn_0.25s]">
                   <button
                     type="button"
                     onClick={() => removeDayField(idx)}
-                    style={{
-                      position: 'absolute', right: '16px', top: '16px', background: 'transparent', border: 'none',
-                      cursor: 'pointer', color: '#9CA3AF', padding: '6px', borderRadius: '8px', transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#FEE2E2'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'transparent'; }}
+                    className="absolute right-4 top-4 bg-transparent border-none cursor-pointer text-gray-400 p-1.5 rounded-lg transition-all hover:text-red-500 hover:bg-red-50"
                   >
                     <Trash2 size={15} />
                   </button>
 
-                  <div style={{
-                    fontSize: '12px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', display: 'inline-block', marginBottom: '16px',
-                    background: '#111827', color: '#C8F04A'
-                  }}>
+                  <div className="text-xs font-extrabold py-0.5 px-2 rounded-md inline-block mb-4 bg-gray-900 text-[#C8F04A]">
                     PLAN DAY #{idx + 1}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '20px', marginBottom: '16px' }}>
-                    {/* Planned Date */}
+                  <div className="grid grid-cols-[1.2fr_1fr_1fr] gap-5 mb-4">
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
-                        Planned Date <span style={{ color: '#EF4444' }}>*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={day.plannedDate}
-                        onChange={(e) => handleDayChange(idx, 'plannedDate', e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' }}
-                      />
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Planned Date <span className="text-red-500">*</span></label>
+                      <input type="date" value={day.plannedDate} onChange={(e) => handleDayChange(idx, 'plannedDate', e.target.value)} required className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] outline-none box-border" />
                     </div>
-
-                    {/* Activity Type */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
-                        Activity Type <span style={{ color: '#EF4444' }}>*</span>
-                      </label>
-                      <select
-                        value={day.activityType}
-                        onChange={(e) => handleDayChange(idx, 'activityType', e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                      >
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Activity Type <span className="text-red-500">*</span></label>
+                      <select value={day.activityType} onChange={(e) => handleDayChange(idx, 'activityType', e.target.value)} required className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] bg-white outline-none box-border">
                         <option value="FIELD_WORK">Field Work (Doctor Visits)</option>
                         <option value="MEETING">Team Meeting</option>
                         <option value="SEMINAR">Seminar / Conference</option>
@@ -493,51 +334,24 @@ const METourPlanPage = () => {
                         <option value="LEAVE">Leave Day</option>
                       </select>
                     </div>
-
-                    {/* Target Territory */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
-                        Target Territory {day.activityType === 'FIELD_WORK' && <span style={{ color: '#EF4444' }}>*</span>}
-                      </label>
-                      <input
-                        type="text"
-                        value={day.targetTerritory}
-                        onChange={(e) => handleDayChange(idx, 'targetTerritory', e.target.value)}
-                        placeholder="e.g. Chennai South, Ward 4"
-                        required={day.activityType === 'FIELD_WORK'}
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' }}
-                      />
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Target Territory {day.activityType === 'FIELD_WORK' && <span className="text-red-500">*</span>}</label>
+                      <input type="text" value={day.targetTerritory} onChange={(e) => handleDayChange(idx, 'targetTerritory', e.target.value)} placeholder="e.g. Chennai South, Ward 4" required={day.activityType === 'FIELD_WORK'} className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] outline-none box-border" />
                     </div>
                   </div>
 
-                  {/* Planned Doctor Selections */}
                   {day.activityType === 'FIELD_WORK' && (
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '8px' }}>
-                        Select Target Healthcare Professionals to Call
-                      </label>
-                      <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px',
-                        maxHeight: '130px', overflowY: 'auto', background: '#fff', border: '1.5px solid #E5E7EB',
-                        padding: '12px', borderRadius: '10px'
-                      }}>
+                    <div className="mb-4">
+                      <label className="block text-xs font-bold text-gray-700 mb-2">Select Target Healthcare Professionals to Call</label>
+                      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5 max-h-[130px] overflow-y-auto bg-white border border-gray-200 p-3 rounded-[10px]">
                         {doctorListOptions.map((doc) => {
                           const isChecked = day.plannedDoctorIds.includes(doc.id);
                           return (
-                            <label key={doc.id} style={{
-                              display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px',
-                              color: '#4B5563', cursor: 'pointer', padding: '4px 6px', borderRadius: '6px',
-                              background: isChecked ? '#F9FAFB' : 'transparent', transition: 'background 0.15s'
-                            }}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(e) => handleDoctorCheckboxChange(idx, doc.id, e.target.checked)}
-                                style={{ width: '14px', height: '14px', accentColor: '#111827' }}
-                              />
-                              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <span style={{ fontWeight: 650, color: '#1F2937' }}>{doc.fullName}</span>
-                                <span style={{ fontSize: '11px', color: '#9CA3AF', marginLeft: '4px' }}>({doc.speciality || 'GEN'})</span>
+                            <label key={doc.id} className={`flex items-center gap-2 text-[12.5px] text-gray-600 cursor-pointer py-1 px-1.5 rounded-md transition-colors duration-150 ${isChecked ? 'bg-gray-50' : ''}`}>
+                              <input type="checkbox" checked={isChecked} onChange={(e) => handleDoctorCheckboxChange(idx, doc.id, e.target.checked)} className="w-3.5 h-3.5 accent-gray-900" />
+                              <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                <span className="font-semibold text-gray-800">{doc.fullName}</span>
+                                <span className="text-[11px] text-gray-400 ml-1">({doc.speciality || 'GEN'})</span>
                               </div>
                             </label>
                           );
@@ -546,61 +360,36 @@ const METourPlanPage = () => {
                     </div>
                   )}
 
-                  {/* Day Remarks */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>Daily Objectives / Remarks</label>
-                    <input
-                      type="text"
-                      value={day.remarks}
-                      onChange={(e) => handleDayChange(idx, 'remarks', e.target.value)}
-                      placeholder="e.g. Introduce cardiological visual aids, collect feedback on MR-Cardio"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' }}
-                    />
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Daily Objectives / Remarks</label>
+                    <input type="text" value={day.remarks} onChange={(e) => handleDayChange(idx, 'remarks', e.target.value)} placeholder="e.g. Introduce cardiological visual aids, collect feedback on MR-Cardio" className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] outline-none box-border" />
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Add day button */}
             <button
               type="button"
               onClick={addDayField}
-              style={{
-                alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px',
-                background: '#111827', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px',
-                fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', transition: 'transform 0.15s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              className="self-start flex items-center gap-1.5 bg-gray-900 text-white border-none py-2.5 px-[18px] rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-px"
             >
               <Plus size={14} /> Add Another Day Plan
             </button>
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #F3F4F6', paddingTop: '20px', marginTop: '10px' }}>
+            <div className="flex gap-3 justify-end border-t border-gray-100 pt-5 mt-2.5">
               <button
                 type="submit"
                 disabled={actionLoading}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff',
-                  color: '#374151', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                className="py-[11px] px-[22px] rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 {actionLoading ? 'Saving...' : 'Save Draft'}
               </button>
               <button
                 type="button"
-                onClick={(e) => handleSaveDraft(null, true)}
+                onClick={() => handleSaveDraft(null, true)}
                 disabled={actionLoading}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', border: 'none',
-                  background: theme.primary, color: theme.textOnPrimary, fontWeight: 850, fontSize: '13px',
-                  cursor: 'pointer', boxShadow: theme.shadow, transition: 'opacity 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = theme.hoverOpacity}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                className="py-[11px] px-[22px] rounded-xl border-none text-white font-bold text-[13px] cursor-pointer transition-opacity hover:opacity-90"
+                style={{ background: primaryColor, boxShadow: primaryShadow }}
               >
                 {actionLoading ? 'Submitting...' : 'Save & Submit Plan'}
               </button>
@@ -611,82 +400,53 @@ const METourPlanPage = () => {
 
       {/* Tour Plan Details Modal */}
       {detailModalOpen && currentTourPlan && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px',
-          animation: 'fadeIn 0.2s'
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '680px', maxHeight: '85vh',
-            display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-            animation: 'scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', overflow: 'hidden'
-          }}>
-            {/* Modal Header */}
-            <div style={{ padding: '20px 24px', borderBottom: '1.5px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-[6px] flex items-center justify-center z-[1100] p-5 animate-[fadeIn_0.2s]">
+          <div className="bg-white rounded-[20px] w-full max-w-[680px] max-h-[85vh] flex flex-col overflow-hidden animate-[scaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)]" style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.15)' }}>
+            <div className="py-5 px-6 border-b border-gray-100 flex justify-between items-center shrink-0">
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111827', margin: 0 }}>Tour Plan Details</h3>
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Plan ID: {currentTourPlan.id} • Month: {formatMonthLabel(currentTourPlan.targetMonth)}</span>
+                <h3 className="text-[17px] font-extrabold text-gray-900 m-0">Tour Plan Details</h3>
+                <span className="text-xs text-gray-400">Plan ID: {currentTourPlan.id} • Month: {formatMonthLabel(currentTourPlan.targetMonth)}</span>
               </div>
-              <span style={{
-                fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px',
-                ...getStatusBadgeStyle(currentTourPlan.status)
-              }}>{currentTourPlan.status}</span>
+              <span className="text-[11px] font-extrabold py-1 px-2.5 rounded-full" style={{ background: getStatusBadgeStyle(currentTourPlan.status).bg, color: getStatusBadgeStyle(currentTourPlan.status).text, border: getStatusBadgeStyle(currentTourPlan.status).border }}>
+                {currentTourPlan.status}
+              </span>
             </div>
 
-            {/* Modal Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Manager remarks if reviewed */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
               {currentTourPlan.remarks && (
-                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '14px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Manager Feedback Remarks</div>
-                  <div style={{ fontSize: '13px', color: '#78350F', marginTop: '4px', fontStyle: 'italic' }}>"{currentTourPlan.remarks}"</div>
+                <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl">
+                  <div className="text-[11px] font-extrabold text-amber-700 uppercase tracking-wide">Manager Feedback Remarks</div>
+                  <div className="text-[13px] text-amber-900 mt-1 italic">"{currentTourPlan.remarks}"</div>
                 </div>
               )}
-
-              {/* Day Schedules list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Planned Days ({currentTourPlan.planDays?.length || 0})</div>
+              <div className="flex flex-col gap-3.5">
+                <div className="text-xs font-extrabold text-gray-400 uppercase tracking-wide">Planned Days ({currentTourPlan.planDays?.length || 0})</div>
                 {currentTourPlan.planDays?.map((day, idx) => (
-                  <div key={idx} style={{ border: '1.5px solid #F3F4F6', padding: '16px', borderRadius: '12px', background: '#FAFAFA' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        📅 {day.plannedDate}
-                      </span>
-                      <span style={{
-                        fontSize: '10.5px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px',
-                        background: '#111827', color: '#C8F04A'
-                      }}>
+                  <div key={idx} className="border border-gray-100 p-4 rounded-xl bg-gray-50">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <span className="text-sm font-bold text-gray-800 flex items-center gap-1.5">📅 {day.plannedDate}</span>
+                      <span className="text-[10.5px] font-extrabold py-0.5 px-2 rounded-md bg-gray-900 text-[#C8F04A]">
                         {day.activityType.replace('_', ' ')}
                       </span>
                     </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '8px', borderTop: '1px solid #F3F4F6', paddingTop: '8px' }}>
+                    <div className="grid grid-cols-[1fr_2fr] gap-4 mb-2 border-t border-gray-100 pt-2">
                       <div>
-                        <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Target Territory</div>
-                        <div style={{ fontSize: '13px', color: '#374151', fontWeight: 600, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <MapPin size={12} color="#9CA3AF" />
-                          {day.targetTerritory || 'N/A'}
-                        </div>
+                        <div className="text-[10.5px] font-bold text-gray-400 uppercase">Target Territory</div>
+                        <div className="text-[13px] text-gray-700 font-semibold mt-0.5 flex items-center gap-1"><MapPin size={12} color="#9CA3AF" />{day.targetTerritory || 'N/A'}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Daily Objectives</div>
-                        <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '2px', fontStyle: day.remarks ? 'normal' : 'italic' }}>
-                          {day.remarks || 'No remarks provided.'}
-                        </div>
+                        <div className="text-[10.5px] font-bold text-gray-400 uppercase">Daily Objectives</div>
+                        <div className={`text-[12.5px] text-gray-600 mt-0.5 ${day.remarks ? '' : 'italic'}`}>{day.remarks || 'No remarks provided.'}</div>
                       </div>
                     </div>
-
                     {day.activityType === 'FIELD_WORK' && day.plannedDoctorIds && day.plannedDoctorIds.length > 0 && (
-                      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '8px', marginTop: '8px' }}>
-                        <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: '4px' }}>Target Doctors ({day.plannedDoctorIds.length})</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      <div className="border-t border-gray-100 pt-2 mt-2">
+                        <div className="text-[10.5px] font-bold text-gray-400 uppercase mb-1">Target Doctors ({day.plannedDoctorIds.length})</div>
+                        <div className="flex flex-wrap gap-1.5">
                           {day.plannedDoctorIds.map((docId) => {
                             const doc = doctorListOptions.find(d => d.id === docId) || { fullName: `Dr. ID: ${docId}`, speciality: '' };
                             return (
-                              <span key={docId} style={{
-                                display: 'inline-flex', padding: '3px 8px', borderRadius: '6px',
-                                background: '#E0E7FF', color: '#4F46E5', fontSize: '11px', fontWeight: 700
-                              }}>
+                              <span key={docId} className="inline-flex py-0.5 px-2 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-bold">
                                 👨‍⚕️ {doc.fullName} {doc.speciality && `(${doc.speciality})`}
                               </span>
                             );
@@ -699,15 +459,8 @@ const METourPlanPage = () => {
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div style={{ padding: '16px 24px', borderTop: '1.5px solid #F3F4F6', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-              <button
-                onClick={() => setDetailModalOpen(false)}
-                style={{
-                  background: '#111827', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '12px',
-                  fontWeight: 700, fontSize: '13px', cursor: 'pointer', outline: 'none'
-                }}
-              >
+            <div className="py-4 px-6 border-t border-gray-100 flex justify-end shrink-0">
+              <button onClick={() => setDetailModalOpen(false)} className="bg-gray-900 text-white border-none py-2.5 px-[22px] rounded-xl font-bold text-[13px] cursor-pointer outline-none">
                 Close Plan
               </button>
             </div>

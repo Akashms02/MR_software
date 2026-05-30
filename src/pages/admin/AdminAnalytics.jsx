@@ -19,7 +19,7 @@ export default function AdminAnalytics() {
       />
 
       {/* KPI Tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '24px' }}>
+      <div className="grid grid-cols-4 gap-3.5 mb-6">
         <StatCard icon="📅" label="Avg Tenure"      value="2.8 yrs" sub="Across all departments" color="#16a34a"  />
         <StatCard icon="⭐" label="High Performers" value="33%"      sub="5 of 15 employees"      color="#d97706" bgColor="#fef3c7" />
         <StatCard icon="🔄" label="Turnover Rate"   value="12.5%"    sub="Last 12 months"         color="#dc2626" bgColor="#fee2e2" />
@@ -27,11 +27,11 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Charts Row 1 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+      <div className="grid grid-cols-[2fr_1fr] gap-4 mb-4">
         {/* Headcount line */}
         <Card>
-          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Headcount Trend</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '16px' }}>Last 12 months</div>
+          <div className="font-bold text-sm text-[#111827] mb-1">Headcount Trend</div>
+          <div className="text-xs text-[#9ca3af] mb-4">Last 12 months</div>
           <ResponsiveContainer width="100%" height={210}>
             <LineChart data={HEADCOUNT_TREND}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
@@ -46,8 +46,8 @@ export default function AdminAnalytics() {
 
         {/* Gender donut */}
         <Card>
-          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Gender Ratio</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>Total {EMPLOYEES.length} employees</div>
+          <div className="font-bold text-sm text-[#111827] mb-1">Gender Ratio</div>
+          <div className="text-xs text-[#9ca3af] mb-3">Total {EMPLOYEES.length} employees</div>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={GENDER_DATA} cx="50%" cy="50%" innerRadius={48} outerRadius={68} paddingAngle={3} dataKey="value">
@@ -56,12 +56,12 @@ export default function AdminAnalytics() {
               <Tooltip content={<ChartTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '8px' }}>
+          <div className="flex justify-center gap-5 mt-2">
             {GENDER_DATA.map(g => (
-              <div key={g.name} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: g.color }} />
-                <span style={{ color: '#6b7280' }}>{g.name}</span>
-                <span style={{ fontWeight: 700, color: '#111827' }}>{g.value}</span>
+              <div key={g.name} className="flex items-center gap-1.25 text-xs">
+                <div className={`w-2 h-2 rounded-full ${g.name === 'Male' ? 'bg-[#16a34a]' : 'bg-[#db2777]'}`} />
+                <span className="text-[#6b7280]">{g.name}</span>
+                <span className="font-bold text-[#111827]">{g.value}</span>
               </div>
             ))}
           </div>
@@ -69,11 +69,11 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Charts Row 2 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="grid grid-cols-2 gap-4">
         {/* Attrition bar */}
         <Card>
-          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginBottom: '4px' }}>Dept-wise Attrition (%)</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '16px' }}>Last 12 months</div>
+          <div className="font-bold text-sm text-[#111827] mb-1">Dept-wise Attrition (%)</div>
+          <div className="text-xs text-[#9ca3af] mb-4">Last 12 months</div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={ATTRITION_DEPT} layout="vertical" barSize={10}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
@@ -88,13 +88,13 @@ export default function AdminAnalytics() {
         </Card>
 
         {/* Summary table */}
-        <Card style={{ padding: '20px' }}>
-          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginBottom: '16px' }}>Department Summary</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <Card className="p-5">
+          <div className="font-bold text-sm text-[#111827] mb-4">Department Summary</div>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
                 {['Department','Count','Avg Salary','Attrition'].map(h => (
-                  <th key={h} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.6px', textAlign: 'left', borderBottom: '1px solid #f3f4f6' }}>{h}</th>
+                  <th key={h} className="px-2.5 py-2 text-[11px] font-semibold text-[#9ca3af] uppercase tracking-[0.6px] text-left border-b border-[#f3f4f6]">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -105,14 +105,14 @@ export default function AdminAnalytics() {
                 const att  = ATTRITION_DEPT.find(a => a.dept === dept)?.rate || 0
                 return (
                   <tr key={dept}
-                    style={{ transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    className="transition-colors duration-150 hover:bg-[#f9fafb]"
                   >
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid #f9fafb', fontSize: '12px', color: '#374151', fontWeight: 500 }}>{dept}</td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid #f9fafb', fontSize: '12px', color: '#16a34a', fontWeight: 700 }}>{emps.length}</td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid #f9fafb', fontSize: '12px', color: '#6b7280' }}>₹{avg.toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid #f9fafb', fontSize: '12px', fontWeight: 700, color: att > 12 ? '#dc2626' : att > 8 ? '#d97706' : '#16a34a' }}>{att}%</td>
+                    <td className="px-2.5 py-2 border-b border-[#f9fafb] text-xs text-[#374151] font-medium">{dept}</td>
+                    <td className="px-2.5 py-2 border-b border-[#f9fafb] text-xs text-[#16a34a] font-bold">{emps.length}</td>
+                    <td className="px-2.5 py-2 border-b border-[#f9fafb] text-xs text-[#6b7280]">₹{avg.toLocaleString('en-IN')}</td>
+                    <td className={`px-2.5 py-2 border-b border-[#f9fafb] text-xs font-bold ${
+                      att > 12 ? 'text-[#dc2626]' : att > 8 ? 'text-[#d97706]' : 'text-[#16a34a]'
+                    }`}>{att}%</td>
                   </tr>
                 )
               })}

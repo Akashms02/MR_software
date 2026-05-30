@@ -190,48 +190,32 @@ export default function MEReports() {
   };
 
   return (
-    <div style={{ animation: 'fadeIn 0.35s ease-out', fontFamily: "'Inter', sans-serif" }}>
+    <div className="animate-[fadeIn_0.35s_ease-out] font-[Inter,sans-serif]">
 
 
       {/* Grid: Selectors on Left, Charts on Right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '24px', alignItems: 'start', minHeight: '600px' }}>
+      <div className="grid gap-6 items-start min-h-[600px]" style={{ gridTemplateColumns: '1fr 3fr' }}>
         
         {/* Left Side: Report Selector & Date configurations */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-5">
           {/* selectors */}
           <Card style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px 6px' }}>
+            <h3 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-wide ml-1.5 mb-3 mt-0">
               Report Category
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="flex flex-col gap-1">
               {REPORT_TYPES.map((t) => {
                 const isActive = activeReport === t.id;
                 return (
                   <button
                     key={t.id}
                     onClick={() => setActiveReport(t.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 14px',
-                      borderRadius: '10px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      background: isActive ? '#6366F1' : 'transparent',
-                      color: isActive ? '#FFFFFF' : '#4B5563',
-                      transition: 'all 0.15s ease',
-                      width: '100%',
-                      fontFamily: 'inherit'
-                    }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F9FAFB'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                    className={`flex items-center gap-3 py-3 px-3.5 rounded-[10px] border-none cursor-pointer text-left w-full transition-all duration-150 font-[inherit] ${isActive ? 'bg-indigo-500 text-white' : 'bg-transparent text-gray-600 hover:bg-gray-50'}`}
                   >
-                    <span style={{ fontSize: '18px' }}>{t.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 600 }}>{t.label}</div>
-                      <div style={{ fontSize: '10.5px', color: isActive ? '#E0E7FF' : '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.sub}</div>
+                    <span className="text-lg">{t.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold'}`}>{t.label}</div>
+                      <div className={`text-[10.5px] whitespace-nowrap overflow-hidden text-ellipsis ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>{t.sub}</div>
                     </div>
                     <ChevronRight size={14} color={isActive ? '#FFFFFF' : '#9CA3AF'} />
                   </button>
@@ -242,49 +226,30 @@ export default function MEReports() {
 
           {/* Date Parameters & Representative Selector */}
           <Card style={{ padding: '18px' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 14px 0' }}>
+            <h3 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-wide mb-3.5 mt-0">
               Query Filters
             </h3>
 
             {/* Representative Selector */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>FIELD REPRESENTATIVE</label>
+            <div className="mb-4">
+              <label className="block text-[11px] font-bold text-gray-600 mb-1.5">FIELD REPRESENTATIVE</label>
               {mrLoading ? (
-                <div style={{ fontSize: '12px', color: '#6B7280' }}>Loading representatives...</div>
+                <div className="text-xs text-gray-500">Loading representatives...</div>
               ) : mrList.length === 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#EF4444' }}>No MR profiles found.</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] text-red-500">No MR profiles found.</span>
                   <input
                     placeholder="Enter MR ID manually..."
                     value={selectedMrId}
                     onChange={(e) => setSelectedMrId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #FCA5A5',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                    }}
+                    className="w-full py-2 px-3 rounded-lg border border-red-300 text-[12.5px] outline-none"
                   />
                 </div>
               ) : (
                 <select 
                   value={selectedMrId}
                   onChange={(e) => setSelectedMrId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '13px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937',
-                    background: '#ffffff',
-                    fontWeight: 600
-                  }}
+                  className="w-full py-2.5 px-3 rounded-lg border border-gray-200 text-[13px] outline-none text-gray-800 bg-white font-semibold"
                 >
                   {mrList.map(mr => (
                     <option key={mr.id} value={String(mr.id)}>
@@ -297,42 +262,14 @@ export default function MEReports() {
 
             {/* Range Pickers */}
             {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="flex flex-col gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>START DATE</label>
-                  <input 
-                    type="date" 
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #E5E7EB',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      color: '#1F2937'
-                    }}
-                  />
+                  <label className="block text-[11px] font-bold text-gray-600 mb-1.5">START DATE</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>END DATE</label>
-                  <input 
-                    type="date" 
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #E5E7EB',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      color: '#1F2937'
-                    }}
-                  />
+                  <label className="block text-[11px] font-bold text-gray-600 mb-1.5">END DATE</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
                 </div>
               </div>
             )}
@@ -340,86 +277,37 @@ export default function MEReports() {
             {/* Single Date Picker */}
             {(activeReport === 'dcr-day' || activeReport === 'daily-activity') && (
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>SELECT DATE</label>
-                <input 
-                  type="date" 
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '12.5px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937'
-                  }}
-                />
+                <label className="block text-[11px] font-bold text-gray-600 mb-1.5">SELECT DATE</label>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
               </div>
             )}
 
             {/* Week Picker */}
             {activeReport === 'weekly-cross' && (
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>DATE IN WEEK</label>
-                <input 
-                  type="date" 
-                  value={dateInWeek}
-                  onChange={(e) => setDateInWeek(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '12.5px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937'
-                  }}
-                />
+                <label className="block text-[11px] font-bold text-gray-600 mb-1.5">DATE IN WEEK</label>
+                <input type="date" value={dateInWeek} onChange={(e) => setDateInWeek(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
               </div>
             )}
           </Card>
         </div>
 
         {/* Right Side: Visual Reports Screen */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+        <div className="flex flex-col gap-6 relative">
           
           {/* Loading Indicator */}
           {loading && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.75)',
-              backdropFilter: 'blur(1px)',
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 50,
-              borderRadius: '16px'
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] flex items-center justify-center z-50 rounded-2xl">
+              <div className="flex flex-col items-center gap-2">
                 <RefreshCw className="animate-spin" size={30} color="#6366F1" />
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1E2937' }}>Retrieving log metrics...</span>
+                <span className="text-[13px] font-bold text-gray-800">Retrieving log metrics...</span>
               </div>
             </div>
           )}
 
           {/* Error Notice */}
           {error && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '14px 18px',
-              background: '#FEF2F2',
-              border: '1px solid #FCA5A5',
-              borderRadius: '12px',
-              color: '#B91C1C',
-              fontSize: '13px',
-              fontWeight: 500
-            }}>
+            <div className="flex items-center gap-2.5 py-3.5 px-[18px] bg-red-50 border border-red-300 rounded-xl text-red-700 text-[13px] font-medium">
               <AlertCircle size={18} />
               <span><strong>API Fetch Failed:</strong> {error}</span>
             </div>
@@ -835,9 +723,9 @@ export default function MEReports() {
           {/* Fallback state when there's no data */}
           {!hasData() && !loading && (
             <Card style={{ padding: '40px 24px', textAlign: 'center', background: '#FFFFFF', border: '1.5px dashed #E5E7EB' }}>
-              <ShieldAlert size={48} color="#9CA3AF" style={{ margin: '0 auto 16px auto' }} />
-              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#374151', margin: '0 0 6px 0' }}>No Database Records Found</h4>
-              <p style={{ fontSize: '12.5px', color: '#6B7280', margin: 0, maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+              <ShieldAlert size={48} className="mx-auto mb-4 text-gray-400" />
+              <h4 className="text-[15px] font-extrabold text-gray-700 mb-1.5 mt-0">No Database Records Found</h4>
+              <p className="text-[12.5px] text-gray-500 m-0 max-w-[420px] mx-auto">
                 There are no logs matching the active selection. This is a live query; configure different dates or represent another representative.
               </p>
             </Card>
@@ -850,13 +738,6 @@ export default function MEReports() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

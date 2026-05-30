@@ -2,10 +2,10 @@ import React from 'react';
 
 const PharmacistDashboard = () => {
   const stats = [
-    { label: 'Validated Today', value: '42 Scripts', sub: 'Pending: 5', color: '#06B6D4', bg: '#ECFEFF', icon: '📄' },
-    { label: 'Stock Alerts', value: '8 Items Low', sub: 'Reorder needed', color: '#EF4444', bg: '#FEF2F2', icon: '🚨' },
-    { label: 'Orders Dispensed', value: '112 Packs', sub: 'Today\'s Total', color: '#10B981', bg: '#ECFDF5', icon: '💊' },
-    { label: 'Counter Sales', value: '₹18,450', sub: 'Cash & Card', color: '#3B82F6', bg: '#EFF6FF', icon: '💵' },
+    { label: 'Validated Today', value: '42 Scripts', sub: 'Pending: 5', color: 'text-cyan-500', bg: 'bg-cyan-50', icon: '📄' },
+    { label: 'Stock Alerts', value: '8 Items Low', sub: 'Reorder needed', color: 'text-rose-500', bg: 'bg-rose-50', icon: '🚨' },
+    { label: 'Orders Dispensed', value: '112 Packs', sub: 'Today\'s Total', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: '💊' },
+    { label: 'Counter Sales', value: '₹18,450', sub: 'Cash & Card', color: 'text-blue-500', bg: 'bg-blue-50', icon: '💵' },
   ];
 
   const stockAlerts = [
@@ -15,74 +15,45 @@ const PharmacistDashboard = () => {
   ];
 
   return (
-    <div style={{ animation: 'fadeIn 0.4s ease-out', padding: '10px' }}>
+    <div className="p-2.5 animate-fade">
       {/* Welcome Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #0891B2 0%, #06B6D4 100%)',
-        borderRadius: '20px',
-        padding: '30px',
-        color: '#fff',
-        marginBottom: '28px',
-        boxShadow: '0 10px 25px rgba(6, 182, 212, 0.15)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
+      <div className="bg-gradient-to-br from-[#0891B2] to-[#06B6D4] rounded-[20px] p-[30px] text-white mb-[28px] shadow-[0_10px_25px_rgba(6,182,212,0.15)] relative overflow-hidden">
+        <div className="relative z-[2]">
+          <span className="bg-white/20 px-3 py-1.5 rounded-[20px] text-[12px] font-bold tracking-[1px]">
             PORTAL: MEDICAL PHARMACIST
           </span>
-          <h2 style={{ fontSize: '28px', fontWeight: 800, margin: '14px 0 6px 0', letterSpacing: '-0.5px' }}>
+          <h2 className="text-[28px] font-extrabold my-3.5 mb-1.5 tracking-[-0.5px]">
             Hello, Pharmacist Partner!
           </h2>
-          <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', maxWidth: '500px' }}>
+          <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Verify digital doctor prescriptions, manage medicine inventory controls, check drug batch expiry codes, and dispense supplies.
           </p>
         </div>
-        <div style={{
-          position: 'absolute', right: '-50px', bottom: '-50px', fontSize: '180px', opacity: 0.1, userSelect: 'none', pointerEvents: 'none'
-        }}>
+        <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           💊
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-[28px]">
         {stats.map((s, i) => (
-          <div key={i} style={{
-            background: '#fff',
-            border: '1.5px solid #F3F4F6',
-            borderRadius: '16px',
-            padding: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)',
-            transition: 'all 0.2s',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
-          }}
+          <div
+            key={i}
+            className="bg-white border-[1.5px] border-gray-100 rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02),0_2px_4px_-1px_rgba(0,0,0,0.01)] hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-200 cursor-pointer"
           >
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '12px', background: s.bg, fontSize: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
+            <div
+              className={`w-12 h-12 rounded-xl text-[24px] flex items-center justify-center shrink-0 ${s.bg}`}
+            >
               {s.icon}
             </div>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="text-[12px] font-semibold text-gray-400 uppercase tracking-[0.5px]">
                 {s.label}
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', margin: '2px 0' }}>
+              <div className="text-[20px] font-extrabold text-gray-800 my-0.5">
                 {s.value}
               </div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: s.color }}>
+              <div className={`text-[11px] font-semibold ${s.color}`}>
                 {s.sub}
               </div>
             </div>
@@ -90,34 +61,25 @@ const PharmacistDashboard = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Inventory Stock Warning */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>Low Stock Inventory Warnings</h3>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#0891B2', cursor: 'pointer' }}>Inventory Manager ➔</span>
+        <div className="lg:col-span-2 bg-white border-[1.5px] border-gray-100 rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="m-0 text-[16px] font-extrabold text-gray-800">Low Stock Inventory Warnings</h3>
+            <span className="text-[12px] font-bold text-[#0891B2] cursor-pointer">Inventory Manager ➔</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="flex flex-col gap-3.5">
             {stockAlerts.map((item, idx) => (
-              <div key={idx} style={{
-                display: 'flex', alignItems: 'center', justifyItems: 'center', gap: '16px', padding: '16px', borderRadius: '12px', background: '#FAFAFA', border: '1px solid #F3F4F6'
-              }}>
-                <div style={{
-                  fontSize: '20px', width: '38px', height: '38px', background: item.status === 'Critical' ? '#FEE2E2' : '#FEF3C7',
-                  borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
+              <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className={`text-[20px] w-[38px] h-[38px] rounded-full flex items-center justify-center shrink-0 ${item.status === 'Critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
                   ⚠️
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937' }}>{item.name}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>Current: <span style={{ fontWeight: 700, color: '#DC2626' }}>{item.currentStock}</span> • Threshold: {item.minStock}</div>
+                <div className="flex-1">
+                  <div className="text-[14px] font-bold text-gray-800">{item.name}</div>
+                  <div className="text-[12px] text-gray-500 mt-0.5">Current: <span className="font-bold text-rose-600">{item.currentStock}</span> • Threshold: {item.minStock}</div>
                 </div>
-                <span style={{
-                  fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px',
-                  background: item.status === 'Critical' ? '#FEE2E2' : '#FEF3C7',
-                  color: item.status === 'Critical' ? '#991B1B' : '#92400E'
-                }}>
+                <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[20px] ${item.status === 'Critical' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
                   {item.status}
                 </span>
               </div>
@@ -126,43 +88,21 @@ const PharmacistDashboard = () => {
         </div>
 
         {/* Counter Actions */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>Quick Actions</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: 'none', background: '#0891B2', color: '#fff',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'opacity 0.2s', textAlign: 'center'
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >
+        <div className="bg-white border-[1.5px] border-gray-100 rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <h3 className="m-0 mb-4.5 text-[16px] font-extrabold text-gray-800">Quick Actions</h3>
+          <div className="flex flex-col gap-2.5">
+            <button className="w-full p-3 rounded-xl bg-[#0891B2] text-white font-bold text-[13px] hover:opacity-90 transition-opacity text-center cursor-pointer">
               🔍 Scan Prescription
             </button>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
+            <button className="w-full p-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] hover:bg-gray-50 transition-colors text-center cursor-pointer">
               📥 Log Supplier Delivery
             </button>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
+            <button className="w-full p-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] hover:bg-gray-50 transition-colors text-center cursor-pointer">
               ⌛ Drug Expiry Checklist
             </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </div>
   );
 };

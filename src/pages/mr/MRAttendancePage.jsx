@@ -344,94 +344,98 @@ export default function MRAttendancePage() {
     : 'Offline / Off-Duty';
 
   return (
-    <div style={{ animation: 'fadeSlideIn 0.35s ease-out', padding: '10px' }}>
+    <div className="p-2.5 animate-[fadeSlideIn_0.35s_ease-out]">
       
       {/* Header Panel & Date Filter */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px', borderBottom: '1px solid #E5E7EB', paddingBottom: '20px' }}>
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3.5 border-b border-gray-200 pb-5">
         <div>
-          <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+          <span className="text-[11px] text-gray-500 font-extrabold uppercase tracking-[1.5px]">
             FIELD OPERATIONS LEDGER
           </span>
-          <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#111827', margin: '4px 0 0 0', letterSpacing: '-0.5px' }}>Field Attendance & Pathway</h2>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>Review geographic paths, check-in timelines, and call summaries for the selected date.</p>
+          <h2 className="text-[26px] font-extrabold text-gray-900 mt-1 mb-0 tracking-[-0.5px]">Field Attendance & Pathway</h2>
+          <p className="text-[13px] text-gray-500 mt-1 mb-0">Review geographic paths, check-in timelines, and call summaries for the selected date.</p>
         </div>
 
         {/* Date Filter Calendar Picker */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', padding: '8px 16px', borderRadius: '12px', border: '1.5px solid #E5E7EB', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-          <Calendar size={15} style={{ color: '#6B7280' }} />
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Date:</span>
+        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
+          <Calendar size={15} className="text-gray-500" />
+          <span className="text-[12px] font-bold text-gray-600 uppercase tracking-[0.5px]">Select Date:</span>
           <input 
             type="date"
             value={selectedDate}
             onChange={(e) => {
               if (e.target.value) setSelectedDate(e.target.value);
             }}
-            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px', background: '#F9FAFB', fontWeight: 700, color: '#1F2937', cursor: 'pointer', outline: 'none' }}
+            className="px-3 py-1.5 rounded-lg border border-gray-300 text-[13px] bg-gray-50 font-bold text-gray-800 cursor-pointer outline-none"
           />
         </div>
       </div>
 
       {/* Daily Stats Ribbon */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         {/* Card 1: Status */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: activeRecord?.status === 'ACTIVE' ? '#ECFDF5' : activeRecord?.status === 'ENDED' ? '#EFF6FF' : '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div 
+            className={`w-[38px] h-[38px] rounded-xl flex items-center justify-center text-[18px] ${
+              activeRecord?.status === 'ACTIVE' ? 'bg-[#ECFDF5]' : activeRecord?.status === 'ENDED' ? 'bg-[#EFF6FF]' : 'bg-[#FEF2F2]'
+            }`}
+          >
             {activeRecord?.status === 'ACTIVE' ? '🟢' : activeRecord?.status === 'ENDED' ? '🏁' : '🛑'}
           </div>
           <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Workday Status</div>
-            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1F2937' }}>{statusLabel}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Workday Status</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">{statusLabel}</div>
           </div>
         </div>
 
         {/* Card 2: Start Time */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F59E0B15', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706' }}>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#F59E0B15] flex items-center justify-center text-[#D97706]">
             <Clock size={18} />
           </div>
           <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Start Time</div>
-            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1F2937' }}>{activeRecord?.startTime || '—'}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Start Time</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">{activeRecord?.startTime || '—'}</div>
           </div>
         </div>
 
         {/* Card 3: End Time */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#3B82F615', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#3B82F615] flex items-center justify-center text-[#2563EB]">
             <Square size={16} />
           </div>
           <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>End Time</div>
-            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1F2937' }}>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">End Time</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">
               {activeRecord?.status === 'ACTIVE' ? 'Active Duty' : activeRecord?.endTime || '—'}
             </div>
           </div>
         </div>
 
         {/* Card 4: Completed Visits */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#10B98115', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#10B98115] flex items-center justify-center text-[#059669]">
             <MapPin size={18} />
           </div>
           <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completed Calls</div>
-            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1F2937' }}>{completedVisits} of {visits.length} logged</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Completed Calls</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">{completedVisits} of {visits.length} logged</div>
           </div>
         </div>
       </div>
 
       {/* Split Layout grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
+      <div className="grid grid-cols-[1.2fr_1fr] gap-6 items-stretch">
         
         {/* LEFT COLUMN: Map container */}
-        <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column' }}>
+        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col">
           {/* Map Title block */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
             <div>
-              <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#111827', margin: 0 }}>Workday Pathway Map</h3>
-              <span style={{ fontSize: '11.5px', color: '#9CA3AF' }}>Chronological Travel Routing</span>
+              <h3 className="text-[14.5px] font-extrabold text-gray-900 m-0">Workday Pathway Map</h3>
+              <span className="text-[11.5px] text-gray-400">Chronological Travel Routing</span>
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#3B82F6', background: '#EFF6FF', padding: '3px 8px', borderRadius: '6px' }}>
+            <span className="text-[11px] font-extrabold text-[#3B82F6] bg-[#EFF6FF] px-2 py-0.5 rounded">
               GPS LIVE ACTIVE
             </span>
           </div>
@@ -439,57 +443,57 @@ export default function MRAttendancePage() {
           {/* Actual Leaflet Container */}
           <div 
             ref={mapContainerRef} 
-            style={{ width: '100%', height: '480px', background: '#FAFAFA', zIndex: 10, flex: 1 }}
+            className="w-full h-[480px] bg-[#FAFAFA] z-10 flex-1"
           />
           
           {/* Map Legend */}
-          <div style={{ padding: '16px 20px', borderTop: '1px solid #F3F4F6', background: '#FAFAFA', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11.5px', fontWeight: 700, color: '#4B5563', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3B82F6', display: 'inline-block' }} />
+          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-4 flex-wrap text-[11.5px] font-bold text-gray-600 shrink-0">
+            <div className="flex items-center gap-6">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
               <span>Start / End Points</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+            <div className="flex items-center gap-6">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
               <span>Completed Visits</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
+            <div className="flex items-center gap-6">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
               <span>Active Visits</span>
             </div>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Chronological Timeline */}
-        <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', height: '584px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ borderBottom: '1px solid #F3F4F6', paddingBottom: '14px', marginBottom: '16px', flexShrink: 0 }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#111827', margin: 0 }}>Chronological Activity Trail</h3>
-            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Step-by-step route timeline</span>
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] h-[584px] flex flex-col">
+          <div className="border-b border-gray-100 pb-3.5 mb-4 shrink-0">
+            <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Chronological Activity Trail</h3>
+            <span className="text-[12px] text-gray-400">Step-by-step route timeline</span>
           </div>
 
-          <div className="timeline-container" style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', paddingLeft: '8px' }}>
+          <div className="flex-1 overflow-y-auto pr-1 pl-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {!activeRecord ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9CA3AF', textAlign: 'center' }}>
-                <Calendar size={28} style={{ marginBottom: '10px', color: '#9CA3AF' }} />
-                <div style={{ fontSize: '14px', fontWeight: 700, color: '#4B5563' }}>No Workday Logged</div>
-                <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px', maxWidth: '240px' }}>No field attendance records exist for this selected date.</div>
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center">
+                <Calendar size={28} className="mb-2.5 text-gray-400" />
+                <div className="text-[14px] font-bold text-gray-600">No Workday Logged</div>
+                <div className="text-[12px] text-gray-400 mt-1 max-w-[240px]">No field attendance records exist for this selected date.</div>
               </div>
             ) : (
-              <div style={{ position: 'relative', borderLeft: '2px dashed #E5E7EB', marginLeft: '12px', paddingLeft: '24px', paddingTop: '8px', paddingBottom: '8px' }}>
+              <div className="relative border-l-2 border-dashed border-gray-200 ml-3 pl-6 py-2">
                 
                 {/* 1. START WORKDAY NODE */}
-                <div style={{ position: 'relative', marginBottom: '24px' }}>
-                  <div style={{ position: 'absolute', left: '-31px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: '#3B82F6', border: '2px solid #fff', boxShadow: '0 0 0 3px rgba(59,130,246,0.15)' }} />
+                <div className="relative mb-6">
+                  <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-[0_0_0_3px_rgba(59,130,246,0.15)]" />
                   
-                  <div style={{ background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E5E7EB', padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: '#EFF6FF', color: '#1E40AF' }}>[START WORKDAY]</span>
-                      <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>{activeRecord.startTime}</span>
+                  <div className="bg-[#F8FAFC] rounded-xl border border-gray-200 p-3 px-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">[START WORKDAY]</span>
+                      <span className="text-[11px] text-gray-400 font-semibold">{activeRecord.startTime}</span>
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937' }}>Check-In Registered</div>
-                    <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>📍 {activeRecord.startLocation?.name || 'GPS Coordinates Verified'}</div>
+                    <div className="text-[13px] font-extrabold text-gray-800">Check-In Registered</div>
+                    <div className="text-[12px] text-gray-500 mt-0.5">📍 {activeRecord.startLocation?.name || 'GPS Coordinates Verified'}</div>
                     {activeRecord.startSelfie && (
-                      <div style={{ marginTop: '8px' }}>
-                        <img src={activeRecord.startSelfie} alt="Start Selfie" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', cursor: 'pointer' }} onClick={() => window.open(activeRecord.startSelfie, '_blank')} />
+                      <div className="mt-2">
+                        <img src={activeRecord.startSelfie} alt="Start Selfie" className="w-[60px] h-[60px] rounded-lg object-cover border border-gray-200 cursor-pointer" onClick={() => window.open(activeRecord.startSelfie, '_blank')} />
                       </div>
                     )}
                   </div>
@@ -497,7 +501,7 @@ export default function MRAttendancePage() {
 
                 {/* 2. VISITS TIMELINE NODES (Single card per visit containing both check-in and check-out logs inside) */}
                 {visits.length === 0 ? (
-                  <div style={{ padding: '16px', background: '#FAFAFA', borderRadius: '12px', border: '1.5px dashed #E5E7EB', color: '#9CA3AF', fontSize: '12px', textAlign: 'center', marginBottom: '24px' }}>
+                  <div className="p-4 bg-[#FAFAFA] rounded-xl border border-dashed border-gray-200 text-gray-400 text-[12px] text-center mb-6">
                     No doctor or pharmacy visits logged for this workday yet.
                   </div>
                 ) : (
@@ -505,69 +509,81 @@ export default function MRAttendancePage() {
                     const isCompleted = v.status === 'COMPLETED';
                     const visitColor = isCompleted ? '#10B981' : '#F59E0B';
                     return (
-                      <div key={v.id || idx} style={{ position: 'relative', marginBottom: '24px' }}>
+                      <div key={v.id || idx} className="relative mb-6">
                         {/* Dot indicator */}
-                        <div style={{ position: 'absolute', left: '-31px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: visitColor, border: '2px solid #fff', boxShadow: `0 0 0 3px ${isCompleted ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}` }} />
+                        <div 
+                          className={`absolute left-[-31px] top-1 w-3 h-3 rounded-full border-2 border-white ${
+                            isCompleted ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]' : 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
+                          }`}
+                        />
                         
                         {/* Single Unified Card */}
-                        <div style={{ background: isCompleted ? '#FCFDFD' : '#FFFEFA', borderRadius: '12px', border: `1.5px solid ${isCompleted ? '#E5E7EB' : '#FCD34D'}`, padding: '14px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.01)' }}>
+                        <div 
+                          className={`rounded-xl px-[18px] py-3.5 shadow-[0_2px_6px_rgba(0,0,0,0.01)] border ${
+                            isCompleted ? 'bg-[#FCFDFD] border-[#E5E7EB]' : 'bg-[#FFFEFA] border-[#FCD34D]'
+                          }`}
+                        >
                           {/* Visit Card Header */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px', marginBottom: '10px' }}>
+                          <div className="flex justify-between items-start border-b border-gray-100 pb-2 mb-2.5">
                             <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: isCompleted ? '#ECFDF5' : '#FFFBEB', color: isCompleted ? '#065F46' : '#92400E', textTransform: 'uppercase' }}>
+                              <div className="flex items-center gap-2">
+                                <span 
+                                  className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
+                                    isCompleted ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FFFBEB] text-[#92400E]'
+                                  }`}
+                                >
                                   {v.type || 'Visit'}
                                 </span>
                                 {isCompleted ? (
-                                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: '#EFF6FF', color: '#1E40AF' }}>
+                                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">
                                     COMPLETED
                                   </span>
                                 ) : (
-                                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: '#FEF2F2', color: '#B91C1C', animation: 'pulse 2s infinite' }}>
+                                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#FEF2F2] text-[#B91C1C] animate-pulse">
                                     IN PROGRESS
                                   </span>
                                 )}
                               </div>
-                              <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', margin: '4px 0 2px 0' }}>{v.name}</h4>
-                              <div style={{ fontSize: '11.5px', color: '#6B7280' }}>🏥 {v.clinic || 'Doctor Clinic'}</div>
+                              <h4 className="text-[14.5px] font-extrabold text-gray-800 mt-1 mb-0.5">{v.name}</h4>
+                              <div className="text-[11.5px] text-gray-500">🏥 {v.clinic || 'Doctor Clinic'}</div>
                             </div>
-                            <span style={{ fontSize: '16px' }}>{v.type === 'Pharmacy' ? '🧪' : '🩺'}</span>
+                            <span className="text-[16px]">{v.type === 'Pharmacy' ? '🧪' : '🩺'}</span>
                           </div>
 
                           {/* Check-In Section */}
-                          <div style={{ marginBottom: isCompleted ? '12px' : '0' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#4B5563', fontWeight: 700, marginBottom: '4px' }}>
+                          <div className={isCompleted ? "mb-3" : "mb-0"}>
+                            <div className="flex justify-between text-[11px] text-gray-600 font-bold mb-1">
                               <span>📥 CHECK-IN LOG</span>
                               <span>{v.checkInTime}</span>
                             </div>
                             {v.checkInNotes && (
-                              <div style={{ fontSize: '12px', color: '#4B5563', padding: '6px 10px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #F1F5F9', fontStyle: 'italic' }}>
+                              <div className="text-[12px] text-gray-600 px-2.5 py-1.5 bg-[#F8FAFC] rounded border border-[#F1F5F9] italic">
                                 🎯 <strong>Objective:</strong> {v.checkInNotes}
                               </div>
                             )}
                             {v.checkInPhoto && (
-                              <div style={{ marginTop: '8px' }}>
-                                <img src={v.checkInPhoto} alt="Check-In Place" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #E5E7EB', cursor: 'pointer' }} onClick={() => window.open(v.checkInPhoto, '_blank')} />
+                              <div className="mt-2">
+                                <img src={v.checkInPhoto} alt="Check-In Place" className="w-[80px] h-[60px] object-cover rounded border border-gray-200 cursor-pointer" onClick={() => window.open(v.checkInPhoto, '_blank')} />
                               </div>
                             )}
                           </div>
 
                           {/* Check-Out Section (displays inside the same card if completed) */}
                           {isCompleted && (
-                            <div style={{ borderTop: '1px dashed #E5E7EB', paddingTop: '10px', marginTop: '10px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#047857', fontWeight: 700, marginBottom: '6px' }}>
+                            <div className="border-t border-dashed border-gray-250 pt-2.5 mt-2.5">
+                              <div className="flex justify-between text-[11px] text-emerald-700 font-bold mb-1.5">
                                 <span>📤 CHECK-OUT LOG</span>
                                 <span>{v.checkOutTime}</span>
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#374151' }}>
+                              <div className="flex flex-col gap-1 text-[12px] text-gray-700">
                                 <div>💊 <strong>Brands Promoted:</strong> {v.products}</div>
                                 <div>🧪 <strong>Samples Distributed:</strong> {v.samples || 'None'}</div>
-                                <div style={{ background: '#ECFDF5', padding: '6px 10px', borderRadius: '6px', border: '1px solid #D1FAE5', color: '#065F46', marginTop: '4px' }}>
+                                <div className="bg-[#ECFDF5] px-2.5 py-1.5 rounded border border-[#D1FAE5] text-[#065F46] mt-1">
                                   📝 <strong>Feedback Summary:</strong> "{v.feedback}"
                                 </div>
                                 {(v.selfie || v.checkOutPhoto) && (
-                                  <div style={{ marginTop: '6px' }}>
-                                    <img src={v.selfie || v.checkOutPhoto} alt="Checkout Selfie" style={{ width: '60px', height: '60px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #A7F3D0', cursor: 'pointer' }} onClick={() => window.open(v.selfie || v.checkOutPhoto, '_blank')} />
+                                  <div className="mt-1.5">
+                                    <img src={v.selfie || v.checkOutPhoto} alt="Checkout Selfie" className="w-[60px] h-[60px] rounded object-cover border border-[#A7F3D0] cursor-pointer" onClick={() => window.open(v.selfie || v.checkOutPhoto, '_blank')} />
                                   </div>
                                 )}
                               </div>
@@ -581,26 +597,26 @@ export default function MRAttendancePage() {
 
                 {/* 3. END WORKDAY NODE */}
                 {activeRecord.status === 'ENDED' ? (
-                  <div style={{ position: 'relative', marginBottom: '8px' }}>
-                    <div style={{ position: 'absolute', left: '-31px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: '#1E3A8A', border: '2px solid #fff', boxShadow: '0 0 0 3px rgba(30,58,138,0.15)' }} />
+                  <div className="relative mb-2">
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-white shadow-[0_0_0_3px_rgba(30,58,138,0.15)]" />
                     
-                    <div style={{ background: '#F8FAFC', borderRadius: '12px', border: '1px solid #CBD5E1', padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: '#F1F5F9', color: '#475569' }}>[END WORKDAY]</span>
-                        <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>{activeRecord.endTime}</span>
+                    <div className="bg-[#F8FAFC] rounded-xl border border-gray-300 p-3 px-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#475569]">[END WORKDAY]</span>
+                        <span className="text-[11px] text-gray-400 font-semibold">{activeRecord.endTime}</span>
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937' }}>Workday Operations Closed</div>
-                      <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>🏁 Ended at: {activeRecord.endLocation?.name || 'GPS Coordinates Verified'}</div>
+                      <div className="text-[13px] font-extrabold text-gray-800">Workday Operations Closed</div>
+                      <div className="text-[12px] text-gray-500 mt-0.5">🏁 Ended at: {activeRecord.endLocation?.name || 'GPS Coordinates Verified'}</div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ position: 'relative', marginBottom: '8px' }}>
-                    <div style={{ position: 'absolute', left: '-31px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: '#10B981', border: '2px solid #fff', animation: 'ping 1.5s infinite' }} />
-                    <div style={{ position: 'absolute', left: '-31px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: '#10B981', border: '2px solid #fff' }} />
+                  <div className="relative mb-2">
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-ping" />
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
                     
-                    <div style={{ background: '#ECFDF5', borderRadius: '12px', border: '1.5px dashed #A7F3D0', padding: '12px 16px', color: '#065F46' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 800 }}>🟢 WORKDAY ACTIVE</div>
-                      <div style={{ fontSize: '11.5px', color: '#047857', marginTop: '2px' }}>Representative is currently on field duty. End of day report pending.</div>
+                    <div className="bg-[#ECFDF5] rounded-xl border border-dashed border-[#A7F3D0] p-3 px-4 text-[#065F46]">
+                      <div className="text-[12px] font-bold">🟢 WORKDAY ACTIVE</div>
+                      <div className="text-[11.5px] text-[#047857] mt-0.5">Representative is currently on field duty. End of day report pending.</div>
                     </div>
                   </div>
                 )}
@@ -614,21 +630,6 @@ export default function MRAttendancePage() {
 
       <style>{`
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ping {
-          0% { transform: scale(1); opacity: 1; }
-          70%, 100% { transform: scale(2); opacity: 0; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-        .timeline-container::-webkit-scrollbar {
-          display: none;
-        }
-        .timeline-container {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
       `}</style>
     </div>
   );

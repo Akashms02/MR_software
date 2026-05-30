@@ -277,46 +277,46 @@ export default function AdminFieldTracking() {
   const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId) || { fullName: 'Representative' };
 
   return (
-    <div style={{ animation: 'fadeIn 0.35s ease-out', fontFamily: "'Inter', sans-serif" }}>
+    <div className="animate-[fadeIn_0.35s_ease-out] font-sans">
       
       {/* Page Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
             ADMIN PORTAL / TEAM OPERATIONS
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', margin: '4px 0 0 0' }}>Field Representative Tracking</h2>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '3px 0 0 0' }}>Monitor Medical Representatives working hours, live routes, GPS locations, and call report submissions.</p>
+          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Field Representative Tracking</h2>
+          <p className="text-[13px] text-[#6B7280] mt-0.75 mb-0">Monitor Medical Representatives working hours, live routes, GPS locations, and call report submissions.</p>
         </div>
       </div>
 
       {/* Overview Cards Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+      <div className="grid grid-cols-4 gap-4 mb-6">
         
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Active Field Reps Today</div>
-          <div style={{ fontSize: '26px', fontWeight: 800, color: '#059669', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {overview.activeField} <span style={{ fontSize: '12px', background: '#ECFDF5', color: '#059669', padding: '3px 8px', borderRadius: '8px' }}>🟢 Live</span>
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Active Field Reps Today</div>
+          <div className="text-[26px] font-extrabold text-[#059669] mt-1.5 flex items-center gap-1.5">
+            {overview.activeField} <span className="text-xs bg-[#ECFDF5] text-[#059669] px-2 py-0.75 rounded-lg">🟢 Live</span>
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Workday Completed Today</div>
-          <div style={{ fontSize: '26px', fontWeight: 800, color: '#1E3A8A', marginTop: '6px' }}>
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Workday Completed Today</div>
+          <div className="text-[26px] font-extrabold text-[#1E3A8A] mt-1.5">
             {overview.completedField} Reps
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Total Visited Calls Today</div>
-          <div style={{ fontSize: '26px', fontWeight: 800, color: '#F59E0B', marginTop: '6px' }}>
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Total Visited Calls Today</div>
+          <div className="text-[26px] font-extrabold text-[#F59E0B] mt-1.5">
             {overview.totalVisitsToday} Visits
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Database Verified Routes</div>
-          <div style={{ fontSize: '26px', fontWeight: 800, color: '#6366F1', marginTop: '6px' }}>
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Database Verified Routes</div>
+          <div className="text-[26px] font-extrabold text-[#6366F1] mt-1.5">
             {db.length} Logs
           </div>
         </div>
@@ -324,30 +324,27 @@ export default function AdminFieldTracking() {
       </div>
 
       {/* main grid: filters + timeline on left, interactive map on right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="grid grid-cols-[1.1fr_1fr] gap-6 items-start">
         
         {/* LEFT COLUMN: Controls, Details & Chronicle */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-5">
           
           {/* Query Filters */}
-          <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#111827', margin: '0 0 16px 0' }}>Filter Field Pathways</h3>
+          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+            <h3 className="text-[15px] font-extrabold text-[#111827] mt-0 mb-4">Filter Field Pathways</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>FIELD REPRESENTATIVE</label>
+                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">FIELD REPRESENTATIVE</label>
                 {teamLoading ? (
-                  <div style={{ fontSize: '13px', color: '#6B7280' }}>Loading team...</div>
+                  <div className="text-[13px] text-[#6B7280]">Loading team...</div>
                 ) : mrList.length === 0 ? (
-                  <div style={{ fontSize: '12px', color: '#EF4444' }}>No MR profiles in database.</div>
+                  <div className="text-xs text-[#EF4444]">No MR profiles in database.</div>
                 ) : (
                   <select 
                     value={selectedMrId}
                     onChange={(e) => setSelectedMrId(e.target.value)}
-                    style={{
-                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E5E7EB',
-                      fontSize: '13px', background: '#fff', fontWeight: 700, color: '#111827'
-                    }}
+                    className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13px] bg-white font-bold text-[#111827]"
                   >
                     {mrList.map(mr => (
                       <option key={mr.id} value={String(mr.id)}>
@@ -359,140 +356,133 @@ export default function AdminFieldTracking() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>CHOOSE DATE</label>
+                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">CHOOSE DATE</label>
                 <input 
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  style={{
-                    width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid #E5E7EB',
-                    fontSize: '12.5px', fontWeight: 700, color: '#111827', outline: 'none'
-                  }}
+                  className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-bold text-[#111827] outline-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Selected Workday Metrics */}
-          <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F3F4F6', paddingBottom: '14px', marginBottom: '14px' }}>
+          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+            <div className="flex justify-between items-center border-b border-[#F3F4F6] pb-3.5 mb-3.5">
               <div>
-                <h3 style={{ fontSize: '15.5px', fontWeight: 800, color: '#111827', margin: 0 }}>{selectedMrProfile.fullName}'s Pathway Summary</h3>
-                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Date logged: {selectedDate}</span>
+                <h3 className="text-[15.5px] font-extrabold text-[#111827] m-0">{selectedMrProfile.fullName}'s Pathway Summary</h3>
+                <span className="text-[11px] text-[#9CA3AF]">Date logged: {selectedDate}</span>
               </div>
-              <span style={{
-                fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '12px',
-                background: currentStats.status === 'OFFLINE' ? '#F3F4F6' : currentStats.status === 'ENDED' ? '#EFF6FF' : '#ECFDF5',
-                color: currentStats.status === 'OFFLINE' ? '#4B5563' : currentStats.status === 'ENDED' ? '#2563EB' : '#059669'
-              }}>
+              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-xl ${currentStats.status === 'OFFLINE' ? 'bg-[#F3F4F6] text-[#4B5563]' : currentStats.status === 'ENDED' ? 'bg-[#EFF6FF] text-[#2563EB]' : 'bg-[#ECFDF5] text-[#059669]'}`}>
                 {currentStats.status}
               </span>
             </div>
 
             {currentStats.status === 'OFFLINE' ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF' }}>
-                <ShieldAlert size={36} style={{ margin: '0 auto 12px auto' }} />
-                <p style={{ margin: 0, fontSize: '13.5px' }}>No field log recorded for this representative on the selected date.</p>
+              <div className="text-center py-5 text-[#9CA3AF]">
+                <ShieldAlert size={36} className="mx-auto mb-3" />
+                <p className="m-0 text-[13.5px]">No field log recorded for this representative on the selected date.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="flex flex-col gap-4">
                 
                 {/* Stats grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                  <div style={{ background: '#FAFAFA', padding: '12px', borderRadius: '12px', border: '1px solid #EEEEEE' }}>
-                    <div style={{ fontSize: '10.5px', color: '#9CA3AF', fontWeight: 700 }}>Total Duration</div>
-                    <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>{currentStats.duration}</div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
+                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Total Duration</div>
+                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.duration}</div>
                   </div>
-                  <div style={{ background: '#FAFAFA', padding: '12px', borderRadius: '12px', border: '1px solid #EEEEEE' }}>
-                    <div style={{ fontSize: '10.5px', color: '#9CA3AF', fontWeight: 700 }}>Total Doctor Visits</div>
-                    <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>{currentStats.visits} Calls</div>
+                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
+                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Total Doctor Visits</div>
+                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.visits} Calls</div>
                   </div>
-                  <div style={{ background: '#FAFAFA', padding: '12px', borderRadius: '12px', border: '1px solid #EEEEEE' }}>
-                    <div style={{ fontSize: '10.5px', color: '#9CA3AF', fontWeight: 700 }}>Estimated Travel</div>
-                    <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>{currentStats.distance}</div>
+                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
+                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Estimated Travel</div>
+                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.distance}</div>
                   </div>
                 </div>
 
                 {/* Clock timings */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-                  <div style={{ padding: '12px', background: '#FAFAFA', borderRadius: '12px', border: '1px solid #EEEEEE', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-[#FAFAFA] rounded-xl border border-[#EEEEEE] flex items-center gap-2.5">
                     <Clock size={16} color="#3B82F6" />
                     <div>
-                      <div style={{ color: '#9CA3AF', fontWeight: 600 }}>Start Day Time</div>
-                      <div style={{ color: '#374151', fontWeight: 800, marginTop: '2px' }}>{currentStats.start}</div>
+                      <div className="text-[#9CA3AF] font-semibold">Start Day Time</div>
+                      <div className="text-[#374151] font-extrabold mt-0.5">{currentStats.start}</div>
                     </div>
                   </div>
-                  <div style={{ padding: '12px', background: '#FAFAFA', borderRadius: '12px', border: '1px solid #EEEEEE', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="p-3 bg-[#FAFAFA] rounded-xl border border-[#EEEEEE] flex items-center gap-2.5">
                     <Clock size={16} color="#10B981" />
                     <div>
-                      <div style={{ color: '#9CA3AF', fontWeight: 600 }}>End Day Time</div>
-                      <div style={{ color: '#374151', fontWeight: 800, marginTop: '2px' }}>{currentStats.end}</div>
+                      <div className="text-[#9CA3AF] font-semibold">End Day Time</div>
+                      <div className="text-[#374151] font-extrabold mt-0.5">{currentStats.end}</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Selfie snapshot verification */}
                 {currentStats.record?.startSelfie && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: '#FAFAFA', borderRadius: '14px', border: '1px solid #EEEEEE' }}>
+                  <div className="flex items-center gap-3 p-3.5 bg-[#FAFAFA] rounded-[14px] border border-[#EEEEEE]">
                     <img 
                       src={currentStats.record.startSelfie} 
                       alt="Workday Start Selfie" 
-                      style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #E5E7EB' }} 
+                      className="w-14 h-14 rounded-lg object-cover border border-[#E5E7EB]" 
                     />
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937' }}>Workday Selfie Captured</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>GPS Location: {currentStats.record.startLocation?.name || 'MG Road'}</div>
-                      <div style={{ fontSize: '10px', background: '#E0F2FE', color: '#0369A1', display: 'inline-block', padding: '2px 6px', borderRadius: '4px', marginTop: '4px', fontWeight: 700 }}>IDENTITY CONFIRMED</div>
+                      <div className="text-[13px] font-extrabold text-[#1F2937]">Workday Selfie Captured</div>
+                      <div className="text-[11px] text-[#6B7280] mt-0.5">GPS Location: {currentStats.record.startLocation?.name || 'MG Road'}</div>
+                      <div className="text-[10px] bg-[#E0F2FE] text-[#0369A1] inline-block px-1.5 py-0.5 rounded mt-1 font-bold">IDENTITY CONFIRMED</div>
                     </div>
                   </div>
                 )}
 
                 {/* Timeline activity log list */}
                 <div>
-                  <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: '14px' }}>Workday Activity Timeline</div>
+                  <div className="text-[12.5px] font-extrabold text-[#9CA3AF] uppercase mb-3.5">Workday Activity Timeline</div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '2px solid #E5E7EB', paddingLeft: '16px', marginLeft: '8px' }}>
+                  <div className="flex flex-col gap-3.5 border-l-2 border-[#E5E7EB] pl-4 ml-2">
                     
                     {/* START TICK */}
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '-22px', top: '2px', width: '10px', height: '10px', borderRadius: '50%', background: '#3B82F6', border: '2px solid #fff', boxShadow: '0 0 0 2px #3B82F6' }} />
-                      <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>{currentStats.start}</div>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937', marginTop: '2px' }}>Workday Started</div>
-                      <div style={{ fontSize: '12px', color: '#6B7280' }}>Location: {currentStats.record.startLocation?.name || 'Coordinates locked'}</div>
+                    <div className="relative">
+                      <span className="absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full bg-[#3B82F6] border-2 border-white shadow-[0_0_0_2px_#3B82F6]" />
+                      <div className="text-[11px] text-[#9CA3AF] font-bold">{currentStats.start}</div>
+                      <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">Workday Started</div>
+                      <div className="text-xs text-[#6B7280]">Location: {currentStats.record.startLocation?.name || 'Coordinates locked'}</div>
                     </div>
 
                     {/* VISITS TIMELINE */}
                     {currentStats.record.visits?.map((v, index) => (
-                      <div key={index} style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '-22px', top: '2px', width: '10px', height: '10px', borderRadius: '50%', background: v.status === 'COMPLETED' ? '#10B981' : '#EF4444', border: '2px solid #fff', boxShadow: `0 0 0 2px ${v.status === 'COMPLETED' ? '#10B981' : '#EF4444'}` }} />
-                        <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>{v.checkInTime} {v.checkOutTime ? `- ${v.checkOutTime}` : ''}</div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937', marginTop: '2px' }}>{v.type} Visit: {v.name}</div>
-                        <div style={{ fontSize: '12px', color: '#6B7280' }}>Clinic: {v.clinic}</div>
+                      <div key={index} className="relative">
+                        <span className={`absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${v.status === 'COMPLETED' ? 'bg-[#10B981] shadow-[0_0_0_2px_#10B981]' : 'bg-[#EF4444] shadow-[0_0_0_2px_#EF4444]'}`} />
+                        <div className="text-[11px] text-[#9CA3AF] font-bold">{v.checkInTime} {v.checkOutTime ? `- ${v.checkOutTime}` : ''}</div>
+                        <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">{v.type} Visit: {v.name}</div>
+                        <div className="text-xs text-[#6B7280]">Clinic: {v.clinic}</div>
                         
                         {v.status === 'COMPLETED' ? (
-                          <div style={{ background: '#FAFAFA', padding: '10px 14px', borderRadius: '8px', border: '1px solid #EEEEEE', fontSize: '12px', color: '#4B5563', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div className="bg-[#FAFAFA] px-3.5 py-2.5 rounded-lg border border-[#EEEEEE] text-xs text-[#4B5563] mt-1.5 flex flex-col gap-1">
                             <div>💊 <strong>Promoted Brands:</strong> {v.products}</div>
                             <div>🧪 <strong>Samples Distributed:</strong> {v.samples || 'None'}</div>
                             <div>📝 <strong>Feedback Summary:</strong> "{v.feedback}"</div>
                             {v.selfie && (
-                              <div style={{ marginTop: '6px' }}>
-                                <img src={v.selfie} alt="Visit Photo" style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} />
+                              <div className="mt-1.5">
+                                <img src={v.selfie} alt="Visit Photo" className="w-12 h-12 rounded-md object-cover border border-[#E5E7EB]" />
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div style={{ fontSize: '12px', color: '#EF4444', fontWeight: 700, marginTop: '4px' }}>🟢 Currently on-site meeting doctor</div>
+                          <div className="text-xs text-[#EF4444] font-bold mt-1">🟢 Currently on-site meeting doctor</div>
                         )}
                       </div>
                     ))}
 
                     {/* END TICK */}
                     {currentStats.status === 'ENDED' && (
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '-22px', top: '2px', width: '10px', height: '10px', borderRadius: '50%', background: '#3B82F6', border: '2px solid #fff', boxShadow: '0 0 0 2px #3B82F6' }} />
-                        <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>{currentStats.end}</div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937', marginTop: '2px' }}>Workday Completed</div>
-                        <div style={{ fontSize: '12px', color: '#6B7280' }}>Location: {currentStats.record.endLocation?.name || 'Lock final exit location'}</div>
+                      <div className="relative">
+                        <span className="absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full bg-[#3B82F6] border-2 border-white shadow-[0_0_0_2px_#3B82F6]" />
+                        <div className="text-[11px] text-[#9CA3AF] font-bold">{currentStats.end}</div>
+                        <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">Workday Completed</div>
+                        <div className="text-xs text-[#6B7280]">Location: {currentStats.record.endLocation?.name || 'Lock final exit location'}</div>
                       </div>
                     )}
 
@@ -505,18 +495,18 @@ export default function AdminFieldTracking() {
         </div>
 
         {/* RIGHT COLUMN: Map Visualizer */}
-        <div style={{ position: 'sticky', top: '24px' }}>
-          <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <div className="sticky top-6">
+          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             
             {/* Map title block */}
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="px-5 py-4 border-b border-[#F3F4F6] flex justify-between items-center">
               <div>
-                <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#111827', margin: 0 }}>Representative Route Visualizer</h3>
-                <span style={{ fontSize: '11.5px', color: '#9CA3AF' }}>Active location pathways</span>
+                <h3 className="text-[14.5px] font-extrabold text-[#111827] m-0">Representative Route Visualizer</h3>
+                <span className="text-[11.5px] text-[#9CA3AF]">Active location pathways</span>
               </div>
               {currentStats.status === 'ACTIVE' && (
-                <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#059669', background: '#ECFDF5', padding: '3px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'ping 1.2s infinite' }} />
+                <span className="text-[11.5px] font-bold text-[#059669] bg-[#ECFDF5] px-2 py-0.75 rounded-md inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block animate-ping" />
                   LIVE STREAMING
                 </span>
               )}
@@ -525,21 +515,21 @@ export default function AdminFieldTracking() {
             {/* Map Canvas */}
             <div 
               ref={mapContainerRef} 
-              style={{ width: '100%', height: '520px', background: '#FAFAFA', zIndex: 10 }}
+              className="w-full h-[520px] bg-[#FAFAFA] z-10"
             />
 
             {/* Map Legend */}
-            <div style={{ padding: '16px 20px', borderTop: '1px solid #F3F4F6', background: '#FAFAFA', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11.5px', fontWeight: 700, color: '#4B5563' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3B82F6', display: 'inline-block' }} />
+            <div className="px-5 py-4 border-t border-[#F3F4F6] bg-[#FAFAFA] flex gap-4 flex-wrap text-[11.5px] font-bold text-[#4B5563]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#3B82F6]" />
                 <span>Start / End Pins</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#10B981]" />
                 <span>Visited Clinics</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#EF4444]" />
                 <span>Active Visits</span>
               </div>
             </div>

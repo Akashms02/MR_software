@@ -32,53 +32,42 @@ export default function Header({ role }) {
   const showApplyLeave = activePage === 'me'
 
   return (
-    <header style={{
-      height: '72px', background: 'transparent',
-      display: 'flex', alignItems: 'center',
-      padding: '0 32px', gap: '16px',
-      flexShrink: 0
-    }}>
+    <header className="h-[72px] bg-transparent flex items-center px-8 gap-4 shrink-0">
       {/* Page Title */}
-      <div style={{ flexShrink: 0 }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#111827', letterSpacing: '-0.3px', lineHeight: 1.2, margin: 0 }}>
+      <div className="shrink-0">
+        <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight m-0">
           {getPageTitle(activePage, role)}
         </h1>
-        <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>
+        <p className="text-xs text-gray-400 mt-0.5">
           {getPageSub(activePage)}
         </p>
       </div>
 
       {/* Apply Leave button (only on Me page) */}
       {showApplyLeave && (
-        <button className="btn-lime" style={{ marginLeft: '16px', flexShrink: 0, borderRadius: '10px', padding: '9px 18px', fontSize: '13px' }}>
+        <button className="inline-flex items-center gap-1.5 py-[9px] px-[18px] bg-[#C8F04A] text-[#1A1A1A] font-bold text-[13px] rounded-[10px] border-none cursor-pointer transition-all duration-[180ms] hover:bg-[#B8E040] hover:-translate-y-0.5 font-sans ml-4 shrink-0">
           Apply Leave
         </button>
       )}
 
       {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      <div className="flex-1" />
 
       {/* Search Bar */}
-      <div style={{ position: 'relative', width: '240px', flexShrink: 0 }}>
+      <div className="relative w-60 shrink-0">
         <Search
           size={15}
           color="#9CA3AF"
-          style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
         />
         <input
           placeholder="Search employees or actions..."
-          className="search-pill"
-          style={{ width: '240px' }}
+          className="w-full bg-[#F3F4F6] border border-[#E5E7EB] rounded-[10px] py-[9px] pl-[38px] pr-[14px] text-[13px] text-gray-500 outline-none transition-all duration-[180ms] focus:bg-white focus:border-[#C8F04A] font-sans"
         />
       </div>
 
       {/* Bell Icon */}
-      <button style={{
-        width: '38px', height: '38px', borderRadius: '10px',
-        background: '#FFFFFF', border: '1px solid #E5E7EB',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', flexShrink: 0
-      }}>
+      <button className="w-[38px] h-[38px] rounded-[10px] bg-white border border-gray-200 flex items-center justify-center cursor-pointer shrink-0">
         <Bell size={18} color="#9CA3AF" />
       </button>
     </header>

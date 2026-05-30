@@ -612,216 +612,77 @@ const DoctorOnboarding = () => {
     }
   };
 
-  const containerStyle = {
-    maxWidth: '850px',
-    margin: '0 auto',
-    paddingBottom: '40px'
-  };
-
-  const cardStyle = {
-    background: '#ffffff',
-    borderRadius: '20px',
-    border: '1.5px solid #F3F4F6',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.02)',
-    padding: '36px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '28px'
-  };
-
-  const sectionHeadingStyle = {
-    fontSize: '15px',
-    fontWeight: 800,
-    color: '#111827',
-    borderBottom: '1px solid #F3F4F6',
-    paddingBottom: '8px',
-    marginBottom: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  };
-
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '18px'
-  };
-
-  const gridThreeStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gap: '18px'
-  };
-
-  const inputGroupStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  };
-
-  const labelStyle = {
-    fontSize: '12px',
-    fontWeight: 700,
-    color: '#4B5563',
-  };
-
-  const inputWrapperStyle = {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 14px 10px 38px',
-    borderRadius: '10px',
-    border: '1.5px solid #E5E7EB',
-    fontSize: '13.5px',
-    color: '#1F2937',
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: '#FAFAFA',
-    transition: 'all 0.2s',
-  };
-
-  const selectStyle = {
-    width: '100%',
-    padding: '10px 14px',
-    borderRadius: '10px',
-    border: '1.5px solid #E5E7EB',
-    fontSize: '13.5px',
-    color: '#1F2937',
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: '#FAFAFA',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  };
-
-  const textareaStyle = {
-    width: '100%',
-    padding: '10px 14px',
-    borderRadius: '10px',
-    border: '1.5px solid #E5E7EB',
-    fontSize: '13.5px',
-    color: '#1F2937',
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: '#FAFAFA',
-    minHeight: '80px',
-    fontFamily: 'inherit',
-    resize: 'vertical',
-    transition: 'all 0.2s',
-  };
-
-  const mapContainerStyle = {
-    height: '280px',
-    width: '100%',
-    borderRadius: '10px',
-    border: '1.5px solid #E5E7EB',
-    boxSizing: 'border-box',
-    marginTop: '10px',
-    overflow: 'hidden',
-    position: 'relative'
-  };
-
-  const mapButtonRowStyle = {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-    marginTop: '6px'
-  };
-
-  const iconStyle = {
-    position: 'absolute',
-    left: '12px',
-    color: '#9CA3AF',
-  };
-
   return (
-    <div style={containerStyle} className="fade-slide-in">
+    <div className="max-w-[850px] mx-auto pb-10 fade-slide-in">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px' }}>
+      <div className="flex items-center gap-3.5 mb-6">
         <button
           onClick={handleCancel}
-          style={{
-            background: '#fff',
-            border: '1px solid #E5E7EB',
-            borderRadius: '12px',
-            padding: '10px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#374151',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#F9FAFB')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
+          className="bg-white border border-[#E5E7EB] rounded-xl p-2.5 cursor-pointer flex items-center justify-center text-[#374151] transition-colors duration-200 hover:bg-[#F9FAFB]"
         >
           <ArrowLeft size={16} />
         </button>
         <div>
-          <span style={{ fontSize: '11px', color: '#7C3AED', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span className="text-[11px] text-[#7C3AED] font-extrabold uppercase tracking-[1px]">
             REGISTRATION PORTAL
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', margin: '4px 0 0 0' }}>
+          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">
             Onboard New {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}
           </h2>
         </div>
       </div>
 
       {/* Main Card Form */}
-      <div style={cardStyle}>
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_10px_25px_rgba(0,0,0,0.02)] p-9 flex flex-col gap-7">
         <div>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: 0 }}>
+          <h3 className="text-[18px] font-extrabold text-[#111827] margin: 0">
             {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Profile & Interactive Geolocation
           </h3>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
+          <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
             Fill in the information below. Drag map pin to center coordinates, search by address, or capture live device GPS.
           </p>
         </div>
 
         {/* Notifications */}
         {localSuccess && (
-          <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#047857', fontSize: '13.5px', fontWeight: 600 }}>
+          <div className="bg-[#ECFDF5] border border-[#A7F3D0] p-3.5 rounded-xl flex items-center gap-2 text-[#047857] text-[13.5px] font-semibold">
             <CheckCircle2 size={16} />
             {localSuccess}
           </div>
         )}
         {localError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#B91C1C', fontSize: '13.5px', fontWeight: 600 }}>
+          <div className="bg-[#FEF2F2] border border-[#FECACA] p-3.5 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13.5px] font-semibold">
             <AlertCircle size={16} />
             {localError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-7">
           {/* Section 1: Account Info */}
           <div>
-            <div style={sectionHeadingStyle}>
+            <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <Users size={16} color="#7C3AED" />
               Account & Contacts
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
-              <div style={gridThreeStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Onboarding Role <span style={{ color: '#EF4444' }}>*</span></label>
+            <div className="flex flex-col gap-4 mt-3">
+              <div className="grid grid-cols-3 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Onboarding Role <span className="text-[#EF4444]">*</span></label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     disabled={isSubmitting}
-                    style={selectStyle}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   >
                     <option value="DOCTOR">Doctor</option>
                     <option value="PHARMACIST">Pharmacist</option>
                   </select>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>{role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Full Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <div style={inputWrapperStyle}>
-                    <User size={15} style={iconStyle} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Full Name <span className="text-[#EF4444]">*</span></label>
+                  <div className="relative flex items-center">
+                    <User size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="text"
                       placeholder={role === 'DOCTOR' ? 'Dr. Sarah Connor' : 'Jane Doe'}
@@ -829,15 +690,15 @@ const DoctorOnboarding = () => {
                       onChange={(e) => { setFullName(e.target.value); setLocalError(null); }}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Email Address <span style={{ color: '#EF4444' }}>*</span></label>
-                  <div style={inputWrapperStyle}>
-                    <Mail size={15} style={iconStyle} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Email Address <span className="text-[#EF4444]">*</span></label>
+                  <div className="relative flex items-center">
+                    <Mail size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="email"
                       placeholder="dr.sarah@example.com"
@@ -845,17 +706,17 @@ const DoctorOnboarding = () => {
                       onChange={(e) => { setEmail(e.target.value); setLocalError(null); }}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
               </div>
 
-              <div style={gridStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Contact Number <span style={{ color: '#EF4444' }}>*</span></label>
-                  <div style={inputWrapperStyle}>
-                    <Phone size={15} style={iconStyle} />
+              <div className="grid grid-cols-2 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Contact Number <span className="text-[#EF4444]">*</span></label>
+                  <div className="relative flex items-center">
+                    <Phone size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="tel"
                       placeholder="e.g. 9876543000"
@@ -863,7 +724,7 @@ const DoctorOnboarding = () => {
                       onChange={(e) => { setPhone(e.target.value); setLocalError(null); }}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
@@ -873,13 +734,13 @@ const DoctorOnboarding = () => {
 
           {/* Section 2: Clinic Location & Address */}
           <div>
-            <div style={sectionHeadingStyle}>
+            <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <MapPin size={16} color="#7C3AED" />
               Location 1: Clinic / Hospital Details
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
-              <div style={inputGroupStyle}>
-                <label style={labelStyle}>Clinic Address <span style={{ color: '#EF4444' }}>*</span></label>
+            <div className="flex flex-col gap-4 mt-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#4B5563]">Clinic Address <span className="text-[#EF4444]">*</span></label>
                 <textarea
                   placeholder="Type clinic/hospital address... (Geocodes coordinates on blur)"
                   value={personalCurrentAddress}
@@ -887,25 +748,16 @@ const DoctorOnboarding = () => {
                   onBlur={() => handleGeocodeClinicAddress(personalCurrentAddress)}
                   required
                   disabled={isSubmitting}
-                  style={textareaStyle}
+                  className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] min-h-[80px] font-sans resize-y transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                 />
                 
                 {/* Actions row for Clinic Map */}
-                <div style={mapButtonRowStyle}>
+                <div className="flex gap-2 items-center mt-1.5">
                   <button
                     type="button"
                     onClick={handleClinicGPSDetect}
                     disabled={isWatchingClinic || isSubmitting}
-                    style={{
-                      background: isWatchingClinic ? '#E5E7EB' : '#10B981',
-                      color: isWatchingClinic ? '#9CA3AF' : 'white',
-                      border: 'none',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      fontSize: '11.5px',
-                      fontWeight: 700,
-                      cursor: isWatchingClinic ? 'not-allowed' : 'pointer',
-                    }}
+                    className={`border-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold transition-colors duration-150 ${isWatchingClinic ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed' : 'bg-[#10B981] text-white cursor-pointer hover:bg-[#0e9f6e]'}`}
                   >
                     {isWatchingClinic ? '🛰️ Live GPS running...' : '🛰️ Use Live GPS'}
                   </button>
@@ -913,16 +765,7 @@ const DoctorOnboarding = () => {
                     <button
                       type="button"
                       onClick={stopClinicWatch}
-                      style={{
-                        background: '#EF4444',
-                        color: 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
+                      className="bg-[#EF4444] text-white border-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold cursor-pointer hover:bg-[#dc2626]"
                     >
                       🛑 Stop
                     </button>
@@ -930,16 +773,7 @@ const DoctorOnboarding = () => {
                   <button
                     type="button"
                     onClick={() => setIsClinicMapOpen(!isClinicMapOpen)}
-                    style={{
-                      background: '#fff',
-                      color: '#4B5563',
-                      border: '1.5px solid #E5E7EB',
-                      padding: '5px 12px',
-                      borderRadius: '8px',
-                      fontSize: '11.5px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
+                    className="bg-white text-[#4B5563] border border-[#E5E7EB] px-3 py-1.25 rounded-lg text-[11.5px] font-bold cursor-pointer hover:bg-gray-50"
                   >
                     {isClinicMapOpen ? '🗺️ Hide Map' : '🗺️ Pin on Map'}
                   </button>
@@ -947,76 +781,66 @@ const DoctorOnboarding = () => {
 
                 {/* Inline Clinic Leaflet Map */}
                 {isClinicMapOpen && (
-                  <div style={mapContainerStyle}>
-                    <div style={{ width: '100%', height: '100%' }} ref={clinicMapContainerRef}></div>
+                  <div className="h-[280px] w-full rounded-lg border-[1.5px] border-[#E5E7EB] box-border mt-2.5 overflow-hidden relative">
+                    <div className="w-full h-full" ref={clinicMapContainerRef}></div>
 
                     {/* Central floating pin overlay */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -100%)',
-                      zIndex: 1000,
-                      pointerEvents: 'none',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center'
-                    }}>
-                      <div style={{ width: '32px', height: '36px' }}>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-[1000] pointer-events-none flex flex-col items-center">
+                      <div className="w-8 h-9">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M12 21C16 16.8 19 12.8 19 9C19 5.13401 15.866 2 12 2C8.13401 2 5 5.13401 5 9C5 12.8 8 16.8 12 21Z" fill="#7C3AED" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                           <circle cx="12" cy="9" r="2.5" fill="#ffffff" />
                         </svg>
                       </div>
-                      <div style={{ width: '10px', height: '3px', background: 'rgba(0,0,0,0.2)', filter: 'blur(1.5px)', borderRadius: '50%', marginTop: '1px', transform: 'translateY(-4px)' }}></div>
+                      <div className="w-2.5 h-[3px] bg-black/20 blur-[1.5px] rounded-full mt-0.25 -translate-y-1"></div>
                     </div>
                   </div>
                 )}
 
                 {clinicGeoError && (
-                  <span style={{ fontSize: '11.5px', color: '#EF4444', fontWeight: 600, marginTop: '4px' }}>
+                  <span className="text-[11.5px] color-[#EF4444] font-semibold mt-1">
                     ⚠️ {clinicGeoError}
                   </span>
                 )}
 
                 {clinicGeocodeStatus && (
-                  <span style={{ fontSize: '11.5px', color: '#7C3AED', fontWeight: 600, marginTop: '4px' }}>
+                  <span className="text-[11.5px] text-[#7C3AED] font-semibold mt-1">
                     {clinicGeocodeStatus}
                   </span>
                 )}
               </div>
 
-              <div style={gridStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>City</label>
+              <div className="grid grid-cols-2 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">City</label>
                   <input
                     type="text"
                     placeholder="City (auto-filled)"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Pincode</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Pincode</label>
                   <input
                     type="text"
                     placeholder="Pincode (auto-filled)"
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value)}
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div style={gridStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Clinic Latitude</label>
-                  <div style={inputWrapperStyle}>
-                    <MapPin size={15} style={iconStyle} />
+              <div className="grid grid-cols-2 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Clinic Latitude</label>
+                  <div className="relative flex items-center">
+                    <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="text"
                       value={latitude}
@@ -1029,15 +853,15 @@ const DoctorOnboarding = () => {
                       }}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Clinic Longitude</label>
-                  <div style={inputWrapperStyle}>
-                    <MapPin size={15} style={iconStyle} />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Clinic Longitude</label>
+                  <div className="relative flex items-center">
+                    <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="text"
                       value={longitude}
@@ -1050,22 +874,22 @@ const DoctorOnboarding = () => {
                       }}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0' }}>
+              <div className="flex items-center gap-2 my-1">
                 <input
                   type="checkbox"
                   id="sameAsCurrentAddress"
                   checked={personalSameAsCurrentAddress}
                   onChange={(e) => setPersonalSameAsCurrentAddress(e.target.checked)}
                   disabled={isSubmitting}
-                  style={{ cursor: 'pointer' }}
+                  className="cursor-pointer"
                 />
-                <label htmlFor="sameAsCurrentAddress" style={{ fontSize: '13px', fontWeight: 600, color: '#4B5563', cursor: 'pointer' }}>
+                <label htmlFor="sameAsCurrentAddress" className="text-xs font-bold text-[#4B5563] cursor-pointer">
                   Doctor Home Address is same as Clinic Address
                 </label>
               </div>
@@ -1075,13 +899,13 @@ const DoctorOnboarding = () => {
           {/* Section 3: Doctor Home Location & Address */}
           {!personalSameAsCurrentAddress && (
             <div>
-              <div style={sectionHeadingStyle}>
+              <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <Heart size={16} color="#7C3AED" />
                 Location 2: Doctor Home Details
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Doctor Home Address <span style={{ color: '#EF4444' }}>*</span></label>
+              <div className="flex flex-col gap-4 mt-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Doctor Home Address <span className="text-[#EF4444]">*</span></label>
                   <textarea
                     placeholder="Type doctor's permanent home address... (Geocodes coordinates on blur)"
                     value={personalPermanentAddress}
@@ -1092,25 +916,16 @@ const DoctorOnboarding = () => {
                     onBlur={() => handleGeocodeHomeAddress(personalPermanentAddress)}
                     required
                     disabled={isSubmitting}
-                    style={textareaStyle}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] min-h-[80px] font-sans resize-y transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
 
                   {/* Actions row for Home Map */}
-                  <div style={mapButtonRowStyle}>
+                  <div className="flex gap-2 items-center mt-1.5">
                     <button
                       type="button"
                       onClick={handleHomeGPSDetect}
                       disabled={isWatchingHome || isSubmitting}
-                      style={{
-                        background: isWatchingHome ? '#E5E7EB' : '#10B981',
-                        color: isWatchingHome ? '#9CA3AF' : 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        cursor: isWatchingHome ? 'not-allowed' : 'pointer',
-                      }}
+                      className={`border-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold transition-colors duration-150 ${isWatchingHome ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed' : 'bg-[#10B981] text-white cursor-pointer hover:bg-[#0e9f6e]'}`}
                     >
                       {isWatchingHome ? '🛰️ Live GPS running...' : '🛰️ Use Live GPS'}
                     </button>
@@ -1118,16 +933,7 @@ const DoctorOnboarding = () => {
                       <button
                         type="button"
                         onClick={stopHomeWatch}
-                        style={{
-                          background: '#EF4444',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '11.5px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
+                        className="bg-[#EF4444] text-white border-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold cursor-pointer hover:bg-[#dc2626]"
                       >
                         🛑 Stop
                       </button>
@@ -1135,16 +941,7 @@ const DoctorOnboarding = () => {
                     <button
                       type="button"
                       onClick={() => setIsHomeMapOpen(!isHomeMapOpen)}
-                      style={{
-                        background: '#fff',
-                        color: '#4B5563',
-                        border: '1.5px solid #E5E7EB',
-                        padding: '5px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
+                      className="bg-white text-[#4B5563] border border-[#E5E7EB] px-3 py-1.25 rounded-lg text-[11.5px] font-bold cursor-pointer hover:bg-gray-50"
                     >
                       {isHomeMapOpen ? '🗺️ Hide Map' : '🗺️ Pin on Map'}
                     </button>
@@ -1152,72 +949,62 @@ const DoctorOnboarding = () => {
 
                   {/* Inline Home Leaflet Map */}
                   {isHomeMapOpen && (
-                    <div style={mapContainerStyle}>
-                      <div style={{ width: '100%', height: '100%' }} ref={homeMapContainerRef}></div>
+                    <div className="h-[280px] w-full rounded-lg border-[1.5px] border-[#E5E7EB] box-border mt-2.5 overflow-hidden relative">
+                      <div className="w-full h-full" ref={homeMapContainerRef}></div>
 
                       {/* Central floating pin overlay */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -100%)',
-                        zIndex: 1000,
-                        pointerEvents: 'none',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                      }}>
-                        <div style={{ width: '32px', height: '36px' }}>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-[1000] pointer-events-none flex flex-col items-center">
+                        <div className="w-8 h-9">
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 21C16 16.8 19 12.8 19 9C19 5.13401 15.866 2 12 2C8.13401 2 5 5.13401 5 9C5 12.8 8 16.8 12 21Z" fill="#7C3AED" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             <circle cx="12" cy="9" r="2.5" fill="#ffffff" />
                           </svg>
                         </div>
-                        <div style={{ width: '10px', height: '3px', background: 'rgba(0,0,0,0.2)', filter: 'blur(1.5px)', borderRadius: '50%', marginTop: '1px', transform: 'translateY(-4px)' }}></div>
+                        <div className="w-2.5 h-[3px] bg-black/20 blur-[1.5px] rounded-full mt-0.25 -translate-y-1"></div>
                       </div>
                     </div>
                   )}
 
                   {homeGeoError && (
-                    <span style={{ fontSize: '11.5px', color: '#EF4444', fontWeight: 600, marginTop: '4px' }}>
+                    <span className="text-[11.5px] text-[#EF4444] font-semibold mt-1">
                       ⚠️ {homeGeoError}
                     </span>
                   )}
 
                   {homeGeocodeStatus && (
-                    <span style={{ fontSize: '11.5px', color: '#7C3AED', fontWeight: 600, marginTop: '4px' }}>
+                    <span className="text-[11.5px] text-[#7C3AED] font-semibold mt-1">
                       {homeGeocodeStatus}
                     </span>
                   )}
                 </div>
 
-                <div style={gridStyle}>
-                  <div style={inputGroupStyle}>
-                    <label style={labelStyle}>Home Latitude</label>
-                    <div style={inputWrapperStyle}>
-                      <MapPin size={15} style={iconStyle} />
+                <div className="grid grid-cols-2 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Home Latitude</label>
+                    <div className="relative flex items-center">
+                      <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                       <input
                         type="text"
                         value={personalLatitude}
                         onChange={(e) => setPersonalLatitude(e.target.value)}
                         required
                         disabled={isSubmitting}
-                        style={inputStyle}
+                        className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                       />
                     </div>
                   </div>
 
-                  <div style={inputGroupStyle}>
-                    <label style={labelStyle}>Home Longitude</label>
-                    <div style={inputWrapperStyle}>
-                      <MapPin size={15} style={iconStyle} />
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Home Longitude</label>
+                    <div className="relative flex items-center">
+                      <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                       <input
                         type="text"
                         value={personalLongitude}
                         onChange={(e) => setPersonalLongitude(e.target.value)}
                         required
                         disabled={isSubmitting}
-                        style={inputStyle}
+                        className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                       />
                     </div>
                   </div>
@@ -1228,14 +1015,14 @@ const DoctorOnboarding = () => {
 
           {/* Section 4: Personal Profile Details */}
           <div>
-            <div style={sectionHeadingStyle}>
+            <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <User size={16} color="#7C3AED" />
               Doctor Personal Details
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
-              <div style={gridThreeStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>First Name <span style={{ color: '#EF4444' }}>*</span></label>
+            <div className="flex flex-col gap-4 mt-3">
+              <div className="grid grid-cols-3 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">First Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     type="text"
                     placeholder="Sarah"
@@ -1243,24 +1030,24 @@ const DoctorOnboarding = () => {
                     onChange={(e) => setPersonalFirstName(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Middle Name</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Middle Name</label>
                   <input
                     type="text"
                     placeholder="Middle Name"
                     value={personalMiddleName}
                     onChange={(e) => setPersonalMiddleName(e.target.value)}
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Surname <span style={{ color: '#EF4444' }}>*</span></label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Surname <span className="text-[#EF4444]">*</span></label>
                   <input
                     type="text"
                     placeholder="Connor"
@@ -1268,34 +1055,34 @@ const DoctorOnboarding = () => {
                     onChange={(e) => setPersonalSurname(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div style={gridThreeStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Date of Birth <span style={{ color: '#EF4444' }}>*</span></label>
-                  <div style={inputWrapperStyle}>
-                    <Calendar size={15} style={iconStyle} />
+              <div className="grid grid-cols-3 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Date of Birth <span className="text-[#EF4444]">*</span></label>
+                  <div className="relative flex items-center">
+                    <Calendar size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
                       type="date"
                       value={personalDateOfBirth}
                       onChange={(e) => setPersonalDateOfBirth(e.target.value)}
                       required
                       disabled={isSubmitting}
-                      style={inputStyle}
+                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Gender</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Gender</label>
                   <select
                     value={personalGender}
                     onChange={(e) => setPersonalGender(e.target.value)}
                     disabled={isSubmitting}
-                    style={selectStyle}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   >
                     <option value="Female">Female</option>
                     <option value="Male">Male</option>
@@ -1303,13 +1090,13 @@ const DoctorOnboarding = () => {
                   </select>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Blood Group</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Blood Group</label>
                   <select
                     value={personalBloodGroup}
                     onChange={(e) => setPersonalBloodGroup(e.target.value)}
                     disabled={isSubmitting}
-                    style={selectStyle}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   >
                     <option value="O+">O+</option>
                     <option value="O-">O-</option>
@@ -1323,14 +1110,14 @@ const DoctorOnboarding = () => {
                 </div>
               </div>
 
-              <div style={gridThreeStyle}>
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Marital Status</label>
+              <div className="grid grid-cols-3 gap-4.5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Marital Status</label>
                   <select
                     value={personalMaritalStatus}
                     onChange={(e) => setPersonalMaritalStatus(e.target.value)}
                     disabled={isSubmitting}
-                    style={selectStyle}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   >
                     <option value="Single">Single</option>
                     <option value="Married">Married</option>
@@ -1339,8 +1126,8 @@ const DoctorOnboarding = () => {
                   </select>
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Father's Name <span style={{ color: '#EF4444' }}>*</span></label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Father's Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     type="text"
                     placeholder="John Connor Sr."
@@ -1348,12 +1135,12 @@ const DoctorOnboarding = () => {
                     onChange={(e) => setPersonalFatherName(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
 
-                <div style={inputGroupStyle}>
-                  <label style={labelStyle}>Mother's Name <span style={{ color: '#EF4444' }}>*</span></label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#4B5563]">Mother's Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     type="text"
                     placeholder="Jane Connor"
@@ -1361,7 +1148,7 @@ const DoctorOnboarding = () => {
                     onChange={(e) => setPersonalMotherName(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    style={{ ...inputStyle, paddingLeft: '14px' }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                   />
                 </div>
               </div>
@@ -1369,51 +1156,23 @@ const DoctorOnboarding = () => {
           </div>
 
           {/* Form Actions */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '24px' }}>
+          <div className="flex gap-3 justify-end mt-3 border-t border-[#F3F4F6] pt-6">
             <button
               type="button"
               onClick={handleCancel}
               disabled={isSubmitting}
-              style={{
-                padding: '11px 22px',
-                borderRadius: '12px',
-                border: '1.5px solid #E5E7EB',
-                background: '#fff',
-                color: '#374151',
-                fontWeight: 700,
-                fontSize: '13.5px',
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.background = '#F9FAFB'; }}
-              onMouseLeave={(e) => { if (!isSubmitting) e.currentTarget.style.background = '#fff'; }}
+              className="px-[22px] py-[11px] rounded-xl border-[1.5px] border-[#E5E7EB] bg-white text-[#374151] font-bold text-[13.5px] cursor-pointer transition-colors duration-200 hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '11px 24px',
-                borderRadius: '12px',
-                border: 'none',
-                background: '#7C3AED',
-                color: '#fff',
-                fontWeight: 800,
-                fontSize: '13.5px',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 14px rgba(124, 58, 237, 0.2)',
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.opacity = '0.9'; }}
-              onMouseLeave={(e) => { if (!isSubmitting) e.currentTarget.style.opacity = '1'; }}
+              className="flex items-center gap-2 px-6 py-[11px] rounded-xl border-0 bg-[#7C3AED] text-white font-extrabold text-[13.5px] cursor-pointer shadow-[0_4px_14px_rgba(124,58,237,0.2)] transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={15} style={{ animation: 'spin 0.8s linear infinite' }} /> Onboarding...
+                  <Loader2 size={15} className="animate-spin" /> Onboarding...
                 </>
               ) : (
                 `Onboard ${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}`
@@ -1430,10 +1189,6 @@ const DoctorOnboarding = () => {
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
