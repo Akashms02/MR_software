@@ -18,17 +18,17 @@ import {
 import EditEmployeeModal from './EditEmployeeModal';
 
 const ROLE_COLORS = {
-  MR: { bg: '#ECFDF5', text: '#059669' },
-  HR: { bg: '#EFF6FF', text: '#2563EB' },
-  REGIONAL_MANAGER: { bg: '#FDF4FF', text: '#9333EA' },
-  AREA_MANAGER: { bg: '#FFF7ED', text: '#EA580C' },
-  MEDICAL_MANAGER: { bg: '#F5F3FF', text: '#7C3AED' },
-  DOCTOR: { bg: '#FEF2F2', text: '#DC2626' },
-  PHARMACIST: { bg: '#FEFCE8', text: '#CA8A04' },
-  DISTRIBUTOR: { bg: '#F0FDF4', text: '#16A34A' },
-  PATIENT: { bg: '#F0F9FF', text: '#0284C7' },
-  MEDICAL_EXECUTIVE: { bg: '#EEF2FF', text: '#4F46E5' },
-  MEDICAL_SALES_EXECUTIVE: { bg: '#F0FDFA', text: '#0D9488' },
+  MR: { bgClass: 'bg-[#ECFDF5]', textClass: 'text-[#059669]' },
+  HR: { bgClass: 'bg-[#EFF6FF]', textClass: 'text-[#2563EB]' },
+  REGIONAL_MANAGER: { bgClass: 'bg-[#FDF4FF]', textClass: 'text-[#9333EA]' },
+  AREA_MANAGER: { bgClass: 'bg-[#FFF7ED]', textClass: 'text-[#EA580C]' },
+  MEDICAL_MANAGER: { bgClass: 'bg-[#F5F3FF]', textClass: 'text-[#7C3AED]' },
+  DOCTOR: { bgClass: 'bg-[#FEF2F2]', textClass: 'text-[#DC2626]' },
+  PHARMACIST: { bgClass: 'bg-[#FEFCE8]', textClass: 'text-[#CA8A04]' },
+  DISTRIBUTOR: { bgClass: 'bg-[#F0FDF4]', textClass: 'text-[#16A34A]' },
+  PATIENT: { bgClass: 'bg-[#F0F9FF]', textClass: 'text-[#0284C7]' },
+  MEDICAL_EXECUTIVE: { bgClass: 'bg-[#EEF2FF]', textClass: 'text-[#4F46E5]' },
+  MEDICAL_SALES_EXECUTIVE: { bgClass: 'bg-[#F0FDFA]', textClass: 'text-[#0D9488]' },
 };
 
 const TeamManagement = () => {
@@ -85,122 +85,66 @@ const TeamManagement = () => {
   };
 
   const stats = [
-    { label: 'Total Members', value: team?.length || 0, color: '#6366F1', bg: '#EEF2FF' },
+    { label: 'Total Members', value: team?.length || 0, textClass: 'text-[#6366F1]' },
     {
       label: 'Med. Reps',
       value: team?.filter((m) => m.role === 'MR').length || 0,
-      color: '#10B981',
-      bg: '#ECFDF5',
+      textClass: 'text-[#10B981]',
     },
     {
       label: 'Managers',
       value:
         team?.filter((m) => m.role?.includes('MANAGER')).length || 0,
-      color: '#F59E0B',
-      bg: '#FFFBEB',
+      textClass: 'text-[#F59E0B]',
     },
     {
       label: 'Medical Staff',
       value:
         team?.filter((m) => ['DOCTOR', 'PHARMACIST'].includes(m.role)).length ||
         0,
-      color: '#EF4444',
-      bg: '#FEF2F2',
+      textClass: 'text-[#EF4444]',
     },
   ];
 
   return (
-    <div style={{ animation: 'fadeIn 0.35s ease-out' }}>
+    <div className="animate-[fadeIn_0.35s_ease-out]">
       {/* ── Action Bar ────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         {/* Resume search */}
         <form
           onSubmit={handleResumeSubmit}
-          style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+          className="flex gap-2 items-center"
         >
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <RefreshCw
               size={15}
-              color="#9CA3AF"
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
               value={resumeId}
               onChange={(e) => setResumeId(e.target.value)}
               placeholder="Enter Employee ID to resume onboarding…"
-              style={{
-                padding: '11px 14px 11px 36px',
-                borderRadius: '12px',
-                border: '1.5px solid #E5E7EB',
-                width: '310px',
-                fontSize: '13px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              className="pl-9 pr-3.5 py-[11px] rounded-xl border-[1.5px] border-gray-200 w-[310px] text-[13px] outline-none transition-[border-color] duration-200 focus:border-indigo-500 bg-white"
             />
           </div>
           <button
             type="submit"
             disabled={!resumeId.trim()}
-            style={{
-              padding: '11px 18px',
-              borderRadius: '12px',
-              border: '1.5px solid #E5E7EB',
-              background: resumeId.trim() ? '#F3F4F6' : '#FAFAFA',
-              color: resumeId.trim() ? '#374151' : '#9CA3AF',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: resumeId.trim() ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-            }}
+            className={`px-4.5 py-[11px] rounded-xl border-[1.5px] border-gray-200 font-bold text-[13px] transition-all duration-200 ${
+              resumeId.trim()
+                ? 'bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200'
+                : 'bg-[#FAFAFA] text-gray-400 cursor-not-allowed'
+            }`}
           >
             Resume Onboarding
           </button>
         </form>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="flex gap-2.5">
           {/* New onboarding button */}
           <button
             onClick={() => navigate('/admin/myteam/onboard')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#111827',
-              color: '#fff',
-              padding: '12px 22px',
-              borderRadius: '12px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(17,24,39,0.18)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(17,24,39,0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 14px rgba(17,24,39,0.18)';
-            }}
+            className="flex items-center gap-2 bg-gray-900 text-white px-5.5 py-3 rounded-xl border-none font-bold text-sm cursor-pointer shadow-[0_4px_14px_rgba(17,24,39,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(17,24,39,0.25)]"
           >
             <Plus size={18} strokeWidth={3} />
             Onboard New Member
@@ -209,29 +153,7 @@ const TeamManagement = () => {
           {/* New doctor onboarding button */}
           <button
             onClick={() => navigate('/admin/myteam/onboard-doctor')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#C8F04A',
-              color: '#111827',
-              padding: '12px 22px',
-              borderRadius: '12px',
-              border: 'none',
-              fontWeight: 800,
-              fontSize: '14px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(200, 240, 74, 0.25)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(200, 240, 74, 0.35)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 14px rgba(200, 240, 74, 0.25)';
-            }}
+            className="flex items-center gap-2 bg-[#C8F04A] text-gray-900 px-5.5 py-3 rounded-xl border-none font-extrabold text-sm cursor-pointer shadow-[0_4px_14px_rgba(200,240,74,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(200,240,74,0.35)]"
           >
             <Plus size={18} strokeWidth={3} />
             Onboard Doctor
@@ -240,44 +162,17 @@ const TeamManagement = () => {
       </div>
 
       {/* ── Stats Bar ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
+      <div className="grid grid-cols-4 gap-4 mb-6">
         {stats.map((s, i) => (
           <div
             key={i}
-            style={{
-              background: '#fff',
-              padding: '18px 22px',
-              borderRadius: '16px',
-              border: '1.5px solid #F3F4F6',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-            }}
+            className="bg-white px-5.5 py-4.5 rounded-2xl border-[1.5px] border-gray-100 shadow-[0_2px_6px_rgba(0,0,0,0.03)]"
           >
-            <div
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: '#9CA3AF',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px]">
               {s.label}
             </div>
             <div
-              style={{
-                fontSize: '28px',
-                fontWeight: 800,
-                color: s.color,
-                marginTop: '6px',
-                lineHeight: 1,
-              }}
+              className={`text-3xl font-extrabold mt-1.5 leading-none ${s.textClass}`}
             >
               {s.value}
             </div>
@@ -286,83 +181,35 @@ const TeamManagement = () => {
       </div>
 
       {/* ── Team Table ────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: '20px',
-          border: '1.5px solid #F3F4F6',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="bg-white rounded-2xl border-[1.5px] border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden">
         {/* Table toolbar */}
-        <div
-          style={{
-            padding: '18px 24px',
-            borderBottom: '1.5px solid #F3F4F6',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{ position: 'relative' }}>
+        <div className="px-6 py-4.5 border-b-[1.5px] border-gray-100 flex justify-between items-center">
+          <div className="relative">
             <Search
               size={16}
-              color="#9CA3AF"
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
               placeholder="Search by name, email or role…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                padding: '10px 14px 10px 36px',
-                borderRadius: '10px',
-                border: '1.5px solid #E5E7EB',
-                width: '280px',
-                fontSize: '13px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              className="pl-9 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-gray-200 w-[280px] text-[13px] outline-none transition-[border-color] duration-200 focus:border-indigo-500 bg-white"
             />
           </div>
-          <span
-            style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: 600 }}
-          >
+          <span className="text-[13px] text-gray-400 font-semibold">
             {filteredTeam.length} member{filteredTeam.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              textAlign: 'left',
-            }}
-          >
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr style={{ background: '#F9FAFB' }}>
+              <tr className="bg-gray-50">
                 {['Member', 'Contact', 'Role', 'Status', 'Action'].map((h) => (
                   <th
                     key={h}
-                    style={{
-                      padding: '14px 20px',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: '#6B7280',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      borderBottom: '1.5px solid #F3F4F6',
-                    }}
+                    className="px-5 py-3.5 text-[11px] font-extrabold text-gray-500 uppercase tracking-wider border-b-[1.5px] border-gray-100"
                   >
                     {h}
                   </th>
@@ -372,30 +219,14 @@ const TeamManagement = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    style={{ padding: '60px', textAlign: 'center' }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '12px',
-                      }}
-                    >
+                  <td colSpan="5" className="p-[60px] text-center">
+                    <div className="flex flex-col items-center gap-3">
                       <Loader2
                         size={28}
                         color="#6366F1"
-                        style={{ animation: 'spin 0.8s linear infinite' }}
+                        className="animate-spin"
                       />
-                      <p
-                        style={{
-                          color: '#9CA3AF',
-                          fontSize: '14px',
-                          margin: 0,
-                        }}
-                      >
+                      <p className="text-gray-400 text-sm m-0">
                         Loading your team…
                       </p>
                     </div>
@@ -405,12 +236,7 @@ const TeamManagement = () => {
                 <tr>
                   <td
                     colSpan="5"
-                    style={{
-                      padding: '60px',
-                      textAlign: 'center',
-                      color: '#9CA3AF',
-                      fontSize: '14px',
-                    }}
+                    className="p-[60px] text-center text-gray-400 text-sm"
                   >
                     {searchQuery
                       ? 'No members match your search.'
@@ -420,8 +246,8 @@ const TeamManagement = () => {
               ) : (
                 filteredTeam.map((member) => {
                   const roleColor = ROLE_COLORS[member.role] || {
-                    bg: '#F3F4F6',
-                    text: '#4B5563',
+                    bgClass: 'bg-[#F3F4F6]',
+                    textClass: 'text-[#4B5563]',
                   };
                   const initials =
                     member.fullName
@@ -432,58 +258,19 @@ const TeamManagement = () => {
                   return (
                     <tr
                       key={member.id}
-                      style={{
-                        borderBottom: '1px solid #F9FAFB',
-                        transition: 'background 0.15s',
-                        cursor: 'default',
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = '#FAFAFA')
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = 'transparent')
-                      }
+                      className="border-b border-gray-50 transition-colors duration-150 cursor-default hover:bg-gray-50/50"
                     >
                       {/* Member */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '42px',
-                              height: '42px',
-                              borderRadius: '12px',
-                              background:
-                                'linear-gradient(135deg, #6366F1, #8B5CF6)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#fff',
-                              fontWeight: 800,
-                              fontSize: '14px',
-                              flexShrink: 0,
-                            }}
-                          >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-extrabold text-sm shrink-0">
                             {initials || <User size={18} />}
                           </div>
                           <div>
-                            <div
-                              style={{
-                                fontWeight: 700,
-                                color: '#111827',
-                                fontSize: '14px',
-                              }}
-                            >
+                            <div className="font-bold text-gray-900 text-sm">
                               {member.fullName || '—'}
                             </div>
-                            <div
-                              style={{ fontSize: '12px', color: '#9CA3AF' }}
-                            >
+                            <div className="text-xs text-gray-400">
                               ID:{' '}
                               {member.employeeId ||
                                 String(member.id || '').slice(-8) ||
@@ -494,55 +281,23 @@ const TeamManagement = () => {
                       </td>
 
                       {/* Contact */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              fontSize: '13px',
-                              color: '#4B5563',
-                            }}
-                          >
-                            <Mail size={13} color="#9CA3AF" />
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                            <Mail size={13} className="text-gray-400" />
                             {member.email || '—'}
                           </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              fontSize: '13px',
-                              color: '#4B5563',
-                            }}
-                          >
-                            <Phone size={13} color="#9CA3AF" />
+                          <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                            <Phone size={13} className="text-gray-400" />
                             {member.phone || '—'}
                           </div>
                         </div>
                       </td>
 
                       {/* Role */}
-                      <td style={{ padding: '16px 20px' }}>
+                      <td className="px-5 py-4">
                         <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            background: roleColor.bg,
-                            color: roleColor.text,
-                            padding: '4px 12px',
-                            borderRadius: '8px',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                          }}
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold ${roleColor.bgClass} ${roleColor.textClass}`}
                         >
                           <Briefcase size={11} />
                           {member.role?.replace(/_/g, ' ') || '—'}
@@ -550,86 +305,29 @@ const TeamManagement = () => {
                       </td>
 
                       {/* Status */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '8px',
-                              height: '8px',
-                              borderRadius: '50%',
-                              background: '#10B981',
-                            }}
-                          />
-                          <span
-                            style={{
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              color: '#059669',
-                            }}
-                          >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span className="text-[13px] font-semibold text-emerald-600">
                             Active
                           </span>
                         </div>
                       </td>
 
                       {/* Actions */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2 items-center">
                           <button
                             onClick={() => handleEditClick(member.employeeId || member.id)}
                             title="View Employee"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#9CA3AF',
-                              padding: '6px',
-                              borderRadius: '8px',
-                              transition: 'all 0.2s',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = '#4F46E5';
-                              e.currentTarget.style.background = '#EEF2FF';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = '#9CA3AF';
-                              e.currentTarget.style.background = 'transparent';
-                            }}
+                            className="bg-transparent border-none cursor-pointer text-gray-400 p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center hover:text-indigo-600 hover:bg-indigo-50"
                           >
                             <Eye size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(member.employeeId || member.id, member.fullName)}
                             title="Delete Employee"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#9CA3AF',
-                              padding: '6px',
-                              borderRadius: '8px',
-                              transition: 'all 0.2s',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = '#DC2626';
-                              e.currentTarget.style.background = '#FEF2F2';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = '#9CA3AF';
-                              e.currentTarget.style.background = 'transparent';
-                            }}
+                            className="bg-transparent border-none cursor-pointer text-gray-400 p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center hover:text-red-600 hover:bg-red-50"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -656,94 +354,31 @@ const TeamManagement = () => {
 
       {/* Delete Confirmation Popup */}
       {deleteConfirmId && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.55)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1100,
-            padding: '20px',
-            animation: 'fadeIn 0.25s ease-out',
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '20px',
-              width: '100%',
-              maxWidth: '440px',
-              padding: '30px',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-              textAlign: 'center',
-              animation: 'scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          >
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                background: '#FEF2F2',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px auto',
-                color: '#DC2626',
-              }}
-            >
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center z-[1100] p-5 animate-[fadeIn_0.25s_ease-out]">
+          <div className="bg-white rounded-2xl w-full max-w-[440px] p-7.5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] text-center animate-[scaleIn_0.25s_cubic-bezier(0.34,1.56,0.64,1)]">
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5 text-red-600">
               <Trash2 size={28} />
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '0 0 8px 0' }}>
+            <h3 className="text-lg font-extrabold text-gray-900 mt-0 mb-2 mx-0">
               Confirm Deletion
             </h3>
-            <p style={{ fontSize: '14px', color: '#6B7280', margin: '0 0 24px 0', lineHeight: '1.5' }}>
+            <p className="text-sm text-gray-500 mt-0 mb-6 mx-0 leading-normal">
               Are you sure you want to delete <strong>{deleteConfirmName}</strong>?<br />
               This action cannot be undone.
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div className="flex gap-3 justify-center">
               <button
                 onClick={() => {
                   setDeleteConfirmId(null);
                   setDeleteConfirmName(null);
                 }}
-                style={{
-                  padding: '11px 22px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #E5E7EB',
-                  background: '#fff',
-                  color: '#374151',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  flex: 1,
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                className="px-5.5 py-[11px] rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer flex-1 transition-colors duration-200 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                style={{
-                  padding: '11px 22px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: '#DC2626',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  flex: 1,
-                  transition: 'opacity 0.2s',
-                  boxShadow: '0 4px 12px rgba(220,38,38,0.2)',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                className="px-5.5 py-[11px] rounded-xl border-none bg-red-600 text-white font-bold text-[13px] cursor-pointer flex-1 transition-opacity duration-200 shadow-[0_4px_12px_rgba(220,38,38,0.2)] hover:opacity-90"
               >
                 Delete
               </button>
@@ -754,26 +389,7 @@ const TeamManagement = () => {
 
       {/* Success Notification */}
       {successMessage && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            background: '#ECFDF5',
-            border: '1.5px solid #A7F3D0',
-            padding: '16px 20px',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            color: '#047857',
-            fontSize: '13px',
-            fontWeight: 700,
-            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-            zIndex: 1200,
-            animation: 'slideIn 0.3s ease-out',
-          }}
-        >
+        <div className="fixed bottom-6 right-6 bg-emerald-50 border-[1.5px] border-emerald-200 px-5 py-4 rounded-xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-bold shadow-[0_10px_25px_rgba(0,0,0,0.05)] z-[1200] animate-[slideIn_0.3s_ease-out]">
           <CheckCircle2 size={18} />
           {successMessage}
         </div>

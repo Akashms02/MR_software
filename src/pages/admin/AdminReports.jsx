@@ -50,20 +50,13 @@ const getFirstOfMonthString = () => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{
-        background: '#ffffff',
-        padding: '12px 16px',
-        border: '1px solid #E5E7EB',
-        borderRadius: '12px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
-        fontFamily: "'Inter', sans-serif"
-      }}>
-        <p style={{ margin: 0, fontWeight: 700, color: '#111827', fontSize: '13px', marginBottom: '6px' }}>{label}</p>
+      <div className="bg-white p-3 border border-[#E5E7EB] rounded-xl shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05),0_4px_6px_-2px_rgba(0,0,0,0.02)] font-sans">
+        <p className="m-0 font-bold text-xs text-[#111827] mb-1.5">{label}</p>
         {payload.map((item, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#4B5563', margin: '4px 0' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block', backgroundColor: item.color }} />
+          <div key={idx} className="flex items-center gap-2 text-[12px] color-[#4B5563] my-1">
+            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: item.color }} />
             <span>{item.name}:</span>
-            <span style={{ fontWeight: 700, color: '#111827' }}>{item.value}</span>
+            <span className="font-bold text-[#111827]">{item.value}</span>
           </div>
         ))}
       </div>
@@ -195,52 +188,34 @@ export default function AdminReports() {
   };
 
   return (
-    <div style={{ animation: 'fadeIn 0.35s ease-out', fontFamily: "'Inter', sans-serif" }}>
-      
-
+    <div className="animate-[fadeIn_0.35s_ease-out] font-sans">
 
       {/* Grid: Selectors & Filters on Left/Top, Charts & Details on Right/Bottom */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '24px', alignItems: 'start', minHeight: '600px' }}>
+      <div className="grid grid-cols-[1fr_3fr] gap-6 items-start min-h-[600px]">
         
         {/* Left Side: Report selector list & Date configurations */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-5">
           
           {/* selectors */}
-          <Card style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px 6px' }}>
+          <Card className="p-4">
+            <h3 className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] mt-0 mb-3 ml-1.5">
               Report Category
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="flex flex-col gap-1">
               {REPORT_TYPES.map((t) => {
                 const isActive = activeReport === t.id;
                 return (
                   <button
                     key={t.id}
                     onClick={() => setActiveReport(t.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 14px',
-                      borderRadius: '10px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      background: isActive ? '#C8F04A' : 'transparent',
-                      color: isActive ? '#1A1A1A' : '#4B5563',
-                      transition: 'all 0.15s ease',
-                      width: '100%',
-                      fontFamily: 'inherit'
-                    }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F9FAFB'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-lg border-0 cursor-pointer text-left w-full font-sans transition-all duration-150 ${isActive ? 'bg-[#C8F04A] text-[#1A1A1A]' : 'bg-transparent text-[#4B5563] hover:bg-[#F9FAFB]'}`}
                   >
-                    <span style={{ fontSize: '18px' }}>{t.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 600 }}>{t.label}</div>
-                      <div style={{ fontSize: '10.5px', color: isActive ? '#374151' : '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.sub}</div>
+                    <span className="text-[18px]">{t.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold'}`}>{t.label}</div>
+                      <div className={`text-[10.5px] truncate ${isActive ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>{t.sub}</div>
                     </div>
-                    <ChevronRight size={14} color={isActive ? '#1A1A1A' : '#9CA3AF'} />
+                    <ChevronRight size={14} className={isActive ? 'text-[#1A1A1A]' : 'text-[#9CA3AF]'} />
                   </button>
                 );
               })}
@@ -248,50 +223,31 @@ export default function AdminReports() {
           </Card>
 
           {/* MR Dropdown & Date Parameters */}
-          <Card style={{ padding: '18px' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 14px 0' }}>
+          <Card className="p-4.5">
+            <h3 className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] mt-0 mb-3.5">
               Query Filters
             </h3>
 
             {/* Representative Selector from Live database list */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>FIELD REPRESENTATIVE</label>
+            <div className="mb-4">
+              <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">FIELD REPRESENTATIVE</label>
               {mrLoading ? (
-                <div style={{ fontSize: '12px', color: '#6B7280' }}>Loading representatives...</div>
+                <div className="text-xs text-[#6B7280]">Loading representatives...</div>
               ) : mrList.length === 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#EF4444' }}>No MR profiles found in database.</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] text-[#EF4444]">No MR profiles found in database.</span>
                   <input
                     placeholder="Enter MR ID manually..."
                     value={selectedMrId}
                     onChange={(e) => setSelectedMrId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #FCA5A5',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                    }}
+                    className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#FCA5A5] text-[12.5px] font-sans outline-none"
                   />
                 </div>
               ) : (
                 <select 
                   value={selectedMrId}
                   onChange={(e) => setSelectedMrId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '13px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937',
-                    background: '#ffffff',
-                    fontWeight: 600
-                  }}
+                  className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13px] font-sans outline-none text-[#1F2937] bg-white font-semibold"
                 >
                   {mrList.map(mr => (
                     <option key={mr.id} value={String(mr.id)}>
@@ -304,41 +260,23 @@ export default function AdminReports() {
 
             {/* Range Pickers */}
             {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="flex flex-col gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>START DATE</label>
+                  <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">START DATE</label>
                   <input 
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #E5E7EB',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      color: '#1F2937'
-                    }}
+                    className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937]"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>END DATE</label>
+                  <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">END DATE</label>
                   <input 
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #E5E7EB',
-                      fontSize: '12.5px',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      color: '#1F2937'
-                    }}
+                    className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937]"
                   />
                 </div>
               </div>
@@ -347,21 +285,12 @@ export default function AdminReports() {
             {/* Single Date Picker */}
             {(activeReport === 'dcr-day' || activeReport === 'daily-activity') && (
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>SELECT DATE</label>
+                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">SELECT DATE</label>
                 <input 
                   type="date" 
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '12.5px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937'
-                  }}
+                  className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937]"
                 />
               </div>
             )}
@@ -369,91 +298,56 @@ export default function AdminReports() {
             {/* Week Picker */}
             {activeReport === 'weekly-cross' && (
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4B5563', marginBottom: '5px' }}>DATE IN WEEK</label>
+                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">DATE IN WEEK</label>
                 <input 
                   type="date" 
                   value={dateInWeek}
                   onChange={(e) => setDateInWeek(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E5E7EB',
-                    fontSize: '12.5px',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    color: '#1F2937'
-                  }}
+                  className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937]"
                 />
               </div>
             )}
-
 
           </Card>
         </div>
 
         {/* Right Side: Visual Reports Screen */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+        <div className="flex flex-col gap-6 relative">
           
-
-
           {/* Loading Indicator */}
           {loading && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.75)',
-              backdropFilter: 'blur(1px)',
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 50,
-              borderRadius: '16px'
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <RefreshCw className="animate-spin" size={30} color="#10B981" />
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1E2937' }}>Retrieving live database logs...</span>
+            <div className="bg-white/75 backdrop-blur-[1px] absolute inset-0 flex items-center justify-center z-50 rounded-2xl">
+              <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="animate-spin text-[#10B981]" size={30} />
+                <span className="text-[13px] font-bold text-[#1E2937]">Retrieving live database logs...</span>
               </div>
             </div>
           )}
 
           {/* Error Notice */}
           {error && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '14px 18px',
-              background: '#FEF2F2',
-              border: '1px solid #FCA5A5',
-              borderRadius: '12px',
-              color: '#B91C1C',
-              fontSize: '13px',
-              fontWeight: 500
-            }}>
+            <div className="flex items-center gap-2.5 px-4.5 py-3.5 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-[#B91C1C] text-[13px] font-medium">
               <AlertCircle size={18} />
               <span><strong>API Fetch Failed:</strong> {error}. Please verify the connection parameters.</span>
             </div>
           )}
 
-
-
           {/* Condition: Visit Summary */}
           {activeReport === 'visit-summary' && hasData() && (
             <>
               {/* Stat summary cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Planned Visits</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalPlanned || 0}</div>
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="p-5 border-l-5 border-[#3B82F6]">
+                  <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Planned Visits</div>
+                  <div className="text-[26px] font-extrabold text-[#1F2937] mt-1.5">{currentData.totalPlanned || 0}</div>
                 </Card>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #10B981' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Completed Visits</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalCompleted || 0}</div>
+                <Card className="p-5 border-l-5 border-[#10B981]">
+                  <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Completed Visits</div>
+                  <div className="text-[26px] font-extrabold text-[#1F2937] mt-1.5">{currentData.totalCompleted || 0}</div>
                 </Card>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #F59E0B' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Success Rate</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>
+                <Card className="p-5 border-l-5 border-[#F59E0B]">
+                  <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Success Rate</div>
+                  <div className="text-[26px] font-extrabold text-[#1F2937] mt-1.5">
                     {currentData.successRate || (currentData.totalPlanned ? `${Math.round((currentData.totalCompleted / currentData.totalPlanned) * 100)}%` : '0%')}
                   </div>
                 </Card>
@@ -461,9 +355,9 @@ export default function AdminReports() {
 
               {/* Chart: planned vs completed per territory */}
               {currentData.territories && currentData.territories.length > 0 && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Territory Performance Breakdown</h3>
-                  <div style={{ width: '100%', height: 300 }}>
+                <Card className="p-6">
+                  <h3 className="mt-0 mb-5 text-[14.5px] font-extrabold text-[#1F2937]">Territory Performance Breakdown</h3>
+                  <div className="w-full h-[300px]">
                     <ResponsiveContainer>
                       <BarChart data={currentData.territories}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
@@ -482,7 +376,7 @@ export default function AdminReports() {
               {/* Detailed territory list */}
               {currentData.territories && currentData.territories.length > 0 && (
                 <TableWrap>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table className="w-full border-collapse">
                     <thead>
                       <tr>
                         <Th>Territory Name</Th>
@@ -496,18 +390,11 @@ export default function AdminReports() {
                         const pct = t.planned ? `${Math.round((t.completed / t.planned) * 100)}%` : '0%';
                         return (
                           <tr key={idx}>
-                            <Td style={{ fontWeight: 700, color: '#1F2937' }}>{t.name}</Td>
+                            <Td className="font-bold text-[#1F2937]">{t.name}</Td>
                             <Td>{t.planned}</Td>
                             <Td>{t.completed}</Td>
                             <Td>
-                              <span style={{
-                                fontWeight: 700,
-                                color: (t.completed/t.planned >= 0.8) ? '#059669' : '#D97706',
-                                background: (t.completed/t.planned >= 0.8) ? '#ECFDF5' : '#FFFBEB',
-                                padding: '3px 8px',
-                                borderRadius: '12px',
-                                fontSize: '11.5px'
-                              }}>
+                              <span className={`font-bold px-2 py-0.75 rounded-xl text-[11.5px] ${t.completed/t.planned >= 0.8 ? 'text-[#059669] bg-[#ECFDF5]' : 'text-[#D97706] bg-[#FFFBEB]'}`}>
                                 {pct}
                               </span>
                             </Td>
@@ -525,9 +412,9 @@ export default function AdminReports() {
           {activeReport === 'datewise-daily' && hasData() && (
             <>
               {/* Chart: Activity Over Time */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Daily Visit & Call Frequency Logs</h3>
-                <div style={{ width: '100%', height: 280 }}>
+              <Card className="p-6">
+                <h3 className="mt-0 mb-5 text-[14.5px] font-extrabold text-[#1F2937]">Daily Visit & Call Frequency Logs</h3>
+                <div className="w-full h-[280px]">
                   <ResponsiveContainer>
                     <AreaChart data={currentData}>
                       <defs>
@@ -554,7 +441,7 @@ export default function AdminReports() {
 
               {/* Detailed logs table */}
               <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="w-full border-collapse">
                   <thead>
                     <tr>
                       <Th>Date</Th>
@@ -567,7 +454,7 @@ export default function AdminReports() {
                   <tbody>
                     {currentData.map((row, idx) => (
                       <tr key={idx}>
-                        <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.date}</Td>
+                        <Td className="font-bold text-[#1F2937]">{row.date}</Td>
                         <Td>{row.visits} visits</Td>
                         <Td>{row.chemistCalls || 0} calls</Td>
                         <Td>{row.calls} calls</Td>
@@ -584,9 +471,9 @@ export default function AdminReports() {
           {activeReport === 'call-visit' && hasData() && (
             <>
               {/* Chart: Specialty Target vs Actual */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Specialty Target Call vs Actual Detailed</h3>
-                <div style={{ width: '100%', height: 300 }}>
+              <Card className="p-6">
+                <h3 className="mt-0 mb-5 text-[14.5px] font-extrabold text-[#1F2937]">Specialty Target Call vs Actual Detailed</h3>
+                <div className="w-full h-[300px]">
                   <ResponsiveContainer>
                     <BarChart data={currentData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
@@ -603,7 +490,7 @@ export default function AdminReports() {
 
               {/* Table of detail */}
               <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="w-full border-collapse">
                   <thead>
                     <tr>
                       <Th>Doctor Specialty</Th>
@@ -618,15 +505,12 @@ export default function AdminReports() {
                       const rate = row.target ? `${Math.round((row.actual / row.target) * 100)}%` : '0%';
                       return (
                         <tr key={idx}>
-                          <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.specialty}</Td>
+                          <Td className="font-bold text-[#1F2937]">{row.specialty}</Td>
                           <Td>{row.target}</Td>
                           <Td>{row.actual}</Td>
                           <Td>{row.samples || 0} units</Td>
                           <Td>
-                            <span style={{
-                              fontWeight: 700,
-                              color: (row.actual/row.target >= 0.9) ? '#10B981' : '#EF4444',
-                            }}>
+                            <span className={`font-bold ${row.actual/row.target >= 0.9 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                               {rate}
                             </span>
                           </Td>
@@ -643,61 +527,45 @@ export default function AdminReports() {
           {activeReport === 'dcr-day' && hasData() && (
             <>
               {/* DCR Verification Sheet */}
-              <Card style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px', marginBottom: '18px' }}>
+              <Card className="p-6">
+                <div className="flex justify-between items-start border-b border-[#F3F4F6] pb-4.5 mb-4.5">
                   <div>
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      background: currentData.status === 'APPROVED' ? '#ECFDF5' : '#FFFBEB',
-                      color: currentData.status === 'APPROVED' ? '#047857' : '#B45309'
-                    }}>
+                    <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[20px] ${currentData.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                       DCR SHEET: {currentData.status || 'SUBMITTED'}
                     </span>
-                    <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '8px 0 2px 0' }}>Daily Call Report Sheet</h3>
-                    <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>Date: <strong>{currentData.date}</strong></p>
+                    <h3 className="text-[18px] font-extrabold text-[#111827] mt-2 mb-0.5">Daily Call Report Sheet</h3>
+                    <p className="text-xs text-[#6B7280] m-0">Date: <strong>{currentData.date}</strong></p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '12px', color: '#6B7280' }}>Verified By</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', marginTop: '2px' }}>{currentData.approvedBy || 'Pending'}</div>
+                  <div className="text-right">
+                    <div className="text-xs text-[#6B7280]">Verified By</div>
+                    <div className="text-[13px] font-bold text-[#111827] mt-0.5">{currentData.approvedBy || 'Pending'}</div>
                   </div>
                 </div>
 
                 {/* Manager Comments */}
                 {currentData.comments && (
-                  <div style={{
-                    background: '#F9FAFB',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    borderLeft: '4px solid #10B981',
-                    fontSize: '13px',
-                    color: '#4B5563',
-                    marginBottom: '20px',
-                    fontStyle: 'italic'
-                  }}>
+                  <div className="bg-[#F9FAFB] px-4 py-3 rounded-lg border-l-4 border-[#10B981] text-[13px] text-[#4B5563] mb-5 italic">
                     "{currentData.comments}"
                   </div>
                 )}
 
                 {/* Stat grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>DOCTORS VISITED</div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-[#FAFAFA] p-4 rounded-xl border border-[#F3F4F6]">
+                    <div className="text-[11px] text-[#9CA3AF] font-bold">DOCTORS VISITED</div>
+                    <div className="text-[20px] font-extrabold text-[#1F2937] mt-1">
                       {currentData.doctorsMet?.length || 0} Met
                     </div>
                   </div>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>DAILY EXPENSES</div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
+                  <div className="bg-[#FAFAFA] p-4 rounded-xl border border-[#F3F4F6]">
+                    <div className="text-[11px] text-[#9CA3AF] font-bold">DAILY EXPENSES</div>
+                    <div className="text-[20px] font-extrabold text-[#1F2937] mt-1">
                       ₹{currentData.expenses ? Object.values(currentData.expenses).reduce((acc, v) => typeof v === 'number' ? acc + v : acc, 0) : 0}
                     </div>
                   </div>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>EXPENSE STATUS</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#10B981', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div className="bg-[#FAFAFA] p-4 rounded-xl border border-[#F3F4F6]">
+                    <div className="text-[11px] text-[#9CA3AF] font-bold">EXPENSE STATUS</div>
+                    <div className="text-[13px] font-bold text-[#10B981] mt-2.5 flex items-center gap-1">
                       <CheckCircle2 size={14} /> {currentData.expenses?.status || 'APPROVED'}
                     </div>
                   </div>
@@ -706,29 +574,21 @@ export default function AdminReports() {
 
               {/* Doctors detailed logs */}
               {currentData.doctorsMet && currentData.doctorsMet.length > 0 && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Visited Doctor Records</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Card className="p-6">
+                  <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Doctor Records</h3>
+                  <div className="flex flex-col gap-3">
                     {currentData.doctorsMet.map((doc, idx) => (
-                      <div key={idx} style={{
-                        padding: '16px',
-                        borderRadius: '12px',
-                        border: '1.5px solid #F3F4F6',
-                        background: '#FAFAFA',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
+                      <div key={idx} className="p-4 rounded-xl border-[1.5px] border-[#F3F4F6] bg-[#FAFAFA] flex justify-between items-center">
                         <div>
-                          <div style={{ fontWeight: 800, color: '#1F2937', fontSize: '14px' }}>{doc.name}</div>
-                          <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{doc.clinic} · <span style={{ fontWeight: 600 }}>{doc.time}</span></div>
-                          <div style={{ fontSize: '12px', color: '#4B5563', marginTop: '6px', background: '#E0F2FE', color: '#0369A1', display: 'inline-block', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                          <div className="font-extrabold text-[#1F2937] text-sm">{doc.name}</div>
+                          <div className="text-xs text-[#6B7280] mt-0.5">{doc.clinic} · <span className="font-semibold">{doc.time}</span></div>
+                          <div className="text-xs text-[#0369A1] mt-1.5 bg-[#E0F2FE] inline-block px-2 py-0.5 rounded-md font-semibold">
                             Samples: {doc.samples}
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right', maxWidth: '250px' }}>
-                          <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>VISIT DETAIL FEEDBACK</div>
-                          <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '4px', fontStyle: 'italic' }}>{doc.feedback}</div>
+                        <div className="text-right max-w-[250px]">
+                          <div className="text-[11px] text-[#9CA3AF] font-bold">VISIT DETAIL FEEDBACK</div>
+                          <div className="text-[12.5px] text-[#4B5563] mt-1 italic">{doc.feedback}</div>
                         </div>
                       </div>
                     ))}
@@ -742,31 +602,31 @@ export default function AdminReports() {
           {activeReport === 'daily-activity' && hasData() && (
             <>
               {/* Daily Checklist card */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: '0 0 16px 0' }}>Daily Activity Verification Checklist</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <Card className="p-6">
+                <h3 className="text-base font-extrabold text-[#111827] mt-0 mb-4">Daily Activity Verification Checklist</h3>
+                <div className="flex flex-col gap-3.5">
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#FAFAFA]">
                     <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Daily Attendance Status</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Checked-In Status: <strong>{currentData.summary?.workingStatus || 'Present'}</strong></div>
+                    <div className="flex-1">
+                      <div className="text-[13.5px] font-bold text-[#1F2937]">Daily Attendance Status</div>
+                      <div className="text-[11px] text-[#6B7280] mt-0.5">Checked-In Status: <strong>{currentData.summary?.workingStatus || 'Present'}</strong></div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#FAFAFA]">
                     <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Tour Plan Coverage</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Target Territory: <strong>{currentData.plannedTerritory}</strong> (Status: <strong>{currentData.tourPlanStatus}</strong>)</div>
+                    <div className="flex-1">
+                      <div className="text-[13.5px] font-bold text-[#1F2937]">Tour Plan Coverage</div>
+                      <div className="text-[11px] text-[#6B7280] mt-0.5">Target Territory: <strong>{currentData.plannedTerritory}</strong> (Status: <strong>{currentData.tourPlanStatus}</strong>)</div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#FAFAFA]">
                     <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>DCR Visit Verification</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Productive: <strong>{currentData.summary?.productiveVisits}</strong> / Non-Productive: <strong>{currentData.summary?.nonProductiveVisits}</strong> (Total: <strong>{currentData.summary?.totalVisits}</strong>)</div>
+                    <div className="flex-1">
+                      <div className="text-[13.5px] font-bold text-[#1F2937]">DCR Visit Verification</div>
+                      <div className="text-[11px] text-[#6B7280] mt-0.5">Productive: <strong>{currentData.summary?.productiveVisits}</strong> / Non-Productive: <strong>{currentData.summary?.nonProductiveVisits}</strong> (Total: <strong>{currentData.summary?.totalVisits}</strong>)</div>
                     </div>
                   </div>
 
@@ -775,9 +635,9 @@ export default function AdminReports() {
 
               {/* Tour Plan Remarks Card */}
               {currentData.summary?.remarks && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', margin: '0 0 12px 0' }}>Field Representative Remarks</h3>
-                  <p style={{ fontSize: '13.5px', color: '#4B5563', margin: 0, lineHeight: 1.5, background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
+                <Card className="p-6">
+                  <h3 className="text-[14.5px] font-extrabold text-[#1F2937] mt-0 mb-3">Field Representative Remarks</h3>
+                  <p className="text-[13.5px] text-[#4B5563] m-0 leading-normal bg-[#FAFAFA] p-4 rounded-xl border border-[#F3F4F6]">
                     {currentData.summary.remarks}
                   </p>
                 </Card>
@@ -789,9 +649,9 @@ export default function AdminReports() {
           {activeReport === 'weekly-cross' && hasData() && (
             <>
               {/* Stacked Chart (visits & calls) */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Weekly Cross Metrics Frequency</h3>
-                <div style={{ width: '100%', height: 260 }}>
+              <Card className="p-6">
+                <h3 className="mt-0 mb-5 text-[14.5px] font-extrabold text-[#1F2937]">Weekly Cross Metrics Frequency</h3>
+                <div className="w-full h-[260px]">
                   <ResponsiveContainer>
                     <BarChart data={currentData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
@@ -808,7 +668,7 @@ export default function AdminReports() {
 
               {/* Cross-tab Weekly Table */}
               <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="w-full border-collapse">
                   <thead>
                     <tr>
                       <Th>Day</Th>
@@ -821,19 +681,12 @@ export default function AdminReports() {
                   <tbody>
                     {currentData.map((row, idx) => (
                       <tr key={idx}>
-                        <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.day}</Td>
-                        <Td style={{ fontWeight: 600 }}>{row.territory}</Td>
+                        <Td className="font-bold text-[#1F2937]">{row.day}</Td>
+                        <Td className="font-semibold">{row.territory}</Td>
                         <Td>{row.doctorVisits} visits</Td>
                         <Td>{row.chemistCalls} calls</Td>
                         <Td>
-                          <span style={{
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            padding: '3px 8px',
-                            borderRadius: '12px',
-                            background: row.dcrStatus === 'APPROVED' ? '#ECFDF5' : row.dcrStatus === 'SUBMITTED' ? '#EFF6FF' : '#F3F4F6',
-                            color: row.dcrStatus === 'APPROVED' ? '#047857' : row.dcrStatus === 'SUBMITTED' ? '#1E40AF' : '#4B5563'
-                          }}>
+                          <span className={`text-[11px] font-extrabold px-2 py-0.75 rounded-xl ${row.dcrStatus === 'APPROVED' ? 'bg-[#ECFDF5] text-[#047857]' : row.dcrStatus === 'SUBMITTED' ? 'bg-[#EFF6FF] text-[#1E40AF]' : 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                             {row.dcrStatus}
                           </span>
                         </Td>
@@ -847,16 +700,14 @@ export default function AdminReports() {
 
           {/* Fallback state when there's no data */}
           {!hasData() && !loading && (
-            <Card style={{ padding: '40px 24px', textAlign: 'center', background: '#FFFFFF', border: '1.5px dashed #E5E7EB' }}>
-              <ShieldAlert size={48} color="#9CA3AF" style={{ margin: '0 auto 16px auto' }} />
-              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#374151', margin: '0 0 6px 0' }}>No Database Records Found</h4>
-              <p style={{ fontSize: '12.5px', color: '#6B7280', margin: 0, maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <Card className="px-6 py-10 text-center bg-white border-[1.5px] border-dashed border-[#E5E7EB]">
+              <ShieldAlert size={48} color="#9CA3AF" className="mx-auto mb-4" />
+              <h4 className="text-[15px] font-extrabold text-[#374151] mt-0 mb-1.5">No Database Records Found</h4>
+              <p className="text-[12.5px] text-[#6B7280] m-0 max-w-[420px] mx-auto">
                 There are no logs matching the active selection. This is a live query; configure different dates or represent another representative.
               </p>
             </Card>
           )}
-
-
 
         </div>
 

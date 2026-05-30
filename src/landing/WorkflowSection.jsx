@@ -28,57 +28,53 @@ export default function WorkflowSection() {
   }
 
   return (
-    <section id="workflow" className="section-spacing" style={{ background: '#fff', overflow: 'hidden' }}>
-      <div className="section-container">
+    <section id="workflow" className="py-20 bg-white overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 md:px-8">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} 
           viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
-          style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          className="mb-10 text-center flex flex-col items-center"
         >
-          <div className="section-label">🔄 Hire-to-Rehire Workflow</div>
-          <h2 className="section-title">The Complete Employee Lifecycle</h2>
-          <p className="section-sub">
+          <div className="text-[12px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-[20px] uppercase tracking-[1px] mb-3">
+            🔄 Hire-to-Rehire Workflow
+          </div>
+          <h2 className="text-[32px] md:text-[38px] font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
+            The Complete Employee Lifecycle
+          </h2>
+          <p className="text-[15px] text-gray-500 max-w-xl leading-relaxed">
             From first offer letter to full-circle rehire — manage every touchpoint in one connected flow.
           </p>
         </motion.div>
 
         {/* Workflow strip */}
-        <div className="workflow-scroll-wrapper">
+        <div className="overflow-x-auto pb-6 scrollbar-thin">
           <motion.div 
             variants={containerVars} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
-            className="workflow-flex-container"
+            className="flex items-start min-w-[800px] justify-between px-4 py-2"
           >
             {STEPS.map((step, i) => (
-              <div key={i} className="workflow-step-wrapper">
+              <div key={i} className="flex-1 flex items-center relative">
                 {/* Node */}
-                <motion.div variants={nodeVars} className="workflow-node workflow-node-element">
-                  <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ position: 'relative', flexShrink: 0 }}>
-                    <div className="workflow-circle">
+                <motion.div variants={nodeVars} className="flex flex-col items-center relative z-10 mx-auto">
+                  <motion.div whileHover={{ scale: 1.1, rotate: 5 }} className="relative shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 border-2 border-slate-100 shadow-sm flex items-center justify-center text-[28px]">
                       {step.icon}
                     </div>
                     {/* Step number */}
-                    <div style={{
-                      position: 'absolute', top: '-8px', right: '-8px',
-                      width: '22px', height: '22px', borderRadius: '50%',
-                      background: 'var(--lime-dark)', color: '#1A1A1A',
-                      fontSize: '12px', fontWeight: 800,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                      border: '2px solid #fff',
-                    }}>{i + 1}</div>
+                    <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#C8F04A] text-gray-900 text-[12px] font-extrabold flex items-center justify-center shadow-md border-2 border-white">
+                      {i + 1}
+                    </div>
                   </motion.div>
-                  <div className="workflow-node-label" style={{
-                    fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)',
-                    textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line', maxWidth: '70px',
-                    marginTop: '8px'
-                  }}>{step.label}</div>
+                  <div className="text-[11px] font-bold text-gray-500 text-center leading-normal whitespace-pre-line max-w-[80px] mt-2.5">
+                    {step.label}
+                  </div>
                 </motion.div>
 
                 {/* Connector */}
                 {i < STEPS.length - 1 && (
-                  <div className="workflow-connector">
-                     <motion.div variants={lineVars} className="workflow-connector-line" />
+                  <div className="absolute top-8 left-[60%] right-[-40%] h-0.5 z-0 flex items-center">
+                    <motion.div variants={lineVars} className="h-full bg-slate-200" />
                   </div>
                 )}
               </div>

@@ -489,81 +489,31 @@ export default function RelievingLetter({ onBack }) {
     }
   }
 
-  // Input styles
-  const inpStyle = {
-    background: '#f9fafb',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '8px 12px',
-    fontSize: '13px',
-    color: '#111827',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    fontFamily: 'inherit',
-    transition: 'border-color 0.15s ease'
-  }
-
-  const labelStyle = {
-    display: 'block',
-    fontSize: '11px',
-    fontWeight: 700,
-    color: '#4b5563',
-    marginBottom: '5px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  }
-
-  const sectionHeaderStyle = {
-    fontSize: '13px',
-    fontWeight: 800,
-    color: '#0f766e',
-    borderBottom: '2px solid #e2e8f0',
-    paddingBottom: '4px',
-    marginBottom: '12px',
-    marginTop: '16px',
-    gridColumn: '1 / -1',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  }
+  const inputCls = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+  const readonlyCls = "w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-500 cursor-not-allowed"
+  const labelCls = "mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500"
+  const sectionHeaderCls = "col-span-full mt-4 mb-2 border-b border-gray-100 pb-1 text-xs font-black uppercase tracking-wider text-teal-700"
 
   return (
-    <div className="document-container document-page-container">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 font-sans">
       {/* Control Panel (Screen-only) */}
-      <div className="no-print" style={{
-        background: '#fff',
-        padding: '24px',
-        borderRadius: '20px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-        border: '1px solid #e5e7eb',
-        marginBottom: '28px'
-      }}>
+      <div className="no-print mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         {/* Navigation & Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f3f4f6', paddingBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <OutlineBtn onClick={onBack} style={{ padding: '8px 16px', fontSize: '13px' }}>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+          <div className="flex items-center gap-3">
+            <OutlineBtn onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-sm">
               <ArrowLeft size={16} /> Back to Hub
             </OutlineBtn>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Relieving Certificate Customizer</h3>
+            <h3 className="text-base font-extrabold text-gray-900">Relieving Certificate Customizer</h3>
           </div>
 
           {/* Quick Preload */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12.5px', color: '#6b7280', fontWeight: 500 }}>Load Employee:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-500">Load Employee:</span>
             <select
               onChange={e => handleLoadEmployee(e.target.value)}
               value={selectedId}
-              style={{
-                background: '#f3f4f6',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                color: '#111827',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer"
             >
               <option value="" disabled>Select Employee…</option>
               {employees.map(emp => (
@@ -576,40 +526,40 @@ export default function RelievingLetter({ onBack }) {
         </div>
 
         {/* Input Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 
-          <div style={sectionHeaderStyle}>Employee Exit Details</div>
+          <div className={sectionHeaderCls}>Employee Exit Details</div>
           <div>
-            <label style={labelStyle}>Employee Name (uppercase)</label>
-            <input type="text" value={candidateName} onChange={e => setCandidateName(e.target.value.toUpperCase())} style={inpStyle} />
+            <label className={labelCls}>Employee Name (uppercase)</label>
+            <input type="text" value={candidateName} onChange={e => setCandidateName(e.target.value.toUpperCase())} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Employee ID</label>
-            <input type="text" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>Employee ID</label>
+            <input type="text" value={selectedId} onChange={e => setSelectedId(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Candidate Email</label>
-            <input type="email" value={candidateEmail} onChange={e => setCandidateEmail(e.target.value)} style={inpStyle} placeholder="employee@example.com" />
+            <label className={labelCls}>Candidate Email</label>
+            <input type="email" value={candidateEmail} onChange={e => setCandidateEmail(e.target.value)} className={inputCls} placeholder="employee@example.com" />
           </div>
           <div>
-            <label style={labelStyle}>Designation</label>
-            <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>Designation</label>
+            <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Department</label>
-            <input type="text" value={department} onChange={e => setDepartment(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>Department</label>
+            <input type="text" value={department} onChange={e => setDepartment(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Joined Date</label>
-            <input type="date" value={joinedDate} onChange={e => setJoinedDate(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>Joined Date</label>
+            <input type="date" value={joinedDate} onChange={e => setJoinedDate(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Relieving Date</label>
-            <input type="date" value={relievingDate} onChange={e => setRelievingDate(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>Relieving Date</label>
+            <input type="date" value={relievingDate} onChange={e => setRelievingDate(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>Reason for Leaving</label>
-            <select value={reason} onChange={e => setReason(e.target.value)} style={inpStyle}>
+            <label className={labelCls}>Reason for Leaving</label>
+            <select value={reason} onChange={e => setReason(e.target.value)} className={inputCls}>
               <option value="Career Progression">Career Progression</option>
               <option value="Personal Endeavors">Personal Endeavors</option>
               <option value="Higher Studies">Higher Studies</option>
@@ -617,39 +567,39 @@ export default function RelievingLetter({ onBack }) {
             </select>
           </div>
 
-          <div style={sectionHeaderStyle}>HR Signatory Details</div>
+          <div className={sectionHeaderCls}>HR Signatory Details</div>
           <div>
-            <label style={labelStyle}>HR Signatory Name</label>
-            <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>HR Signatory Name</label>
+            <input type="text" value={hrHeadName} onChange={e => setHrHeadName(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label style={labelStyle}>HR Signatory Designation</label>
-            <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} style={inpStyle} />
+            <label className={labelCls}>HR Signatory Designation</label>
+            <input type="text" value={hrHeadDesignation} onChange={e => setHrHeadDesignation(e.target.value)} className={inputCls} />
           </div>
 
           {/* Read-only Company Info from API */}
-          <div style={sectionHeaderStyle}>Company Info (from Profile)</div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Company Name</label>
-            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed' }}>{companyName || '—'}</div>
+          <div className={sectionHeaderCls}>Company Info (from Profile)</div>
+          <div className="col-span-2">
+            <label className={labelCls}>Company Name</label>
+            <div className={readonlyCls}>{companyName || '—'}</div>
           </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={labelStyle}>Registered Address</label>
-            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed', whiteSpace: 'pre-wrap' }}>{companyRegAddress || '—'}</div>
+          <div className="col-span-2">
+            <label className={labelCls}>Registered Address</label>
+            <div className={`${readonlyCls} whitespace-pre-wrap`}>{companyRegAddress || '—'}</div>
           </div>
           <div>
-            <label style={labelStyle}>HR / Contact Email</label>
-            <div style={{ ...inpStyle, background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed' }}>{hrEmail || '—'}</div>
+            <label className={labelCls}>HR / Contact Email</label>
+            <div className={readonlyCls}>{hrEmail || '—'}</div>
           </div>
         </div>
 
         {/* Action controls */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', background: '#f9fafb', borderRadius: '12px', padding: '12px 18px', border: '1px solid #f3f4f6' }}>
-          <OutlineBtn onClick={handleGenerate} disabled={isGenerating} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', fontSize: '13.5px' }}>
+        <div className="flex flex-wrap justify-end gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+          <OutlineBtn onClick={handleGenerate} disabled={isGenerating} className="flex items-center gap-2 px-5 py-2 text-sm">
             <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
             {isGenerating ? "Generating..." : "Generate & Send Letter"}
           </OutlineBtn>
-          <PrimaryBtn onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '13.5px' }}>
+          <PrimaryBtn onClick={handlePrint} className="flex items-center gap-2 px-5 py-2 text-sm">
             <Printer size={16} /> Print / Export PDF
           </PrimaryBtn>
         </div>
@@ -657,95 +607,76 @@ export default function RelievingLetter({ onBack }) {
 
       {/* Success / Error Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: '20px',
-            padding: '32px',
-            maxWidth: '460px',
-            width: '100%',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
-            position: 'relative',
-            fontFamily: "'Inter', sans-serif"
-          }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl">
             <button
               onClick={() => setShowModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px', borderRadius: '6px' }}
+              className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
             >
               <X size={18} />
             </button>
 
             {modalError ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <X size={24} color="#ef4444" />
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                  <X size={24} className="text-red-500" />
                 </div>
-                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111827', margin: 0 }}>Generation Failed</h3>
-                <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{modalError}</p>
+                <h3 className="text-base font-extrabold text-gray-900">Generation Failed</h3>
+                <p className="text-xs text-gray-500 leading-relaxed max-w-sm">{modalError}</p>
                 <button
                   onClick={() => setShowModal(false)}
-                  style={{ marginTop: '8px', padding: '10px 24px', background: '#111827', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
+                  className="mt-2 w-full rounded-xl bg-gray-950 px-5 py-3 text-xs font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
                 >
                   Close
                 </button>
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '24px', textAlign: 'center' }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 size={28} color="#059669" />
+                <div className="flex flex-col items-center gap-2 text-center mb-6">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                    <CheckCircle2 size={28} className="text-emerald-600" />
                   </div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: 0 }}>Relieving Letter Dispatched!</h3>
-                  <p style={{ fontSize: '12.5px', color: '#6b7280', margin: 0 }}>The certificate has been emailed successfully to the employee.</p>
+                  <h3 className="text-lg font-black text-gray-900">Relieving Letter Dispatched!</h3>
+                  <p className="text-xs text-gray-500">The certificate has been emailed successfully to the employee.</p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Mail size={16} color="#3b82f6" />
+                <div className="flex flex-col gap-3 mb-6">
+                  <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                      <Mail size={16} />
                     </div>
                     <div>
-                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Email Sent To</p>
-                      <p style={{ fontSize: '13.5px', fontWeight: 700, color: '#111827', margin: 0 }}>{modalData.emailSentTo}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Email Sent To</p>
+                      <p className="text-sm font-bold text-gray-800">{modalData.emailSentTo}</p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <CheckCircle2 size={16} color="#059669" />
+                  <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                      <CheckCircle2 size={16} />
                     </div>
                     <div>
-                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Delivery Status</p>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#059669', background: '#d1fae5', padding: '2px 10px', borderRadius: '999px', border: '1px solid #a7f3d0' }}>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Delivery Status</p>
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-2xs font-extrabold uppercase text-emerald-600 tracking-wider inline-block mt-0.5">
                         {modalData.status}
                       </span>
                     </div>
                   </div>
 
                   {modalData.previewUrl && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <FileText size={16} color="#d97706" />
+                    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                        <FileText size={16} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>Preview URL</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Preview URL</p>
                         <a
                           href={getFullAssetUrl(modalData.previewUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ fontSize: '12.5px', fontWeight: 700, color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition overflow-hidden text-overflow-ellipsis whitespace-nowrap"
                         >
-                          Open Document <ExternalLink size={12} style={{ flexShrink: 0 }} />
+                          Open Document <ExternalLink size={12} className="shrink-0" />
                         </a>
                       </div>
                     </div>
@@ -754,7 +685,7 @@ export default function RelievingLetter({ onBack }) {
 
                 <button
                   onClick={() => setShowModal(false)}
-                  style={{ width: '100%', padding: '12px', background: '#111827', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px', cursor: 'pointer' }}
+                  className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
                 >
                   Done
                 </button>
@@ -835,131 +766,97 @@ export default function RelievingLetter({ onBack }) {
                 </svg>
               )}
               <div>
-                <div style={{ fontSize: '18px', fontWeight: 900, color: '#166534', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', lineHeight: 1.1, textTransform: 'uppercase', maxWidth: '280px' }}>
+                <div className="text-lg font-black uppercase leading-tight tracking-wide text-emerald-800 max-w-[280px]" style={{ fontFamily: "'Georgia', serif" }}>
                   {companyName}
                 </div>
-                <div style={{ fontSize: '9.5px', color: '#374151', fontWeight: 700, letterSpacing: '0.5px', marginTop: '2px' }}>
+                <div className="mt-0.5 text-[9.5px] font-bold tracking-wide text-gray-700">
                   {user?.adminReferenceCode ? `Ref: ${user.adminReferenceCode}` : 'Since 1975'}
                 </div>
               </div>
             </div>
 
             {/* Document Date */}
-            <div style={{ paddingRight: '120px', marginTop: '16px', fontSize: '12.5px', color: '#1f2937', fontWeight: 600 }}>
+            <div className="mt-4 pr-[120px] text-[12.5px] font-semibold text-gray-800">
               Date: {formatDateIN(relievingDate)}
             </div>
           </div>
 
           {/* Reference & Title */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '12.5px' }}>
+          <div className="mb-3 flex justify-between text-[12.5px]">
             <div>
               <strong>Ref:</strong> GPHR/HR/REL/2026/{selectedId}
             </div>
           </div>
 
-          <h3 style={{
-            textAlign: 'center',
-            textTransform: 'uppercase',
-            fontSize: '15px',
-            fontWeight: 800,
-            color: '#111827',
-            borderBottom: '1.5px solid #111827',
-            paddingBottom: '4px',
-            marginBottom: '24px',
-            letterSpacing: '1px'
-          }}>
+          <h3 className="mb-6 border-b-2 border-gray-900 pb-1 text-center text-[15px] font-extrabold uppercase tracking-widest text-gray-900">
             Relieving Order &amp; Experience Certificate
           </h3>
 
           {/* Body Text */}
-          <div className="letter-body-content" style={{ fontSize: '12.5px', color: '#1f2937', textAlign: 'justify', display: 'flex', flexDirection: 'column', gap: '14px', textIndent: '40px', lineHeight: 1.6 }}>
-            <p style={{ margin: 0 }}>
+          <div className="letter-body-content flex flex-col gap-3.5 text-justify text-[12.5px] leading-relaxed text-gray-800" style={{ textIndent: '40px' }}>
+            <p className="m-0">
               This is to certify that Mr. <strong>{candidateName}</strong> (Employee ID: <strong>{selectedId}</strong>) was employed with M/s. <strong>{companyName}</strong> as <strong>{designation}</strong> in the <strong>{department}</strong> Department.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               Mr. <strong>{candidateName}</strong> joined the services of the Company on <strong>{formatDateIN(joinedDate)}</strong> and has been relieved from their duties with effect from the close of business hours on <strong>{formatDateIN(relievingDate)}</strong> following their resignation submitted due to <strong>{reason}</strong>.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               During their tenure of service with us, we found them to be extremely diligent, committed, and professional in carrying out their responsibilities. They have shown great clinical analytical precision and stellar teamwork in our pharmaceutical operations.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               We also confirm that they have successfully completed all handover processes, resolved any company asset clearances, and fulfilled all exit compliance guidelines. No outstanding dues remain between the Company and Mr. <strong>{candidateName}</strong>.
             </p>
 
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               We deeply appreciate their contributions to our pharmaceutical research and development goals and wish them the absolute best in all their future professional endeavors.
             </p>
           </div>
 
           {/* Signatures Row */}
-          <div className="signature-block" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-end',
-            marginTop: 'auto',
-            paddingTop: '20px',
-            fontSize: '12.5px',
-            color: '#1f2937'
-          }}>
+          <div className="signature-block mt-auto flex items-end justify-between pt-5 text-[12.5px] text-gray-800">
             <div>
-              <div style={{ fontWeight: 600 }}>Yours Sincerely,</div>
-              <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', marginBottom: '24px' }}>for {companyName},</div>
+              <div className="font-semibold">Yours Sincerely,</div>
+              <div className="mb-6 text-[11px] font-extrabold uppercase">for {companyName},</div>
 
               {/* Stamp or Simulated Signature */}
               {stampSrc ? (
-                <div style={{ height: '56px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                  <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                <div className="mb-1 flex h-14 items-center">
+                  <img crossOrigin="anonymous" src={stampSrc} alt="Stamp" className="max-h-full object-contain" />
                 </div>
               ) : (
-                <div style={{
-                  fontFamily: "'Brush Script MT', cursive, sans-serif",
-                  fontSize: '24px',
-                  color: '#1e3a8a',
-                  height: '32px',
-                  lineHeight: 1,
-                  transform: 'rotate(-4deg) translateX(10px)',
-                  marginBottom: '2px',
-                  userSelect: 'none'
-                }}>
+                <div
+                  className="mb-0.5 h-8 select-none text-2xl font-bold text-blue-900 rotate-[-4deg] translate-x-2.5"
+                  style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                >
                   {hrHeadName}
                 </div>
               )}
 
-              <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px' }}></div>
-              <div style={{ fontWeight: 800, fontSize: '11px' }}>{hrHeadName}</div>
-              <div style={{ fontSize: '10px', color: '#4b5563' }}>{hrHeadDesignation}</div>
+              <div className="mb-0.5 w-40 border-t border-gray-500"></div>
+              <div className="text-[11px] font-extrabold">{hrHeadName}</div>
+              <div className="text-[10px] text-gray-600">{hrHeadDesignation}</div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: '40px' }}>Received Certificate Copy:</div>
-              <div style={{ borderBottom: '1px solid #4b5563', width: '160px', marginBottom: '3px', marginLeft: 'auto' }}></div>
-              <div style={{ fontWeight: 800, fontSize: '11px' }}>Candidate Signature</div>
-              <div style={{ fontSize: '10px', color: '#4b5563' }}>Date: {formatDateIN(relievingDate)}</div>
+            <div className="text-right">
+              <div className="mb-10 text-[11.5px] text-gray-500">Received Certificate Copy:</div>
+              <div className="mb-0.5 ml-auto w-40 border-t border-gray-500"></div>
+              <div className="text-[11px] font-extrabold">Candidate Signature</div>
+              <div className="text-[10px] text-gray-600">Date: {formatDateIN(relievingDate)}</div>
             </div>
           </div>
 
         </div>
 
         {/* Footer address info */}
-        <div style={{
-          textAlign: 'center',
-          borderTop: '1px solid #e2e8f0',
-          paddingTop: '8px',
-          fontSize: '9px',
-          color: '#4b5563',
-          lineHeight: 1.35,
-          zIndex: 10,
-          marginTop: '20px',
-          paddingBottom: '50px'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 900, color: '#b45309', fontFamily: "'Georgia', serif", letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '2px' }}>
+        <div className="relative z-10 mt-5 border-t border-gray-200 pb-12 pt-2 text-center text-[9px] leading-snug text-gray-600">
+          <div className="mb-0.5 text-[13px] font-black uppercase tracking-wide text-amber-700" style={{ fontFamily: "'Georgia', serif" }}>
             {companyName}
           </div>
           {companyRegAddress && <div>{companyRegAddress}</div>}
-          {hrEmail && <div style={{ fontWeight: 600 }}>Email: {hrEmail} {user?.phone ? `| Ph: ${user.phone}` : ''}</div>}
+          {hrEmail && <div className="font-semibold">Email: {hrEmail} {user?.phone ? `| Ph: ${user.phone}` : ''}</div>}
         </div>
 
       </div>

@@ -59,95 +59,67 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="login-page-container">
+    <div className="min-h-screen bg-white relative flex items-center justify-center p-4 md:p-8 overflow-hidden font-sans">
 
       {/* ── DYNAMIC BACKGROUND ─────────────────────────────────────── */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
-        style={{
-          position: 'absolute', top: '-20%', left: '-10%',
-          width: '70vw', height: '70vw', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(200, 240, 74, 0.4) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
+        className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(200,240,74,0.4)_0%,transparent_70%)] blur-[80px] pointer-events-none"
       />
 
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-        style={{
-          position: 'absolute', bottom: '-20%', right: '-10%',
-          width: '60vw', height: '60vw', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(167, 216, 0, 0.2) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
+        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle,rgba(167,216,0,0.2)_0%,transparent_70%)] blur-[80px] pointer-events-none"
       />
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────── */}
-      <div className="login-page-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl w-full relative z-10">
 
         {/* Left Side: Brand & Messaging */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="login-brand-section"
+          className="flex flex-col items-start gap-6 lg:pr-10"
         >
           <motion.div
             variants={itemVariants}
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
+            className="flex items-center gap-4 cursor-pointer select-none"
             onClick={() => navigate('/')}
           >
-            <div style={{
-              width: '56px', height: '56px', borderRadius: '16px',
-              background: 'linear-gradient(135deg, var(--lime) 0%, var(--lime-dark) 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 12px 32px rgba(200, 240, 74, 0.25)'
-            }}>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C8F04A] to-green-600 flex items-center justify-center shadow-lg">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#0F172A" strokeWidth="2.5" strokeLinejoin="round"/>
                 <path d="M12 2v20M3 7l9 5 9-5" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '28px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              <div className="font-extrabold text-[28px] text-gray-900 tracking-tight leading-none">
                 GmaxepayHR
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--lime-dark)', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
+              <div className="text-[11px] text-green-700 font-bold tracking-[2px] uppercase leading-none mt-1">
                 Pharma HRMS
               </div>
             </div>
           </motion.div>
 
-          <motion.h1 variants={itemVariants} style={{
-            fontSize: 'clamp(40px, 5vw, 56px)', fontWeight: 900, color: 'var(--text-primary)',
-            letterSpacing: '-1.5px', lineHeight: 1.1,
-          }}>
-            Restore your <span style={{ color: 'var(--lime-dark)' }}>credentials.</span>
+          <motion.h1 variants={itemVariants} className="text-[40px] md:text-[50px] lg:text-[56px] font-extrabold text-gray-900 tracking-tight leading-[1.1]">
+            Restore your <span className="text-green-700">credentials.</span>
           </motion.h1>
 
-          <motion.p variants={itemVariants} style={{
-            fontSize: '18px', color: 'var(--text-secondary)',
-            lineHeight: 1.6, maxWidth: '420px', fontWeight: 500
-          }}>
+          <motion.p variants={itemVariants} className="text-[18px] text-gray-500 leading-relaxed max-w-[420px] font-medium">
             Enter your email address to receive a secure password reset link to reactivate your access.
           </motion.p>
 
-          <motion.div variants={itemVariants} style={{
-             marginTop: '20px', padding: '16px 20px',
-             background: '#fff', border: '1px solid var(--border)',
-             borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
-             boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-          }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>PASSWORD RESET SYSTEM</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--lime-dark)', boxShadow: '0 0 10px var(--lime)' }} />
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>Automatic link expiry</span>
+          <motion.div variants={itemVariants} className="mt-5 p-4 px-5 bg-white border border-gray-200 rounded-xl shadow-sm inline-block">
+            <div className="text-[12px] text-gray-400 mb-1 font-bold uppercase tracking-wider">PASSWORD RESET SYSTEM</div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-600 shadow-[0_0_10px_#10b981]" />
+              <span className="text-[14px] text-gray-955 font-bold">Automatic link expiry</span>
             </div>
           </motion.div>
         </motion.div>
@@ -159,13 +131,13 @@ export default function ForgotPasswordPage() {
           transition={{ duration: 0.8, type: 'spring', bounce: 0.4 }}
           style={{ perspective: '1000px' }}
         >
-          <div className="login-card-container">
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 md:p-10 shadow-2xl w-full max-w-[460px] mx-auto">
 
-            <div style={{ marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            <div className="mb-8">
+              <h2 className="text-[24px] font-extrabold text-gray-900 mb-2">
                 Reset Password
               </h2>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              <p className="text-[14px] text-gray-550 font-medium">
                 Please enter your email to receive a recovery link.
               </p>
             </div>
@@ -173,8 +145,8 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} noValidate>
 
               {/* Email */}
-              <div style={{ marginBottom: '28px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="mb-7">
+                <label className="block text-[12px] font-bold text-gray-400 mb-2 uppercase tracking-[0.5px]">
                   Email Address
                 </label>
                 <input
@@ -184,18 +156,7 @@ export default function ForgotPasswordPage() {
                   onChange={e => { setEmail(e.target.value); setLocalError('') }}
                   placeholder="you@gmaxepayhr.in"
                   autoComplete="email"
-                  style={{
-                    width: '100%', padding: '14px 16px',
-                    background: '#f8fafc',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px', fontSize: '15px',
-                    color: 'var(--text-primary)', outline: 'none',
-                    transition: 'all 0.2s ease',
-                    boxSizing: 'border-box',
-                    fontWeight: 500,
-                  }}
-                  onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
-                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-[15px] text-gray-950 font-medium outline-none transition-all duration-200 focus:border-green-600 focus:bg-white box-border"
                 />
               </div>
 
@@ -206,14 +167,9 @@ export default function ForgotPasswordPage() {
                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    style={{ overflow: 'hidden' }}
+                    className="overflow-hidden"
                   >
-                    <div style={{
-                      padding: '12px 16px', borderRadius: '10px',
-                      background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
-                      fontSize: '13px', color: '#dc2626', lineHeight: 1.5,
-                      display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500
-                    }}>
+                    <div className="p-3 px-4 rounded-lg bg-rose-50 border border-rose-200 text-[13px] text-rose-600 leading-relaxed flex items-center gap-2 font-medium">
                       <span>⚠️</span> {error}
                     </div>
                   </motion.div>
@@ -224,14 +180,9 @@ export default function ForgotPasswordPage() {
                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    style={{ overflow: 'hidden' }}
+                    className="overflow-hidden"
                   >
-                    <div style={{
-                      padding: '12px 16px', borderRadius: '10px',
-                      background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)',
-                      fontSize: '13px', color: 'var(--lime-dark)', lineHeight: 1.5,
-                      display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600
-                    }}>
+                    <div className="p-3 px-4 rounded-lg bg-green-50 border border-green-200 text-[13px] text-green-700 leading-relaxed flex items-center gap-2 font-bold">
                       <span>✅</span> {localSuccess}
                     </div>
                   </motion.div>
@@ -245,16 +196,9 @@ export default function ForgotPasswordPage() {
                 id="forgot-btn"
                 type="submit"
                 disabled={loading || !!localSuccess}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: loading || localSuccess ? 'rgba(200, 240, 74, 0.5)' : 'var(--lime)',
-                  color: '#0F172A', fontWeight: 800, fontSize: '15px',
-                  border: 'none', borderRadius: '12px',
-                  cursor: loading || localSuccess ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  fontFamily: 'var(--font-sans)',
-                  boxShadow: '0 8px 20px rgba(200, 240, 74, 0.2)'
-                }}
+                className={`w-full py-3.5 text-gray-955 font-extrabold text-[15px] border-none rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-lg transition-colors ${
+                  loading || localSuccess ? 'bg-green-200 cursor-not-allowed' : 'bg-[#C8F04A] hover:bg-[#b5db3f]'
+                }`}
               >
                 {loading ? (
                   <>
@@ -266,17 +210,11 @@ export default function ForgotPasswordPage() {
               </motion.button>
 
               {/* Back to Login Link */}
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Remembered your password? </span>
+              <div className="text-center mt-6">
+                <span className="text-[13px] text-gray-500 font-medium">Remembered your password? </span>
                 <span
                   onClick={() => navigate('/login')}
-                  style={{
-                    fontSize: '13px', color: 'var(--lime-dark)',
-                    cursor: 'pointer', fontWeight: 700,
-                    transition: 'opacity 0.2s', textDecoration: 'none'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  className="text-[13px] text-green-700 font-bold hover:opacity-80 transition-opacity cursor-pointer no-underline"
                 >
                   Sign In
                 </span>
@@ -291,11 +229,9 @@ export default function ForgotPasswordPage() {
 
 function SpinnerIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-      style={{ animation: 'spin 1s linear infinite' }}>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="animate-spin">
       <circle cx="12" cy="12" r="10" stroke="rgba(15, 23, 42, 0.2)" strokeWidth="3"/>
       <path d="M12 2a10 10 0 0110 10" stroke="#0F172A" strokeWidth="3" strokeLinecap="round"/>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </svg>
   );
 }

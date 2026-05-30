@@ -2,10 +2,10 @@ import React from 'react';
 
 const HRDashboard = () => {
   const stats = [
-    { label: 'Total Employees', value: '384 Active', sub: 'Across 4 Regions', color: '#10B981', bg: '#ECFDF5', icon: '👥' },
-    { label: 'Pending Approvals', value: '12 Requests', sub: 'Leaves & Attendance', color: '#EF4444', bg: '#FEF2F2', icon: '📝' },
-    { label: 'Active Job Openings', value: '6 Positions', sub: 'Recruiting Pipeline', color: '#3B82F6', bg: '#EFF6FF', icon: '💼' },
-    { label: 'Payroll Status', value: 'May Cycle Done', sub: 'Disbursed on 1st', color: '#8B5CF6', bg: '#F5F3FF', icon: '💰' },
+    { label: 'Total Employees', value: '384 Active', sub: 'Across 4 Regions', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: '👥' },
+    { label: 'Pending Approvals', value: '12 Requests', sub: 'Leaves & Attendance', color: 'text-rose-500', bg: 'bg-rose-50', icon: '📝' },
+    { label: 'Active Job Openings', value: '6 Positions', sub: 'Recruiting Pipeline', color: 'text-blue-500', bg: 'bg-blue-50', icon: '💼' },
+    { label: 'Payroll Status', value: 'May Cycle Done', sub: 'Disbursed on 1st', color: 'text-violet-500', bg: 'bg-violet-50', icon: '💰' },
   ];
 
   const pendingApprovals = [
@@ -15,74 +15,45 @@ const HRDashboard = () => {
   ];
 
   return (
-    <div style={{ animation: 'fadeIn 0.4s ease-out', padding: '10px' }}>
+    <div className="p-2.5 animate-fade">
       {/* Welcome Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #047857 0%, #10B981 100%)',
-        borderRadius: '20px',
-        padding: '30px',
-        color: '#fff',
-        marginBottom: '28px',
-        boxShadow: '0 10px 25px rgba(16, 185, 129, 0.15)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, letterSpacing: '1px' }}>
+      <div className="bg-gradient-to-br from-[#047857] to-[#10B981] rounded-[20px] p-[30px] text-white mb-[28px] shadow-[0_10px_25px_rgba(16,185,129,0.15)] relative overflow-hidden">
+        <div className="relative z-[2]">
+          <span className="bg-white/20 px-3 py-1.5 rounded-[20px] text-[12px] font-bold tracking-[1px]">
             PORTAL: HR MANAGEMENT
           </span>
-          <h2 style={{ fontSize: '28px', fontWeight: 800, margin: '14px 0 6px 0', letterSpacing: '-0.5px' }}>
+          <h2 className="text-[28px] font-extrabold my-3.5 mb-1.5 tracking-[-0.5px]">
             Welcome, HR Admin!
           </h2>
-          <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', maxWidth: '500px' }}>
+          <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Oversee company culture, process leave requests, track field recruitment pipelines, and manage employee onboarding.
           </p>
         </div>
-        <div style={{
-          position: 'absolute', right: '-50px', bottom: '-50px', fontSize: '180px', opacity: 0.1, userSelect: 'none', pointerEvents: 'none'
-        }}>
+        <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           👩‍💼
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-[28px]">
         {stats.map((s, i) => (
-          <div key={i} style={{
-            background: '#fff',
-            border: '1.5px solid #F3F4F6',
-            borderRadius: '16px',
-            padding: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)',
-            transition: 'all 0.2s',
-            cursor: 'pointer'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
-            }}
+          <div
+            key={i}
+            className="bg-white border-[1.5px] border-gray-100 rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02),0_2px_4px_-1px_rgba(0,0,0,0.01)] hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-200 cursor-pointer"
           >
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '12px', background: s.bg, fontSize: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
+            <div
+              className={`w-12 h-12 rounded-xl text-[24px] flex items-center justify-center shrink-0 ${s.bg}`}
+            >
               {s.icon}
             </div>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="text-[12px] font-semibold text-gray-400 uppercase tracking-[0.5px]">
                 {s.label}
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', margin: '2px 0' }}>
+              <div className="text-[20px] font-extrabold text-gray-800 my-0.5">
                 {s.value}
               </div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: s.color }}>
+              <div className={`text-[11px] font-semibold ${s.color}`}>
                 {s.sub}
               </div>
             </div>
@@ -90,37 +61,28 @@ const HRDashboard = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Pending Approvals Feed */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>Pending Requests Inbox</h3>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#047857', cursor: 'pointer' }}>View All Requests ➔</span>
+        <div className="lg:col-span-2 bg-white border-[1.5px] border-gray-100 rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="m-0 text-[16px] font-extrabold text-gray-800">Pending Requests Inbox</h3>
+            <span className="text-[12px] font-bold text-[#047857] cursor-pointer">View All Requests ➔</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="flex flex-col gap-3.5">
             {pendingApprovals.map((p, idx) => (
-              <div key={idx} style={{
-                display: 'flex', alignItems: 'center', justifyItems: 'center', gap: '16px', padding: '16px', borderRadius: '12px', background: '#FAFAFA', border: '1px solid #F3F4F6'
-              }}>
-                <div style={{
-                  fontSize: '20px', width: '40px', height: '40px', background: p.status.includes('Review') ? '#FFE4E6' : '#EFF6FF',
-                  borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
+              <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="text-[20px] w-10 h-10 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center shrink-0">
                   {p.status.includes('Review') ? '⚠️' : '✉️'}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937' }}>{p.name}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{p.role} • <span style={{ fontWeight: 600, color: '#4B5563' }}>{p.request}</span></div>
-                  <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>Duration/Amount: {p.date}</div>
+                <div className="flex-1">
+                  <div className="text-[14px] font-bold text-gray-800">{p.name}</div>
+                  <div className="text-[12px] text-gray-500 mt-0.5">{p.role} • <span className="font-semibold text-gray-600">{p.request}</span></div>
+                  <div className="text-[11px] text-gray-400 mt-1">Duration/Amount: {p.date}</div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={{
-                    padding: '6px 12px', fontSize: '11px', fontWeight: 700, borderRadius: '8px', border: 'none', background: '#D1FAE5', color: '#065F46', cursor: 'pointer'
-                  }}>Approve</button>
-                  <button style={{
-                    padding: '6px 12px', fontSize: '11px', fontWeight: 700, borderRadius: '8px', border: 'none', background: '#F3F4F6', color: '#374151', cursor: 'pointer'
-                  }}>Reject</button>
+                <div className="flex gap-2">
+                  <button className="px-3.5 py-1.5 text-[11px] font-bold rounded-lg border-none bg-green-100 text-green-800 hover:bg-green-200 transition-colors cursor-pointer">Approve</button>
+                  <button className="px-3.5 py-1.5 text-[11px] font-bold rounded-lg border-none bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer">Reject</button>
                 </div>
               </div>
             ))}
@@ -128,54 +90,27 @@ const HRDashboard = () => {
         </div>
 
         {/* HR Operations Quick Links */}
-        <div style={{ background: '#fff', border: '1.5px solid #F3F4F6', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ margin: '0 0 18px 0', fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>HR Operations</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="bg-white border-[1.5px] border-gray-100 rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <h3 className="m-0 mb-4.5 text-[16px] font-extrabold text-gray-800">HR Operations</h3>
+          <div className="flex flex-col gap-2.5">
             <button
               onClick={() => window.location.href = '/admin/onboard'}
-              style={{
-                width: '100%', padding: '12px', borderRadius: '12px', border: 'none', background: '#047857', color: '#fff',
-                fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'opacity 0.2s', textAlign: 'center'
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              className="w-full p-3 rounded-xl bg-[#047857] text-white font-bold text-[13px] hover:opacity-90 transition-opacity text-center cursor-pointer"
             >
               ➕ Onboard New Employee
             </button>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
+            <button className="w-full p-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] hover:bg-gray-50 transition-colors text-center cursor-pointer">
               📊 Payroll Calculator
             </button>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
+            <button className="w-full p-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] hover:bg-gray-50 transition-colors text-center cursor-pointer">
               📁 Compliance Documents
             </button>
-            <button style={{
-              width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151',
-              fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'center'
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-            >
+            <button className="w-full p-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] hover:bg-gray-50 transition-colors text-center cursor-pointer">
               🏢 Manage Departments
             </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </div>
   );
 };

@@ -12,9 +12,9 @@ import MRTourPlanPage from '../../pages/mr/MRTourPlanPage'
 import MRLeavePage from '../../pages/mr/MRLeavePage'
 
 const SettingsPlaceholder = () => (
-  <div style={{ padding: '24px', background: '#fff', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
-    <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '0 0 8px 0' }}>Settings</h3>
-    <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>Configure your personal preferences, notifications, and profile security here.</p>
+  <div className="p-6 bg-white rounded-2xl border border-gray-200">
+    <h3 className="text-[18px] font-extrabold text-gray-900 mb-2">Settings</h3>
+    <p className="text-[13px] text-gray-500">Configure your personal preferences, notifications, and profile security here.</p>
   </div>
 )
 

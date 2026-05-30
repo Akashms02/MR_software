@@ -48,17 +48,14 @@ function typeIcon(type) {
 // ─── Toast ─────────────────────────────────────────────────────────────────────
 function Toast({ msg, type, onClose }) {
   return (
-    <div style={{
-      position: 'fixed', bottom: '28px', right: '28px', zIndex: 9999,
-      background: type === 'error' ? '#7F1D1D' : '#064E3B',
-      color: '#fff', borderRadius: '14px', padding: '14px 20px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
-      display: 'flex', alignItems: 'center', gap: '10px',
-      maxWidth: '380px', animation: 'toastIn 0.3s ease-out',
-    }}>
-      <span style={{ fontSize: '20px' }}>{type === 'error' ? '⚠️' : '✅'}</span>
-      <span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>{msg}</span>
-      <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '2px 8px', cursor: 'pointer' }}>✕</button>
+    <div 
+      className={`fixed bottom-7 right-7 z-[9999] text-white rounded-2xl px-5 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] flex items-center gap-2.5 max-w-[380px] animate-[toastIn_0.3s_ease-out] ${
+        type === 'error' ? 'bg-[#7F1D1D]' : 'bg-[#064E3B]'
+      }`}
+    >
+      <span className="text-[20px]">{type === 'error' ? '⚠️' : '✅'}</span>
+      <span className="text-[13px] font-semibold flex-1">{msg}</span>
+      <button onClick={onClose} className="bg-white/15 border-none text-white rounded-lg px-2 py-0.5 cursor-pointer">✕</button>
     </div>
   );
 }
@@ -102,39 +99,39 @@ function PhotoCaptureModal({ title, onDone, onClose }) {
   const handleClose = () => { stop(); onClose(); };
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:1100, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}>
-      <div style={{ background:'#fff', borderRadius:'20px', width:'100%', maxWidth:'440px', maxHeight:'90vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 56px rgba(0,0,0,0.3)', animation:'modalIn 0.25s ease-out' }}>
-        <div style={{ background:'linear-gradient(135deg,#1E3A8A,#3B82F6)', padding:'18px 22px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-          <span style={{ color:'#fff', fontWeight:800, fontSize:'15px' }}>{title}</span>
-          <button onClick={handleClose} style={{ background:'rgba(255,255,255,0.2)', border:'none', color:'#fff', borderRadius:'8px', padding:'4px 10px', cursor:'pointer', fontSize:'16px' }}>✕</button>
+    <div className="fixed inset-0 bg-black/65 z-[1100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-[440px] max-h-[90vh] flex flex-col overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.3)] animate-[modalIn_0.25s_ease-out]">
+        <div className="bg-gradient-to-br from-blue-900 to-blue-500 px-5.5 py-4.5 flex justify-between items-center shrink-0">
+          <span className="text-white font-extrabold text-[15px]">{title}</span>
+          <button onClick={handleClose} className="bg-white/20 border-none text-white rounded-lg px-2.5 py-1 cursor-pointer text-[16px]">✕</button>
         </div>
-        <div style={{ padding:'22px', overflowY:'auto', flex:1 }}>
+        <div className="p-5.5 overflow-y-auto flex-1">
           {mode === 'choose' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              <p style={{ margin:'0 0 6px', fontSize:'13px', color:'#6B7280' }}>How would you like to add a photo of this place?</p>
-              <button onClick={openCamera} style={photoBtnStyle('#1D4ED8','#EFF6FF','1.5px solid #3B82F6')}>Open Camera</button>
-              <label style={photoBtnStyle('#374151','#F9FAFB','1.5px solid #E5E7EB')}>
+            <div className="flex flex-col gap-2.5">
+              <p className="m-0 mb-1.5 text-[13px] text-gray-500">How would you like to add a photo of this place?</p>
+              <button onClick={openCamera} className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-blue-500 bg-blue-50 text-blue-800 font-bold text-[14px] cursor-pointer w-full">Open Camera</button>
+              <label className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-bold text-[14px] cursor-pointer w-full text-center justify-center">
                 Upload from Device
-                <input type="file" accept="image/*" onChange={handleFile} style={{ display:'none' }} />
+                <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
               </label>
-              <button onClick={() => onDone(null)} style={photoBtnStyle('#6B7280','#F3F4F6','none')}>Skip Photo</button>
+              <button onClick={() => onDone(null)} className="flex items-center justify-center gap-2 p-3.5 rounded-xl border-none bg-gray-100 text-gray-500 font-bold text-[14px] cursor-pointer w-full">Skip Photo</button>
             </div>
           )}
           {mode === 'camera' && (
             <div>
-              <video ref={videoRef} autoPlay playsInline style={{ width:'100%', borderRadius:'12px', background:'#000', display:'block' }} />
-              <canvas ref={canvasRef} style={{ display:'none' }} />
-              <button onClick={snap} style={{ marginTop:'12px', width:'100%', padding:'13px', borderRadius:'12px', border:'none', background:'#3B82F6', color:'#fff', fontWeight:800, fontSize:'14px', cursor:'pointer' }}>Capture</button>
-              <button onClick={() => { stop(); setMode('choose'); }} style={{ marginTop:'8px', width:'100%', padding:'10px', borderRadius:'12px', border:'1.5px solid #E5E7EB', background:'#fff', color:'#374151', fontWeight:600, fontSize:'13px', cursor:'pointer' }}>Back</button>
+              <video ref={videoRef} autoPlay playsInline className="w-full rounded-xl bg-black block" />
+              <canvas ref={canvasRef} className="hidden" />
+              <button onClick={snap} className="mt-3 w-full p-3.5 rounded-xl border-none bg-blue-500 text-white font-extrabold text-[14px] cursor-pointer">Capture</button>
+              <button onClick={() => { stop(); setMode('choose'); }} className="mt-2 w-full p-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-[13px] cursor-pointer">Back</button>
             </div>
           )}
           {mode === 'preview' && (
             <div>
-              <img src={preview} alt="Captured" style={{ width:'100%', borderRadius:'12px', maxHeight:'240px', objectFit:'cover' }} />
-              <canvas ref={canvasRef} style={{ display:'none' }} />
-              <div style={{ display:'flex', gap:'10px', marginTop:'12px' }}>
-                <button onClick={() => setMode('choose')} style={{ flex:1, padding:'11px', borderRadius:'12px', border:'1.5px solid #E5E7EB', background:'#fff', color:'#374151', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Retake</button>
-                <button onClick={() => { onDone(preview); handleClose(); }} style={{ flex:2, padding:'11px', borderRadius:'12px', border:'none', background:'#059669', color:'#fff', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Use Photo</button>
+              <img src={preview} alt="Captured" className="w-full rounded-xl max-h-[240px] object-cover" />
+              <canvas ref={canvasRef} className="hidden" />
+              <div className="flex gap-2.5 mt-3">
+                <button onClick={() => setMode('choose')} className="flex-1 p-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer">Retake</button>
+                <button onClick={() => { onDone(preview); handleClose(); }} className="flex-[2] p-3 rounded-xl border-none bg-emerald-600 text-white font-bold text-[13px] cursor-pointer">Use Photo</button>
               </div>
             </div>
           )}
@@ -143,11 +140,6 @@ function PhotoCaptureModal({ title, onDone, onClose }) {
     </div>
   );
 }
-const photoBtnStyle = (color, bg, border) => ({
-  display:'flex', alignItems:'center', justifyContent:'center', gap:'8px',
-  padding:'13px', borderRadius:'12px', border, background:bg, color, fontWeight:700,
-  fontSize:'14px', cursor:'pointer', width:'100%',
-});
 
 // ─── Visit Check-In Modal ─────────────────────────────────────────────────────
 function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
@@ -173,67 +165,67 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
   const canSubmit = isCustom ? customName.trim().length > 0 : !!selectedId;
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}>
-      <div style={{ background:'#fff', borderRadius:'22px', width:'100%', maxWidth:'500px', maxHeight:'90vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 56px rgba(0,0,0,0.25)', animation:'modalIn 0.25s ease-out' }}>
+    <div className="fixed inset-0 bg-black/55 z-[1000] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.25)] animate-[modalIn_0.25s_ease-out]">
 
         {/* Header */}
-        <div style={{ background:'linear-gradient(135deg,#1E3A8A,#3B82F6)', padding:'18px 22px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+        <div className="bg-gradient-to-br from-blue-900 to-blue-500 px-5.5 py-4.5 flex justify-between items-center shrink-0">
           <div>
-            <div style={{ color:'rgba(255,255,255,0.7)', fontSize:'11px', fontWeight:700, letterSpacing:'1px' }}>FIELD VISIT</div>
-            <div style={{ color:'#fff', fontWeight:800, fontSize:'16px' }}>Visit Check-In</div>
+            <div className="text-white/70 text-[11px] font-bold tracking-wider">FIELD VISIT</div>
+            <div className="text-white font-extrabold text-[16px]">Visit Check-In</div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.2)', border:'none', color:'#fff', borderRadius:'10px', padding:'6px 12px', cursor:'pointer', fontSize:'15px' }}>✕</button>
+          <button onClick={onClose} className="bg-white/20 border-none text-white rounded-xl px-3 py-1.5 cursor-pointer text-[15px]">✕</button>
         </div>
 
-        <div style={{ padding:'22px', display:'flex', flexDirection:'column', gap:'16px', overflowY:'auto', flex:1 }}>
+        <div className="p-5.5 flex flex-col gap-4 overflow-y-auto flex-1">
 
           {/* Location + Time Strip */}
-          <div style={{ background:'#F0FDF4', borderRadius:'12px', padding:'12px 14px', display:'flex', gap:'16px', fontSize:'12px', fontWeight:700, color:'#065F46' }}>
+          <div className="bg-[#F0FDF4] rounded-xl px-3.5 py-3 flex gap-4 text-[12px] font-bold text-[#065F46]">
             <span>GPS Location Verified</span>
             <span>Time: {new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true })}</span>
-            {gpsLoading && <span style={{ color:'#3B82F6' }}>Getting location...</span>}
+            {gpsLoading && <span className="text-blue-500">Getting location...</span>}
           </div>
 
           {/* Search / Select Target */}
           {!isCustom ? (
             <div>
-              <label style={lblStyle}>Search Doctor / Hospital / Pharmacy</label>
+              <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Search Doctor / Hospital / Pharmacy</label>
               <input
                 type="text" value={search} onChange={e => { setSearch(e.target.value); setSelectedId(''); }}
                 placeholder="Type to search..."
-                style={{ ...inpStyle, marginBottom:'8px' }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border mb-2"
                 autoFocus
               />
-              <div style={{ maxHeight:'180px', overflowY:'auto', display:'flex', flexDirection:'column', gap:'5px', border:'1.5px solid #F3F4F6', borderRadius:'12px', padding:'8px' }}>
+              <div className="max-h-[180px] overflow-y-auto flex flex-col gap-1.5 border border-gray-105 rounded-xl p-2">
                 {filtered.map(t => (
                   <div key={t.id} onClick={() => { setSelectedId(t.id); setSearch(t.name); }}
-                    style={{ display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'9px', cursor:'pointer',
-                      background: selectedId === t.id ? '#EFF6FF' : '#FAFAFA',
-                      border: `1.5px solid ${selectedId === t.id ? '#3B82F6' : 'transparent'}`,
-                      transition:'all 0.15s' }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-                        <span style={{ fontSize:'10px', fontWeight:800, padding:'2px 6px', borderRadius:'4px', background:'#E5E7EB', color:'#374151' }}>{t.type.toUpperCase()}</span>
-                        <span style={{ fontSize:'13px', fontWeight:700, color:'#1F2937' }}>{t.name}</span>
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 border ${
+                      selectedId === t.id ? 'bg-[#EFF6FF] border-[#3B82F6]' : 'bg-[#FAFAFA] border-transparent'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 uppercase">{t.type.toUpperCase()}</span>
+                        <span className="text-[13px] font-bold text-gray-800">{t.name}</span>
                       </div>
-                      <div style={{ fontSize:'11px', color:'#9CA3AF', marginTop:'2px' }}>{t.clinic} · {t.specialty}</div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">{t.clinic} · {t.specialty}</div>
                     </div>
-                    {selectedId === t.id && <span style={{ color:'#3B82F6', fontSize:'16px' }}>✓</span>}
+                    {selectedId === t.id && <span className="text-blue-500 text-[16px]">✓</span>}
                   </div>
                 ))}
-                <button onClick={() => setIsCustom(true)} style={{ padding:'9px', borderRadius:'8px', border:'1.5px dashed #D1D5DB', background:'#F9FAFB', color:'#6B7280', fontWeight:600, fontSize:'12px', cursor:'pointer', textAlign:'center' }}>
+                <button onClick={() => setIsCustom(true)} className="p-2 rounded-lg border border-dashed border-gray-300 bg-[#F9FAFB] text-gray-500 font-semibold text-[12px] cursor-pointer text-center">
                   + Custom Visit Target
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ border:'1.5px solid #E5E7EB', borderRadius:'14px', padding:'14px', display:'flex', flexDirection:'column', gap:'10px' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontWeight:800, fontSize:'13px', color:'#1F2937' }}>Custom Visit Target</span>
-                <button onClick={() => setIsCustom(false)} style={{ background:'none', border:'none', color:'#3B82F6', fontSize:'12px', cursor:'pointer', fontWeight:600 }}>Back to list</button>
+            <div className="border border-gray-200 rounded-2xl p-3.5 flex flex-col gap-2.5">
+              <div className="flex justify-between items-center">
+                <span className="font-extrabold text-[13px] text-gray-800">Custom Visit Target</span>
+                <button onClick={() => setIsCustom(false)} className="bg-transparent border-none text-blue-500 text-[12px] cursor-pointer font-semibold">Back to list</button>
               </div>
-              <input type="text" value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Doctor / Hospital / Pharmacy name..." style={inpStyle} autoFocus />
-              <select value={customType} onChange={e => setCustomType(e.target.value)} style={inpStyle}>
+              <input type="text" value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Doctor / Hospital / Pharmacy name..." className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" autoFocus />
+              <select value={customType} onChange={e => setCustomType(e.target.value)} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border">
                 {['Doctor','Hospital','Pharmacy','Clinic','Lab'].map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
@@ -241,22 +233,22 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
 
           {/* Notes */}
           <div>
-            <label style={lblStyle}>Visit Purpose / Notes <span style={{ color:'#9CA3AF', fontWeight:500 }}>(optional)</span></label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Visit Purpose / Notes <span className="text-gray-400 font-medium">(optional)</span></label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="e.g. Discuss Cardace 5mg samples, follow-up on last prescription..."
-              rows={2} style={{ ...inpStyle, resize:'vertical' }} />
+              rows={2} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border resize-y" />
           </div>
 
           {/* Photo */}
           <div>
-            <label style={lblStyle}>Place / Clinic Photo <span style={{ color:'#9CA3AF', fontWeight:500 }}>(optional)</span></label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Place / Clinic Photo <span className="text-gray-400 font-medium">(optional)</span></label>
             {photo ? (
-              <div style={{ position:'relative' }}>
-                <img src={photo} alt="Place" style={{ width:'100%', height:'110px', objectFit:'cover', borderRadius:'12px' }} />
-                <button onClick={() => setPhoto(null)} style={{ position:'absolute', top:'7px', right:'7px', background:'#EF4444', border:'none', color:'#fff', borderRadius:'50%', width:'26px', height:'26px', cursor:'pointer', fontWeight:700 }}>✕</button>
+              <div className="relative">
+                <img src={photo} alt="Place" className="w-full h-[110px] object-cover rounded-xl" />
+                <button onClick={() => setPhoto(null)} className="absolute top-1.5 right-1.5 bg-red-500 border-none text-white rounded-full w-6.5 h-6.5 cursor-pointer font-bold">✕</button>
               </div>
             ) : (
-              <button onClick={() => setShowPhoto(true)} style={{ width:'100%', padding:'12px', borderRadius:'12px', border:'1.5px dashed #CBD5E1', background:'#F8FAFC', color:'#64748B', fontWeight:600, fontSize:'13px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>
+              <button onClick={() => setShowPhoto(true)} className="w-full p-3 rounded-xl border border-dashed border-gray-300 bg-[#F8FAFC] text-gray-500 font-semibold text-[13px] cursor-pointer flex items-center justify-center gap-2">
                 Capture / Upload Photo
               </button>
             )}
@@ -266,12 +258,11 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
           <button
             onClick={() => onSubmit({ target: selectedTarget, notes, photo })}
             disabled={!canSubmit || gpsLoading}
-            style={{ width:'100%', padding:'15px', borderRadius:'14px', border:'none', fontSize:'15px', fontWeight:800, cursor: (!canSubmit || gpsLoading) ? 'not-allowed' : 'pointer',
-              background: (!canSubmit || gpsLoading) ? '#D1D5DB' : 'linear-gradient(135deg,#1E3A8A,#3B82F6)',
-              color: (!canSubmit || gpsLoading) ? '#9CA3AF' : '#fff',
-              boxShadow: (!canSubmit || gpsLoading) ? 'none' : '0 4px 16px rgba(59,130,246,0.35)',
-              transition:'all 0.2s'
-            }}
+            className={`w-full p-3.5 rounded-2xl border-none text-[15px] font-extrabold transition-all duration-200 ${
+              (!canSubmit || gpsLoading) 
+                ? 'bg-gray-300 text-gray-400 cursor-not-allowed shadow-none' 
+                : 'bg-gradient-to-br from-blue-900 to-blue-500 text-white cursor-pointer shadow-[0_4px_16px_rgba(59,130,246,0.35)]'
+            }`}
           >
             {gpsLoading ? 'Getting Location...' : 'Confirm Check-In'}
           </button>
@@ -296,45 +287,48 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading }) {
   const [feedback,  setFeedback]  = useState('');
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}>
-      <div style={{ background:'#fff', borderRadius:'22px', width:'100%', maxWidth:'480px', maxHeight:'90vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 56px rgba(0,0,0,0.25)', animation:'modalIn 0.25s ease-out' }}>
-        <div style={{ background:'linear-gradient(135deg,#065F46,#059669)', padding:'18px 22px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+    <div className="fixed inset-0 bg-black/55 z-[1000] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-[480px] max-h-[90vh] flex flex-col overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.25)] animate-[modalIn_0.25s_ease-out]">
+        <div className="bg-gradient-to-br from-emerald-800 to-emerald-600 px-5.5 py-4.5 flex justify-between items-center shrink-0">
           <div>
-            <div style={{ color:'rgba(255,255,255,0.7)', fontSize:'11px', fontWeight:700 }}>VISIT COMPLETE</div>
-            <div style={{ color:'#fff', fontWeight:800, fontSize:'16px' }}>Check-Out</div>
+            <div className="text-white/70 text-[11px] font-bold">VISIT COMPLETE</div>
+            <div className="text-white font-extrabold text-[16px]">Check-Out</div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.2)', border:'none', color:'#fff', borderRadius:'10px', padding:'6px 12px', cursor:'pointer', fontSize:'15px' }}>✕</button>
+          <button onClick={onClose} className="bg-white/20 border-none text-white rounded-xl px-3 py-1.5 cursor-pointer text-[15px]">✕</button>
         </div>
-        <div style={{ padding:'22px', display:'flex', flexDirection:'column', gap:'14px', overflowY:'auto', flex:1 }}>
+        <div className="p-5.5 flex flex-col gap-3.5 overflow-y-auto flex-1">
           {/* Visit Summary */}
-          <div style={{ background:'#F0FDF4', borderRadius:'12px', padding:'14px', display:'flex', flexDirection:'column', gap:'4px' }}>
-            <div style={{ fontSize:'10px', fontWeight:800, color:'#047857', letterSpacing:'0.5px' }}>{visit.type.toUpperCase()}</div>
+          <div className="bg-[#F0FDF4] rounded-xl p-3.5 flex flex-col gap-1">
+            <div className="text-[10px] font-extrabold text-[#047857] tracking-wider uppercase">{visit.type.toUpperCase()}</div>
             <div>
-              <div style={{ fontWeight:800, fontSize:'14px', color:'#111827' }}>{visit.name}</div>
-              <div style={{ fontSize:'12px', color:'#6B7280' }}>{visit.clinic} · Checked-in at <strong>{visit.checkInTime}</strong></div>
+              <div className="font-extrabold text-[14px] text-gray-900">{visit.name}</div>
+              <div className="text-[12px] text-gray-500">{visit.clinic} · Checked-in at <strong>{visit.checkInTime}</strong></div>
             </div>
           </div>
 
           <div>
-            <label style={lblStyle}>Products / Medicines Promoted</label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Products / Medicines Promoted</label>
             <input type="text" value={products} onChange={e => setProducts(e.target.value)}
-              placeholder="e.g. Cardace 5mg, Lipvas 10mg" style={inpStyle} autoFocus />
+              placeholder="e.g. Cardace 5mg, Lipvas 10mg" className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" autoFocus />
           </div>
           <div>
-            <label style={lblStyle}>Samples Distributed</label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Samples Distributed</label>
             <input type="text" value={samples} onChange={e => setSamples(e.target.value)}
-              placeholder="e.g. Cardace (10 tabs), Visual Aid" style={inpStyle} />
+              placeholder="e.g. Cardace (10 tabs), Visual Aid" className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" />
           </div>
           <div>
-            <label style={lblStyle}>Doctor Feedback / Call Summary</label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Doctor Feedback / Call Summary</label>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="Doctor's response, prescription intent, follow-up needed…"
-              rows={3} style={{ ...inpStyle, resize:'vertical' }} />
+              rows={3} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border resize-y" />
           </div>
 
           <button onClick={() => onSubmit({ products, samples, feedback })}
             disabled={gpsLoading}
-            style={{ width:'100%', padding:'14px', borderRadius:'14px', border:'none', background: gpsLoading ? '#D1D5DB' : '#059669', color:'#fff', fontWeight:800, fontSize:'14px', cursor: gpsLoading ? 'not-allowed' : 'pointer', boxShadow: gpsLoading ? 'none' : '0 4px 16px rgba(5,150,105,0.3)' }}>
+            className={`w-full p-3.5 rounded-2xl border-none text-white font-extrabold text-[14px] transition-all ${
+              gpsLoading ? 'bg-gray-350 cursor-not-allowed shadow-none' : 'bg-emerald-600 cursor-pointer shadow-[0_4px_16px_rgba(5,150,105,0.3)]'
+            }`}
+          >
             {gpsLoading ? 'Getting Location...' : 'Confirm Check-Out'}
           </button>
         </div>
@@ -343,26 +337,23 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading }) {
   );
 }
 
-const lblStyle = { display:'block', fontSize:'12px', fontWeight:700, color:'#374151', marginBottom:'6px' };
-const inpStyle = { width:'100%', padding:'10px 13px', borderRadius:'10px', border:'1.5px solid #E5E7EB', fontSize:'13px', fontFamily:'inherit', color:'#1F2937', outline:'none', boxSizing:'border-box' };
-
 // ─── Progress Circle Helper ────────────────────────────────────────────────────
 function ProgressCircle({ pct, color, label, val }) {
   const r = 32;
   const circ = 2 * Math.PI * r;
   const strokePct = ((100 - pct) / 100) * circ;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-      <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg style={{ transform: 'rotate(-90deg)', width: '80px', height: '80px' }}>
+    <div className="flex flex-col items-center gap-2.5">
+      <div className="relative w-20 h-20 flex items-center justify-center">
+        <svg className="w-20 h-20 -rotate-90">
           <circle cx="40" cy="40" r={r} fill="transparent" stroke="#F1F5F9" strokeWidth="6" />
           <circle cx="40" cy="40" r={r} fill="transparent" stroke={color} strokeWidth="6"
             strokeDasharray={circ} strokeDashoffset={strokePct} strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.35s' }} />
+            className="transition-[stroke-dashoffset] duration-[350ms]" />
         </svg>
-        <div style={{ position: 'absolute', fontSize: '13px', fontWeight: 800, color: '#1E293B' }}>{val}</div>
+        <div className="absolute text-[13px] font-extrabold text-[#1E293B]">{val}</div>
       </div>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.4px', textAlign: 'center' }}>{label}</div>
+      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">{label}</div>
     </div>
   );
 }
@@ -553,93 +544,70 @@ export default function MRDashboard() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ animation:'fadeIn 0.35s ease-out', padding:'10px' }}>
+    <div className="animate-[fadeIn_0.35s_ease-out] p-2.5">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* ── Welcome Banner ──────────────────────────────────────────────── */}
-      <div style={{
-        background:'linear-gradient(135deg,#1E3A8A 0%,#3B82F6 100%)',
-        borderRadius:'20px', padding:'26px 30px', color:'#fff',
-        marginBottom:'22px', boxShadow:'0 10px 30px rgba(59,130,246,0.18)',
-        position:'relative', overflow:'hidden'
-      }}>
-        <div style={{ position:'relative', zIndex:2 }}>
-          <span style={{ background:'rgba(255,255,255,0.18)', padding:'5px 12px', borderRadius:'20px', fontSize:'11px', fontWeight:700, letterSpacing:'1px' }}>
+      <div className="bg-gradient-to-br from-blue-900 to-blue-500 rounded-3xl px-7.5 py-6.5 text-white mb-5.5 shadow-[0_10px_30px_rgba(59,130,246,0.18)] relative overflow-hidden">
+        <div className="relative z-10">
+          <span className="bg-white/18 px-3 py-1 rounded-2xl text-[11px] font-bold tracking-wider">
             MEDICAL REPRESENTATIVE PORTAL
           </span>
-          <h2 style={{ fontSize:'26px', fontWeight:800, margin:'12px 0 4px', letterSpacing:'-0.5px' }}>
+          <h2 className="text-[26px] font-extrabold my-3 mb-1 tracking-[-0.5px]">
             Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {mrName.split(' ')[0]}!
           </h2>
-          <p style={{ margin:0, fontSize:'13px', color:'rgba(255,255,255,0.8)' }}>
+          <p className="m-0 text-[13px] text-white/80">
             {new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
           </p>
         </div>
       </div>
 
       {/* ── Stats Grid ───────────────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:'14px', marginBottom:'22px' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3.5 mb-5.5">
         {stats.map((s, i) => (
-          <div key={i} style={{
-            background:'#fff', border:'1.5px solid #E5E7EB', borderRadius:'16px',
-            padding:'18px 20px', display:'flex', flexDirection:'column', gap:'6px',
-            boxShadow:'0 2px 6px rgba(0,0,0,0.02)', transition:'all 0.2s'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 8px 20px rgba(0,0,0,0.07)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)';    e.currentTarget.style.boxShadow='0 2px 6px rgba(0,0,0,0.02)'; }}
+          <div 
+            key={i} 
+            className="bg-white border border-gray-200 rounded-2xl px-5 py-4.5 flex flex-col gap-1.5 shadow-[0_2px_6px_rgba(0,0,0,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.07)]"
           >
-            <div style={{ fontSize:'11px', fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.5px' }}>{s.label}</div>
-            <div style={{ fontSize:'24px', fontWeight:800, color:'#1F2937', lineHeight:1 }}>{s.val}</div>
-            <div style={{ fontSize:'11px', fontWeight:600, color:s.col }}>{s.sub}</div>
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{s.label}</div>
+            <div className="text-[24px] font-extrabold text-gray-800 leading-none">{s.val}</div>
+            <div className="text-[11px] font-semibold" style={{ color: s.col }}>{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* ── Operations & Performance Progress Row ──────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '22px', alignItems: 'stretch' }}>
+      <div className="grid grid-cols-3 gap-5 mb-5.5 items-stretch">
         
         {/* Left Card: Operations Control */}
-        <div style={{
-          background: '#fff', 
-          borderRadius: '20px', 
-          border: '1.5px solid #E5E7EB',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+        <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col">
           {/* Header */}
-          <div style={{ background: '#F8FAFC', borderBottom: '1.5px solid #E5E7EB', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontWeight: 800, fontSize: '13px', color: '#374151', letterSpacing: '0.3px' }}>Operations Control</span>
-            <span style={{
-              fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '20px',
-              background: ds === 'ACTIVE' ? '#DCFCE7' : ds === 'ENDED' ? '#DBEAFE' : '#F3F4F6',
-              color:       ds === 'ACTIVE' ? '#15803D'  : ds === 'ENDED' ? '#1D4ED8' : '#6B7280',
-            }}>
+          <div className="bg-slate-50 border-b border-gray-200 px-5 py-3.5 flex justify-between items-center shrink-0">
+            <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Operations Control</span>
+            <span className={`text-[11px] font-bold px-3 py-1 rounded-2xl ${ds === 'ACTIVE' ? 'bg-[#DCFCE7] text-[#15803D]' : ds === 'ENDED' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}>
               {ds === 'ACTIVE' ? 'Active' : ds === 'ENDED' ? 'Day Ended' : 'Off Duty'}
             </span>
           </div>
 
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', justifyContent: 'center', flex: 1 }}>
+          <div className="p-6 flex flex-col items-center gap-5 justify-center flex-1">
             
             {/* Live Timer Clock */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+            <div className="text-center">
+              <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                 {ds === 'ACTIVE' ? 'Time Elapsed' : ds === 'ENDED' ? 'Workday Duration' : 'Timer Ready'}
               </div>
-              <div style={{
-                fontFamily: 'monospace', fontSize: '38px', fontWeight: 800, letterSpacing: '2px',
-                color: ds === 'ACTIVE' ? '#1F2937' : '#9CA3AF',
-                lineHeight: 1
-              }}>
+              <div className={`font-mono text-[38px] font-extrabold tracking-[2px] leading-none ${
+                ds === 'ACTIVE' ? 'text-gray-800' : 'text-gray-400'
+              }`}>
                 {ds === 'ACTIVE' ? secsToHMS(elapsed) : ds === 'ENDED' ? activeDay?.endTime : '00:00:00'}
               </div>
               {ds === 'ACTIVE' && (
-                <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '6px' }}>Started at {activeDay?.startTime}</div>
+                <div className="text-[11px] text-gray-500 mt-1.5">Started at {activeDay?.startTime}</div>
               )}
             </div>
 
             {/* Action Buttons Grid - Exactly Two Buttons */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+            <div className="grid grid-cols-2 gap-3 w-full">
               
               {/* Button 1: Workday Attendance Control (Check In / Check Out) */}
               {ds === 'NOT_STARTED' || ds === 'ENDED' ? (
@@ -685,17 +653,7 @@ export default function MRDashboard() {
 
             {/* Active Visit Mini-Status */}
             {activeVisit && (
-              <div style={{ 
-                width: '100%', 
-                background: '#FFF7ED', 
-                border: '1.5px solid #FFEDD5', 
-                borderRadius: '12px', 
-                padding: '10px 14px', 
-                fontSize: '12px', 
-                color: '#C2410C', 
-                textAlign: 'center',
-                fontWeight: 600
-              }}>
+              <div className="w-full bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl px-3.5 py-2.5 text-[12px] text-[#C2410C] text-center font-semibold">
                 Active visit: {activeVisit.name} (since {activeVisit.checkInTime})
               </div>
             )}
@@ -704,21 +662,13 @@ export default function MRDashboard() {
         </div>
 
         {/* Middle Card: Performance Progress circles (Rounded Balls) */}
-        <div style={{
-          background: '#fff', 
-          borderRadius: '20px', 
-          border: '1.5px solid #E5E7EB',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+        <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col">
           {/* Header */}
-          <div style={{ background: '#F8FAFC', borderBottom: '1.5px solid #E5E7EB', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontWeight: 800, fontSize: '13px', color: '#374151', letterSpacing: '0.3px' }}>Performance & Attendance</span>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#10B981' }}>Live Progress</span>
+          <div className="bg-slate-50 border-b border-gray-200 px-5 py-3.5 flex justify-between items-center shrink-0">
+            <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Performance & Attendance</span>
+            <span className="text-[11px] font-bold text-emerald-600">Live Progress</span>
           </div>
-          <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-around', alignItems: 'center', flex: 1, gap: '12px' }}>
+          <div className="p-6 flex justify-around items-center flex-1 gap-3">
             <ProgressCircle 
               pct={Math.min(100, Math.round((daysWorked / 20) * 100))} 
               color="#3B82F6" 
@@ -735,35 +685,25 @@ export default function MRDashboard() {
         </div>
 
         {/* Right Card: Today's Summary */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1E293B, #0F172A)',
-          borderRadius: '20px',
-          padding: '24px',
-          color: '#fff',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '220px'
-        }}>
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[220px]">
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '14px' }}>Today's Summary</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="text-[11px] font-extrabold text-white/60 tracking-wider uppercase mb-3.5">Today's Summary</div>
+            <div className="flex flex-col gap-2.5">
               {[
                 ['Start Time',    activeDay?.startTime || '—'],
                 ['End Time',      activeDay?.endTime   || (ds === 'ACTIVE' ? 'Ongoing' : '—')],
                 ['Visits Done',   `${doneVisits.length} / ${todayVisits.length}`],
                 ['Active Now',    activeVisit ? activeVisit.name.split(' ').slice(0,2).join(' ') : 'None'],
               ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>{k}</span>
-                  <span style={{ fontWeight: 700 }}>{v}</span>
+                <div key={k} className="flex justify-between text-[12.5px] border-b border-white/8 pb-1.5">
+                  <span className="text-white/60">{k}</span>
+                  <span className="font-bold">{v}</span>
                 </div>
               ))}
             </div>
           </div>
           {ds === 'ACTIVE' && (
-            <div style={{ fontSize: '12px', textAlign: 'center', color: '#38BDF8', fontWeight: 700, paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="text-[12px] text-center text-sky-400 font-bold pt-2.5 border-t border-white/10">
               Work duration: {secsToHMS(elapsed)}
             </div>
           )}
@@ -772,58 +712,50 @@ export default function MRDashboard() {
       </div>
 
       {/* ── Main Content (Next Planned Calls on left, Quick Links & Holidays on right) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '22px', alignItems: 'stretch', height: '320px' }}>
+      <div className="grid grid-cols-[2fr_1fr] gap-5 mb-5.5 items-stretch h-[320px]">
 
         {/* Left Column: Next Planned Calls */}
-        <div style={{ background:'#fff', border:'1.5px solid #F3F4F6', borderRadius:'18px', padding:'22px', boxShadow:'0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'18px', borderBottom: '1px solid #F3F4F6', paddingBottom: '12px', flexShrink: 0 }}>
+        <div className="bg-white border border-gray-100 rounded-2xl p-5.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-full">
+          <div className="flex justify-between items-center mb-4.5 border-b border-gray-100 pb-3 shrink-0">
             <div>
-              <h3 style={{ margin:0, fontSize:'16px', fontWeight:800, color:'#1F2937' }}>Next Planned Calls</h3>
-              <p style={{ margin:'3px 0 0 0', fontSize:'12px', color:'#9CA3AF' }}>Scheduled doctor and pharmacy visits remaining for today</p>
+              <h3 className="m-0 text-[16px] font-extrabold text-gray-800">Next Planned Calls</h3>
+              <p className="m-0 text-[12px] text-gray-400">Scheduled doctor and pharmacy visits remaining for today</p>
             </div>
-            <button onClick={() => navigate('/mr/attendance')} style={{ background:'#EFF6FF', border:'none', color:'#1D4ED8', fontWeight:700, fontSize:'12px', padding:'6px 14px', borderRadius:'20px', cursor:'pointer', whiteSpace:'nowrap' }}>
+            <button onClick={() => navigate('/mr/attendance')} className="bg-blue-50 border-none text-blue-700 font-bold text-[12px] px-3.5 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
               Attendance Ledger
             </button>
           </div>
 
           {upcomingCalls.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'40px 20px', color:'#059669', background:'#ECFDF5', borderRadius:'14px', border:'1px solid #A7F3D0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontSize:'24px' }}>🏆</span>
-              <div style={{ fontWeight:800, fontSize:'14.5px', marginTop:'6px' }}>All Planned Calls Completed!</div>
-              <div style={{ fontSize:'12px', color:'#047857', marginTop:'3px' }}>You have visited all scheduled doctor and chemist sites for today. Good work!</div>
+            <div className="text-center p-10 px-5 text-emerald-600 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] flex-1 flex flex-col justify-center">
+              <span className="text-[24px]">🎉</span>
+              <div className="font-extrabold text-[14.5px] mt-1.5">All Planned Calls Completed!</div>
+              <div className="text-[12px] text-[#047857] mt-1">You have visited all scheduled doctor and chemist sites for today. Good work!</div>
             </div>
           ) : (
-            <div className="upcoming-calls-container" style={{ display:'flex', flexDirection:'column', gap:'12px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px' }}>
+            <div className="upcoming-calls-container flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {upcomingCalls.map((target, idx) => {
                 const targetTime = mockTimes[idx % mockTimes.length];
                 return (
-                  <div key={target.id} style={{
-                    display:'flex', gap:'16px', padding:'14px 18px', borderRadius:'14px', alignItems:'center',
-                    background: '#FAFAFA',
-                    border: '1.5px solid #F3F4F6',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#F0FDF4'; e.currentTarget.style.borderColor = '#BBF7D0'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#FAFAFA'; e.currentTarget.style.borderColor = '#F3F4F6'; }}
+                  <div 
+                    key={target.id} 
+                    className="flex gap-4 px-4.5 py-3.5 rounded-2xl items-center bg-[#FAFAFA] border border-gray-100 transition-all duration-200 hover:bg-[#F0FDF4] hover:border-[#BBF7D0]"
                   >
                     {/* Time indicator */}
-                    <div style={{ 
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                      background: '#EFF6FF', color: '#1E40AF', borderRadius: '10px', width: '70px', height: '52px', flexShrink: 0 
-                    }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plan</span>
-                      <span style={{ fontSize: '11.5px', fontWeight: 800 }}>{targetTime}</span>
+                    <div className="flex flex-col items-center justify-center bg-blue-50 text-blue-800 rounded-lg w-[70px] h-[52px] shrink-0">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider">Plan</span>
+                      <span className="text-[11.5px] font-extrabold">{targetTime}</span>
                     </div>
 
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-                        <span style={{ fontSize:'9px', fontWeight:800, padding:'2px 6px', borderRadius: '4px', background: '#E5E7EB', color: '#374151', textTransform: 'uppercase' }}>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 uppercase">
                           {target.type}
                         </span>
-                        <span style={{ fontSize:'13px', fontWeight:800, color:'#1F2937' }}>{target.name}</span>
+                        <span className="text-[13px] font-extrabold text-gray-800">{target.name}</span>
                       </div>
-                      <div style={{ fontSize:'11.5px', color:'#6B7280', marginTop:'3px' }}>
-                        {target.clinic} · <span style={{ color: '#3B82F6', fontWeight: 600 }}>{target.specialty}</span>
+                      <div className="text-[11.5px] text-gray-500 mt-0.5">
+                        {target.clinic} · <span className="text-blue-500 font-semibold">{target.specialty}</span>
                       </div>
                     </div>
                   </div>
@@ -834,21 +766,23 @@ export default function MRDashboard() {
         </div>
 
         {/* Right Column: Quick Links & Holidays */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'12px', height: '100%' }}>
+        <div className="flex flex-col gap-3 h-full">
           
           {/* Quick Links */}
-          <div style={{ background:'#fff', border:'1.5px solid #F3F4F6', borderRadius:'18px', padding:'14px 20px', boxShadow:'0 2px 8px rgba(0,0,0,0.02)', flexShrink: 0 }}>
-            <h3 style={{ margin:'0 0 10px', fontSize:'13.5px', fontWeight:800, color:'#1F2937' }}>Quick Links</h3>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px' }}>
+          <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
+            <h3 className="m-0 mb-2.5 text-[13.5px] font-extrabold text-gray-800">Quick Links</h3>
+            <div className="grid grid-cols-2 gap-1.5">
               {[
                 { label:'View Attendance', fn: () => navigate('/mr/attendance') },
                 { label:'Submit Allowance',    fn: () => {} },
                 { label:'Sample Inventory',          fn: () => {} },
                 { label:'Target Doctors',         fn: () => {} },
               ].map((b, i) => (
-                <button key={i} onClick={b.fn} style={{ padding:'8px 10px', borderRadius:'10px', border:'1.5px solid #E5E7EB', background:'#fff', color:'#374151', fontWeight:600, fontSize:'11.5px', cursor:'pointer', textAlign:'center', transition:'background 0.15s', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
-                  onMouseEnter={e => e.currentTarget.style.background='#F9FAFB'}
-                  onMouseLeave={e => e.currentTarget.style.background='#fff'}>
+                <button 
+                  key={i} 
+                  onClick={b.fn} 
+                  className="px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-[11.5px] cursor-pointer text-center transition-colors duration-150 hover:bg-gray-50 whitespace-nowrap overflow-hidden text-ellipsis"
+                >
                   {b.label}
                 </button>
               ))}
@@ -856,37 +790,26 @@ export default function MRDashboard() {
           </div>
 
           {/* Upcoming Holidays */}
-          <div style={{
-            background: '#fff', 
-            borderRadius: '18px', 
-            border: '1.5px solid #E5E7EB',
-            overflow: 'hidden',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            minHeight: 0
-          }}>
-            <div style={{ background: '#F8FAFC', borderBottom: '1.5px solid #E5E7EB', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <span style={{ fontWeight: 800, fontSize: '13px', color: '#374151', letterSpacing: '0.3px' }}>Upcoming Holidays</span>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>2026</span>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0">
+            <div className="bg-slate-50 border-b border-gray-100 px-5 py-2.5 flex justify-between items-center shrink-0">
+              <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Upcoming Holidays</span>
+              <span className="text-[11px] font-bold text-blue-500">2026</span>
             </div>
-            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+            <div className="px-5 py-4 flex flex-col gap-2.5 overflow-y-auto">
               {[
                 { date: 'June 29', name: 'Bakrid / Eid al-Adha', type: 'Regional' },
                 { date: 'August 15', name: 'Independence Day', type: 'National' },
                 { date: 'October 02', name: 'Gandhi Jayanti', type: 'National' },
               ].map((h, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: idx === 2 ? 0 : '8px', borderBottom: idx === 2 ? 'none' : '1px solid #F3F4F6' }}>
+                <div 
+                  key={idx} 
+                  className={`flex items-center justify-between ${idx === 2 ? 'pb-0 border-none' : 'pb-2 border-b border-gray-100'}`}
+                >
                   <div>
-                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1F2937' }}>{h.name}</div>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{h.date}</div>
+                    <div className="text-[12.5px] font-bold text-gray-800">{h.name}</div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">{h.date}</div>
                   </div>
-                  <span style={{
-                    fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '12px',
-                    background: h.type === 'National' ? '#FEF2F2' : '#F0FDF4',
-                    color: h.type === 'National' ? '#EF4444' : '#10B981'
-                  }}>{h.type}</span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${h.type === 'National' ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{h.type}</span>
                 </div>
               ))}
             </div>
@@ -919,13 +842,6 @@ export default function MRDashboard() {
         @keyframes toastIn   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse     { 0%,100% { box-shadow:0 4px 14px rgba(124,58,237,0.25); } 50% { box-shadow:0 4px 28px rgba(124,58,237,0.55); } }
         @keyframes btnPulse  { 0%,100% { box-shadow:0 4px 14px rgba(249,115,22,0.3); } 50% { box-shadow:0 4px 28px rgba(249,115,22,0.6); } }
-        .upcoming-calls-container::-webkit-scrollbar {
-          display: none;
-        }
-        .upcoming-calls-container {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
       `}</style>
     </div>
   );
@@ -934,18 +850,19 @@ export default function MRDashboard() {
 // ─── Reusable Button ───────────────────────────────────────────────────────────
 function Btn({ label, onClick, disabled, bg, shadow, pulse, title }) {
   return (
-    <button onClick={onClick} disabled={disabled} title={title}
-      style={{
-        padding:'13px 22px', borderRadius:'14px', border:'none', background: disabled ? '#E5E7EB' : bg,
-        color: disabled ? '#9CA3AF' : '#fff', fontWeight:800, fontSize:'14px',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        boxShadow: disabled ? 'none' : `0 4px 14px ${shadow}`,
-        transition:'all 0.2s', display:'flex', alignItems:'center', gap:'7px',
-        animation: pulse && !disabled ? 'btnPulse 2s infinite' : 'none',
-        whiteSpace:'nowrap'
+    <button 
+      onClick={onClick} 
+      disabled={disabled} 
+      title={title}
+      className={`px-5.5 py-3 rounded-2xl border-none font-extrabold text-[14px] transition-all duration-200 flex items-center gap-2 justify-center whitespace-nowrap ${
+        disabled 
+          ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
+          : 'text-white cursor-pointer'
+      } ${pulse && !disabled ? 'animate-[btnPulse_2s_infinite]' : ''}`}
+      style={{ 
+        background: disabled ? undefined : bg, 
+        boxShadow: disabled ? 'none' : `0 4px 14px ${shadow}` 
       }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.opacity = '0.9'; }}
-      onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
     >
       {label}
     </button>

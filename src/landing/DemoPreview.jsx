@@ -27,13 +27,9 @@ const COMPLIANCE = [
 ]
 
 function StatusBadge({ status, color }) {
-  const bg = color === '#16a34a' ? '#dcfce7' : color === '#d97706' ? '#fef3c7' : color === '#dc2626' ? '#fee2e2' : '#dbeafe'
-  const border = color === '#16a34a' ? '#bbf7d0' : color === '#d97706' ? '#fde68a' : color === '#dc2626' ? '#fecaca' : '#bfdbfe'
+  const bg = color === '#16a34a' ? 'bg-green-100 text-green-800' : color === '#d97706' ? 'bg-amber-100 text-amber-800' : color === '#dc2626' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'
   return (
-    <span style={{
-      padding: '2px 10px', borderRadius: '100px', fontSize: '12px', fontWeight: 600,
-      background: bg, border: `1px solid ${border}`, color,
-    }}>{status}</span>
+    <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-bold tracking-wide uppercase ${bg}`}>{status}</span>
   )
 }
 
@@ -54,33 +50,38 @@ export default function DemoPreview() {
   const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -10])
 
   return (
-    <section ref={ref} className="section-spacing" style={{ background: '#fff', perspective: '1500px', overflow: 'hidden' }}>
-      <div className="section-container">
+    <section ref={ref} className="py-20 bg-white overflow-hidden" style={{ perspective: '1500px' }}>
+      <div className="max-w-6xl mx-auto px-4 md:px-8">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} 
           viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
-          style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          className="mb-10 text-center flex flex-col items-center"
         >
-          <div className="section-label">🖥️ Live Demo Preview</div>
-          <h2 className="section-title">See GmaxepayHR in Action</h2>
+          <div className="text-[12px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-[20px] uppercase tracking-[1px] mb-3 inline-block">
+            🖥️ Live Demo Preview
+          </div>
+          <h2 className="text-[32px] md:text-[38px] font-extrabold text-gray-900 tracking-tight leading-tight">
+            See GmaxepayHR in Action
+          </h2>
         </motion.div>
 
         <motion.div 
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
             y: yOffset, rotateX: rotateX
           }}
+          className="flex flex-col items-center"
         >
           {/* Tabs */}
-          <div style={{
-            display: 'inline-flex', gap: '4px', padding: '4px',
-            background: 'var(--bg-section)', border: '1px solid var(--border)',
-            borderRadius: '10px', marginBottom: '24px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-          }}>
+          <div className="inline-flex gap-1 p-1 bg-slate-50 border border-gray-200 rounded-xl mb-6 shadow-sm">
             {TABS.map(t => (
-              <button key={t} className={`tab-btn${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`flex items-center gap-1.5 py-2.5 px-5 rounded-lg border-none font-bold text-[14px] cursor-pointer transition-all duration-200 ${
+                  tab === t ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-400 hover:text-gray-600'
+                }`}
+              >
                 {t === 'Payroll' ? '💰' : t === 'Attendance' ? '📅' : '⚖️'} {t}
               </button>
             ))}
@@ -89,61 +90,72 @@ export default function DemoPreview() {
           {/* Browser Window Mockup */}
           <motion.div 
             whileHover={{ scale: 1.02 }} transition={{ type: 'spring', bounce: 0.4 }}
-            className="browser-mockup" style={{ width: '100%', maxWidth: '900px', margin: '0 auto', boxShadow: '0 40px 80px rgba(0,0,0,0.15)', borderRadius: '16px', border: '1px solid var(--border)', background: '#fff', overflow: 'hidden' }}
+            className="w-full max-w-[900px] mx-auto shadow-2xl rounded-2xl border border-gray-200 bg-white overflow-hidden"
           >
-            <div className="browser-header" style={{ padding: '16px 20px', background: 'var(--bg-section)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="browser-dots" style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }} />
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#f59e0b' }} />
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
+            <div className="p-4 px-5 bg-slate-50 border-b border-gray-200 flex items-center gap-4">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, background: '#fff', padding: '4px 16px', borderRadius: '6px', border: '1px solid var(--border)' }}>app.gmaxepayhr.in/dashboard</div>
+              <div className="text-[12px] text-gray-400 font-bold bg-white px-4 py-1 rounded-md border border-gray-200">
+                app.gmaxepayhr.in/dashboard
+              </div>
             </div>
 
-            <div style={{ padding: '0', background: '#fff' }}>
-              <div style={{ overflowX: 'auto' }}>
+            <div className="p-0 bg-white">
+              <div className="overflow-x-auto">
                 {tab === 'Payroll' && (
-                  <table className="demo-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}><tr>{['Employee','Role','Basic','HRA','Net Pay','Status'].map(h => <th key={h} style={{ padding: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{h}</th>)}</tr></thead>
+                  <table className="w-full border-collapse text-left">
+                    <thead className="border-b border-gray-200 bg-slate-50">
+                      <tr>{['Employee','Role','Basic','HRA','Net Pay','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
+                    </thead>
                     <tbody>
                       {PAYROLL.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>{r.name}</td>
-                          <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.role}</td><td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.basic}</td><td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.hra}</td>
-                          <td style={{ padding: '16px', color: 'var(--lime-dark)', fontWeight: 700, fontSize: '14px' }}>{r.net}</td>
-                          <td style={{ padding: '16px' }}><StatusBadge status={r.status} color={r.color} /></td>
+                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.name}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.role}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.basic}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.hra}</td>
+                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.net}</td>
+                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
                         </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 )}
                 {tab === 'Attendance' && (
-                  <table className="demo-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}><tr>{['Employee','Dept.','Present','Absent','Leave','Status'].map(h => <th key={h} style={{ padding: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{h}</th>)}</tr></thead>
+                  <table className="w-full border-collapse text-left">
+                    <thead className="border-b border-gray-200 bg-slate-50">
+                      <tr>{['Employee','Dept.','Present','Absent','Leave','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
+                    </thead>
                     <tbody>
                       {ATTENDANCE.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>{r.name}</td>
-                          <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.dept}</td>
-                          <td style={{ padding: '16px', color: '#16a34a', fontWeight: 600, fontSize: '14px' }}>{r.present}</td>
-                          <td style={{ padding: '16px', color: '#dc2626', fontWeight: 600, fontSize: '14px' }}>{r.absent}</td>
-                          <td style={{ padding: '16px', color: '#2563eb', fontWeight: 600, fontSize: '14px' }}>{r.leave}</td>
-                          <td style={{ padding: '16px' }}><StatusBadge status={r.status} color={r.color} /></td>
+                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.name}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.dept}</td>
+                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.present}</td>
+                          <td className="p-4 text-red-600 font-bold text-[14px]">{r.absent}</td>
+                          <td className="p-4 text-blue-600 font-bold text-[14px]">{r.leave}</td>
+                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
                         </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 )}
                 {tab === 'Compliance' && (
-                  <table className="demo-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}><tr>{['Statutory Type','Month','Due Date','Amount','Status'].map(h => <th key={h} style={{ padding: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{h}</th>)}</tr></thead>
+                  <table className="w-full border-collapse text-left">
+                    <thead className="border-b border-gray-200 bg-slate-50">
+                      <tr>{['Statutory Type','Month','Due Date','Amount','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
+                    </thead>
                     <tbody>
                       {COMPLIANCE.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>{r.type}</td>
-                          <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.month}</td><td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>{r.due}</td>
-                          <td style={{ padding: '16px', color: 'var(--lime-dark)', fontWeight: 700, fontSize: '14px' }}>{r.amount}</td>
-                          <td style={{ padding: '16px' }}><StatusBadge status={r.status} color={r.color} /></td>
+                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.type}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.month}</td>
+                          <td className="p-4 text-[14px] text-gray-500">{r.due}</td>
+                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.amount}</td>
+                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
                         </motion.tr>
                       ))}
                     </tbody>
@@ -153,15 +165,11 @@ export default function DemoPreview() {
             </div>
 
             {/* Footer */}
-            <div className="browser-mockup-footer">
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Showing 5 of {tab === 'Compliance' ? '18' : '1,250'} records</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="p-4 px-5 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
+              <span className="text-[12px] text-gray-400 font-medium">Showing 5 of {tab === 'Compliance' ? '18' : '1,250'} records</span>
+              <div className="flex gap-2">
                 {['⬇ Export', '🖨 Print', '📊 Report'].map(a => (
-                  <button key={a} style={{
-                    padding: '6px 12px', borderRadius: '6px', fontSize: '12px',
-                    background: '#fff', border: '1px solid var(--border)',
-                    color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 500,
-                  }}>{a}</button>
+                  <button key={a} className="py-1.5 px-3 rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700 text-[12px] font-bold cursor-pointer transition-colors">{a}</button>
                 ))}
               </div>
             </div>
@@ -171,4 +179,3 @@ export default function DemoPreview() {
     </section>
   )
 }
-

@@ -5,7 +5,6 @@ import {
   registerAdmin,
   clearErrors,
   clearSuccess,
-  updateAdminDetails,
 } from "../../redux/actions/adminActions";
 import {
   Plus,
@@ -23,12 +22,13 @@ import {
   Edit,
 } from "lucide-react";
 import { updateCompanyAccess, editCompanyData } from "../../redux/actions/companyAction";
+
 const AdminManagement = () => {
   const dispatch = useDispatch();
-  const { admins, loading, error, success } = useSelector(
-    (state) => state.admin,
+  const { admins = [], loading, error, success } = useSelector(
+    (state) => state.admin || {}
   );
-  const companyState = useSelector((state) => state.company);
+  const companyState = useSelector((state) => state.company || {});
   const [showModal, setShowModal] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
@@ -157,7 +157,6 @@ const AdminManagement = () => {
     try {
       const newStatus = !currentStatus;
       await dispatch(updateCompanyAccess(adminId, newStatus));
-      // Refresh admin list after successful status update
       dispatch(getAdmins());
     } catch (err) {
       console.error("Error updating admin status:", err);
@@ -177,51 +176,13 @@ const AdminManagement = () => {
     );
   };
 
-  const getStatusIndicatorColor = (enabled) => {
-    return enabled !== false ? "#10B981" : "#EF4444";
-  };
-
-  const getStatusText = (enabled) => {
-    return enabled !== false ? "Active" : "Inactive";
-  };
-
-  const getStatusTextColor = (enabled) => {
-    return enabled !== false ? "#059669" : "#B91C1C";
-  };
-
   return (
-    <div className="animate-fade-in p-2">
+    <div className="animate-[fadeIn_0.4s_ease-out_forwards] p-2">
       {/* Action Bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "24px",
-        }}
-      >
+      <div className="flex justify-end mb-6">
         <button
           onClick={() => setShowModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "#111827",
-            color: "#fff",
-            padding: "12px 20px",
-            borderRadius: "12px",
-            fontWeight: 700,
-            fontSize: "14px",
-            border: "none",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            transition: "transform 0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.transform = "translateY(-2px)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.transform = "translateY(0)")
-          }
+          className="flex items-center gap-2 bg-gray-900 text-white px-5 py-3 rounded-xl font-bold text-sm border-none cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:-translate-y-0.5"
         >
           <Plus size={18} strokeWidth={3} />
           Register New Admin
@@ -229,53 +190,24 @@ const AdminManagement = () => {
       </div>
 
       {/* Stats Bar */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Admins", value: admins.length, color: "#6366F1" },
+          { label: "Total Admins", value: admins.length },
           {
             label: "Active Sessions",
             value: Math.floor(admins.length * 0.7),
-            color: "#10B981",
           },
-          { label: "System Access", value: "100%", color: "#F59E0B" },
-          { label: "Pending Invitations", value: "0", color: "#EF4444" },
+          { label: "System Access", value: "100%" },
+          { label: "Pending Invitations", value: "0" },
         ].map((stat, i) => (
           <div
             key={i}
-            style={{
-              background: "#fff",
-              padding: "16px 20px",
-              borderRadius: "16px",
-              border: "1px solid #F3F4F6",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
-            }}
+            className="bg-white px-5 py-4 rounded-2xl border border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
           >
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "#9CA3AF",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-[0.5px]">
               {stat.label}
             </div>
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: 800,
-                color: "#111827",
-                marginTop: "4px",
-              }}
-            >
+            <div className="text-2xl font-extrabold text-gray-900 mt-1">
               {stat.value}
             </div>
           </div>
@@ -283,375 +215,125 @@ const AdminManagement = () => {
       </div>
 
       {/* Table Section */}
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: "20px",
-          border: "1px solid #F3F4F6",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "20px",
-            borderBottom: "1px solid #F3F4F6",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ position: "relative" }}>
+      <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+          <div className="relative">
             <Search
               size={18}
-              color="#9CA3AF"
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
               placeholder="Search by name, email..."
-              style={{
-                padding: "10px 12px 10px 40px",
-                borderRadius: "10px",
-                border: "1px solid #E5E7EB",
-                width: "300px",
-                fontSize: "14px",
-                outline: "none",
-              }}
+              className="pl-10 pr-3.5 py-2.5 rounded-lg border border-gray-200 w-[300px] text-sm outline-none focus:border-indigo-500"
             />
           </div>
-          <button
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#6B7280",
-              fontSize: "14px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-transparent border-none text-gray-500 text-sm font-semibold cursor-pointer hover:text-gray-700 transition-colors duration-150">
             Filter & Sort
           </button>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              textAlign: "left",
-            }}
-          >
-            <thead style={{ background: "#F9FAFB" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-gray-50">
               <tr>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#4B5563",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Administrator
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#4B5563",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Contact Info
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#4B5563",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Role
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#4B5563",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#4B5563",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Actions
-                </th>
+                {["Administrator", "Contact Info", "Role", "Status", "Actions"].map((h) => (
+                  <th key={h} className="px-5 py-4 text-xs font-bold text-gray-500 uppercase border-b border-gray-200">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading && admins.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    style={{ padding: "40px", textAlign: "center" }}
-                  >
+                  <td colSpan="5" className="p-10 text-center">
                     <Loader2
-                      className="animate-spin"
-                      color="#6366F1"
+                      className="animate-spin mx-auto text-[#6366F1]"
                       size={24}
-                      style={{ margin: "0 auto" }}
                     />
-                    <p
-                      style={{
-                        marginTop: "12px",
-                        color: "#6B7280",
-                        fontSize: "14px",
-                      }}
-                    >
+                    <p className="mt-3 text-gray-500 text-sm">
                       Fetching administrator list...
                     </p>
                   </td>
                 </tr>
               ) : admins.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    style={{
-                      padding: "40px",
-                      textAlign: "center",
-                      color: "#6B7280",
-                    }}
-                  >
+                  <td colSpan="5" className="p-10 text-center text-gray-500">
                     No administrators found.
                   </td>
                 </tr>
               ) : (
-                admins.map((admin) => (
-                  <tr
-                    key={admin.id}
-                    style={{
-                      borderBottom: "1px solid #F3F4F6",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#F9FAFB")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "transparent")
-                    }
-                  >
-                    <td style={{ padding: "16px 20px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "12px",
-                            background:
-                              "linear-gradient(135deg, #6366F1, #4F46E5)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#fff",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                          }}
-                        >
-                          {admin.fullName?.charAt(0) || <User size={18} />}
+                admins.map((admin) => {
+                  const isEnabled = admin.enabled !== false;
+                  return (
+                    <tr
+                      key={admin.id}
+                      className="border-b border-gray-100 transition-colors duration-150 hover:bg-gray-50/50"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                            {admin.fullName?.charAt(0) || <User size={18} />}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900 text-sm">
+                              {admin.fullName}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-0.5">
+                              ID: {admin.id?.toString().slice(-8) || "N/A"}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div
-                            style={{
-                              fontWeight: 700,
-                              color: "#111827",
-                              fontSize: "14px",
-                            }}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                            <Mail size={14} className="text-gray-400" /> {admin.email}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                            <Phone size={14} className="text-gray-400" /> {admin.phone}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="inline-flex items-center gap-1.5 bg-[#EEF2FF] text-[#4F46E5] px-2.5 py-1 rounded-md text-xs font-bold border border-[#E0E7FF]">
+                          <Shield size={12} /> {admin.role}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${isEnabled ? "bg-emerald-500" : "bg-rose-500"}`} />
+                          <span className={`text-[13px] font-semibold ${isEnabled ? "text-emerald-600" : "text-rose-600"}`}>
+                            {isEnabled ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2 items-center">
+                          <button
+                            onClick={() => handleToggleAdminStatus(admin.id, isEnabled)}
+                            disabled={updatingStatusId === admin.id}
+                            className={`flex items-center gap-1.5 border-none px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                              isEnabled 
+                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100" 
+                                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+                            }`}
                           >
-                            {admin.fullName}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                            ID: {admin.id?.toString().slice(-8) || "N/A"}
-                          </div>
+                            {getStatusIcon(admin)}
+                            {isEnabled ? "Enabled" : "Disabled"}
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditModal(admin)}
+                            className="flex items-center gap-1.5 bg-gray-100 border-none text-gray-700 px-3.5 py-2 rounded-lg text-[13px] font-semibold cursor-pointer transition-all duration-150 hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-sm"
+                          >
+                            <Edit size={14} />
+                            Edit
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "4px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            fontSize: "13px",
-                            color: "#4B5563",
-                          }}
-                        >
-                          <Mail size={14} color="#9CA3AF" /> {admin.email}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            fontSize: "13px",
-                            color: "#4B5563",
-                          }}
-                        >
-                          <Phone size={14} color="#9CA3AF" /> {admin.phone}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: "#EEF2FF",
-                          color: "#4F46E5",
-                          padding: "4px 10px",
-                          borderRadius: "8px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                        }}
-                      >
-                        <Shield size={12} /> {admin.role}
-                      </div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: getStatusIndicatorColor(admin.enabled),
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            color: getStatusTextColor(admin.enabled),
-                          }}
-                        >
-                          {getStatusText(admin.enabled)}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                        <button
-                          onClick={() =>
-                            handleToggleAdminStatus(
-                              admin.id,
-                              admin.enabled ?? true
-                            )
-                          }
-                          disabled={updatingStatusId === admin.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            background: admin.enabled ? "#DBEAFE" : "#FEE2E2",
-                            border: "none",
-                            color: admin.enabled ? "#0369A1" : "#991B1B",
-                            padding: "8px 14px",
-                            borderRadius: "8px",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            cursor:
-                              updatingStatusId === admin.id
-                                ? "not-allowed"
-                                : "pointer",
-                            opacity: updatingStatusId === admin.id ? 0.7 : 1,
-                            transition: "all 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            if (updatingStatusId !== admin.id) {
-                              e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                              e.currentTarget.style.boxShadow =
-                                "0 4px 8px rgba(0,0,0,0.1)";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "none";
-                          }}
-                        >
-                          {getStatusIcon(admin)}
-                          {admin.enabled ? "Enabled" : "Disabled"}
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(admin)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            background: "#F3F4F6",
-                            border: "none",
-                            color: "#374151",
-                            padding: "8px 14px",
-                            borderRadius: "8px",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#E5E7EB";
-                            e.currentTarget.style.transform = "translateY(-2px)";
-                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.05)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "#F3F4F6";
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "none";
-                          }}
-                        >
-                          <Edit size={14} />
-                          Edit
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -660,138 +342,44 @@ const AdminManagement = () => {
 
       {/* Register Modal */}
       {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(17, 24, 39, 0.6)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-          }}
-        >
-          <div
-            className="animate-slide-up"
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "500px",
-              borderRadius: "24px",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              overflow: "hidden",
-            }}
-          >
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
+          <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
             {/* Modal Header */}
-            <div
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid #F3F4F6",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "linear-gradient(to right, #F9FAFB, #fff)",
-              }}
-            >
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
               <div>
-                <h3
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: 800,
-                    color: "#111827",
-                    margin: 0,
-                  }}
-                >
+                <h3 className="text-xl font-extrabold text-gray-900 m-0">
                   Register Administrator
                 </h3>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#6B7280",
-                    marginTop: "4px",
-                  }}
-                >
+                <p className="text-[13px] text-gray-500 mt-1">
                   Create a new administrator account with system access.
                 </p>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                style={{
-                  background: "#F3F4F6",
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "8px",
-                  cursor: "pointer",
-                }}
+                className="bg-gray-100 border-none rounded-lg p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-150"
               >
-                <X size={18} color="#6B7280" />
+                <X size={18} className="text-gray-500" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "20px",
-                }}
-              >
+            <form onSubmit={handleSubmit} className="p-6">
+              <div className="flex flex-col gap-5">
                 {/* Status Messages */}
                 {error && (
-                  <div
-                    style={{
-                      background: "#FEF2F2",
-                      border: "1px solid #FEE2E2",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      color: "#B91C1C",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-2.5 text-rose-700 text-sm font-semibold">
                     <AlertCircle size={18} /> {error}
                   </div>
                 )}
                 {success && (
-                  <div
-                    style={{
-                      background: "#ECFDF5",
-                      border: "1px solid #D1FAE5",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      color: "#047857",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center gap-2.5 text-emerald-700 text-sm font-semibold">
                     <CheckCircle2 size={18} /> {success}
                   </div>
                 )}
 
                 {/* Input Fields */}
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      marginBottom: "8px",
-                    }}
-                  >
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -800,34 +388,13 @@ const AdminManagement = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="e.g. John Doe"
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #E5E7EB",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "16px",
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       Email Address
                     </label>
                     <input
@@ -837,26 +404,11 @@ const AdminManagement = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="admin@example.com"
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       Phone Number
                     </label>
                     <input
@@ -865,28 +417,13 @@ const AdminManagement = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="9876543210"
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      marginBottom: "8px",
-                    }}
-                  >
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
                     Company Code
                   </label>
                   <input
@@ -895,96 +432,40 @@ const AdminManagement = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="e.g. APEX"
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #E5E7EB",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                   />
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: "#9CA3AF",
-                      marginTop: "6px",
-                    }}
-                  >
+                  <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed">
                     A unique reference code for the company (e.g. APEX).
                   </p>
                 </div>
 
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      marginBottom: "8px",
-                    }}
-                  >
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
                     System Role
                   </label>
                   <select
                     name="role"
                     value="ADMIN"
                     disabled
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #E5E7EB",
-                      fontSize: "14px",
-                      outline: "none",
-                      background: "#f3f4f6",
-                      cursor: "not-allowed",
-                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-gray-100 cursor-not-allowed text-gray-500"
                   >
                     <option value="ADMIN">Administrator</option>
                   </select>
                 </div>
 
                 {/* Footer Buttons */}
-                <div
-                  style={{ display: "flex", gap: "12px", marginTop: "10px" }}
-                >
+                <div className="flex gap-3 mt-2.5">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    style={{
-                      flex: 1,
-                      padding: "14px",
-                      borderRadius: "14px",
-                      border: "1px solid #E5E7EB",
-                      background: "#fff",
-                      color: "#374151",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      cursor: "pointer",
-                    }}
+                    className="flex-1 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    style={{
-                      flex: 1.5,
-                      padding: "14px",
-                      borderRadius: "14px",
-                      border: "none",
-                      background: "#111827",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                    }}
+                    className="flex-[1.5] py-3.5 rounded-xl border-none bg-gray-900 text-white font-bold text-sm cursor-pointer hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <Loader2 className="animate-spin" size={18} />
@@ -1001,63 +482,15 @@ const AdminManagement = () => {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(17, 24, 39, 0.6)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-          }}
-        >
-          <div
-            className="animate-slide-up"
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "500px",
-              borderRadius: "24px",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              overflow: "hidden",
-            }}
-          >
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
+          <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
             {/* Modal Header */}
-            <div
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid #F3F4F6",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "linear-gradient(to right, #F9FAFB, #fff)",
-              }}
-            >
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
               <div>
-                <h3
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: 800,
-                    color: "#111827",
-                    margin: 0,
-                  }}
-                >
+                <h3 className="text-xl font-extrabold text-gray-900 m-0">
                   Edit Administrator
                 </h3>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#6B7280",
-                    marginTop: "4px",
-                  }}
-                >
+                <p className="text-[13px] text-gray-500 mt-1">
                   Modify details for {selectedAdmin?.fullName || "Administrator"}.
                 </p>
               </div>
@@ -1066,76 +499,30 @@ const AdminManagement = () => {
                   setShowEditModal(false);
                   setSelectedAdmin(null);
                 }}
-                style={{
-                  background: "#F3F4F6",
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "8px",
-                  cursor: "pointer",
-                }}
+                className="bg-gray-100 border-none rounded-lg p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-150"
               >
-                <X size={18} color="#6B7280" />
+                <X size={18} className="text-gray-500" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleEditSubmit} style={{ padding: "24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "20px",
-                }}
-              >
+            <form onSubmit={handleEditSubmit} className="p-6">
+              <div className="flex flex-col gap-5">
                 {/* Status Messages */}
                 {(companyState.error || error) && (
-                  <div
-                    style={{
-                      background: "#FEF2F2",
-                      border: "1px solid #FEE2E2",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      color: "#B91C1C",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-2.5 text-rose-700 text-sm font-semibold">
                     <AlertCircle size={18} /> {companyState.error || error}
                   </div>
                 )}
                 {(companyState.success || success) && (
-                  <div
-                    style={{
-                      background: "#ECFDF5",
-                      border: "1px solid #D1FAE5",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      color: "#047857",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center gap-2.5 text-emerald-700 text-sm font-semibold">
                     <CheckCircle2 size={18} /> {companyState.message || success}
                   </div>
                 )}
 
                 {/* Input Fields */}
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      marginBottom: "8px",
-                    }}
-                  >
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -1144,34 +531,13 @@ const AdminManagement = () => {
                     onChange={handleEditInputChange}
                     required
                     placeholder="e.g. John Doe"
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #E5E7EB",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "16px",
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       Email Address
                     </label>
                     <input
@@ -1181,26 +547,11 @@ const AdminManagement = () => {
                       onChange={handleEditInputChange}
                       required
                       placeholder="admin@example.com"
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       Phone Number
                     </label>
                     <input
@@ -1209,35 +560,14 @@ const AdminManagement = () => {
                       onChange={handleEditInputChange}
                       required
                       placeholder="9876543210"
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "16px",
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       Admin Reference Code
                     </label>
                     <input
@@ -1246,42 +576,18 @@ const AdminManagement = () => {
                       onChange={handleEditInputChange}
                       required
                       placeholder="e.g. GMPM"
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
                       System Role
                     </label>
                     <select
                       name="role"
                       value="ADMIN"
                       disabled
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #E5E7EB",
-                        fontSize: "14px",
-                        outline: "none",
-                        background: "#f3f4f6",
-                        cursor: "not-allowed",
-                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-gray-100 cursor-not-allowed text-gray-500"
                     >
                       <option value="ADMIN">Administrator</option>
                     </select>
@@ -1289,30 +595,14 @@ const AdminManagement = () => {
                 </div>
 
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      marginBottom: "8px",
-                    }}
-                  >
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
                     Account Status
                   </label>
                   <select
                     name="enabled"
                     value={editFormData.enabled ? "true" : "false"}
                     onChange={(e) => setEditFormData({ ...editFormData, enabled: e.target.value === "true" })}
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #E5E7EB",
-                      fontSize: "14px",
-                      outline: "none",
-                      background: "#fff",
-                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-white focus:border-indigo-500 transition-colors duration-200"
                   >
                     <option value="true">Active (Access Enabled)</option>
                     <option value="false">Inactive (Access Suspended)</option>
@@ -1320,47 +610,21 @@ const AdminManagement = () => {
                 </div>
 
                 {/* Footer Buttons */}
-                <div
-                  style={{ display: "flex", gap: "12px", marginTop: "10px" }}
-                >
+                <div className="flex gap-3 mt-2.5">
                   <button
                     type="button"
                     onClick={() => {
                       setShowEditModal(false);
                       setSelectedAdmin(null);
                     }}
-                    style={{
-                      flex: 1,
-                      padding: "14px",
-                      borderRadius: "14px",
-                      border: "1px solid #E5E7EB",
-                      background: "#fff",
-                      color: "#374151",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      cursor: "pointer",
-                    }}
+                    className="flex-1 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    style={{
-                      flex: 1.5,
-                      padding: "14px",
-                      borderRadius: "14px",
-                      border: "none",
-                      background: "#111827",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                    }}
+                    className="flex-[1.5] py-3.5 rounded-xl border-none bg-gray-900 text-white font-bold text-sm cursor-pointer hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <Loader2 className="animate-spin" size={18} />
@@ -1377,19 +641,9 @@ const AdminManagement = () => {
 
       {/* Animations */}
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.4s ease-out forwards;
-        }
-        .animate-slide-up {
-          animation: slideUp 0.4s ease-out forwards;
         }
       `}</style>
     </div>

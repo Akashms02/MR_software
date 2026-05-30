@@ -26,81 +26,88 @@ const STEP_LABELS = [
   'Verification',
 ];
 
-const inputStyle = {
-  width: '100%',
-  padding: '12px 16px',
-  borderRadius: '12px',
-  border: '1.5px solid #E5E7EB',
-  fontSize: '14px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  background: '#FAFAFA',
-  transition: 'border-color 0.2s',
+// Sub-component for input fields to keep JSX dry and use premium Tailwind classes
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  required = false,
+  type = 'text',
+  placeholder = '',
+  options = null,
+}) => {
+  const inputClass = "w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-white transition-[border-color] duration-200 focus:border-indigo-500";
+  const selectClass = "w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-white transition-[border-color] duration-200 focus:border-indigo-500 cursor-pointer";
+
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-700 mb-2">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </label>
+      {options ? (
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={selectClass}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+          placeholder={placeholder}
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
 };
-const labelStyle = {
-  display: 'block',
-  fontSize: '12px',
-  fontWeight: 700,
-  color: '#374151',
-  marginBottom: '8px',
-};
-const gridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' };
 
 const FileDropzone = ({ label, file, onChange, required = false }) => (
   <div>
-    <label style={labelStyle}>
+    <label className="block text-xs font-bold text-gray-700 mb-2">
       {label}
-      {required && <span style={{ color: '#EF4444' }}> *</span>}
+      {required && <span className="text-red-500"> *</span>}
     </label>
     <div
-      style={{
-        border: `2px dashed ${file ? '#6366F1' : '#E5E7EB'}`,
-        padding: '18px 16px',
-        borderRadius: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        cursor: 'pointer',
-        background: file ? '#EEF2FF' : '#FAFAFA',
-        position: 'relative',
-        transition: 'all 0.2s',
-      }}
+      className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-3 cursor-pointer relative transition-all duration-200 ${
+        file ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-[#FAFAFA]'
+      }`}
     >
       <div
-        style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '10px',
-          background: file ? '#6366F1' : '#F3F4F6',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
+        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+          file ? 'bg-indigo-600' : 'bg-gray-100'
+        }`}
       >
-        <Upload size={16} color={file ? '#fff' : '#9CA3AF'} />
+        <Upload size={16} className={file ? 'text-white' : 'text-gray-400'} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="flex-1 min-w-0">
         <div
-          style={{
-            fontSize: '13px',
-            fontWeight: 700,
-            color: file ? '#4338CA' : '#374151',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
+          className={`text-[13px] font-bold truncate ${
+            file ? 'text-indigo-700' : 'text-gray-700'
+          }`}
         >
           {file ? file.name : `Choose ${label}`}
         </div>
-        <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+        <div className="text-[11px] text-gray-400 mt-0.5">
           PDF, JPG, PNG · Max 5MB
         </div>
       </div>
       <input
         type="file"
         onChange={(e) => onChange(e.target.files[0])}
-        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+        className="absolute inset-0 opacity-0 cursor-pointer"
       />
     </div>
   </div>
@@ -471,79 +478,32 @@ const OnboardingWizard = () => {
   };
 
   return (
-    <div style={{ animation: 'fadeSlideIn 0.35s ease-out' }}>
+    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
       {/* ── Header ───────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '14px',
-          marginBottom: '28px',
-        }}
-      >
+      <div className="flex items-center gap-3.5 mb-7">
         <button
           onClick={() => navigate('/admin/myteam')}
-          style={{
-            background: '#F3F4F6',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '10px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#E5E7EB')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
+          className="bg-gray-100 border-none rounded-xl p-2.5 cursor-pointer flex items-center transition-colors duration-200 hover:bg-gray-200"
         >
-          <ChevronLeft size={20} color="#374151" />
+          <ChevronLeft size={20} className="text-gray-700" />
         </button>
-        <div style={{ flex: 1 }}>
-          <h2
-            style={{
-              fontSize: '22px',
-              fontWeight: 800,
-              color: '#111827',
-              margin: 0,
-            }}
-          >
+        <div className="flex-1">
+          <h2 className="text-2xl font-extrabold text-gray-900 m-0">
             Employee Onboarding
           </h2>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '3px 0 0 0' }}>
+          <p className="text-[13px] text-gray-500 mt-0.5 mb-0 mx-0">
             Follow the 7-step wizard to complete employee registration.
           </p>
         </div>
         {employeeId && (
-          <span
-            style={{
-              background: '#ECFDF5',
-              color: '#047857',
-              padding: '6px 14px',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: 700,
-              border: '1px solid #D1FAE5',
-            }}
-          >
+          <span className="bg-emerald-50 text-emerald-700 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-emerald-100">
             EMP ID: {employeeId}
           </span>
         )}
       </div>
 
       {/* ── Step Progress Bar ─────────────────────────────────────── */}
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: '18px',
-          padding: '18px 24px',
-          marginBottom: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          overflowX: 'auto',
-        }}
-      >
+      <div className="bg-white rounded-2xl px-6 py-4.5 mb-5 shadow-sm flex items-center gap-1.5 overflow-x-auto">
         {STEP_LABELS.map((name, i) => {
           const n = i + 1;
           const done = n < activeStep;
@@ -552,57 +512,47 @@ const OnboardingWizard = () => {
           const preCompleted = n < resumedFromStep;
           return (
             <React.Fragment key={n}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  flexShrink: 0,
-                }}
-              >
+              <div className="flex items-center gap-2 shrink-0">
                 <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: done
-                      ? preCompleted ? '#6366F1' : '#10B981'
-                      : active ? '#111827' : '#F3F4F6',
-                    color: done || active ? '#fff' : '#9CA3AF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: '13px',
-                    transition: 'all 0.3s',
-                  }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] transition-all duration-300 ${
+                    done
+                      ? preCompleted
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-emerald-500 text-white'
+                      : active
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
                   title={preCompleted && done ? 'Already submitted' : ''}
                 >
                   {done ? '✓' : n}
                 </div>
                 <span
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: active ? 800 : 600,
-                    color: active ? '#111827' : done ? (preCompleted ? '#6366F1' : '#10B981') : '#9CA3AF',
-                    whiteSpace: 'nowrap',
-                  }}
+                  className={`text-xs white-space-nowrap ${
+                    active
+                      ? 'font-extrabold text-gray-900'
+                      : done
+                      ? preCompleted
+                        ? 'font-semibold text-indigo-500'
+                        : 'font-semibold text-emerald-500'
+                      : 'font-semibold text-gray-400'
+                  }`}
                 >
                   {name}
                   {preCompleted && done && (
-                    <span style={{ fontSize: '10px', marginLeft: '4px', opacity: 0.7 }}>✦</span>
+                    <span className="text-[10px] ml-1 opacity-70">✦</span>
                   )}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div
-                  style={{
-                    flex: 1,
-                    height: '2px',
-                    background: done ? (preCompleted ? '#6366F1' : '#10B981') : '#F3F4F6',
-                    minWidth: '16px',
-                    transition: 'background 0.3s',
-                  }}
+                  className={`flex-1 h-[2px] min-w-4 transition-colors duration-300 ${
+                    done
+                      ? preCompleted
+                        ? 'bg-indigo-500'
+                        : 'bg-emerald-500'
+                      : 'bg-gray-100'
+                  }`}
                 />
               )}
             </React.Fragment>
@@ -611,53 +561,16 @@ const OnboardingWizard = () => {
       </div>
 
       {/* ── Main Card ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: '20px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-          padding: '36px 40px',
-        }}
-      >
+      <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-10 py-9">
         {/* Alerts */}
         {formError && (
-          <div
-            style={{
-              background: '#FEF2F2',
-              border: '1.5px solid #FECACA',
-              padding: '14px 18px',
-              borderRadius: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              color: '#B91C1C',
-              fontSize: '13px',
-              fontWeight: 600,
-              marginBottom: '24px',
-              animation: 'fadeSlideIn 0.2s ease-out',
-            }}
-          >
+          <div className="bg-red-50 border-[1.5px] border-red-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-red-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
             <AlertCircle size={18} />
             {formError}
           </div>
         )}
         {formSuccess && (
-          <div
-            style={{
-              background: '#ECFDF5',
-              border: '1.5px solid #A7F3D0',
-              padding: '14px 18px',
-              borderRadius: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              color: '#047857',
-              fontSize: '13px',
-              fontWeight: 600,
-              marginBottom: '24px',
-              animation: 'fadeSlideIn 0.2s ease-out',
-            }}
-          >
+          <div className="bg-emerald-50 border-[1.5px] border-emerald-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
             <CheckCircle2 size={18} />
             {formSuccess}
           </div>
@@ -666,43 +579,29 @@ const OnboardingWizard = () => {
         <form onSubmit={handleStepSubmit}>
           {/* ═══ STEP 1: Basic Setup ══════════════════════════════════ */}
           {activeStep === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div className="flex flex-col gap-7">
               <div>
-                <h4
-                  style={{
-                    margin: '0 0 4px 0',
-                    fontSize: '18px',
-                    fontWeight: 800,
-                    color: '#111827',
-                  }}
-                >
+                <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">
                   Step 1: Account Setup & Credentials
                 </h4>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+                <p className="text-[13px] text-gray-500 m-0">
                   Fill in basic login credentials. Enter an Employee ID to resume
                   an existing onboarding.
                 </p>
               </div>
 
               {/* Employee ID field — same pattern as EmployeeOnboarding reference */}
-              <div style={gridStyle}>
+              <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'baseline',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    <label style={{ ...labelStyle, marginBottom: 0 }}>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <label className="block text-xs font-bold text-gray-700">
                       Employee ID
                     </label>
-                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                    <span className="text-[11px] text-gray-400">
                       Enter to resume • leave empty for new
                     </span>
                   </div>
-                  <div style={{ position: 'relative' }}>
+                  <div className="relative">
                     <input
                       type="text"
                       value={resumeId}
@@ -711,130 +610,76 @@ const OnboardingWizard = () => {
                       }
                       onBlur={() => handleIdCheck()}
                       placeholder="e.g. EMP-2026-0001"
-                      style={{
-                        ...inputStyle,
-                        paddingRight: resumeLoading ? '42px' : '16px',
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.borderColor = '#6366F1')
-                      }
-                      onBlurCapture={(e) =>
-                        (e.currentTarget.style.borderColor = '#E5E7EB')
-                      }
+                      className="w-full pl-4 pr-10 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-white transition-[border-color] duration-200 focus:border-indigo-500"
                     />
                     {resumeLoading && (
                       <Loader2
                         size={16}
-                        style={{
-                          position: 'absolute',
-                          right: '12px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: '#6B7280',
-                          animation: 'spin 0.8s linear infinite',
-                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 animate-spin"
                       />
                     )}
                   </div>
                 </div>
 
-                <div>
-                  <label style={labelStyle}>
-                    Full Name <span style={{ color: '#EF4444' }}>*</span>
-                  </label>
-                  <input
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g. Rajesh Kumar"
-                    style={inputStyle}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor = '#6366F1')
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '#E5E7EB')
-                    }
-                  />
-                </div>
+                <FormField
+                  label="Full Name"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Rajesh Kumar"
+                />
               </div>
 
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>
-                    Email Address <span style={{ color: '#EF4444' }}>*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="rajesh@example.com"
-                    style={inputStyle}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor = '#6366F1')
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '#E5E7EB')
-                    }
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Phone Number <span style={{ color: '#EF4444' }}>*</span>
-                  </label>
-                  <input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="9876543210"
-                    style={inputStyle}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor = '#6366F1')
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '#E5E7EB')
-                    }
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Email Address"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  type="email"
+                  placeholder="rajesh@example.com"
+                />
+                <FormField
+                  label="Phone Number"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="9876543210"
+                />
               </div>
 
-              <div style={gridStyle}>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Role Type"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'MR', label: 'Medical Representative (MR)' },
+                    { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive' },
+                    { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive' },
+                    { value: 'HR', label: 'HR Manager' },
+                    { value: 'REGIONAL_MANAGER', label: 'Regional Manager' },
+                    { value: 'AREA_MANAGER', label: 'Area Manager' },
+                    { value: 'MEDICAL_MANAGER', label: 'Medical Manager' },
+                    { value: 'DOCTOR', label: 'Doctor' },
+                    { value: 'PHARMACIST', label: 'Pharmacist' },
+                    { value: 'DISTRIBUTOR', label: 'Distributor' },
+                    { value: 'PATIENT', label: 'Patient' },
+                  ]}
+                />
                 <div>
-                  <label style={labelStyle}>Role Type</label>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    style={{ ...inputStyle, background: '#fff' }}
-                  >
-                    <option value="MR">Medical Representative (MR)</option>
-                    <option value="MEDICAL_EXECUTIVE">Medical Executive</option>
-                    <option value="MEDICAL_SALES_EXECUTIVE">Medical Sales Executive</option>
-                    <option value="HR">HR Manager</option>
-                    <option value="REGIONAL_MANAGER">Regional Manager</option>
-                    <option value="AREA_MANAGER">Area Manager</option>
-                    <option value="MEDICAL_MANAGER">Medical Manager</option>
-                    <option value="DOCTOR">Doctor</option>
-                    <option value="PHARMACIST">Pharmacist</option>
-                    <option value="DISTRIBUTOR">Distributor</option>
-                    <option value="PATIENT">Patient</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Reporting Manager{' '}
-                    <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>
-                      (Optional)
-                    </span>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">
+                    Reporting Manager <span className="text-[11px] font-normal text-gray-400">(Optional)</span>
                   </label>
                   <select
                     name="reportingToId"
                     value={formData.reportingToId}
                     onChange={handleInputChange}
-                    style={{ ...inputStyle, background: '#fff' }}
+                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-white transition-[border-color] duration-200 focus:border-indigo-500 cursor-pointer"
                   >
                     <option value="">Select Reporting Manager</option>
                     {reportingManagers.map((mgr) => (
@@ -846,19 +691,12 @@ const OnboardingWizard = () => {
                 </div>
               </div>
 
-              <div style={{ maxWidth: '50%' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'baseline',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <label style={{ ...labelStyle, marginBottom: 0 }}>
+              <div className="max-w-[50%]">
+                <div className="flex justify-between items-baseline mb-2">
+                  <label className="block text-xs font-bold text-gray-700">
                     Security Password
                   </label>
-                  <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                  <span className="text-[11px] text-gray-400">
                     Leave empty to auto-generate
                   </span>
                 </div>
@@ -868,13 +706,7 @@ const OnboardingWizard = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  style={inputStyle}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = '#6366F1')
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '#E5E7EB')
-                  }
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-white transition-[border-color] duration-200 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -882,151 +714,121 @@ const OnboardingWizard = () => {
 
           {/* ═══ STEP 2: Personal Info ════════════════════════════════ */}
           {activeStep === 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">
                 Step 2: Personal Profile & Demographics
               </h4>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="grid grid-cols-3 gap-4">
                 {[
                   ['firstName', 'First Name', true],
                   ['middleName', 'Middle Name', false],
                   ['surname', 'Surname', true],
                 ].map(([field, label, req]) => (
-                  <div key={field}>
-                    <label style={labelStyle}>
-                      {label}
-                      {req && <span style={{ color: '#EF4444' }}> *</span>}
-                    </label>
-                    <input
-                      name={field}
-                      value={formData[field]}
-                      onChange={handleInputChange}
-                      required={req}
-                      placeholder={label}
-                      style={inputStyle}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-                    />
-                  </div>
+                  <FormField
+                    key={field}
+                    label={label}
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleInputChange}
+                    required={req}
+                    placeholder={label}
+                  />
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={labelStyle}>
-                    Date of Birth <span style={{ color: '#EF4444' }}>*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>Gender <span style={{ color: '#EF4444' }}>*</span></label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    style={{ ...inputStyle, background: '#fff' }}
-                  >
-                    {['Male', 'Female', 'Other'].map((g) => (
-                      <option key={g} value={g}>{g}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Blood Group</label>
-                  <select
-                    name="bloodGroup"
-                    value={formData.bloodGroup}
-                    onChange={handleInputChange}
-                    style={{ ...inputStyle, background: '#fff' }}
-                  >
-                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
-                      <option key={bg} value={bg}>{bg}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  label="Date of Birth"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                  required
+                  type="date"
+                />
+                <FormField
+                  label="Gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  required
+                  options={[
+                    { value: 'Male', label: 'Male' },
+                    { value: 'Female', label: 'Female' },
+                    { value: 'Other', label: 'Other' },
+                  ]}
+                />
+                <FormField
+                  label="Blood Group"
+                  name="bloodGroup"
+                  value={formData.bloodGroup}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'A+', label: 'A+' },
+                    { value: 'A-', label: 'A-' },
+                    { value: 'B+', label: 'B+' },
+                    { value: 'B-', label: 'B-' },
+                    { value: 'AB+', label: 'AB+' },
+                    { value: 'AB-', label: 'AB-' },
+                    { value: 'O+', label: 'O+' },
+                    { value: 'O-', label: 'O-' },
+                  ]}
+                />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={labelStyle}>Marital Status</label>
-                  <select
-                    name="maritalStatus"
-                    value={formData.maritalStatus}
-                    onChange={handleInputChange}
-                    style={{ ...inputStyle, background: '#fff' }}
-                  >
-                    {['Single', 'Married', 'Divorced', 'Widowed'].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Father's Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input
-                    name="fatherName"
-                    value={formData.fatherName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Father's Full Name"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>Mother's Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input
-                    name="motherName"
-                    value={formData.motherName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Mother's Full Name"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-                  />
-                </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  label="Marital Status"
+                  name="maritalStatus"
+                  value={formData.maritalStatus}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'Single', label: 'Single' },
+                    { value: 'Married', label: 'Married' },
+                    { value: 'Divorced', label: 'Divorced' },
+                    { value: 'Widowed', label: 'Widowed' },
+                  ]}
+                />
+                <FormField
+                  label="Father's Name"
+                  name="fatherName"
+                  value={formData.fatherName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Father's Full Name"
+                />
+                <FormField
+                  label="Mother's Name"
+                  name="motherName"
+                  value={formData.motherName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Mother's Full Name"
+                />
               </div>
 
               <div>
-                <label style={labelStyle}>Current Address <span style={{ color: '#EF4444' }}>*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Current Address <span className="text-red-500"> *</span>
+                </label>
                 <textarea
                   name="currentAddress"
                   value={formData.currentAddress}
                   onChange={handleInputChange}
                   required
                   placeholder="Flat, Building, Street, Area, City, PIN"
-                  style={{ ...inputStyle, height: '80px', resize: 'none' }}
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border bg-white transition-[border-color] duration-200 h-20 resize-none focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#374151',
-                    cursor: 'pointer',
-                    marginBottom: '8px',
-                  }}
-                >
+                <label className="flex items-center gap-2 text-[13px] font-bold text-gray-700 mb-2 cursor-pointer">
                   <input
                     type="checkbox"
                     name="sameAsCurrentAddress"
                     id="sameAddr"
                     checked={formData.sameAsCurrentAddress}
                     onChange={handleInputChange}
-                    style={{ width: '16px', height: '16px' }}
+                    className="w-4 h-4"
                   />
                   Permanent address is same as current address
                 </label>
@@ -1037,7 +839,7 @@ const OnboardingWizard = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="Flat, Building, Street, Area, City, PIN"
-                    style={{ ...inputStyle, height: '80px', resize: 'none' }}
+                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border bg-white transition-[border-color] duration-200 h-20 resize-none focus:border-indigo-500"
                   />
                 )}
               </div>
@@ -1046,44 +848,77 @@ const OnboardingWizard = () => {
 
           {/* ═══ STEP 3: Employment ══════════════════════════════════ */}
           {activeStep === 3 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">
                 Step 3: Professional & Employment Details
               </h4>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Department <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="department" value={formData.department} onChange={handleInputChange} required placeholder="e.g. Sales, Operations" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Designation <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="designation" value={formData.designation} onChange={handleInputChange} required placeholder="e.g. Senior MR" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Sales, Operations"
+                />
+                <FormField
+                  label="Designation"
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Senior MR"
+                />
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Date of Joining <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input type="date" name="dateOfJoining" value={formData.dateOfJoining} onChange={handleInputChange} required style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Work Location <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="workLocation" value={formData.workLocation} onChange={handleInputChange} required placeholder="e.g. Bangalore HQ" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Date of Joining"
+                  name="dateOfJoining"
+                  value={formData.dateOfJoining}
+                  onChange={handleInputChange}
+                  required
+                  type="date"
+                />
+                <FormField
+                  label="Work Location"
+                  name="workLocation"
+                  value={formData.workLocation}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Bangalore HQ"
+                />
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Employment Type</label>
-                  <select name="employmentType" value={formData.employmentType} onChange={handleInputChange} style={{ ...inputStyle, background: '#fff' }}>
-                    {['Full-time', 'Part-time', 'Contract', 'Internship'].map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Annual CTC <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                  <input type="number" name="salaryDetails" value={formData.salaryDetails} onChange={handleInputChange} placeholder="e.g. 500000" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Employment Type"
+                  name="employmentType"
+                  value={formData.employmentType}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'Full-time', label: 'Full-time' },
+                    { value: 'Part-time', label: 'Part-time' },
+                    { value: 'Contract', label: 'Contract' },
+                    { value: 'Internship', label: 'Internship' },
+                  ]}
+                />
+                <FormField
+                  label="Annual CTC"
+                  name="salaryDetails"
+                  value={formData.salaryDetails}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="e.g. 500000"
+                />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" name="isFresher" id="isFresher" checked={formData.isFresher} onChange={handleInputChange} style={{ width: '16px', height: '16px' }} />
+              <label className="flex items-center gap-2 text-[13px] font-bold text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isFresher"
+                  id="isFresher"
+                  checked={formData.isFresher}
+                  onChange={handleInputChange}
+                  className="w-4 h-4"
+                />
                 Candidate is a fresher (Step 4 – Experience – is optional)
               </label>
             </div>
@@ -1091,42 +926,62 @@ const OnboardingWizard = () => {
 
           {/* ═══ STEP 4: Experience ══════════════════════════════════ */}
           {activeStep === 4 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>Step 4: Past Work Experience</h4>
+            <div className="flex flex-col gap-6">
+              <div className="flex justify-between items-center">
+                <h4 className="text-lg font-extrabold text-gray-900 m-0">Step 4: Past Work Experience</h4>
                 {formData.isFresher && (
-                  <span style={{ background: '#EFF6FF', color: '#1D4ED8', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700 }}>Fresher – Optional</span>
+                  <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[11px] font-bold">Fresher – Optional</span>
                 )}
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Previous Company{!formData.isFresher && <span style={{ color: '#EF4444' }}> *</span>}</label>
-                  <input name="companyName" value={formData.companyName} onChange={handleInputChange} required={!formData.isFresher} placeholder="e.g. Novartis India" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Previous Designation{!formData.isFresher && <span style={{ color: '#EF4444' }}> *</span>}</label>
-                  <input name="prevDesignation" value={formData.prevDesignation} onChange={handleInputChange} required={!formData.isFresher} placeholder="e.g. MR" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Previous Company"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleInputChange}
+                  required={!formData.isFresher}
+                  placeholder="e.g. Novartis India"
+                />
+                <FormField
+                  label="Previous Designation"
+                  name="prevDesignation"
+                  value={formData.prevDesignation}
+                  onChange={handleInputChange}
+                  required={!formData.isFresher}
+                  placeholder="e.g. MR"
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={labelStyle}>Department <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                  <input name="prevDepartment" value={formData.prevDepartment} onChange={handleInputChange} placeholder="e.g. Sales" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>From Date</label>
-                  <input type="date" name="expFromDate" value={formData.expFromDate} onChange={handleInputChange} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>To Date</label>
-                  <input type="date" name="expToDate" value={formData.expToDate} onChange={handleInputChange} style={inputStyle} />
-                </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  label="Department"
+                  name="prevDepartment"
+                  value={formData.prevDepartment}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Sales"
+                />
+                <FormField
+                  label="From Date"
+                  name="expFromDate"
+                  value={formData.expFromDate}
+                  onChange={handleInputChange}
+                  type="date"
+                />
+                <FormField
+                  label="To Date"
+                  name="expToDate"
+                  value={formData.expToDate}
+                  onChange={handleInputChange}
+                  type="date"
+                />
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Total Experience</label>
-                  <input name="totalExperience" value={formData.totalExperience} onChange={handleInputChange} placeholder="e.g. 2 Years 4 Months" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Total Experience"
+                  name="totalExperience"
+                  value={formData.totalExperience}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 2 Years 4 Months"
+                />
                 <FileDropzone label="Experience Letter" file={experienceLetter} onChange={setExperienceLetter} />
               </div>
             </div>
@@ -1134,55 +989,83 @@ const OnboardingWizard = () => {
 
           {/* ═══ STEP 5: Bank Details ════════════════════════════════ */}
           {activeStep === 5 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>Step 5: Salary Bank Account Details</h4>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Bank Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="bankName" value={formData.bankName} onChange={handleInputChange} required placeholder="e.g. HDFC Bank" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Account Number <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} required placeholder="e.g. 50100249240212" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 5: Salary Bank Account Details</h4>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Bank Name"
+                  name="bankName"
+                  value={formData.bankName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. HDFC Bank"
+                />
+                <FormField
+                  label="Account Number"
+                  name="accountNumber"
+                  value={formData.accountNumber}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. 50100249240212"
+                />
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>IFSC Code <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} required placeholder="e.g. HDFC0000124" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Branch Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="branchName" value={formData.branchName} onChange={handleInputChange} required placeholder="e.g. Koramangala Branch" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="IFSC Code"
+                  name="ifscCode"
+                  value={formData.ifscCode}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. HDFC0000124"
+                />
+                <FormField
+                  label="Branch Name"
+                  name="branchName"
+                  value={formData.branchName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Koramangala Branch"
+                />
               </div>
             </div>
           )}
 
           {/* ═══ STEP 6: Statutory ══════════════════════════════════ */}
           {activeStep === 6 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>Step 6: Statutory Details & Legal IDs</h4>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>PAN Number <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="panNumber" value={formData.panNumber} onChange={handleInputChange} required placeholder="e.g. ABCDE1234F" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Aadhaar Number <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="aadharNumber" value={formData.aadharNumber} onChange={handleInputChange} required placeholder="e.g. 1234 5678 9012" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 6: Statutory Details & Legal IDs</h4>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="PAN Number"
+                  name="panNumber"
+                  value={formData.panNumber}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. ABCDE1234F"
+                />
+                <FormField
+                  label="Aadhaar Number"
+                  name="aadharNumber"
+                  value={formData.aadharNumber}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. 1234 5678 9012"
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="grid grid-cols-3 gap-4">
                 {[
                   ['uanNumber', 'UAN Number', 'e.g. 100912482402'],
                   ['pfNumber', 'EPF Account No.', 'e.g. MH/BAN/0012345'],
                   ['esiNumber', 'ESIC Number', 'e.g. 31000123450001001'],
                 ].map(([field, label, ph]) => (
-                  <div key={field}>
-                    <label style={labelStyle}>{label} <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                    <input name={field} value={formData[field]} onChange={handleInputChange} placeholder={ph} style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                  </div>
+                  <FormField
+                    key={field}
+                    label={label}
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleInputChange}
+                    placeholder={ph}
+                  />
                 ))}
               </div>
             </div>
@@ -1190,33 +1073,48 @@ const OnboardingWizard = () => {
 
           {/* ═══ STEP 7: Verification & Emergency ══════════════════ */}
           {activeStep === 7 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#111827' }}>Step 7: Verification Documents & Emergency Contact</h4>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Emergency Contact Name <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="emergencyContactName" value={formData.emergencyContactName} onChange={handleInputChange} required placeholder="Full Name of Contact Person" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Relationship <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="relationship" value={formData.relationship} onChange={handleInputChange} required placeholder="e.g. Father, Spouse" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 7: Verification Documents & Emergency Contact</h4>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Emergency Contact Name"
+                  name="emergencyContactName"
+                  value={formData.emergencyContactName}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Full Name of Contact Person"
+                />
+                <FormField
+                  label="Relationship"
+                  name="relationship"
+                  value={formData.relationship}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g. Father, Spouse"
+                />
               </div>
-              <div style={gridStyle}>
-                <div>
-                  <label style={labelStyle}>Contact Number <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input name="emergencyContactNumber" value={formData.emergencyContactNumber} onChange={handleInputChange} required placeholder="Primary Phone" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Alternate Number <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                  <input name="alternateContactNumber" value={formData.alternateContactNumber} onChange={handleInputChange} placeholder="Secondary Phone" style={inputStyle} onFocus={(e) => (e.currentTarget.style.borderColor = '#6366F1')} onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')} />
-                </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormField
+                  label="Contact Number"
+                  name="emergencyContactNumber"
+                  value={formData.emergencyContactNumber}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Primary Phone"
+                />
+                <FormField
+                  label="Alternate Number (Optional)"
+                  name="alternateContactNumber"
+                  value={formData.alternateContactNumber}
+                  onChange={handleInputChange}
+                  placeholder="Secondary Phone"
+                />
               </div>
-              <div style={gridStyle}>
+              <div className="grid grid-cols-2 gap-5">
                 <FileDropzone label="Profile Photo (Passport size)" file={profilePhoto} onChange={setProfilePhoto} required />
                 <FileDropzone label="Aadhaar Card Document" file={aadharDoc} onChange={setAadharDoc} />
               </div>
-              <div style={gridStyle}>
+              <div className="grid grid-cols-2 gap-5">
                 <FileDropzone label="PAN Card Document" file={panDoc} onChange={setPanDoc} />
                 <FileDropzone label="Resume / CV" file={resumeDoc} onChange={setResumeDoc} />
               </div>
@@ -1224,36 +1122,12 @@ const OnboardingWizard = () => {
           )}
 
           {/* ── Navigation Footer ─────────────────────────────────── */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: '40px',
-              paddingTop: '24px',
-              borderTop: '1.5px solid #F3F4F6',
-            }}
-          >
+          <div className="flex justify-between items-center mt-10 pt-6 border-t-[1.5px] border-gray-100">
             {activeStep > 1 ? (
               <button
                 type="button"
                 onClick={() => setActiveStep((p) => p - 1)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '12px 22px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #E5E7EB',
-                  background: '#fff',
-                  color: '#374151',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#F9FAFB')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
+                className="flex items-center gap-1.5 px-5.5 py-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer transition-all duration-200 hover:bg-gray-50"
               >
                 <ArrowLeft size={16} /> Back
               </button>
@@ -1263,34 +1137,18 @@ const OnboardingWizard = () => {
             <button
               type="submit"
               disabled={loading || resumeLoading || !!formSuccess}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 28px',
-                borderRadius: '12px',
-                border: 'none',
-                background: isStepAlreadyDone(activeStep) ? '#6366F1' : '#111827',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: (loading || resumeLoading || !!formSuccess) ? 'not-allowed' : 'pointer',
-                opacity: (loading || resumeLoading || !!formSuccess) ? 0.7 : 1,
-                transition: 'all 0.2s',
-                boxShadow: isStepAlreadyDone(activeStep)
-                  ? '0 4px 12px rgba(99,102,241,0.3)'
-                  : '0 4px 12px rgba(17,24,39,0.2)',
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && !resumeLoading && !formSuccess)
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
+              className={`flex items-center gap-2 px-7 py-3 rounded-xl border-none text-white font-bold text-sm transition-all duration-200 ${
+                isStepAlreadyDone(activeStep)
+                  ? 'bg-indigo-500 shadow-[0_4px_12px_rgba(99,102,241,0.3)]'
+                  : 'bg-gray-900 shadow-[0_4px_12px_rgba(17,24,39,0.2)]'
+              } ${
+                (loading || resumeLoading || !!formSuccess)
+                  ? 'opacity-70 cursor-not-allowed'
+                  : 'cursor-pointer hover:-translate-y-0.5'
+              }`}
             >
               {loading ? (
-                <Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} />
+                <Loader2 size={16} className="animate-spin" />
               ) : null}
               {activeStep === 7
                 ? 'Complete Onboarding'
