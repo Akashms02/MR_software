@@ -108,95 +108,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page-container">
+    <div className="min-h-screen bg-white relative flex items-center justify-center p-4 md:p-8 overflow-hidden font-sans">
 
       {/* ── DYNAMIC BACKGROUND ─────────────────────────────────────── */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
-        style={{
-          position: 'absolute', top: '-20%', left: '-10%',
-          width: '70vw', height: '70vw', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(200, 240, 74, 0.4) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
+        className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(200,240,74,0.4)_0%,transparent_70%)] blur-[80px] pointer-events-none"
       />
 
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-        style={{
-          position: 'absolute', bottom: '-20%', right: '-10%',
-          width: '60vw', height: '60vw', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(167, 216, 0, 0.2) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
+        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle,rgba(167,216,0,0.2)_0%,transparent_70%)] blur-[80px] pointer-events-none"
       />
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────── */}
-      <div className="login-page-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl w-full relative z-10">
 
         {/* Left Side: Brand & Messaging */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="login-brand-section"
+          className="flex flex-col items-start gap-6 lg:pr-10"
         >
           <motion.div
             variants={itemVariants}
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
+            className="flex items-center gap-4 cursor-pointer select-none"
             onClick={() => navigate('/')}
           >
-            <div style={{
-              width: '56px', height: '56px', borderRadius: '16px',
-              background: 'linear-gradient(135deg, var(--lime) 0%, var(--lime-dark) 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 12px 32px rgba(200, 240, 74, 0.25)'
-            }}>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C8F04A] to-green-600 flex items-center justify-center shadow-lg">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#0F172A" strokeWidth="2.5" strokeLinejoin="round" />
                 <path d="M12 2v20M3 7l9 5 9-5" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '28px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              <div className="font-extrabold text-[28px] text-gray-900 tracking-tight leading-none">
                 GmaxepayHR
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--lime-dark)', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
+              <div className="text-[11px] text-green-700 font-bold tracking-[2px] uppercase leading-none mt-1">
                 Pharma HRMS
               </div>
             </div>
           </motion.div>
 
-          <motion.h1 variants={itemVariants} style={{
-            fontSize: 'clamp(40px, 5vw, 56px)', fontWeight: 900, color: 'var(--text-primary)',
-            letterSpacing: '-1.5px', lineHeight: 1.1,
-          }}>
-            Enter the future of <span style={{ color: 'var(--lime-dark)' }}>Pharma HR.</span>
+          <motion.h1 variants={itemVariants} className="text-[40px] md:text-[50px] lg:text-[56px] font-extrabold text-gray-900 tracking-tight leading-[1.1]">
+            Enter the future of <span className="text-green-700">Pharma HR.</span>
           </motion.h1>
 
-          <motion.p variants={itemVariants} style={{
-            fontSize: '18px', color: 'var(--text-secondary)',
-            lineHeight: 1.6, maxWidth: '420px', fontWeight: 500
-          }}>
+          <motion.p variants={itemVariants} className="text-[18px] text-gray-500 leading-relaxed max-w-[420px] font-medium">
             Secure, compliant, and lightning-fast. Access your workspace and manage operations from anywhere.
           </motion.p>
 
-          <motion.div variants={itemVariants} style={{
-            marginTop: '20px', padding: '16px 20px',
-            background: '#fff', border: '1px solid var(--border)',
-            borderRadius: '12px', display: 'inline-block', alignSelf: 'flex-start',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-          }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>SYSTEM STATUS</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--lime-dark)', boxShadow: '0 0 10px var(--lime)' }} />
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>All services operational</span>
+          <motion.div variants={itemVariants} className="mt-5 p-4 px-5 bg-white border border-gray-200 rounded-xl shadow-sm inline-block">
+            <div className="text-[12px] text-gray-400 mb-1 font-bold uppercase tracking-wider">SYSTEM STATUS</div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-600 shadow-[0_0_10px_#10b981]" />
+              <span className="text-[14px] text-gray-955 font-bold">All services operational</span>
             </div>
           </motion.div>
         </motion.div>
@@ -208,13 +180,13 @@ export default function LoginPage() {
           transition={{ duration: 0.8, type: 'spring', bounce: 0.4 }}
           style={{ perspective: '1000px' }}
         >
-          <div className="login-card-container">
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 md:p-10 shadow-2xl w-full max-w-[460px] mx-auto">
 
-            <div style={{ marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            <div className="mb-8">
+              <h2 className="text-[24px] font-extrabold text-gray-900 mb-2">
                 Welcome back
               </h2>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              <p className="text-[14px] text-gray-500 font-medium">
                 Please enter your credentials to continue.
               </p>
             </div>
@@ -222,8 +194,8 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} noValidate>
 
               {/* Email */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="mb-5">
+                <label className="block text-[12px] font-bold text-gray-400 mb-2 uppercase tracking-[0.5px]">
                   Email Address
                 </label>
                 <input
@@ -233,27 +205,16 @@ export default function LoginPage() {
                   onChange={e => { setEmail(e.target.value); setLocalError('') }}
                   placeholder="you@gmaxepayhr.in"
                   autoComplete="email"
-                  style={{
-                    width: '100%', padding: '14px 16px',
-                    background: '#f8fafc',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px', fontSize: '15px',
-                    color: 'var(--text-primary)', outline: 'none',
-                    transition: 'all 0.2s ease',
-                    boxSizing: 'border-box',
-                    fontWeight: 500,
-                  }}
-                  onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
-                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-[15px] text-gray-950 font-medium outline-none transition-all duration-200 focus:border-green-600 focus:bg-white box-border"
                 />
               </div>
 
               {/* Password */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold text-gray-400 mb-2 uppercase tracking-[0.5px]">
                   Password
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <input
                     id="login-password"
                     type={showPw ? 'text' : 'password'}
@@ -261,31 +222,12 @@ export default function LoginPage() {
                     onChange={e => { setPassword(e.target.value); setLocalError('') }}
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    style={{
-                      width: '100%', padding: '14px 48px 14px 16px',
-                      background: '#f8fafc',
-                      border: '1px solid var(--border)',
-                      borderRadius: '12px', fontSize: '15px',
-                      color: 'var(--text-primary)', outline: 'none',
-                      transition: 'all 0.2s ease',
-                      boxSizing: 'border-box',
-                      fontWeight: 500,
-                    }}
-                    onFocus={e => { e.target.style.borderColor = 'var(--lime-dark)'; e.target.style.background = '#fff'; }}
-                    onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f8fafc'; }}
+                    className="w-full px-4 pr-12 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-[15px] text-gray-950 font-medium outline-none transition-all duration-200 focus:border-green-600 focus:bg-white box-border"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPw(!showPw)}
-                    style={{
-                      position: 'absolute', right: '14px', top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--text-muted)', display: 'flex',
-                      padding: '4px', transition: 'color 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-gray-400 hover:text-gray-600 transition-colors p-1"
                   >
                     {showPw ? <EyeOff /> : <EyeOpen />}
                   </button>
@@ -293,15 +235,8 @@ export default function LoginPage() {
               </div>
 
               {/* Forgot password */}
-              <div style={{ textAlign: 'right', marginBottom: '28px' }}>
-                <Link to="/forgot-password" style={{
-                  fontSize: '13px', color: 'var(--lime-dark)',
-                  textDecoration: 'none', fontWeight: 700,
-                  transition: 'opacity 0.2s'
-                }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                >
+              <div className="text-right mb-7">
+                <Link to="/forgot-password" className="text-[13px] text-green-700 font-bold hover:opacity-80 transition-opacity no-underline">
                   Forgot password?
                 </Link>
               </div>
@@ -313,14 +248,9 @@ export default function LoginPage() {
                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                     animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    style={{ overflow: 'hidden' }}
+                    className="overflow-hidden"
                   >
-                    <div style={{
-                      padding: '12px 16px', borderRadius: '10px',
-                      background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
-                      fontSize: '13px', color: '#dc2626', lineHeight: 1.5,
-                      display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500
-                    }}>
+                    <div className="p-3 px-4 rounded-lg bg-rose-50 border border-rose-200 text-[13px] text-rose-600 leading-relaxed flex items-center gap-2 font-medium">
                       <span>⚠️</span> {error}
                     </div>
                   </motion.div>
@@ -334,16 +264,9 @@ export default function LoginPage() {
                 id="login-btn"
                 type="submit"
                 disabled={loading}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: loading ? 'rgba(200, 240, 74, 0.5)' : 'var(--lime)',
-                  color: '#0F172A', fontWeight: 800, fontSize: '15px',
-                  border: 'none', borderRadius: '12px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  fontFamily: 'var(--font-sans)',
-                  boxShadow: '0 8px 20px rgba(200, 240, 74, 0.2)'
-                }}
+                className={`w-full py-3.5 text-gray-950 font-extrabold text-[15px] border-none rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-lg transition-colors ${
+                  loading ? 'bg-green-200 cursor-not-allowed' : 'bg-[#C8F04A] hover:bg-[#b5db3f]'
+                }`}
               >
                 {loading ? (
                   <>
@@ -356,14 +279,11 @@ export default function LoginPage() {
             </form>
 
             {/* Demo Credentials Hint */}
-            <div style={{
-              marginTop: '36px', paddingTop: '24px',
-              borderTop: '1px solid var(--border)',
-            }}>
-              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div className="mt-9 pt-6 border-t border-gray-200">
+              <div className="text-[11px] font-bold text-gray-400 mb-3 uppercase tracking-[0.5px]">
                 One-Click Demo Access
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="flex flex-col gap-2">
                 {[
                   { email: 'superadmin@mrmedical.com', password: 'SuperAdmin@123', role: 'Super Admin' },
                   { email: 'admin.one@mrmedical.com', password: 'Password@123', role: 'Admin' },
@@ -373,23 +293,16 @@ export default function LoginPage() {
                   { email: 'msmadhankumar2002@gmail.com', password: 'Madhan@1234', role: 'Medical Sales Executive' }
                 ].map((c, i) => (
                   <motion.div
-                    whileHover={{ x: 4, background: 'var(--bg-section)' }}
+                    whileHover={{ x: 4, backgroundColor: '#f8fafc' }}
                     key={i}
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '8px 12px', borderRadius: '8px',
-                      cursor: 'pointer', transition: 'background 0.2s'
-                    }}
+                    className="flex justify-between items-center p-2 px-3 rounded-lg cursor-pointer transition-colors duration-150"
                     onClick={() => { setEmail(c.email); setPassword(c.password); setLocalError('') }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        width: '8px', height: '8px', borderRadius: '50%',
-                        background: c.role.includes('Admin') ? '#F43F5E' : 'var(--lime-dark)'
-                      }} />
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{c.role}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${c.role.includes('Admin') ? 'bg-rose-500' : 'bg-green-600'}`} />
+                      <span className="text-[13px] font-bold text-gray-700">{c.role}</span>
                     </div>
-                    <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)' }}>Click to fill</span>
+                    <span className="text-[12px] font-medium text-gray-400">Click to fill</span>
                   </motion.div>
                 ))}
               </div>
@@ -398,24 +311,15 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </div>
-
-      <style>{`
-        input:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
-          -webkit-text-fill-color: var(--text-primary) !important;
-        }
-      `}</style>
     </div>
   )
 }
 
 function SpinnerIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-      style={{ animation: 'spin 1s linear infinite' }}>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="animate-spin">
       <circle cx="12" cy="12" r="10" stroke="rgba(15, 23, 42, 0.2)" strokeWidth="3" />
       <path d="M12 2a10 10 0 0110 10" stroke="#0F172A" strokeWidth="3" strokeLinecap="round" />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </svg>
   )
 }

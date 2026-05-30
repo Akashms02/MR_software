@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { EMPLOYEES, PAYROLL_HISTORY } from '../../data/hrmsData'
 import {
-  Card, SectionHeader, StatusBadge, PrimaryBtn, OutlineBtn,
+  Card, SectionHeader, StatusBadge,
   TableWrap, Th, Td, TabBar, StatCard
 } from '../../components/ui'
 
@@ -36,12 +36,6 @@ export default function AdminPayroll({ role }) {
   const totalGross  = EMPLOYEES.reduce((s, e) => s + Math.round(e.salary * 0.80), 0)
   const totalNet    = EMPLOYEES.reduce((s, e) => s + Math.round(e.salary * 0.63), 0)
 
-  const inStyle = {
-    background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '8px',
-    padding: '9px 12px', color: '#374151', fontSize: '13px',
-    fontFamily: 'inherit', outline: 'none',
-  }
-
   return (
     <div>
       <SectionHeader
@@ -54,7 +48,7 @@ export default function AdminPayroll({ role }) {
       {tab === 'summary' && (
         <>
           {/* KPI Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '24px' }}>
+          <div className="grid grid-cols-4 gap-3.5 mb-6">
             <StatCard icon="👥" label="Total Employees" value={EMPLOYEES.length} color="#16a34a" />
             <StatCard icon="💼" label="Gross Payroll" value={`₹${(totalGross/100000).toFixed(1)}L`} color="#0891b2" bgColor="#e0f2fe" />
             <StatCard icon="💰" label="Net Payroll"   value={`₹${(totalNet/100000).toFixed(1)}L`}  color="#7c3aed" bgColor="#ede9fe" />
@@ -63,40 +57,53 @@ export default function AdminPayroll({ role }) {
 
           {/* Run Payroll card */}
           {!processed ? (
-            <Card style={{ marginBottom: '24px', padding: '24px', border: '1.5px solid #bbf7d0', background: 'linear-gradient(135deg,#f0fdf4,#fff)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <Card className="mb-6 p-6 border-[1.5px] border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-white">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '16px', color: '#111827', marginBottom: '4px' }}>Run May 2026 Payroll</div>
-                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                    {EMPLOYEES.length} employees · Estimated net: <strong style={{ color: '#16a34a' }}>₹{totalNet.toLocaleString('en-IN')}</strong>
+                  <div className="font-bold text-base text-[#111827] mb-1">Run May 2026 Payroll</div>
+                  <div className="text-[13px] text-[#6b7280]">
+                    {EMPLOYEES.length} employees · Estimated net: <strong className="text-[#16a34a]">₹{totalNet.toLocaleString('en-IN')}</strong>
                   </div>
                 </div>
                 {role === 'HR Admin' && (
-                  <PrimaryBtn onClick={() => setModal(true)} style={{ padding: '11px 24px', fontSize: '14px' }}>
+                  <button
+                    onClick={() => setModal(true)}
+                    className="btn-lime px-6 py-[11px] text-[14px] cursor-pointer font-bold rounded-lg border-0 transition-colors duration-150"
+                  >
                     ▶ Process Payroll
-                  </PrimaryBtn>
+                  </button>
                 )}
               </div>
             </Card>
           ) : (
-            <Card style={{ marginBottom: '24px', padding: '20px', border: '1.5px solid #bbf7d0', background: '#f0fdf4' }}>
-              <div style={{ color: '#16a34a', fontWeight: 600, fontSize: '14px' }}>✅ Payroll processed for May 2026. Payslips sent to all employees.</div>
+            <Card className="mb-6 p-5 border-[1.5px] border-[#bbf7d0] bg-[#f0fdf4]">
+              <div className="text-[#16a34a] font-semibold text-[14px]">✅ Payroll processed for May 2026. Payslips sent to all employees.</div>
             </Card>
           )}
 
           {/* Confirm Modal */}
           {showModal && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.4)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Card style={{ width: '420px', padding: '28px', borderRadius: '16px', border: '1.5px solid #e5e7eb', zIndex: 401 }}>
-                <div style={{ fontSize: '28px', marginBottom: '12px' }}>⚠️</div>
-                <div style={{ fontWeight: 700, fontSize: '18px', color: '#111827', marginBottom: '10px' }}>Confirm Payroll Run</div>
-                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.6, marginBottom: '20px' }}>
-                  This will process payroll for <strong style={{ color: '#111827' }}>{EMPLOYEES.length} employees</strong>,
-                  totalling <strong style={{ color: '#16a34a' }}>₹{totalNet.toLocaleString('en-IN')}</strong> net payout. This action cannot be undone.
+            <div className="fixed inset-0 bg-gray-900/40 z-[400] flex items-center justify-center">
+              <Card className="w-[420px] p-7 rounded-2xl border-[1.5px] border-[#e5e7eb] z-[401]">
+                <div className="text-[28px] mb-3">⚠️</div>
+                <div className="font-bold text-[18px] text-[#111827] mb-2.5">Confirm Payroll Run</div>
+                <p className="text-[14px] text-[#6b7280] leading-relaxed mb-5">
+                  This will process payroll for <strong className="text-[#111827]">{EMPLOYEES.length} employees</strong>,
+                  totalling <strong className="text-[#16a34a]">₹{totalNet.toLocaleString('en-IN')}</strong> net payout. This action cannot be undone.
                 </p>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <PrimaryBtn onClick={() => { setProc(true); setModal(false) }}>✅ Confirm & Process</PrimaryBtn>
-                  <OutlineBtn onClick={() => setModal(false)}>Cancel</OutlineBtn>
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={() => { setProc(true); setModal(false) }}
+                    className="btn-lime px-5 py-2.5 rounded-lg text-sm font-bold cursor-pointer border-0"
+                  >
+                    ✅ Confirm & Process
+                  </button>
+                  <button
+                    onClick={() => setModal(false)}
+                    className="px-5 py-2.5 rounded-lg border border-[#e5e7eb] bg-white text-[#374151] font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </Card>
             </div>
@@ -104,21 +111,20 @@ export default function AdminPayroll({ role }) {
 
           {/* Salary Table */}
           <TableWrap>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5e7eb', fontWeight: 700, fontSize: '14px', color: '#111827' }}>Employee Salary Breakdown</div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="px-5 py-3.5 border-b border-[#e5e7eb] font-bold text-[14px] text-[#111827]">Employee Salary Breakdown</div>
+            <table className="w-full border-collapse">
               <thead><tr>{['Employee','Basic','HRA','Allowances','Gross','PF','TDS','Net Pay'].map(h => <Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {EMPLOYEES.map(emp => {
                   const b = breakdown(emp.salary)
                   return (
-                    <tr key={emp.id}
-                      style={{ transition: 'background 0.12s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <Td style={{ fontWeight: 600, color: '#111827' }}>{emp.name}</Td>
+                    <tr key={emp.id} className="transition-colors duration-100 hover:bg-[#f9fafb]">
+                      <Td className="font-semibold text-[#111827]">{emp.name}</Td>
                       {[b['Basic Salary'], b.HRA, b['Other Allowances'], b['Gross Pay'], b['PF (12%)'], b.TDS, b['Net Pay']].map((v, i) => (
-                        <Td key={i} style={{ color: i === 6 ? '#16a34a' : i >= 4 ? '#dc2626' : '#374151', fontWeight: i === 6 ? 700 : 400 }}>
+                        <Td 
+                          key={i} 
+                          className={i === 6 ? 'text-[#16a34a] font-bold' : i >= 4 ? 'text-[#dc2626]' : 'text-[#374151]'}
+                        >
                           ₹{v.toLocaleString('en-IN')}
                         </Td>
                       ))}
@@ -134,49 +140,53 @@ export default function AdminPayroll({ role }) {
       {/* ── Payslip ─────────────────────────────────────────────── */}
       {tab === 'payslip' && (
         <div>
-          <div style={{ marginBottom: '20px' }}>
-            <select value={empId} onChange={e => setEmpId(e.target.value)} style={{ ...inStyle, minWidth: '280px' }}>
+          <div className="mb-5">
+            <select
+              value={empId}
+              onChange={e => setEmpId(e.target.value)}
+              className="bg-white border-[1.5px] border-[#e5e7eb] rounded-lg px-3 py-2 text-[#374151] text-[13px] outline-none min-w-[280px]"
+            >
               <option value="">Select Employee…</option>
               {EMPLOYEES.map(e => <option key={e.id} value={e.id}>{e.name} — {e.id}</option>)}
             </select>
           </div>
 
           {selectedEmp && (
-            <Card style={{ maxWidth: '580px', padding: '28px' }}>
+            <Card className="max-w-[580px] p-7">
               {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '18px', borderBottom: '1px solid #f3f4f6', marginBottom: '20px' }}>
+              <div className="flex justify-between items-start pb-4.5 border-b border-[#f3f4f6] mb-5">
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '20px', color: '#16a34a' }}>GmaxepayHR Pharma</div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>Payslip — April 2026</div>
+                  <div className="font-bold text-[20px] text-[#16a34a]">GmaxepayHR Pharma</div>
+                  <div className="text-[12px] text-[#9ca3af]">Payslip — April 2026</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, fontSize: '15px', color: '#111827' }}>{selectedEmp.name}</div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{selectedEmp.id} · {selectedEmp.dept}</div>
+                <div className="text-right">
+                  <div className="font-bold text-[15px] text-[#111827]">{selectedEmp.name}</div>
+                  <div className="text-[12px] text-[#9ca3af]">{selectedEmp.id} · {selectedEmp.dept}</div>
                 </div>
               </div>
 
               {/* Earnings + Deductions */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <div className="grid grid-cols-2 gap-5 mb-5">
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Earnings</div>
+                  <div className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider mb-3">Earnings</div>
                   {EARNING_KEYS.map(k => {
                     const b = breakdown(selectedEmp.salary)
                     return (
-                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f9fafb', fontSize: '13px' }}>
-                        <span style={{ color: '#6b7280' }}>{k}</span>
-                        <span style={{ color: '#111827', fontWeight: 500 }}>₹{b[k].toLocaleString('en-IN')}</span>
+                      <div key={k} className="flex justify-between py-2 border-b border-[#f9fafb] text-[13px]">
+                        <span className="text-[#6b7280]">{k}</span>
+                        <span className="text-[#111827] font-medium">₹{b[k].toLocaleString('en-IN')}</span>
                       </div>
                     )
                   })}
                 </div>
-                <div style={{ paddingLeft: '16px', borderLeft: '1px solid #f3f4f6' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Deductions</div>
+                <div className="pl-4 border-l border-[#f3f4f6]">
+                  <div className="text-[11px] font-bold text-[#dc2626] uppercase tracking-wider mb-3">Deductions</div>
                   {DEDUCT_KEYS.map(k => {
                     const b = breakdown(selectedEmp.salary)
                     return (
-                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f9fafb', fontSize: '13px' }}>
-                        <span style={{ color: '#6b7280' }}>{k}</span>
-                        <span style={{ color: '#dc2626' }}>₹{b[k].toLocaleString('en-IN')}</span>
+                      <div key={k} className="flex justify-between py-2 border-b border-[#f9fafb] text-[13px]">
+                        <span className="text-[#6b7280]">{k}</span>
+                        <span className="text-[#dc2626]">₹{b[k].toLocaleString('en-IN')}</span>
                       </div>
                     )
                   })}
@@ -184,11 +194,13 @@ export default function AdminPayroll({ role }) {
               </div>
 
               {/* Net Pay */}
-              <div style={{ padding: '16px', background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <span style={{ fontWeight: 700, fontSize: '15px', color: '#374151' }}>Net Pay</span>
-                <span style={{ fontWeight: 800, fontSize: '24px', color: '#16a34a' }}>₹{breakdown(selectedEmp.salary)['Net Pay'].toLocaleString('en-IN')}</span>
+              <div className="p-4 bg-[#f0fdf4] border-[1.5px] border-[#bbf7d0] rounded-xl flex items-center justify-between mb-4">
+                <span className="font-bold text-[15px] text-[#374151]">Net Pay</span>
+                <span className="font-extrabold text-[24px] text-[#16a34a]">₹{breakdown(selectedEmp.salary)['Net Pay'].toLocaleString('en-IN')}</span>
               </div>
-              <OutlineBtn>⬇ Download PDF</OutlineBtn>
+              <button className="w-full px-5 py-2.5 rounded-lg border border-[#e5e7eb] bg-white text-[#374151] font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150">
+                ⬇ Download PDF
+              </button>
             </Card>
           )}
         </div>
@@ -197,23 +209,19 @@ export default function AdminPayroll({ role }) {
       {/* ── History ─────────────────────────────────────────────── */}
       {tab === 'history' && (
         <TableWrap>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5e7eb', fontWeight: 700, fontSize: '14px', color: '#111827' }}>Payroll History</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="px-5 py-3.5 border-b border-[#e5e7eb] font-bold text-[14px] text-[#111827]">Payroll History</div>
+          <table className="w-full border-collapse">
             <thead><tr>{['Month','Employees','Gross Payroll','Net Payroll','Status',''].map(h => <Th key={h}>{h}</Th>)}</tr></thead>
             <tbody>
               {PAYROLL_HISTORY.map(h => (
-                <tr key={h.month}
-                  style={{ transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <Td style={{ fontWeight: 600, color: '#111827' }}>{h.month}</Td>
+                <tr key={h.month} className="transition-colors duration-100 hover:bg-[#f9fafb]">
+                  <Td className="font-semibold text-[#111827]">{h.month}</Td>
                   <Td>{h.employees}</Td>
-                  <Td style={{ color: '#6b7280' }}>{h.gross}</Td>
-                  <Td style={{ color: '#16a34a', fontWeight: 700 }}>{h.net}</Td>
+                  <Td className="text-[#6b7280]">{h.gross}</Td>
+                  <Td className="text-[#16a34a] font-bold">{h.net}</Td>
                   <Td><StatusBadge status={h.status} /></Td>
                   <Td>
-                    <button style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                    <button className="px-3 py-1.25 rounded-md border border-[#e5e7eb] bg-white text-[#6b7280] text-xs cursor-pointer hover:bg-gray-50 font-medium font-sans">
                       ⬇ Download
                     </button>
                   </Td>

@@ -8,13 +8,14 @@ import { SUPER_ADMIN_NAV, ADMIN_NAV, EMPLOYEE_NAV } from './navConfig'
 function SidebarAvatar({ name, size = 42 }) {
   const initials = name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
   return (
-    <div style={{
-      width: `${size}px`, height: `${size}px`, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #CBD5E1 0%, #94A3B8 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: `${size * 0.36}px`, fontWeight: 700, color: '#fff',
-      flexShrink: 0, overflow: 'hidden'
-    }}>
+    <div
+      className="rounded-full flex items-center justify-center font-bold text-white shrink-0 overflow-hidden"
+      style={{
+        width: `${size}px`, height: `${size}px`,
+        background: 'linear-gradient(135deg, #CBD5E1 0%, #94A3B8 100%)',
+        fontSize: `${size * 0.36}px`
+      }}
+    >
       {initials}
     </div>
   )
@@ -38,7 +39,6 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
   const location = useLocation()
   const dispatch = useDispatch()
 
-  // Extract the active page ID from the URL path (e.g., /dashboard/finance -> finance)
   const pathParts = location.pathname.split('/')
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
@@ -47,34 +47,19 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
   else if (!isEmployee) currentNav = ADMIN_NAV;
 
   return (
-    <aside style={{
-      width: '220px', flexShrink: 0,
-      background: '#FFFFFF',
-      display: 'flex', flexDirection: 'column',
-      position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
-      boxShadow: '2px 0 16px rgba(0,0,0,0.04)',
-    }}>
-      {/* Logo ─────────────────────────────────────── */}
-      <div style={{
-        height: '72px', display: 'flex', alignItems: 'center',
-        padding: '0 20px', gap: '10px', flexShrink: 0,
-        borderBottom: '1px solid #F3F4F6'
-      }}>
-        <div style={{
-          width: '36px', height: '36px', borderRadius: '10px',
-          background: '#111827',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0
-        }}>
+    <aside className="w-[220px] shrink-0 bg-white flex flex-col fixed top-0 left-0 bottom-0 z-[100] shadow-[2px_0_16px_rgba(0,0,0,0.04)]">
+      {/* Logo */}
+      <div className="h-[72px] flex items-center px-5 gap-2.5 shrink-0 border-b border-gray-100">
+        <div className="w-9 h-9 rounded-[10px] bg-gray-900 flex items-center justify-center shrink-0">
           <SnowflakeLogo />
         </div>
-        <span style={{ fontWeight: 800, fontSize: '18px', color: '#111827', letterSpacing: '-0.5px' }}>
+        <span className="font-extrabold text-[18px] text-gray-900 tracking-tight">
           HRMS
         </span>
       </div>
 
-      {/* Navigation ──────────────────────────────── */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 12px' }}>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-3">
         {currentNav.map(item => {
           const isActive = activePage === item.id
           const Icon = item.icon
@@ -83,21 +68,7 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
             <button
               key={item.id}
               onClick={() => navigate(`${prefix}/${item.id}`)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: '10px 14px', borderRadius: '10px',
-                marginBottom: '2px', cursor: 'pointer', border: 'none',
-                background: isActive ? '#C8F04A' : 'transparent',
-                color: isActive ? '#1A1A1A' : '#6B7280',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '13.5px',
-                fontFamily: 'inherit', textAlign: 'left',
-                transition: 'all 0.18s ease',
-                boxShadow: 'none',
-                outline: 'none'
-              }}
-              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F9FAFB' }}
-              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+              className={`flex items-center gap-2.5 w-full py-2.5 px-3.5 rounded-[10px] mb-0.5 cursor-pointer border-none font-[inherit] text-left text-[13.5px] transition-all duration-[180ms] outline-none ${isActive ? 'bg-[#C8F04A] text-gray-900 font-bold' : 'bg-transparent text-gray-500 font-medium hover:bg-gray-50'}`}
             >
               <Icon
                 size={17}
@@ -110,35 +81,23 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
         })}
       </nav>
 
-      {/* Bottom — User + Logout ───────────────────── */}
-      <div style={{ padding: '16px 12px', borderTop: '1px solid #F3F4F6', flexShrink: 0 }}>
+      {/* Bottom — User + Logout */}
+      <div className="p-3 border-t border-gray-100 shrink-0">
         {/* User card */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '10px 10px', borderRadius: '10px',
-          marginBottom: '4px', background: '#F9FAFB'
-        }}>
+        <div className="flex items-center gap-2.5 p-2.5 rounded-[10px] mb-1 bg-gray-50">
           <SidebarAvatar name={displayName} size={38} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-bold text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
               {displayName}
             </div>
-            <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{displayRole}</div>
+            <div className="text-[11px] text-gray-400">{displayRole}</div>
           </div>
         </div>
 
         {/* Log Out */}
         <button
           onClick={() => dispatch(logout())}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            width: '100%', padding: '9px 14px', borderRadius: '10px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: '#9CA3AF', fontSize: '13px', fontWeight: 500,
-            fontFamily: 'inherit', marginTop: '2px'
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          className="flex items-center gap-2 w-full py-[9px] px-3.5 rounded-[10px] bg-transparent border-none cursor-pointer text-gray-400 text-[13px] font-medium font-[inherit] mt-0.5 hover:bg-gray-50 transition-colors"
         >
           <LogOut size={16} color="#9CA3AF" />
           <span>Log Out</span>

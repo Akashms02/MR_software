@@ -188,16 +188,16 @@ const MRDcrPage = () => {
   };
 
   // Helper: Status badge color styles
-  const getStatusBadgeStyle = (status) => {
+  const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'APPROVED':
-        return { bg: '#ECFDF5', text: '#059669', border: '1px solid #A7F3D0' };
+        return 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]';
       case 'REJECTED':
-        return { bg: '#FEF2F2', text: '#DC2626', border: '1px solid #FCA5A5' };
+        return 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]';
       case 'SUBMITTED':
-        return { bg: '#FFFBEB', text: '#D97706', border: '1px solid #FDE68A' };
+        return 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]';
       default: // DRAFT
-        return { bg: '#F3F4F6', text: '#4B5563', border: '1px solid #D1D5DB' };
+        return 'bg-[#F3F4F6] text-[#4B5563] border border-[#D1D5DB]';
     }
   };
 
@@ -210,91 +210,84 @@ const MRDcrPage = () => {
   ];
 
   return (
-    <div style={{ animation: 'fadeSlideIn 0.35s ease-out' }}>
+    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
       {/* Header section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+      <div className="flex justify-between items-center mb-7">
         <div>
-          <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
             PORTAL: MEDICAL REPRESENTATIVE
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', margin: '4px 0 0 0' }}>Daily Call Reports (DCR)</h2>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '3px 0 0 0' }}>Log and track call visits submitted to your reporting manager.</p>
+          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Daily Call Reports (DCR)</h2>
+          <p className="text-[13px] text-[#6B7280] mt-[3px] mb-0">Log and track call visits submitted to your reporting manager.</p>
         </div>
       </div>
 
       {/* Notifications */}
       {successMsg && (
-        <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#047857', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
           <CheckCircle2 size={16} />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#B91C1C', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
           <AlertCircle size={16} />
           {errorMsg}
         </div>
       )}
 
       {/* Tab controls */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+      <div className="flex gap-2.5 mb-6">
         <button
           onClick={() => setActiveTab('list')}
-          style={{
-            padding: '10px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-            background: activeTab === 'list' ? '#C8F04A' : '#fff',
-            color: '#111827', fontWeight: 700, fontSize: '13.5px',
-            boxShadow: activeTab === 'list' ? '0 4px 12px rgba(200, 240, 74, 0.25)' : 'none',
-            border: activeTab === 'list' ? 'none' : '1px solid #E5E7EB',
-            transition: 'all 0.2s', outline: 'none'
-          }}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'list' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
         >
           My DCR Logs
         </button>
         <button
           onClick={() => setActiveTab('new')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '10px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-            background: activeTab === 'new' ? '#C8F04A' : '#fff',
-            color: '#111827', fontWeight: 700, fontSize: '13.5px',
-            boxShadow: activeTab === 'new' ? '0 4px 12px rgba(200, 240, 74, 0.25)' : 'none',
-            border: activeTab === 'new' ? 'none' : '1px solid #E5E7EB',
-            transition: 'all 0.2s', outline: 'none'
-          }}
+          className={`flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'new' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
         >
           <Plus size={15} strokeWidth={2.5} /> Log New DCR Draft
         </button>
       </div>
 
       {/* Content wrapper */}
-      <div style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #F3F4F6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', padding: '28px' }}>
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-7">
         
         {/* Tab 1: Logs list */}
         {activeTab === 'list' && (
           dcrLoading && dcrs.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px', gap: '12px' }}>
-              <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', color: '#111827' }} />
-              <span style={{ fontSize: '13.5px', color: '#9CA3AF' }}>Loading call reports...</span>
+            <div className="flex flex-col items-center p-[60px] gap-3">
+              <Loader2 size={24} className="animate-spin text-[#111827]" />
+              <span className="text-[13.5px] text-[#9CA3AF]">Loading call reports...</span>
             </div>
           ) : dcrs.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF' }}>
-              <ClipboardList size={40} style={{ margin: '0 auto 12px auto', strokeWidth: 1.5 }} />
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>No Daily Call Reports logged yet.</p>
+            <div className="p-[60px] text-center text-[#9CA3AF]">
+              <ClipboardList size={40} className="mx-auto mb-3 stroke-[1.5]" />
+              <p className="m-0 text-[14px] font-medium">No Daily Call Reports logged yet.</p>
               <button
                 onClick={() => setActiveTab('new')}
-                style={{ marginTop: '14px', background: '#111827', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}
+                className="mt-3.5 bg-[#111827] text-white border-none px-4 py-2 rounded-lg font-bold text-[12.5px] cursor-pointer hover:bg-gray-800 transition-colors duration-150"
               >
                 Log Your First Call
               </button>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr style={{ borderBottom: '1.5px solid #F3F4F6' }}>
+                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
                     {['Report Date', 'Total Visits', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                      <th key={h} style={{ padding: '12px 16px', fontSize: '11.5px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
                         {h}
                       </th>
                     ))}
@@ -302,47 +295,36 @@ const MRDcrPage = () => {
                 </thead>
                 <tbody>
                   {dcrs.map((dcr) => {
-                    const statusStyle = getStatusBadgeStyle(dcr.status);
                     return (
-                      <tr key={dcr.id} style={{ borderBottom: '1px solid #FAFAFA', transition: 'background 0.15s' }}>
+                      <tr key={dcr.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
                         {/* Date */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Calendar size={14} color="#9CA3AF" />
+                        <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
+                          <span className="flex items-center gap-2">
+                            <Calendar size={14} className="text-[#9CA3AF]" />
                             {dcr.reportDate}
                           </span>
                         </td>
                         {/* Visit count */}
-                        <td style={{ padding: '16px 16px', fontSize: '13.5px', color: '#4B5563', fontWeight: 600 }}>
+                        <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
                           {dcr.visits?.length || 0} Doctor{dcr.visits?.length !== 1 ? 's' : ''} visited
                         </td>
                         {/* Status */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <span style={{
-                            display: 'inline-flex', padding: '4px 10px', borderRadius: '20px',
-                            fontSize: '11px', fontWeight: 800, ...statusStyle
-                          }}>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold ${getStatusBadgeClass(dcr.status)}`}>
                             {dcr.status}
                           </span>
                         </td>
                         {/* Remarks */}
-                        <td style={{ padding: '16px 16px', fontSize: '13px', color: '#6B7280', fontStyle: 'italic', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
                           {dcr.remarks || '—'}
                         </td>
                         {/* Actions */}
-                        <td style={{ padding: '16px 16px' }}>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <td className="px-4 py-4">
+                          <div className="flex gap-2 items-center">
                             <button
                               onClick={() => handleViewDcrDetails(dcr.id)}
                               title="View Details"
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: '4px',
-                                background: '#F3F4F6', border: 'none', padding: '6px 12px', borderRadius: '8px',
-                                cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#374151',
-                                transition: 'all 0.15s'
-                              }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-                              onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
+                              className="flex items-center gap-1 bg-[#F3F4F6] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#374151] hover:bg-[#E5E7EB] transition-colors duration-150"
                             >
                               <Eye size={12} /> View
                             </button>
@@ -351,14 +333,7 @@ const MRDcrPage = () => {
                                 onClick={() => handleSubmitDcr(dcr.id)}
                                 disabled={actionLoading}
                                 title="Submit report to manager"
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: '4px',
-                                  background: '#C8F04A', border: 'none', padding: '6px 12px', borderRadius: '8px',
-                                  cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#111827',
-                                  transition: 'opacity 0.15s'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                                className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#111827] hover:opacity-90 transition-opacity duration-150"
                               >
                                 <Send size={11} /> Submit
                               </button>
@@ -376,60 +351,52 @@ const MRDcrPage = () => {
 
         {/* Tab 2: New DCR Draft */}
         {activeTab === 'new' && (
-          <form onSubmit={(e) => handleSaveDraft(e, false)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #F3F4F6', paddingBottom: '20px' }}>
+          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex flex-col gap-6">
+            <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#F3F4F6] pb-5">
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>Create Daily Call Log</h4>
-                <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0 0' }}>Record visited healthcare professionals and samples distributed today.</p>
+                <h4 className="text-[16px] font-extrabold text-[#111827] margin-0">Create Daily Call Log</h4>
+                <p className="text-[12px] text-[#6B7280] mt-[2px] mb-0">Record visited healthcare professionals and samples distributed today.</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Report Date:</label>
+              <div className="flex items-center gap-2">
+                <label className="text-[13px] font-bold text-[#374151]">Report Date:</label>
                 <input
                   type="date"
                   value={reportDate}
                   onChange={(e) => setReportDate(e.target.value)}
                   required
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none' }}
+                  className="px-3 py-2 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
                 />
               </div>
             </div>
 
             {/* Visits list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex flex-col gap-5">
               {visits.map((visit, idx) => (
-                <div key={idx} style={{
-                  padding: '24px', border: '1px solid #E5E7EB', borderRadius: '16px', background: '#FAFAFA',
-                  position: 'relative', animation: 'fadeIn 0.25s'
-                }}>
+                <div key={idx} className="p-6 border border-gray-200 rounded-2xl bg-[#FAFAFA] relative animate-[fadeIn_0.25s]">
                   {/* Remove visit button */}
                   <button
                     type="button"
                     onClick={() => removeVisitField(idx)}
-                    style={{
-                      position: 'absolute', right: '16px', top: '16px', background: 'transparent', border: 'none',
-                      cursor: 'pointer', color: '#9CA3AF', padding: '6px', borderRadius: '8px', transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#FEE2E2'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'transparent'; }}
+                    className="absolute right-4 top-4 bg-transparent border-none cursor-pointer text-[#9CA3AF] p-1.5 rounded-lg hover:text-[#EF4444] hover:bg-[#FEE2E2] transition-all duration-200"
                   >
                     <Trash2 size={15} />
                   </button>
 
-                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#C8F04A', background: '#111827', padding: '3px 8px', borderRadius: '6px', display: 'inline-block', marginBottom: '16px' }}>
+                  <div className="text-[12px] font-extrabold text-[#C8F04A] bg-[#111827] px-2 py-1 rounded-md inline-block mb-4">
                     CALL VISIT #{idx + 1}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+                  <div className="grid grid-cols-2 gap-5 mb-4">
                     {/* Doctor selection */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
-                        Select Doctor <span style={{ color: '#EF4444' }}>*</span>
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                        Select Doctor <span className="text-[#EF4444]">*</span>
                       </label>
                       <select
                         value={visit.doctorId}
                         onChange={(e) => handleVisitChange(idx, 'doctorId', e.target.value)}
                         required
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', background: '#fff', outline: 'none' }}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none font-sans"
                       >
                         <option value="">Choose healthcare professional...</option>
                         {doctorListOptions.map((doc) => (
@@ -442,65 +409,63 @@ const MRDcrPage = () => {
 
                     {/* Visit time */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
-                        Visit Call Time <span style={{ color: '#EF4444' }}>*</span>
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                        Visit Call Time <span className="text-[#EF4444]">*</span>
                       </label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type="time"
-                          value={visit.visitTime}
-                          onChange={(e) => handleVisitChange(idx, 'visitTime', e.target.value)}
-                          required
-                          style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none' }}
-                        />
-                      </div>
+                      <input
+                        type="time"
+                        value={visit.visitTime}
+                        onChange={(e) => handleVisitChange(idx, 'visitTime', e.target.value)}
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
+                      />
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+                  <div className="grid grid-cols-2 gap-5 mb-4">
                     {/* Products discussed */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>Products Promoted</label>
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Products Promoted</label>
                       <input
                         type="text"
                         value={visit.productsDiscussed}
                         onChange={(e) => handleVisitChange(idx, 'productsDiscussed', e.target.value)}
                         placeholder="e.g. Cardace 5mg, Lipvas 10mg"
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none' }}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
                       />
                     </div>
                     {/* Samples given */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>Samples / Literature Distributed</label>
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Samples / Literature Distributed</label>
                       <input
                         type="text"
                         value={visit.samplesGiven}
                         onChange={(e) => handleVisitChange(idx, 'samplesGiven', e.target.value)}
                         placeholder="e.g. Cardace (10 Tabs), Visual Aid brochures"
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', outline: 'none' }}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
                       />
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div className="flex flex-col gap-1.5">
                     {/* Feedback */}
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151' }}>Doctor Feedback / Notes</label>
+                    <label className="block text-[12px] font-bold text-[#374151]">Doctor Feedback / Notes</label>
                     <textarea
                       value={visit.feedback}
                       onChange={(e) => handleVisitChange(idx, 'feedback', e.target.value)}
                       placeholder="Enter detailed feedback or follow-up notes..."
-                      style={{ width: '100%', height: '70px', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E5E7EB', fontSize: '13.5px', resize: 'none', outline: 'none' }}
+                      className="w-full h-[70px] px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] resize-none outline-none font-sans"
                     />
                   </div>
 
                   {/* GPS checkbox */}
-                  <div style={{ marginTop: '12px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#4B5563', cursor: 'pointer' }}>
+                  <div className="mt-3">
+                    <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#4B5563] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={visit.isGpsVerified}
                         onChange={(e) => handleVisitChange(idx, 'isGpsVerified', e.target.checked)}
-                        style={{ width: '15px', height: '15px', accentColor: '#111827' }}
+                        className="w-4 h-4 accent-gray-900"
                       />
                       GPS Verified Visit Coordinates (Automatic check)
                     </label>
@@ -513,28 +478,17 @@ const MRDcrPage = () => {
             <button
               type="button"
               onClick={addVisitField}
-              style={{
-                alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px',
-                background: '#111827', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px',
-                fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', transition: 'transform 0.15s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              className="self-start flex items-center gap-1.5 bg-[#111827] text-white border-none px-4.5 py-2.5 rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-[1px]"
             >
               <Plus size={14} /> Add Another Visit Log
             </button>
 
             {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #F3F4F6', paddingTop: '20px', marginTop: '10px' }}>
+            <div className="flex gap-3 justify-end border-t border-[#F3F4F6] pt-5 mt-2.5">
               <button
                 type="submit"
                 disabled={actionLoading}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: '#fff',
-                  color: '#374151', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
               >
                 {actionLoading ? 'Saving...' : 'Save Draft'}
               </button>
@@ -542,13 +496,7 @@ const MRDcrPage = () => {
                 type="button"
                 onClick={() => handleSaveDraft(null, true)}
                 disabled={actionLoading}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', border: 'none', background: '#C8F04A',
-                  color: '#111827', fontWeight: 800, fontSize: '13px', cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(200, 240, 74, 0.2)', transition: 'opacity 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                className="px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150"
               >
                 {actionLoading ? 'Submitting...' : 'Save & Submit report'}
               </button>
@@ -559,79 +507,70 @@ const MRDcrPage = () => {
 
       {/* DCR Details Modal */}
       {detailModalOpen && currentDcr && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px',
-          animation: 'fadeIn 0.2s'
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '640px', maxHeight: '85vh',
-            display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-            animation: 'scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', overflow: 'hidden'
-          }}>
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-[6px] flex items-center justify-center z-[1100] p-5 animate-[fadeIn_0.2s]">
+          <div className="bg-white rounded-3xl w-full max-w-[640px] max-h-[85vh] flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-[scaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden">
             {/* Modal Header */}
-            <div style={{ padding: '20px 24px', borderBottom: '1.5px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div className="px-6 py-5 border-b-[1.5px] border-[#F3F4F6] flex justify-between items-center shrink-0">
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111827', margin: 0 }}>DCR Call Log Details</h3>
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Report ID: {currentDcr.id} • Date: {currentDcr.reportDate}</span>
+                <h3 className="text-[17px] font-extrabold text-[#111827] margin-0">DCR Call Log Details</h3>
+                <span className="text-[12px] text-[#9CA3AF]">Report ID: {currentDcr.id} • Date: {currentDcr.reportDate}</span>
               </div>
-              <span style={{
-                fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px',
-                ...getStatusBadgeStyle(currentDcr.status)
-              }}>{currentDcr.status}</span>
+              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full ${getStatusBadgeClass(currentDcr.status)}`}>
+                {currentDcr.status}
+              </span>
             </div>
 
             {/* Modal Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
               {/* Manager remarks if reviewed */}
               {currentDcr.remarks && (
-                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '14px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Manager Feedback Remarks</div>
-                  <div style={{ fontSize: '13px', color: '#78350F', marginTop: '4px', fontStyle: 'italic' }}>"{currentDcr.remarks}"</div>
+                <div className="bg-[#FFFBEB] border border-[#FDE68A] p-3.5 rounded-xl">
+                  <div className="text-[11px] font-extrabold text-[#B45309] uppercase tracking-wider">Manager Feedback Remarks</div>
+                  <div className="text-[13px] text-[#78350F] mt-1 italic">"{currentDcr.remarks}"</div>
                 </div>
               )}
 
               {/* Visits list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Visit Logs ({currentDcr.visits?.length || 0})</div>
+              <div className="flex flex-col gap-3.5">
+                <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Visit Logs ({currentDcr.visits?.length || 0})</div>
                 {currentDcr.visits?.map((visit, index) => {
                   const doc = doctorListOptions.find(d => d.id === visit.doctorId) || { fullName: `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
                   return (
-                    <div key={index} style={{ border: '1.5px solid #F3F4F6', padding: '16px', borderRadius: '12px', background: '#FAFAFA' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937' }}>{doc.fullName}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
-                          <Clock size={12} color="#9CA3AF" />
+                    <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
+                      <div className="flex justify-between items-center mb-2.5">
+                        <span className="text-[14px] font-bold text-[#1F2937]">{doc.fullName}</span>
+                        <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
+                          <Clock size={12} className="text-[#9CA3AF]" />
                           {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
                         </span>
                       </div>
                       
                       {doc.speciality && (
-                        <div style={{ fontSize: '11px', color: '#9CA3AF', marginBottom: '8px' }}>
-                          Specialty: <span style={{ color: '#4B5563', fontWeight: 600 }}>{doc.speciality}</span> • Clinic: <span style={{ color: '#4B5563', fontWeight: 600 }}>{doc.clinicName || 'N/A'}</span>
+                        <div className="text-[11px] text-[#9CA3AF] mb-2">
+                          Specialty: <span className="text-[#4B5563] font-semibold">{doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
                         </div>
                       )}
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px', borderTop: '1px solid #F3F4F6', paddingTop: '8px' }}>
+                      <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
                         <div>
-                          <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Promoted Products</div>
-                          <div style={{ fontSize: '12.5px', color: '#374151', fontWeight: 500, marginTop: '2px' }}>{visit.productsDiscussed || '—'}</div>
+                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
+                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Distributed Samples</div>
-                          <div style={{ fontSize: '12.5px', color: '#374151', fontWeight: 500, marginTop: '2px' }}>{visit.samplesGiven || '—'}</div>
+                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Distributed Samples</div>
+                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.samplesGiven || '—'}</div>
                         </div>
                       </div>
 
-                      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '8px' }}>
-                        <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Feedback Details</div>
-                        <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '2px', fontStyle: visit.feedback ? 'normal' : 'italic' }}>
+                      <div className="border-t border-[#F3F4F6] pt-2">
+                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
+                        <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
                           {visit.feedback || 'No feedback details logged.'}
                         </div>
                       </div>
 
                       {visit.isGpsVerified && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', color: '#047857', padding: '3px 8px', borderRadius: '6px', fontSize: '10.5px', fontWeight: 750, marginTop: '10px' }}>
+                        <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
                           <MapPin size={10} /> GPS COORDINATES RECORDED
                         </div>
                       )}
@@ -642,15 +581,10 @@ const MRDcrPage = () => {
             </div>
 
             {/* Modal Footer */}
-            <div style={{ padding: '16px 24px', borderTop: '1.5px solid #F3F4F6', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+            <div className="px-6 py-4 border-t-[1.5px] border-[#F3F4F6] flex justify-end shrink-0">
               <button
-                onClick={() => {
-                  setDetailModalOpen(false);
-                }}
-                style={{
-                  background: '#111827', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '12px',
-                  fontWeight: 700, fontSize: '13px', cursor: 'pointer', outline: 'none'
-                }}
+                onClick={() => setDetailModalOpen(false)}
+                className="bg-[#111827] text-white border-none px-[22px] py-2.5 rounded-xl font-bold text-[13px] cursor-pointer outline-none hover:bg-gray-800 transition-colors duration-155"
               >
                 Close Report
               </button>

@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { getMyTeam } from '../../redux/actions/teamActions'
 
 const STATUS_BADGE = {
-  'Active':   { bg: '#ECFDF5', color: '#059669' },
-  'Inactive': { bg: '#FFF1F2', color: '#F43F5E' },
+  'Active':   'bg-[#ECFDF5] text-[#059669]',
+  'Inactive': 'bg-[#FFF1F2] text-[#F43F5E]',
 }
 
 const formatDate = (dateStr) => {
@@ -29,72 +29,54 @@ function Avatar({ name, size = 72 }) {
     ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
   return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #CBD5E1, #94A3B8)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, color: '#fff', flexShrink: 0
-    }}>
+    <div
+      className="rounded-full bg-gradient-to-br from-[#CBD5E1] to-[#94A3B8] flex items-center justify-center text-white shrink-0 font-bold"
+      style={{ width: size, height: size, fontSize: size * 0.36 }}
+    >
       {initials}
     </div>
   )
 }
 
 function EmployeeCard({ name, role, status, email, phone, employeeId, joinedOn, photoUrl }) {
-  const [hovered, setHovered] = useState(false)
-  const badge = STATUS_BADGE[status] || STATUS_BADGE['Active']
+  const badgeClass = STATUS_BADGE[status] || STATUS_BADGE['Active']
 
   return (
     <div 
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: '#fff', borderRadius: '16px',
-        boxShadow: hovered ? '0 12px 24px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.04)',
-        padding: '22px 18px', position: 'relative',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        textAlign: 'center',
-        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
-        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-        border: '1.5px solid #F3F4F6',
-      }}
+      className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] px-[18px] py-[22px] relative flex flex-col items-center text-center transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 border-[1.5px] border-[#F3F4F6]"
     >
       {/* External link top right */}
-      <button style={{ position:'absolute', top:'14px', right:'14px', background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', fontSize:'14px', padding:0 }}>
+      <button className="absolute top-3.5 right-3.5 bg-none border-0 cursor-pointer text-[#9CA3AF] text-sm p-0">
         ↗
       </button>
 
       {/* Avatar */}
       {photoUrl ? (
-          <img src={photoUrl} alt={name} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover' }} />
+          <img src={photoUrl} alt={name} className="w-18 h-18 rounded-full object-cover" />
         ) : (
           <Avatar name={name} size={72} />
         )}
 
       {/* Name + Role */}
-      <div style={{ fontSize:'14px', fontWeight:800, color:'#111827', marginTop:'12px', marginBottom:'2px' }}>{name}</div>
-      <div style={{ fontSize:'11.5px', color:'#9CA3AF', marginBottom:'12px', fontWeight: 600 }}>{role}</div>
+      <div className="text-sm font-extrabold text-[#111827] mt-3 mb-0.5">{name}</div>
+      <div className="text-[11.5px] text-[#9CA3AF] mb-3 font-semibold">{role}</div>
 
       {/* Status badge */}
-      <div style={{
-        padding:'4px 14px', borderRadius:'6px', fontSize:'10px', fontWeight:700,
-        background: badge.bg, color: badge.color, marginBottom:'16px',
-        letterSpacing: '0.3px'
-      }}>
+      <div className={`px-3.5 py-1 rounded-md text-[10px] font-bold mb-4 tracking-[0.3px] ${badgeClass}`}>
         {status.toUpperCase()}
       </div>
 
       {/* Details */}
-      <div style={{ width:'100%', borderTop:'1px solid #F3F4F6', paddingTop:'14px', display:'flex', flexDirection:'column', gap:'6px', textAlign:'left' }}>
+      <div className="w-full border-t border-[#F3F4F6] pt-3.5 flex flex-col gap-1.5 text-left">
         {[
           ['ID', employeeId],
           ['Mail', email],
           ['Phone', phone],
           ['Joined', joinedOn]
         ].map(([k, v]) => (
-          <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:'11px' }}>
-            <span style={{ color:'#9CA3AF', fontWeight:500 }}>{k}</span>
-            <span style={{ color:'#374151', fontWeight:600, maxWidth:'130px', textAlign:'right', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{v}</span>
+          <div key={k} className="flex justify-between text-[11px]">
+            <span className="text-[#9CA3AF] font-medium">{k}</span>
+            <span className="text-[#374151] font-semibold max-w-[130px] text-right truncate whitespace-nowrap">{v}</span>
           </div>
         ))}
       </div>
@@ -103,41 +85,27 @@ function EmployeeCard({ name, role, status, email, phone, employeeId, joinedOn, 
 }
 
 function SidebarItem({ label }) {
-  const [hovered, setHovered] = useState(false)
   return (
     <div 
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:'11px 14px', background: hovered ? '#F3F4F6' : '#F9FAFB', borderRadius:'10px', cursor:'pointer',
-        transform: hovered ? 'translateX(4px)' : 'translateX(0)',
-        transition: 'all 0.2s ease'
-      }}
+      className="flex items-center justify-between px-3.5 py-[11px] bg-[#F9FAFB] rounded-xl cursor-pointer transition-all duration-200 ease-in-out hover:bg-[#F3F4F6] hover:translate-x-1"
     >
-      <span style={{ fontSize:'12px', fontWeight:600, color:'#374151' }}>{label}</span>
-      <ChevronRight size={15} color="#C8F04A" strokeWidth={2.5} />
+      <span className="text-xs font-semibold text-[#374151]">{label}</span>
+      <ChevronRight size={15} className="text-[#C8F04A]" strokeWidth={2.5} />
     </div>
   )
 }
 
 const SkeletonCard = () => (
-  <div style={{
-    background: '#fff', borderRadius: '20px',
-    padding: '24px 20px', position: 'relative',
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    border: '1.5px solid #F3F4F6',
-    gap: '12px'
-  }}>
-    <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
-    <div style={{ width: '120px', height: '16px', borderRadius: '4px', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
-    <div style={{ width: '80px', height: '12px', borderRadius: '4px', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
-    <div style={{ width: '60px', height: '20px', borderRadius: '6px', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
-    <div style={{ width: '100%', borderTop: '1px solid #F3F4F6', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+  <div className="bg-white rounded-[20px] px-5 py-6 relative flex flex-col items-center border-[1.5px] border-[#F3F4F6] gap-3">
+    <div className="w-18 h-18 rounded-full bg-[#F3F4F6] animate-pulse" />
+    <div className="w-[120px] h-4 rounded bg-[#F3F4F6] animate-pulse" />
+    <div className="w-20 h-3 rounded bg-[#F3F4F6] animate-pulse" />
+    <div className="w-[60px] h-5 rounded-md bg-[#F3F4F6] animate-pulse" />
+    <div className="w-full border-t border-[#F3F4F6] pt-3.5 flex flex-col gap-2">
       {[1, 2, 3, 4].map(i => (
-        <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div style={{ width: '50px', height: '10px', borderRadius: '4px', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
-          <div style={{ width: '80px', height: '10px', borderRadius: '4px', background: '#F3F4F6', animation: 'pulse 1.5s infinite ease-in-out' }} />
+        <div key={i} className="flex justify-between">
+          <div className="w-[50px] h-2.5 rounded bg-[#F3F4F6] animate-pulse" />
+          <div className="w-20 h-2.5 rounded bg-[#F3F4F6] animate-pulse" />
         </div>
       ))}
     </div>
@@ -164,75 +132,53 @@ export default function AdminEmployees() {
   )
 
   return (
-    <div className="animate-fade" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="animate-fade font-sans">
 
       {/* Employees header row */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-          <span style={{ fontSize:'18px', fontWeight:850, color:'#111827' }}>Company Employees</span>
-          <span style={{ background: '#F3F4F6', color: '#6B7280', fontSize: '12px', padding: '4px 8px', borderRadius: '6px', fontWeight: 700 }}>
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-[18px] font-black text-[#111827]">Company Employees</span>
+          <span className="bg-[#F3F4F6] text-[#6B7280] text-xs px-2 py-1 rounded-md font-bold">
             {filteredEmployees.length} Total
           </span>
         </div>
 
         {/* Search Input bar and layout selector */}
-        <div style={{ display:'flex', alignItems: 'center', gap:'12px' }}>
-          <div style={{ position: 'relative' }}>
+        <div className="flex items-center gap-3">
+          <div className="relative">
             <Search 
               size={15} 
-              color="#9CA3AF" 
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" 
             />
             <input 
               placeholder="Search employees..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                padding: '8px 12px 8px 34px',
-                borderRadius: '10px',
-                border: '1.5px solid #E5E7EB',
-                fontSize: '13px',
-                outline: 'none',
-                width: '240px',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#111827'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
+              className="pl-8.5 pr-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13px] outline-none w-[240px] transition-colors duration-200 focus:border-[#111827]"
             />
           </div>
-          <div style={{ display:'flex', gap:'8px' }}>
-            <button style={{ background:'none', border:'1.5px solid #E5E7EB', borderRadius:'8px', padding:'6px 10px', cursor:'pointer', color:'#6B7280', fontSize:'16px', lineHeight:1 }}>☰</button>
-            <button style={{ background:'none', border:'1.5px solid #E5E7EB', borderRadius:'8px', padding:'6px 10px', cursor:'pointer', color:'#6B7280', fontSize:'16px', lineHeight:1 }}>⊞</button>
+          <div className="flex gap-2">
+            <button className="bg-none border-[1.5px] border-[#E5E7EB] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#6B7280] text-[16px] leading-none hover:bg-gray-50">☰</button>
+            <button className="bg-none border-[1.5px] border-[#E5E7EB] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#6B7280] text-[16px] leading-none hover:bg-gray-50">⊞</button>
           </div>
         </div>
       </div>
 
       {/* Main Grid: cards + sidebar */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 240px', gap:'20px' }}>
+      <div className="grid grid-cols-[1fr_240px] gap-5">
 
         {/* Profiles Grid */}
         <div>
           {/* Skeleton Loader during fetch */}
           {loading && (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px' }}>
+            <div className="grid grid-cols-3 gap-3.5">
               {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
             </div>
           )}
 
           {/* API Error Notification */}
           {error && (
-            <div style={{
-              padding: '24px',
-              background: '#FEF2F2',
-              border: '1.5px solid #FCA5A5',
-              borderRadius: '16px',
-              color: '#B91C1C',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '13px',
-              marginBottom: '20px'
-            }}>
+            <div className="p-6 bg-[#FEF2F2] border-[1.5px] border-[#FCA5A5] rounded-2xl text-[#B91C1C] flex items-center gap-3 text-[13px] mb-5">
               <AlertCircle size={20} />
               <span><strong>Failed to load employees:</strong> {error}. Please verify server connection parameters.</span>
             </div>
@@ -242,22 +188,15 @@ export default function AdminEmployees() {
           {!loading && (
             <>
               {filteredEmployees.length === 0 ? (
-                <div style={{
-                  padding: '50px 24px',
-                  textAlign: 'center',
-                  background: '#fff',
-                  borderRadius: '16px',
-                  border: '1.5px dashed #E5E7EB',
-                  color: '#9CA3AF'
-                }}>
-                  <Users size={40} style={{ marginBottom: '12px', color: '#CBD5E1' }} />
-                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#4B5563', margin: '0 0 6px 0' }}>No Employees Found</h4>
-                  <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
+                <div className="px-6 py-[50px] text-center bg-white rounded-2xl border-[1.5px] border-dashed border-[#E5E7EB] text-[#9CA3AF]">
+                  <Users size={40} className="mb-3 text-[#CBD5E1] mx-auto" />
+                  <h4 className="text-[15px] font-extrabold text-[#4B5563] mt-0 mb-1.5">No Employees Found</h4>
+                  <p className="text-xs text-[#9CA3AF] m-0">
                     {searchQuery ? `No employees match "${searchQuery}"` : 'Your database team list is empty.'}
                   </p>
                 </div>
               ) : (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px' }}>
+                <div className="grid grid-cols-3 gap-3.5">
                   {filteredEmployees.map((member) => (
                     <EmployeeCard 
                       key={member.id}
@@ -279,9 +218,9 @@ export default function AdminEmployees() {
 
         {/* Quick Actions Sidebar */}
         <div>
-          <div style={{ background:'#fff', borderRadius:'16px', boxShadow:'0 2px 8px rgba(0,0,0,0.06)', padding:'20px' }}>
-            <div style={{ fontSize:'14px', fontWeight:800, color:'#111827', marginBottom:'14px' }}>Quick Actions</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+          <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
+            <div className="text-sm font-extrabold text-[#111827] mb-3.5">Quick Actions</div>
+            <div className="flex flex-col gap-2.5">
               {['Onboard Employee','Statutory Filings','Active Departments','Department Directory'].map((label, i) => (
                 <SidebarItem key={i} label={label} />
               ))}
@@ -290,15 +229,6 @@ export default function AdminEmployees() {
         </div>
 
       </div>
-
-      {/* Styled Animations */}
-      <style>{`
-        @keyframes pulse {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
-        }
-      `}</style>
 
     </div>
   )

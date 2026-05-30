@@ -24,28 +24,6 @@ const STEP_LABELS = [
   'Documents',
 ];
 
-const inputStyle = {
-  width: '100%',
-  padding: '12px 16px',
-  borderRadius: '12px',
-  border: '1.5px solid #E5E7EB',
-  fontSize: '14px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  background: '#FAFAFA',
-  transition: 'border-color 0.2s',
-};
-
-const labelStyle = {
-  display: 'block',
-  fontSize: '12px',
-  fontWeight: 700,
-  color: '#374151',
-  marginBottom: '8px',
-};
-
-const gridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' };
-
 const getDocumentUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:')) {
@@ -69,6 +47,61 @@ const isImageFile = (fileOrPath) => {
   return false;
 };
 
+// Sub-component for input fields to keep JSX dry and use premium Tailwind classes
+const FormField = ({
+  label,
+  name,
+  value,
+  onChange,
+  isEditing,
+  required = false,
+  type = 'text',
+  placeholder = '',
+  options = null,
+}) => {
+  const inputClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
+    isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+  }`;
+
+  const selectClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
+    isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+  }`;
+
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-700 mb-2">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </label>
+      {options ? (
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          disabled={!isEditing}
+          className={selectClass}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+          placeholder={placeholder}
+          disabled={!isEditing}
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
+};
 
 const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl = null, disabled = false }) => {
   const resolvedUrl = getDocumentUrl(existingFileUrl);
@@ -77,101 +110,62 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
 
   return (
     <div>
-      <label style={labelStyle}>
+      <label className="block text-xs font-bold text-gray-700 mb-2">
         {label}
-        {required && <span style={{ color: '#EF4444' }}> *</span>}
+        {required && <span className="text-red-500"> *</span>}
       </label>
       <div
-        style={{
-          border: `2px dashed ${file ? '#6366F1' : existingFileUrl ? '#10B981' : '#E5E7EB'}`,
-          padding: '16px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          cursor: disabled ? 'default' : 'pointer',
-          background: file ? '#EEF2FF' : existingFileUrl ? '#F0FDF4' : '#FAFAFA',
-          position: 'relative',
-          transition: 'all 0.2s',
-        }}
+        className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-4 relative transition-all duration-200 ${
+          disabled ? 'cursor-default' : 'cursor-pointer'
+        } ${
+          file
+            ? 'border-indigo-500 bg-indigo-50'
+            : existingFileUrl
+            ? 'border-emerald-500 bg-emerald-50'
+            : 'border-gray-200 bg-[#FAFAFA]'
+        }`}
       >
         {/* Preview Thumbnail or Icon */}
         {displayUrl && isImg ? (
-          <div
-            style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              border: '1.5px solid #E5E7EB',
-              background: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
+          <div className="w-[54px] h-[54px] rounded-lg overflow-hidden border-[1.5px] border-gray-200 bg-white flex items-center justify-center shrink-0">
             <img
               src={displayUrl}
               alt={label}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
+              className="w-full h-full object-cover"
             />
           </div>
         ) : (
           <div
-            style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '8px',
-              background: file ? '#E0E7FF' : existingFileUrl ? '#DCFCE7' : '#F3F4F6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              border: '1.5px solid #E5E7EB',
-            }}
+            className={`w-[54px] h-[54px] rounded-lg flex items-center justify-center shrink-0 border-[1.5px] border-gray-200 ${
+              file ? 'bg-indigo-100' : existingFileUrl ? 'bg-emerald-100' : 'bg-gray-100'
+            }`}
           >
-            <Upload size={20} color={file ? '#4F46E5' : existingFileUrl ? '#15803D' : '#9CA3AF'} />
+            <Upload size={20} className={file ? 'text-indigo-600' : existingFileUrl ? 'text-emerald-700' : 'text-gray-400'} />
           </div>
         )}
 
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: file ? '#4338CA' : existingFileUrl ? '#166534' : '#374151',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
+            className={`text-[13px] font-bold truncate ${
+              file ? 'text-indigo-700' : existingFileUrl ? 'text-emerald-800' : 'text-gray-700'
+            }`}
           >
             {file ? file.name : existingFileUrl ? `Current ${label}` : `No file uploaded`}
           </div>
           
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+          <div className="flex gap-2 items-center mt-1">
             {existingFileUrl && !file && (
               <>
-                <span style={{ fontSize: '11px', color: '#16A34A', fontWeight: 700 }}>
+                <span className="text-[11px] text-emerald-600 font-bold">
                   ✓ Uploaded
                 </span>
-                <span style={{ fontSize: '11px', color: '#D1D5DB' }}>•</span>
+                <span className="text-[11px] text-gray-300">•</span>
                 <a
                   href={resolvedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  style={{
-                    fontSize: '11px',
-                    color: '#2563EB',
-                    fontWeight: 700,
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                  }}
+                  className="text-[11px] text-blue-600 font-bold underline cursor-pointer"
                 >
                   View File
                 </a>
@@ -179,7 +173,7 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
             )}
             {file && (
               <>
-                <span style={{ fontSize: '11px', color: '#4F46E5', fontWeight: 700 }}>
+                <span className="text-[11px] text-indigo-600 font-bold">
                   Ready to upload
                 </span>
               </>
@@ -188,11 +182,11 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
               <>
                 {(existingFileUrl || file) ? (
                   <>
-                    <span style={{ fontSize: '11px', color: '#D1D5DB' }}>•</span>
-                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Click to replace</span>
+                    <span className="text-[11px] text-gray-300">•</span>
+                    <span className="text-[11px] text-gray-400">Click to replace</span>
                   </>
                 ) : (
-                  <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Click to browse</span>
+                  <span className="text-[11px] text-gray-400">Click to browse</span>
                 )}
               </>
             )}
@@ -206,7 +200,7 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
               const selectedFile = e.target.files[0];
               if (selectedFile) onChange(selectedFile);
             }}
-            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+            className="absolute inset-0 opacity-0 cursor-pointer"
           />
         )}
       </div>
@@ -571,103 +565,32 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.55)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '20px',
-        animation: 'fadeIn 0.25s ease-out',
-      }}
-    >
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: '24px',
-          width: '100%',
-          maxWidth: '1080px',
-          height: '90vh',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-          overflow: 'hidden',
-          animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}
-      >
+    <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center z-[1000] p-5 animate-[fadeIn_0.25s_ease-out]">
+      <div className="bg-white rounded-[24px] w-full max-w-[1080px] h-[90vh] max-h-[90vh] flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden animate-[scaleIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
+        
         {/* Modal Header */}
-        <div
-          style={{
-            padding: '24px 32px',
-            borderBottom: '1.5px solid #F3F4F6',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexShrink: 0,
-          }}
-        >
+        <div className="px-8 py-6 border-b-[1.5px] border-gray-100 flex justify-between items-center shrink-0">
           <div>
-            <h3 style={{ fontSize: '20px', fontWeight: 850, color: '#111827', margin: 0 }}>
+            <h3 className="text-xl font-[850] text-gray-900 m-0">
               Employee Profile Card
             </h3>
-            <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-              Employee ID: <span style={{ fontWeight: 700, color: '#4F46E5' }}>{employeeId}</span>
+            <p className="text-[13px] text-gray-500 mt-1 mb-0 mx-0">
+              Employee ID: <span className="font-bold text-indigo-600">{employeeId}</span>
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="flex items-center gap-3">
             {!isEditing && (
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  border: '1.5px solid #E5E7EB',
-                  background: '#fff',
-                  color: '#374151',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  outline: 'none',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-all duration-200 outline-none hover:bg-gray-50"
               >
                 ✏️ Edit {activeTab === 8 ? 'Documents' : 'Section'}
               </button>
             )}
             <button
               onClick={onClose}
-              style={{
-                background: '#F3F4F6',
-                border: 'none',
-                borderRadius: '50%',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#4B5563',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#E5E7EB';
-                e.currentTarget.style.color = '#111827';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#F3F4F6';
-                e.currentTarget.style.color = '#4B5563';
-              }}
+              className="bg-gray-100 border-none rounded-full w-9 h-9 flex items-center justify-center cursor-pointer text-gray-500 transition-all duration-200 hover:bg-gray-200 hover:text-gray-900"
             >
               <X size={18} />
             </button>
@@ -675,28 +598,15 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         </div>
 
         {initialLoading ? (
-          <div style={{ padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'center' }}>
-            <Loader2 size={36} color="#6366F1" style={{ animation: 'spin 0.8s linear infinite' }} />
-            <p style={{ color: '#9CA3AF', fontSize: '14px', margin: 0 }}>Fetching details...</p>
+          <div className="p-20 flex flex-col items-center gap-4 flex-1 justify-center">
+            <Loader2 size={36} color="#6366F1" className="animate-spin" />
+            <p className="text-gray-400 text-sm m-0">Fetching details...</p>
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+          <div className="flex-1 flex min-h-0 overflow-hidden">
             {/* Left Sidebar: Tabs Navigation */}
-            <div
-              style={{
-                width: '240px',
-                borderRight: '1.5px solid #F3F4F6',
-                background: '#F9FAFB',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                padding: '24px 16px',
-                boxSizing: 'border-box',
-                overflowY: 'auto',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', paddingLeft: '8px' }}>
+            <div className="w-[240px] border-r-[1.5px] border-gray-100 bg-gray-50 flex flex-col gap-1.5 p-6 box-border overflow-y-auto shrink-0">
+              <div className="text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.5px] mb-2 pl-2">
                 Profile Sections
               </div>
               {STEP_LABELS.map((name, i) => {
@@ -719,155 +629,55 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                       setResumeDoc(null);
                       setActiveTab(tabIndex);
                     }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: isActive ? '#EEF2FF' : 'transparent',
-                      color: isActive ? '#4F46E5' : '#4B5563',
-                      fontWeight: isActive ? 800 : 600,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.background = '#E5E7EB';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'transparent';
-                    }}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-none text-[13px] cursor-pointer transition-all duration-200 flex items-center justify-between outline-none box-border ${
+                      isActive ? 'bg-indigo-50 text-indigo-600 font-extrabold' : 'bg-transparent text-gray-600 font-semibold hover:bg-gray-200'
+                    }`}
                   >
                     <span>{name}</span>
                     {isActive && (
-                      <div
-                        style={{
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          background: '#4F46E5',
-                        }}
-                      />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
                     )}
                   </button>
                 );
               })}
               
-              <div style={{ flex: 1 }} />
+              <div className="flex-1" />
               
               <button
                 type="button"
                 onClick={onClose}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #E5E7EB',
-                  background: '#fff',
-                  color: '#374151',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  textAlign: 'center',
-                  outline: 'none',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                className="w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-all duration-200 text-center outline-none hover:bg-gray-50"
               >
                 Close Profile
               </button>
             </div>
 
             {/* Right Pane: Scrollable Form / Details View */}
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0,
-                background: '#fff',
-                overflow: 'hidden',
-              }}
-            >
-              <form
-                onSubmit={handleSectionSave}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: 0,
-                  margin: 0,
-                }}
-              >
+            <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
+              <form onSubmit={handleSectionSave} className="flex-1 flex flex-col min-h-0 m-0">
                 {/* Right Pane Header */}
-                <div
-                  style={{
-                    padding: '24px 32px',
-                    borderBottom: '1.5px solid #F3F4F6',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexShrink: 0,
-                  }}
-                >
+                <div className="px-8 py-6 border-b-[1.5px] border-gray-100 flex justify-between items-center shrink-0">
                   <div>
-                    <h4 style={{ fontSize: '18px', fontWeight: 850, color: '#111827', margin: 0 }}>
+                    <h4 className="text-lg font-[850] text-gray-900 m-0">
                       {STEP_LABELS[activeTab - 1]}
                     </h4>
-                    <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
+                    <p className="text-[13px] text-gray-500 mt-1 mb-0 mx-0">
                       {isEditing ? 'Modify the details below and save your changes.' : 'View details of the selected section.'}
                     </p>
                   </div>
                 </div>
 
                 {/* Right Pane Scrollable Content */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '32px', boxSizing: 'border-box' }}>
+                <div className="flex-1 overflow-y-auto p-8 box-border">
                   {/* Alerts */}
                   {formError && (
-                    <div
-                      style={{
-                        background: '#FEF2F2',
-                        border: '1.5px solid #FECACA',
-                        padding: '14px 18px',
-                        borderRadius: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        color: '#B91C1C',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        marginBottom: '24px',
-                        animation: 'fadeSlideIn 0.2s ease-out',
-                      }}
-                    >
+                    <div className="bg-red-50 border-[1.5px] border-red-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-red-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
                       <AlertCircle size={18} />
                       {formError}
                     </div>
                   )}
                   {formSuccess && (
-                    <div
-                      style={{
-                        background: '#ECFDF5',
-                        border: '1.5px solid #A7F3D0',
-                        padding: '14px 18px',
-                        borderRadius: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        color: '#047857',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        marginBottom: '24px',
-                        animation: 'fadeSlideIn 0.2s ease-out',
-                      }}
-                    >
+                    <div className="bg-emerald-50 border-[1.5px] border-emerald-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
                       <CheckCircle2 size={18} />
                       {formSuccess}
                     </div>
@@ -877,99 +687,72 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                   
                   {/* TAB 1: Basic Setup */}
                   {activeTab === 1 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Full Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Rajesh Kumar"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Email Address <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="rajesh@example.com"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Full Name"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Rajesh Kumar"
+                        />
+                        <FormField
+                          label="Email Address"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          type="email"
+                          placeholder="rajesh@example.com"
+                        />
                       </div>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Phone Number <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="9876543210"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Role Type</label>
-                          <select
-                            name="role"
-                            value={formData.role}
-                            onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          >
-                            <option value="MR">Medical Representative (MR)</option>
-                            <option value="MEDICAL_EXECUTIVE">Medical Executive</option>
-                            <option value="MEDICAL_SALES_EXECUTIVE">Medical Sales Executive</option>
-                            <option value="HR">HR Manager</option>
-                            <option value="REGIONAL_MANAGER">Regional Manager</option>
-                            <option value="AREA_MANAGER">Area Manager</option>
-                            <option value="MEDICAL_MANAGER">Medical Manager</option>
-                            <option value="DOCTOR">Doctor</option>
-                            <option value="PHARMACIST">Pharmacist</option>
-                            <option value="DISTRIBUTOR">Distributor</option>
-                            <option value="PATIENT">Patient</option>
-                          </select>
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Phone Number"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="9876543210"
+                        />
+                        <FormField
+                          label="Role Type"
+                          name="role"
+                          value={formData.role}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          options={[
+                            { value: 'MR', label: 'Medical Representative (MR)' },
+                            { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive' },
+                            { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive' },
+                            { value: 'HR', label: 'HR Manager' },
+                            { value: 'REGIONAL_MANAGER', label: 'Regional Manager' },
+                            { value: 'AREA_MANAGER', label: 'Area Manager' },
+                            { value: 'MEDICAL_MANAGER', label: 'Medical Manager' },
+                            { value: 'DOCTOR', label: 'Doctor' },
+                            { value: 'PHARMACIST', label: 'Pharmacist' },
+                            { value: 'DISTRIBUTOR', label: 'Distributor' },
+                            { value: 'PATIENT', label: 'Patient' },
+                          ]}
+                        />
                       </div>
-                      <div style={gridStyle}>
+                      <div className="grid grid-cols-2 gap-5">
                         <div>
-                          <label style={labelStyle}>Reporting Manager <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
+                          <label className="block text-xs font-bold text-gray-700 mb-2">
+                            Reporting Manager <span className="text-[11px] font-normal text-gray-400">(Optional)</span>
+                          </label>
                           <select
                             name="reportingToId"
                             value={formData.reportingToId}
                             onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
                             disabled={!isEditing}
+                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
+                              isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                            }`}
                           >
                             <option value="">Select Reporting Manager</option>
                             {reportingManagers.map((mgr) => (
@@ -979,183 +762,149 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                             ))}
                           </select>
                         </div>
-                        <div>
-                          <label style={labelStyle}>Security Password <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Leave empty to keep current)</span></label>
-                          <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            placeholder="••••••••"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                        <FormField
+                          label="Security Password (Leave empty to keep current)"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          type="password"
+                          placeholder="••••••••"
+                        />
                       </div>
                     </div>
                   )}
 
                   {/* TAB 2: Personal Info */}
                   {activeTab === 2 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                        {[
-                          ['firstName', 'First Name', true],
-                          ['middleName', 'Middle Name', false],
-                          ['surname', 'Surname', true],
-                        ].map(([field, label, req]) => (
-                          <div key={field}>
-                            <label style={labelStyle}>
-                              {label}
-                              {req && <span style={{ color: '#EF4444' }}> *</span>}
-                            </label>
-                            <input
-                              name={field}
-                              value={formData[field]}
-                              onChange={handleInputChange}
-                              required={req}
-                              placeholder={label}
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                        ))}
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          label="First Name"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="First Name"
+                        />
+                        <FormField
+                          label="Middle Name"
+                          name="middleName"
+                          value={formData.middleName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          placeholder="Middle Name"
+                        />
+                        <FormField
+                          label="Surname"
+                          name="surname"
+                          value={formData.surname}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="Surname"
+                        />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                        <div>
-                          <label style={labelStyle}>Date of Birth <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            type="date"
-                            name="dateOfBirth"
-                            value={formData.dateOfBirth}
-                            onChange={handleInputChange}
-                            required
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Gender <span style={{ color: '#EF4444' }}>*</span></label>
-                          <select
-                            name="gender"
-                            value={formData.gender}
-                            onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          >
-                            {['Male', 'Female', 'Other'].map((g) => <option key={g} value={g}>{g}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Blood Group</label>
-                          <select
-                            name="bloodGroup"
-                            value={formData.bloodGroup}
-                            onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          >
-                            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => <option key={bg} value={bg}>{bg}</option>)}
-                          </select>
-                        </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          label="Date of Birth"
+                          name="dateOfBirth"
+                          value={formData.dateOfBirth}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          type="date"
+                        />
+                        <FormField
+                          label="Gender"
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          options={[
+                            { value: 'Male', label: 'Male' },
+                            { value: 'Female', label: 'Female' },
+                            { value: 'Other', label: 'Other' },
+                          ]}
+                        />
+                        <FormField
+                          label="Blood Group"
+                          name="bloodGroup"
+                          value={formData.bloodGroup}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          options={[
+                            { value: 'A+', label: 'A+' },
+                            { value: 'A-', label: 'A-' },
+                            { value: 'B+', label: 'B+' },
+                            { value: 'B-', label: 'B-' },
+                            { value: 'AB+', label: 'AB+' },
+                            { value: 'AB-', label: 'AB-' },
+                            { value: 'O+', label: 'O+' },
+                            { value: 'O-', label: 'O-' },
+                          ]}
+                        />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                        <div>
-                          <label style={labelStyle}>Marital Status</label>
-                          <select
-                            name="maritalStatus"
-                            value={formData.maritalStatus}
-                            onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          >
-                            {['Single', 'Married', 'Divorced', 'Widowed'].map((s) => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Father's Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="fatherName"
-                            value={formData.fatherName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Father's Full Name"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Mother's Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="motherName"
-                            value={formData.motherName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Mother's Full Name"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          label="Marital Status"
+                          name="maritalStatus"
+                          value={formData.maritalStatus}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          options={[
+                            { value: 'Single', label: 'Single' },
+                            { value: 'Married', label: 'Married' },
+                            { value: 'Divorced', label: 'Divorced' },
+                            { value: 'Widowed', label: 'Widowed' },
+                          ]}
+                        />
+                        <FormField
+                          label="Father's Name"
+                          name="fatherName"
+                          value={formData.fatherName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="Father's Full Name"
+                        />
+                        <FormField
+                          label="Mother's Name"
+                          name="motherName"
+                          value={formData.motherName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="Mother's Full Name"
+                        />
                       </div>
                       <div>
-                        <label style={labelStyle}>Current Address <span style={{ color: '#EF4444' }}>*</span></label>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">
+                          Current Address <span className="text-red-500"> *</span>
+                        </label>
                         <textarea
                           name="currentAddress"
                           value={formData.currentAddress}
                           onChange={handleInputChange}
                           required
                           placeholder="Flat, Building, Street, Area, City, PIN"
-                          style={{
-                            ...inputStyle,
-                            height: '80px',
-                            resize: 'none',
-                            background: isEditing ? '#fff' : '#F9FAFB',
-                            cursor: isEditing ? 'text' : 'not-allowed',
-                          }}
                           disabled={!isEditing}
+                          className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${
+                            isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                          }`}
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#374151', cursor: isEditing ? 'pointer' : 'not-allowed', marginBottom: '8px' }}>
+                        <label className={`flex items-center gap-2 text-[13px] font-bold text-gray-700 mb-2 ${isEditing ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                           <input
                             type="checkbox"
                             name="sameAsCurrentAddress"
                             checked={formData.sameAsCurrentAddress}
                             onChange={handleInputChange}
-                            style={{ width: '16px', height: '16px' }}
                             disabled={!isEditing}
+                            className="w-4 h-4"
                           />
                           Permanent address is same as current address
                         </label>
@@ -1166,14 +915,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                             onChange={handleInputChange}
                             required
                             placeholder="Flat, Building, Street, Area, City, PIN"
-                            style={{
-                              ...inputStyle,
-                              height: '80px',
-                              resize: 'none',
-                              background: (isEditing && !formData.sameAsCurrentAddress) ? '#fff' : '#F9FAFB',
-                              cursor: (isEditing && !formData.sameAsCurrentAddress) ? 'text' : 'not-allowed',
-                            }}
                             disabled={!isEditing || formData.sameAsCurrentAddress}
+                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${
+                              (isEditing && !formData.sameAsCurrentAddress) ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                            }`}
                           />
                         )}
                       </div>
@@ -1182,117 +927,79 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
                   {/* TAB 3: Employment */}
                   {activeTab === 3 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Department <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="department"
-                            value={formData.department}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Sales, Operations"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Designation <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="designation"
-                            value={formData.designation}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Senior MR"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Department"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Sales, Operations"
+                        />
+                        <FormField
+                          label="Designation"
+                          name="designation"
+                          value={formData.designation}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Senior MR"
+                        />
                       </div>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Date of Joining <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            type="date"
-                            name="dateOfJoining"
-                            value={formData.dateOfJoining}
-                            onChange={handleInputChange}
-                            required
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Work Location <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="workLocation"
-                            value={formData.workLocation}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Bangalore HQ"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Date of Joining"
+                          name="dateOfJoining"
+                          value={formData.dateOfJoining}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          type="date"
+                        />
+                        <FormField
+                          label="Work Location"
+                          name="workLocation"
+                          value={formData.workLocation}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Bangalore HQ"
+                        />
                       </div>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Employment Type</label>
-                          <select
-                            name="employmentType"
-                            value={formData.employmentType}
-                            onChange={handleInputChange}
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'pointer' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          >
-                            {['Full-time', 'Part-time', 'Contract', 'Internship'].map((t) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Annual CTC <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                          <input
-                            type="number"
-                            name="salaryDetails"
-                            value={formData.salaryDetails}
-                            onChange={handleInputChange}
-                            placeholder="e.g. 500000"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Employment Type"
+                          name="employmentType"
+                          value={formData.employmentType}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          options={[
+                            { value: 'Full-time', label: 'Full-time' },
+                            { value: 'Part-time', label: 'Part-time' },
+                            { value: 'Contract', label: 'Contract' },
+                            { value: 'Internship', label: 'Internship' },
+                          ]}
+                        />
+                        <FormField
+                          label="Annual CTC"
+                          name="salaryDetails"
+                          value={formData.salaryDetails}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          type="number"
+                          placeholder="e.g. 500000"
+                        />
                       </div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#374151', cursor: isEditing ? 'pointer' : 'not-allowed' }}>
+                      <label className={`flex items-center gap-2 text-[13px] font-bold text-gray-700 ${isEditing ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                         <input
                           type="checkbox"
                           name="isFresher"
                           checked={formData.isFresher}
                           onChange={handleInputChange}
-                          style={{ width: '16px', height: '16px' }}
                           disabled={!isEditing}
+                          className="w-4 h-4"
                         />
                         Candidate is a fresher (Step 4 – Experience – is optional)
                       </label>
@@ -1302,108 +1009,66 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                   {/* TAB 4: Experience */}
                   {activeTab === 4 && (
                     formData.isFresher ? (
-                      <div style={{ padding: '24px', background: '#F9FAFB', borderRadius: '12px', border: '1.5px dashed #E5E7EB', color: '#6B7280', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
+                      <div className="p-6 bg-gray-50 rounded-xl border-[1.5px] border-dashed border-gray-200 text-gray-500 text-[13px] font-semibold text-center">
                         Candidate is marked as a Fresher. No past work experience is recorded.
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={gridStyle}>
-                          <div>
-                            <label style={labelStyle}>Previous Company <span style={{ color: '#EF4444' }}>*</span></label>
-                            <input
-                              name="companyName"
-                              value={formData.companyName}
-                              onChange={handleInputChange}
-                              required={!formData.isFresher}
-                              placeholder="e.g. Novartis India"
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Previous Designation <span style={{ color: '#EF4444' }}>*</span></label>
-                            <input
-                              name="prevDesignation"
-                              value={formData.prevDesignation}
-                              onChange={handleInputChange}
-                              required={!formData.isFresher}
-                              placeholder="e.g. MR"
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
+                      <div className="flex flex-col gap-6">
+                        <div className="grid grid-cols-2 gap-5">
+                          <FormField
+                            label="Previous Company"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            required={!formData.isFresher}
+                            placeholder="e.g. Novartis India"
+                          />
+                          <FormField
+                            label="Previous Designation"
+                            name="prevDesignation"
+                            value={formData.prevDesignation}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            required={!formData.isFresher}
+                            placeholder="e.g. MR"
+                          />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                          <div>
-                            <label style={labelStyle}>Department <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                            <input
-                              name="prevDepartment"
-                              value={formData.prevDepartment}
-                              onChange={handleInputChange}
-                              placeholder="e.g. Sales"
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>From Date</label>
-                            <input
-                              type="date"
-                              name="expFromDate"
-                              value={formData.expFromDate}
-                              onChange={handleInputChange}
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>To Date</label>
-                            <input
-                              type="date"
-                              name="expToDate"
-                              value={formData.expToDate}
-                              onChange={handleInputChange}
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <FormField
+                            label="Department"
+                            name="prevDepartment"
+                            value={formData.prevDepartment}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            placeholder="e.g. Sales"
+                          />
+                          <FormField
+                            label="From Date"
+                            name="expFromDate"
+                            value={formData.expFromDate}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            type="date"
+                          />
+                          <FormField
+                            label="To Date"
+                            name="expToDate"
+                            value={formData.expToDate}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            type="date"
+                          />
                         </div>
-                        <div style={gridStyle}>
-                          <div>
-                            <label style={labelStyle}>Total Experience</label>
-                            <input
-                              name="totalExperience"
-                              value={formData.totalExperience}
-                              onChange={handleInputChange}
-                              placeholder="e.g. 2 Years 4 Months"
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
+                        <div className="grid grid-cols-2 gap-5">
+                          <FormField
+                            label="Total Experience"
+                            name="totalExperience"
+                            value={formData.totalExperience}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            placeholder="e.g. 2 Years 4 Months"
+                          />
                           <FileDropzone
                             label="Experience Letter"
                             file={experienceLetter}
@@ -1418,136 +1083,88 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
                   {/* TAB 5: Bank Details */}
                   {activeTab === 5 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Bank Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="bankName"
-                            value={formData.bankName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. HDFC Bank"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Account Number <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="accountNumber"
-                            value={formData.accountNumber}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. 50100249240212"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Bank Name"
+                          name="bankName"
+                          value={formData.bankName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. HDFC Bank"
+                        />
+                        <FormField
+                          label="Account Number"
+                          name="accountNumber"
+                          value={formData.accountNumber}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. 50100249240212"
+                        />
                       </div>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>IFSC Code <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="ifscCode"
-                            value={formData.ifscCode}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. HDFC0000124"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Branch Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="branchName"
-                            value={formData.branchName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Koramangala Branch"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="IFSC Code"
+                          name="ifscCode"
+                          value={formData.ifscCode}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. HDFC0000124"
+                        />
+                        <FormField
+                          label="Branch Name"
+                          name="branchName"
+                          value={formData.branchName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Koramangala Branch"
+                        />
                       </div>
                     </div>
                   )}
 
                   {/* TAB 6: Statutory */}
                   {activeTab === 6 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>PAN Number <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="panNumber"
-                            value={formData.panNumber}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. ABCDE1234F"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Aadhaar Number <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="aadharNumber"
-                            value={formData.aadharNumber}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. 1234 5678 9012"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="PAN Number"
+                          name="panNumber"
+                          value={formData.panNumber}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. ABCDE1234F"
+                        />
+                        <FormField
+                          label="Aadhaar Number"
+                          name="aadharNumber"
+                          value={formData.aadharNumber}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. 1234 5678 9012"
+                        />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                      <div className="grid grid-cols-3 gap-4">
                         {[
                           ['uanNumber', 'UAN Number', 'e.g. 100912482402'],
                           ['pfNumber', 'EPF Account No.', 'e.g. MH/BAN/0012345'],
                           ['esiNumber', 'ESIC Number', 'e.g. 31000123450001001'],
                         ].map(([field, label, ph]) => (
-                          <div key={field}>
-                            <label style={labelStyle}>{label} <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                            <input
-                              name={field}
-                              value={formData[field]}
-                              onChange={handleInputChange}
-                              placeholder={ph}
-                              style={{
-                                ...inputStyle,
-                                background: isEditing ? '#fff' : '#F9FAFB',
-                                cursor: isEditing ? 'text' : 'not-allowed',
-                              }}
-                              disabled={!isEditing}
-                            />
-                          </div>
+                          <FormField
+                            key={field}
+                            label={label}
+                            name={field}
+                            value={formData[field]}
+                            onChange={handleInputChange}
+                            isEditing={isEditing}
+                            placeholder={ph}
+                          />
                         ))}
                       </div>
                     </div>
@@ -1555,73 +1172,45 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
                   {/* TAB 7: Emergency Info */}
                   {activeTab === 7 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Emergency Contact Name <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="emergencyContactName"
-                            value={formData.emergencyContactName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Full Name of Contact Person"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Relationship <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="relationship"
-                            value={formData.relationship}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="e.g. Father, Spouse"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Emergency Contact Name"
+                          name="emergencyContactName"
+                          value={formData.emergencyContactName}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="Full Name of Contact Person"
+                        />
+                        <FormField
+                          label="Relationship"
+                          name="relationship"
+                          value={formData.relationship}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="e.g. Father, Spouse"
+                        />
                       </div>
-                      <div style={gridStyle}>
-                        <div>
-                          <label style={labelStyle}>Contact Number <span style={{ color: '#EF4444' }}>*</span></label>
-                          <input
-                            name="emergencyContactNumber"
-                            value={formData.emergencyContactNumber}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Primary Phone"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Alternate Number <span style={{ fontSize: '11px', fontWeight: 400, color: '#9CA3AF' }}>(Optional)</span></label>
-                          <input
-                            name="alternateContactNumber"
-                            value={formData.alternateContactNumber}
-                            onChange={handleInputChange}
-                            placeholder="Secondary Phone"
-                            style={{
-                              ...inputStyle,
-                              background: isEditing ? '#fff' : '#F9FAFB',
-                              cursor: isEditing ? 'text' : 'not-allowed',
-                            }}
-                            disabled={!isEditing}
-                          />
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          label="Contact Number"
+                          name="emergencyContactNumber"
+                          value={formData.emergencyContactNumber}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          required
+                          placeholder="Primary Phone"
+                        />
+                        <FormField
+                          label="Alternate Number (Optional)"
+                          name="alternateContactNumber"
+                          value={formData.alternateContactNumber}
+                          onChange={handleInputChange}
+                          isEditing={isEditing}
+                          placeholder="Secondary Phone"
+                        />
                       </div>
                     </div>
                   )}
@@ -1641,10 +1230,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                     const isImg = activeDoc.fileState ? isImageFile(activeDoc.fileState) : isImageFile(getDocumentUrl(activeDoc.existingUrl));
 
                     return (
-                      <div style={{ display: 'flex', gap: '24px', height: '420px', boxSizing: 'border-box' }}>
+                      <div className="flex gap-6 h-[420px] box-border">
                         {/* Left Panel: Document selection list */}
-                        <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', paddingRight: '6px', flexShrink: 0 }}>
-                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                        <div className="w-[300px] flex flex-col gap-3 overflow-y-auto pr-1.5 shrink-0">
+                          <div className="text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.5px] mb-1">
                             Documents Directory
                           </div>
                           {documentTypes.map((doc) => {
@@ -1657,46 +1246,32 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                               <div
                                 key={doc.key}
                                 onClick={() => setActiveDocKey(doc.key)}
-                                style={{
-                                  padding: '12px 14px',
-                                  borderRadius: '12px',
-                                  border: `1.5px solid ${isActive ? '#6366F1' : '#E5E7EB'}`,
-                                  background: isActive ? '#EEF2FF' : '#fff',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '6px',
-                                  transition: 'all 0.2s',
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isActive) e.currentTarget.style.borderColor = '#9CA3AF';
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isActive) e.currentTarget.style.borderColor = '#E5E7EB';
-                                }}
+                                className={`p-3 rounded-xl border-[1.5px] cursor-pointer flex flex-col gap-1.5 transition-all duration-200 ${
+                                  isActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-400'
+                                }`}
                               >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <span style={{ fontSize: '13px', fontWeight: 700, color: isActive ? '#4338CA' : '#374151' }}>
+                                <div className="flex justify-between items-center">
+                                  <span className={`text-[13px] font-bold ${isActive ? 'text-indigo-700' : 'text-gray-700'}`}>
                                     {doc.label}
                                   </span>
                                   {isDraft && (
-                                    <span style={{ fontSize: '9px', background: '#EEF2FF', color: '#4F46E5', padding: '2px 6px', borderRadius: '9999px', fontWeight: 800, border: '1px solid #C7D2FE' }}>
+                                    <span className="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full font-extrabold border border-indigo-200">
                                       Draft
                                     </span>
                                   )}
                                   {isUploaded && (
-                                    <span style={{ fontSize: '9px', background: '#ECFDF5', color: '#10B981', padding: '2px 6px', borderRadius: '9999px', fontWeight: 800, border: '1px solid #A7F3D0' }}>
+                                    <span className="text-[9px] bg-emerald-50 text-emerald-500 px-1.5 py-0.5 rounded-full font-extrabold border border-emerald-200">
                                       Uploaded
                                     </span>
                                   )}
                                   {!hasFile && (
-                                    <span style={{ fontSize: '9px', background: '#FFF7ED', color: '#EA580C', padding: '2px 6px', borderRadius: '9999px', fontWeight: 800, border: '1px solid #FFEDD5' }}>
+                                    <span className="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded-full font-extrabold border border-orange-200">
                                       Missing
                                     </span>
                                   )}
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-                                  <span style={{ fontSize: '11px', color: '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+                                <div className="flex justify-between items-center mt-0.5">
+                                  <span className="text-[11px] text-gray-400 truncate max-w-[140px]">
                                     {doc.fileState ? doc.fileState.name : doc.existingUrl ? 'Stored document' : 'No file chosen'}
                                   </span>
                                   
@@ -1708,17 +1283,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                                           e.stopPropagation();
                                           document.getElementById(`file-upload-${doc.key}`).click();
                                         }}
-                                        style={{
-                                          fontSize: '11px',
-                                          fontWeight: 700,
-                                          border: 'none',
-                                          borderRadius: '6px',
-                                          padding: '4px 8px',
-                                          background: isActive ? '#6366F1' : '#F3F4F6',
-                                          color: isActive ? '#fff' : '#4B5563',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s',
-                                        }}
+                                        className={`text-[11px] font-bold border-none rounded px-2 py-1 cursor-pointer transition-all duration-200 ${
+                                          isActive ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+                                        }`}
                                       >
                                         {hasFile ? 'Replace' : 'Upload'}
                                       </button>
@@ -1730,7 +1297,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                                           const file = e.target.files[0];
                                           if (file) doc.setFileState(file);
                                         }}
-                                        style={{ display: 'none' }}
+                                        className="hidden"
                                       />
                                     </>
                                   )}
@@ -1741,53 +1308,24 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                         </div>
 
                         {/* Right Panel: Large Document Preview Window */}
-                        <div
-                          style={{
-                            flex: 1,
-                            border: '1.5px solid #E5E7EB',
-                            borderRadius: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            background: '#F9FAFB',
-                          }}
-                        >
+                        <div className="flex-1 border-[1.5px] border-gray-200 rounded-2xl flex flex-col overflow-hidden bg-gray-50">
                           {/* Preview Topbar */}
-                          <div
-                            style={{
-                              padding: '12px 16px',
-                              borderBottom: '1.5px solid #E5E7EB',
-                              background: '#fff',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
+                          <div className="px-4 py-3 border-b-[1.5px] border-gray-200 bg-white flex justify-between items-center">
                             <div>
-                              <span style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>
+                              <span className="text-sm font-extrabold text-gray-900">
                                 {activeDoc.label}
                               </span>
-                              <span style={{ fontSize: '11px', color: '#9CA3AF', marginLeft: '8px' }}>
+                              <span className="text-[11px] text-gray-400 ml-2">
                                 {activeDoc.fileState ? 'Draft File' : activeDoc.existingUrl ? 'Stored on Server' : 'Empty'}
                               </span>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="flex gap-2 items-center">
                               {displayUrl && (
                                 <a
                                   href={displayUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  style={{
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    color: '#2563EB',
-                                    background: '#EFF6FF',
-                                    border: '1.5px solid #BFDBFE',
-                                    borderRadius: '8px',
-                                    padding: '5px 12px',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                  }}
+                                  className="text-[11px] font-bold text-blue-600 bg-blue-50 border-[1.5px] border-blue-200 rounded-lg px-3 py-1 text-center no-underline cursor-pointer"
                                 >
                                   View Fullscreen
                                 </a>
@@ -1796,16 +1334,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                                 <button
                                   type="button"
                                   onClick={() => activeDoc.setFileState(null)}
-                                  style={{
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    color: '#DC2626',
-                                    background: '#FEF2F2',
-                                    border: '1.5px solid #FEE2E2',
-                                    borderRadius: '8px',
-                                    padding: '5px 12px',
-                                    cursor: 'pointer',
-                                  }}
+                                  className="text-[11px] font-bold text-red-600 bg-red-50 border-[1.5px] border-red-200 rounded-lg px-3 py-1 cursor-pointer"
                                 >
                                   Clear Draft
                                 </button>
@@ -1814,105 +1343,42 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           </div>
 
                           {/* Preview Viewer Box */}
-                          <div
-                            style={{
-                              flex: 1,
-                              padding: '20px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden',
-                            }}
-                          >
+                          <div className="flex-1 p-5 flex items-center justify-center overflow-hidden">
                             {displayUrl ? (
                               isImg ? (
-                                <div
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    background: '#fff',
-                                    borderRadius: '10px',
-                                    border: '1.5px solid #E5E7EB',
-                                    padding: '12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxSizing: 'border-box',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                                  }}
-                                >
+                                <div className="w-full h-full bg-white rounded-lg border-[1.5px] border-gray-200 p-3 flex items-center justify-center box-border shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
                                   <img
                                     src={displayUrl}
                                     alt={activeDoc.label}
-                                    style={{
-                                      maxWidth: '100%',
-                                      maxHeight: '100%',
-                                      objectFit: 'contain',
-                                      borderRadius: '6px',
-                                    }}
+                                    className="max-w-full max-h-full object-contain rounded"
                                   />
                                 </div>
                               ) : (
-                                <div
-                                  style={{
-                                    textAlign: 'center',
-                                    background: '#fff',
-                                    padding: '32px 24px',
-                                    borderRadius: '16px',
-                                    border: '1.5px solid #E5E7EB',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                                    maxWidth: '300px',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: '60px',
-                                      height: '60px',
-                                      borderRadius: '50%',
-                                      background: '#EEF2FF',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      margin: '0 auto 16px auto',
-                                      color: '#4F46E5',
-                                    }}
-                                  >
+                                <div className="text-center bg-white px-6 py-8 rounded-2xl border-[1.5px] border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.03)] max-w-[300px]">
+                                  <div className="w-[60px] h-[60px] rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4 text-indigo-600">
                                     <Upload size={28} />
                                   </div>
-                                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#111827', margin: '0 0 6px 0' }}>
+                                  <h4 className="text-sm font-extrabold text-gray-900 mt-0 mb-1.5 mx-0">
                                     Document File (PDF)
                                   </h4>
-                                  <p style={{ fontSize: '11px', color: '#6B7280', margin: '0 0 18px 0', lineHeight: '1.5' }}>
+                                  <p className="text-[11px] text-gray-500 mt-0 mb-4.5 mx-0 leading-normal">
                                     Direct preview of PDFs is not supported inline. Click the button below to view the file.
                                   </p>
                                   <a
                                     href={displayUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{
-                                      display: 'block',
-                                      padding: '10px 0',
-                                      background: '#4F46E5',
-                                      color: '#fff',
-                                      borderRadius: '8px',
-                                      fontWeight: 700,
-                                      fontSize: '12px',
-                                      textDecoration: 'none',
-                                      textAlign: 'center',
-                                      transition: 'opacity 0.2s',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                                    className="block py-2.5 bg-indigo-600 text-white rounded-lg font-bold text-xs no-underline text-center transition-opacity duration-200 hover:opacity-90"
                                   >
                                     Open Document
                                   </a>
                                 </div>
                               )
                             ) : (
-                              <div style={{ textAlign: 'center', color: '#9CA3AF' }}>
-                                <Upload size={40} style={{ marginBottom: '10px', color: '#9CA3AF' }} />
-                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#4B5563' }}>No File Chosen</div>
-                                <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                              <div className="text-center text-gray-400">
+                                <Upload size={40} className="mb-2.5 text-gray-400" />
+                                <div className="text-[13px] font-bold text-gray-600">No File Chosen</div>
+                                <div className="text-[11px] mt-0.5">
                                   {isEditing ? `Click the upload button on the left to add a ${activeDoc.label}.` : `This document has not been uploaded yet.`}
                                 </div>
                               </div>
@@ -1925,15 +1391,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
                   {/* Section Actions (Save & Cancel buttons for edit mode) */}
                   {isEditing && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '12px',
-                        marginTop: '32px',
-                        paddingTop: '24px',
-                        borderTop: '1.5px solid #F3F4F6',
-                      }}
-                    >
+                    <div className="flex gap-3 mt-8 pt-6 border-t-[1.5px] border-gray-100">
                       <button
                         type="button"
                         onClick={() => {
@@ -1946,46 +1404,19 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           setIsEditing(false);
                           setFormError(null);
                         }}
-                        style={{
-                          padding: '10px 20px',
-                          borderRadius: '10px',
-                          border: '1.5px solid #E5E7EB',
-                          background: '#fff',
-                          color: '#4B5563',
-                          fontWeight: 700,
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          outline: 'none',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                        className="px-5 py-2.5 rounded-lg border-[1.5px] border-gray-200 bg-white text-gray-500 font-bold text-[13px] cursor-pointer transition-all duration-200 outline-none hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={loading}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '10px 24px',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: '#4F46E5',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '13px',
-                          cursor: loading ? 'not-allowed' : 'pointer',
-                          opacity: loading ? 0.7 : 1,
-                          transition: 'all 0.2s',
-                          boxShadow: '0 4px 12px rgba(79,70,229,0.2)',
-                          outline: 'none',
-                        }}
+                        className={`flex items-center gap-1.5 px-6 py-2.5 rounded-lg border-none bg-indigo-600 text-white font-bold text-[13px] transition-all duration-200 shadow-[0_4px_12px_rgba(79,70,229,0.2)] outline-none hover:bg-indigo-700 ${
+                          loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
                       >
                         {loading && (
-                          <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} />
+                          <Loader2 size={14} className="animate-spin" />
                         )}
                         Save Changes
                       </button>

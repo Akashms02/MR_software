@@ -6,7 +6,7 @@ import RelievingLetter from '../../components/documents/RelievingLetter'
 import SalarySlip from '../../components/documents/SalarySlip'
 import TerminationLetter from '../../components/documents/TerminationLetter'
 
-export default function Documents() {
+const Documents = () => {
   const [activeView, setActiveView] = useState('hub')
 
   const documentCards = [
@@ -128,3 +128,5 @@ export default function Documents() {
     </div>
   )
 }
+
+export default Documents

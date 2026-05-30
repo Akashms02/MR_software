@@ -6,31 +6,28 @@ const NAV_GROUPS = [
 
 export default function Footer() {
   return (
-    <footer id="contact" className="footer-bg">
-      <div className="section-container" style={{ padding: '56px 24px 0' }}>
-        <div className="footer-grid">
+    <footer id="contact" className="bg-slate-50 border-t border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-12 pb-12">
 
           {/* Brand */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <div style={{
-                width: '36px', height: '36px', borderRadius: '8px',
-                background: 'var(--green)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 rounded-lg bg-green-600 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
                   <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-primary)' }}>
-                  Gmaxepay<span style={{ color: 'var(--green)' }}>HR</span>
+                <div className="font-extrabold text-[17px] text-gray-900 leading-none">
+                  Gmaxepay<span className="text-green-600">HR</span>
                 </div>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '1px' }}>PHARMA HRMS</div>
+                <div className="text-[9px] text-gray-400 font-bold tracking-[1px] leading-none mt-0.5 uppercase">PHARMA HRMS</div>
               </div>
             </div>
 
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: '240px', marginBottom: '20px' }}>
+            <p className="text-[13px] text-gray-400 leading-relaxed max-w-[240px] mb-5">
               The intelligent HRMS built for pharma enterprises. From hire to rehire — one seamless platform.
             </p>
 
@@ -39,14 +36,14 @@ export default function Footer() {
               { icon: '📞', text: '+91 98765 43210' },
               { icon: '🏢', text: 'Mumbai · Bengaluru · Hyderabad' },
             ].map((c, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '13px' }}>{c.icon}</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{c.text}</span>
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <span className="text-[13px]">{c.icon}</span>
+                <span className="text-[13px] text-gray-400 font-medium">{c.text}</span>
               </div>
             ))}
 
-            <div style={{ marginTop: '20px' }}>
-              <span className="badge-green" style={{ fontSize: '11px' }}>
+            <div className="mt-5">
+              <span className="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-3 py-1 rounded-[20px] tracking-wide inline-block">
                 🏛️ Empaneled with NICSI · MeitY, Govt. of India
               </span>
             </div>
@@ -55,66 +52,40 @@ export default function Footer() {
           {/* Nav groups */}
           {NAV_GROUPS.map((group, i) => (
             <div key={i}>
-              <div style={{
-                fontSize: '11px', fontWeight: 700, color: 'var(--green)',
-                textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px',
-              }}>{group.title}</div>
+              <div className="text-[11px] font-bold text-green-700 uppercase tracking-widest mb-4">
+                {group.title}
+              </div>
               {group.links.map(link => (
-                <a key={link} href="#" style={{
-                  display: 'block', fontSize: '13px', color: 'var(--text-muted)',
-                  textDecoration: 'none', marginBottom: '10px', transition: 'color 0.15s',
-                }}
-                  onMouseEnter={e => e.target.style.color = 'var(--green)'}
-                  onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
-                >{link}</a>
+                <a
+                  key={link}
+                  href="#"
+                  className="block text-[13px] text-gray-400 hover:text-green-600 transition-colors duration-150 mb-2.5 font-medium no-underline"
+                >
+                  {link}
+                </a>
               ))}
             </div>
           ))}
         </div>
 
         {/* Bottom bar */}
-        <div className="footer-bottom-bar" style={{
-          borderTop: '1px solid var(--border)', padding: '20px 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-        }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            © 2026 GmaxepayHR. Powered by <span style={{ color: 'var(--green)', fontWeight: 600 }}>GreenCall Technologies Pvt. Ltd.</span> · All rights reserved.
+        <div className="border-t border-gray-200 py-6 flex flex-wrap items-center justify-between gap-3 text-center sm:text-left">
+          <div className="text-[12px] text-gray-400 font-medium">
+            © 2026 GmaxepayHR. Powered by <span className="text-green-600 font-bold">GreenCall Technologies Pvt. Ltd.</span> · All rights reserved.
           </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
+          <div className="flex gap-4">
             {['Privacy Policy', 'Terms', 'Cookies'].map(l => (
-              <a key={l} href="#" style={{
-                fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'none',
-              }}
-                onMouseEnter={e => e.target.style.color = 'var(--green)'}
-                onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
-              >{l}</a>
+              <a
+                key={l}
+                href="#"
+                className="text-[12px] text-gray-400 hover:text-green-600 transition-colors duration-150 font-semibold no-underline"
+              >
+                {l}
+              </a>
             ))}
           </div>
         </div>
       </div>
-
-      <style>{`
-        .footer-grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1fr;
-          gap: 48px;
-          padding-bottom: 48px;
-        }
-        @media (max-width: 900px) {
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width: 600px) {
-          .footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
-          .footer-bottom-bar {
-            flex-direction: column !important;
-            text-align: center !important;
-            justify-content: center !important;
-          }
-          .footer-bottom-bar div {
-            justify-content: center !important;
-          }
-        }
-      `}</style>
     </footer>
   )
 }

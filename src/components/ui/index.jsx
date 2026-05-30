@@ -5,13 +5,14 @@ import { ChevronRight, X, MessageSquare, MoreHorizontal, ArrowRight } from 'luci
 export function Avatar({ name, size = 32 }) {
   const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??'
   return (
-    <div style={{
-      width: `${size}px`, height: `${size}px`, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: `${size * 0.4}px`, fontWeight: 700, color: '#475569',
-      flexShrink: 0, overflow: 'hidden'
-    }}>
+    <div
+      className="rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center font-bold text-slate-600 shrink-0 overflow-hidden"
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        fontSize: `${size * 0.4}px`
+      }}
+    >
       {initials}
     </div>
   )
@@ -20,7 +21,7 @@ export function Avatar({ name, size = 32 }) {
 /* ─── Card ─────────────────────────────────────────────────────────────── */
 export function Card({ children, style, className = '' }) {
   return (
-    <div className={`card ${className}`} style={style}>
+    <div className={`bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] ${className}`} style={style}>
       {children}
     </div>
   )
@@ -37,47 +38,28 @@ export function StatCardGradient({ icon: Icon, label, value, type = 'teal' }) {
   const g = gradients[type] || gradients.teal
 
   return (
-    <div style={{
-      padding: '24px',
-      borderRadius: '24px',
-      background: `linear-gradient(135deg, ${g.from}, ${g.to})`,
-      color: '#fff',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-      minHeight: '170px',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-      overflow: 'hidden'
-    }}>
+    <div
+      className="p-6 rounded-[24px] text-white flex flex-col relative min-h-[170px] shadow-[0_8px_24px_rgba(0,0,0,0.08)] overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${g.from}, ${g.to})`,
+      }}
+    >
       {/* Top Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-        <div style={{ 
-          width: '44px', height: '44px', borderRadius: '12px', 
-          background: 'rgba(255,255,255,0.25)', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '22px', backdropFilter: 'blur(4px)'
-        }}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="w-11 h-11 rounded-xl bg-white/25 flex items-center justify-center text-[22px] backdrop-blur-[4px]">
           {g.icon}
         </div>
-        <div style={{ 
-          width: '28px', height: '28px', borderRadius: '50%',
-          background: 'rgba(255,255,255,0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', cursor: 'pointer'
-        }}>
+        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white cursor-pointer hover:bg-white/30 transition-colors">
           <ChevronRight size={16} />
         </div>
       </div>
 
       {/* Bottom Section: Label Left, Big Value Right */}
-      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <div style={{ 
-          fontSize: '13px', fontWeight: 600, opacity: 0.9, 
-          maxWidth: '80px', lineHeight: 1.3, marginBottom: '6px'
-        }}>
+      <div className="mt-auto flex items-end justify-between">
+        <div className="text-[13px] font-semibold opacity-90 max-w-[80px] leading-tight mb-1.5">
           {label}
         </div>
-        <div style={{ fontSize: '56px', fontWeight: 800, lineHeight: 0.8, letterSpacing: '-2px' }}>
+        <div className="text-[56px] font-extrabold leading-none tracking-[-2px]">
           {value}
         </div>
       </div>
@@ -88,25 +70,15 @@ export function StatCardGradient({ icon: Icon, label, value, type = 'teal' }) {
 /* ─── Info Banner ──────────────────────────────────────────────────────── */
 export function InfoBanner({ icon = '💡', text, actionLabel, onAction }) {
   return (
-    <div style={{
-      background: '#fff',
-      padding: '12px 24px',
-      borderRadius: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      boxShadow: 'var(--shadow-card)',
-      marginBottom: '24px',
-      border: '1px solid var(--border-light)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '18px', filter: 'grayscale(1) brightness(0.5)' }}>{icon}</span>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Take Action :</span> {text}
+    <div className="bg-white p-3 px-6 rounded-2xl flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.02)] mb-6 border border-gray-100">
+      <div className="flex items-center gap-3">
+        <span className="text-[18px] grayscale contrast-50 brightness-75">{icon}</span>
+        <div className="text-[13px] text-gray-500">
+          <span className="text-gray-900 font-extrabold">Take Action :</span> {text}
         </div>
       </div>
       {actionLabel && (
-        <button onClick={onAction} className="btn-lime" style={{ padding: '10px 20px', fontSize: '12px', borderRadius: '10px' }}>
+        <button onClick={onAction} className="btn-lime py-2 px-5 text-[12px] rounded-[10px]">
           {actionLabel}
         </button>
       )}
@@ -117,14 +89,14 @@ export function InfoBanner({ icon = '💡', text, actionLabel, onAction }) {
 /* ─── Badge ────────────────────────────────────────────────────────────── */
 export function Badge({ type = 'processing', children }) {
   const classes = {
-    processing: 'badge-processing',
-    selected:   'badge-selected',
-    rejected:   'badge-rejected',
-    pending:    'badge-pending',
-    approved:   'badge-approved',
+    processing: 'bg-[#EFF6FF] text-[#1D4ED8] border-none',
+    selected:   'bg-[#E0F2FE] text-[#0369A1] border-none',
+    rejected:   'bg-[#FEF2F2] text-[#B91C1C] border-none',
+    pending:    'bg-[#FFFBEB] text-[#B45309] border-none',
+    approved:   'bg-[#ECFDF5] text-[#047857] border-none',
   }
   return (
-    <div className={`badge ${classes[type] || classes.processing}`}>
+    <div className={`inline-flex items-center px-2.5 py-1 rounded-[10px] text-[12px] font-bold uppercase tracking-wider ${classes[type.toLowerCase()] || classes.processing}`}>
       {children}
     </div>
   )
@@ -133,106 +105,97 @@ export function Badge({ type = 'processing', children }) {
 /* ─── Candidate Card ───────────────────────────────────────────────────── */
 export function CandidateCard({ name, role, status, email, phone, experience, appliedOn }) {
   return (
-    <Card style={{ padding: '24px', textAlign: 'center', position: 'relative' }}>
-      <button style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-light)', cursor: 'pointer' }}>
+    <Card className="p-6 text-center relative">
+      <button className="absolute top-4 right-4 bg-transparent border-none text-gray-400 hover:text-gray-600 cursor-pointer transition-colors">
         <X size={18} />
       </button>
       
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+      <div className="flex justify-center mb-4">
         <Avatar name={name} size={64} />
       </div>
       
-      <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--text-primary)' }}>{name}</div>
-      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>{role}</div>
+      <div className="font-extrabold text-[16px] text-gray-900">{name}</div>
+      <div className="text-[12px] text-gray-400 mb-3">{role}</div>
       
-      <div style={{ marginBottom: '20px' }}>
+      <div className="mb-5">
         <Badge type={status.toLowerCase()}>{status}</Badge>
       </div>
       
-      <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Mail</span>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{email}</span>
+      <div className="border-t border-gray-150 pt-4 flex flex-col gap-2 text-left">
+        <div className="flex justify-between text-[12px]">
+          <span className="text-gray-400">Mail</span>
+          <span className="text-gray-600 font-semibold">{email}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Phone</span>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{phone}</span>
+        <div className="flex justify-between text-[12px]">
+          <span className="text-gray-400">Phone</span>
+          <span className="text-gray-600 font-semibold">{phone}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Experience</span>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{experience}</span>
+        <div className="flex justify-between text-[12px]">
+          <span className="text-gray-400">Experience</span>
+          <span className="text-gray-600 font-semibold">{experience}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Applied on</span>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{appliedOn}</span>
+        <div className="flex justify-between text-[12px]">
+          <span className="text-gray-400">Applied on</span>
+          <span className="text-gray-600 font-semibold">{appliedOn}</span>
         </div>
       </div>
       
-      <button className="btn-lime" style={{ width: '100%', marginTop: '16px', justifyContent: 'center', background: '#f0fdf4', color: '#16a34a', border: 'none' }}>
-        <MessageSquare size={14} style={{ marginRight: '6px' }} /> Comments
+      <button className="btn-lime w-full mt-4 justify-center bg-green-50 text-green-600 border-none hover:bg-green-100/80 transition-colors">
+        <MessageSquare size={14} className="mr-1.5" /> Comments
       </button>
     </Card>
   )
 }
 
 /* ─── Event Row ────────────────────────────────────────────────────────── */
-export function EventRow({ date, month, title, sub, color = 'var(--lime)' }) {
+export function EventRow({ date, month, title, sub, color = '#C8F04A' }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 0' }}>
-      <div style={{ 
-        width: '44px', height: '44px', borderRadius: '12px', 
-        background: `${color}15`, border: `1.5px solid ${color}`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0
-      }}>
-        <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{date}</div>
-        <div style={{ fontSize: '9px', fontWeight: 700, color: color, textTransform: 'uppercase' }}>{month}</div>
+    <div className="flex items-center gap-4 py-3">
+      <div
+        className="w-11 h-11 rounded-xl border-[1.5px] flex flex-col items-center justify-center shrink-0"
+        style={{
+          backgroundColor: `${color}15`,
+          borderColor: color,
+        }}
+      >
+        <div className="text-[14px] font-extrabold text-gray-900 leading-none">{date}</div>
+        <div className="text-[9px] font-bold text-gray-500 uppercase mt-0.5" style={{ color: color }}>{month}</div>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-gray-900 truncate">{title}</div>
+        <div className="text-[11px] text-gray-400">{sub}</div>
       </div>
     </div>
   )
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────── */
-export function PrimaryBtn({ children, onClick, style }) {
+export function PrimaryBtn({ children, onClick, style, className = '' }) {
   return (
-    <button className="btn-lime" onClick={onClick} style={style}>
+    <button className={`btn-lime ${className}`} onClick={onClick} style={style}>
       {children}
     </button>
   )
 }
 
-export function OutlineBtn({ children, onClick, style }) {
+export function OutlineBtn({ children, onClick, style, className = '' }) {
   return (
-    <button onClick={onClick} style={{
-      display: 'inline-flex', alignItems: 'center', gap: '8px',
-      padding: '10px 22px', background: '#fff', color: 'var(--text-primary)',
-      fontWeight: 700, fontSize: '14px', borderRadius: '10px',
-      border: '1.5px solid var(--border)', cursor: 'pointer',
-      transition: 'all 0.2s', ...style
-    }}
-    onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-    onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 py-2.5 px-[22px] bg-white text-gray-950 font-bold text-[14px] rounded-[10px] border-[1.5px] border-gray-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer ${className}`}
+      style={style}
     >
       {children}
     </button>
   )
 }
 
-export function GhostBtn({ children, onClick, style }) {
+export function GhostBtn({ children, onClick, style, className = '' }) {
   return (
-    <button onClick={onClick} style={{
-      display: 'inline-flex', alignItems: 'center', gap: '8px',
-      padding: '10px 22px', background: 'transparent', color: 'var(--text-secondary)',
-      fontWeight: 600, fontSize: '14px', borderRadius: '10px',
-      border: 'none', cursor: 'pointer',
-      transition: 'all 0.2s', ...style
-    }}
-    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
-    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 py-2.5 px-[22px] bg-transparent text-gray-500 font-semibold text-[14px] rounded-[10px] border-none hover:bg-gray-100 transition-all duration-200 cursor-pointer ${className}`}
+      style={style}
     >
       {children}
     </button>
@@ -242,7 +205,7 @@ export function GhostBtn({ children, onClick, style }) {
 /* ─── Table ────────────────────────────────────────────────────────────── */
 export function TableWrap({ children }) {
   return (
-    <Card style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+    <Card className="p-0 overflow-hidden border border-gray-100">
       {children}
     </Card>
   )
@@ -250,22 +213,18 @@ export function TableWrap({ children }) {
 
 export function Th({ children }) {
   return (
-    <th style={{
-      textAlign: 'left', padding: '14px 20px', fontSize: '11px',
-      fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase',
-      letterSpacing: '0.5px', background: '#F9FAFB', borderBottom: '1px solid var(--border-light)'
-    }}>
+    <th className="text-left py-3.5 px-5 text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.5px] bg-gray-50 border-b border-gray-100">
       {children}
     </th>
   )
 }
 
-export function Td({ children, style }) {
+export function Td({ children, style, className = '' }) {
   return (
-    <td style={{
-      padding: '14px 20px', fontSize: '13px', color: 'var(--text-secondary)',
-      borderBottom: '1px solid var(--border-light)', ...style
-    }}>
+    <td 
+      className={`py-3.5 px-5 text-[13px] text-gray-600 border-b border-gray-100 ${className}`}
+      style={style}
+    >
       {children}
     </td>
   )
@@ -274,16 +233,15 @@ export function Td({ children, style }) {
 /* ─── Navigation ───────────────────────────────────────────────────────── */
 export function TabBar({ tabs, active, onChange }) {
   return (
-    <div style={{ display: 'flex', background: '#F3F4F6', padding: '4px', borderRadius: '12px' }}>
+    <div className="flex bg-gray-100 p-1 rounded-xl">
       {tabs.map(t => (
-        <button key={t.id} onClick={() => onChange(t.id)} style={{
-          padding: '8px 16px', borderRadius: '8px', border: 'none',
-          background: active === t.id ? '#fff' : 'transparent',
-          color: active === t.id ? 'var(--text-primary)' : 'var(--text-muted)',
-          fontWeight: 700, fontSize: '13px', cursor: 'pointer',
-          boxShadow: active === t.id ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-          transition: 'all 0.2s'
-        }}>
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          className={`py-2 px-4 rounded-lg border-none font-bold text-[13px] cursor-pointer transition-all duration-200 ${
+            active === t.id ? 'bg-white text-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.06)]' : 'bg-transparent text-gray-400 hover:text-gray-600'
+          }`}
+        >
           {t.label}
         </button>
       ))}
@@ -294,17 +252,19 @@ export function TabBar({ tabs, active, onChange }) {
 /* ─── Legacy Stat Card (Flat) ─────────────────────────────────────────── */
 export function StatCard({ icon, label, value, color, bgColor }) {
   return (
-    <Card style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-      <div style={{
-        width: '48px', height: '48px', borderRadius: '14px',
-        background: bgColor || '#F3F4F6', color: color || 'var(--text-primary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px'
-      }}>
+    <Card className="flex items-center gap-4">
+      <div
+        className="w-12 h-12 rounded-[14px] flex items-center justify-center text-[20px]"
+        style={{
+          backgroundColor: bgColor || '#F3F4F6',
+          color: color || '#1F2937'
+        }}
+      >
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{label}</div>
-        <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{value}</div>
+        <div className="text-[12px] font-semibold text-gray-400">{label}</div>
+        <div className="text-[20px] font-extrabold text-gray-800">{value}</div>
       </div>
     </Card>
   )
@@ -313,10 +273,10 @@ export function StatCard({ icon, label, value, color, bgColor }) {
 /* ─── Section Header ───────────────────────────────────────────────────── */
 export function SectionHeader({ title, sub, action }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
+    <div className="flex justify-between items-end mb-6">
       <div>
-        <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{title}</h2>
-        {sub && <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>{sub}</p>}
+        <h2 className="text-[20px] font-extrabold text-gray-900 m-0">{title}</h2>
+        {sub && <p className="text-[13px] text-gray-400 m-0 mt-1">{sub}</p>}
       </div>
       <div>{action}</div>
     </div>
@@ -326,18 +286,16 @@ export function SectionHeader({ title, sub, action }) {
 /* ─── Quick Action Tile ────────────────────────────────────────────────── */
 export function QuickActionTile({ icon: Icon, label }) {
   return (
-    <div style={{ 
-      background: '#F9FAFB', borderRadius: (typeof Icon === 'string' ? '12px' : '16px'), padding: '16px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-      cursor: 'pointer', transition: 'all 0.2s'
-    }}
-    onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-    onMouseLeave={e => e.currentTarget.style.background = '#F9FAFB'}
+    <div
+      className="bg-gray-50 rounded-xl p-4 flex flex-col items-center gap-2.5 cursor-pointer hover:bg-gray-100 transition-all duration-200"
+      style={{
+        borderRadius: typeof Icon === 'string' ? '12px' : '16px'
+      }}
     >
-      <div style={{ color: 'var(--text-secondary)' }}>
-        {typeof Icon === 'string' ? <span style={{ fontSize: '20px' }}>{Icon}</span> : <Icon size={20} />}
+      <div className="text-gray-600">
+        {typeof Icon === 'string' ? <span className="text-[20px]">{Icon}</span> : <Icon size={20} />}
       </div>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'center' }}>{label}</div>
+      <div className="text-[11px] font-bold text-gray-400 text-center">{label}</div>
     </div>
   )
 }
@@ -346,17 +304,13 @@ export function QuickActionTile({ icon: Icon, label }) {
 export function ChartTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div style={{
-        background: '#fff', padding: '10px 14px', border: 'none',
-        borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-        fontSize: '12px', minWidth: '100px'
-      }}>
-        {label && <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>{label}</div>}
+      <div className="bg-white p-2.5 px-3.5 border-none rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] text-[12px] min-w-[100px]">
+        {label && <div className="font-extrabold text-gray-900 mb-1">{label}</div>}
         {payload.map((p, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: p.color || 'var(--text-secondary)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.color || p.fill }} />
-            <span style={{ fontWeight: 500 }}>{p.name}:</span>
-            <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{p.value}</span>
+          <div key={i} className="flex items-center gap-2" style={{ color: p.color || '#4B5563' }}>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color || p.fill }} />
+            <span className="font-medium">{p.name}:</span>
+            <span className="font-extrabold text-gray-900">{p.value}</span>
           </div>
         ))}
       </div>

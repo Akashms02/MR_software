@@ -16,39 +16,24 @@ function StatCard({ label, value, type }) {
   const { Icon } = c
 
   return (
-    <div style={{
-      borderRadius: '18px',
-      background: `linear-gradient(135deg, ${c.from}, ${c.to})`,
-      padding: '20px 22px',
-      display: 'flex', flexDirection: 'column',
-      minHeight: '160px', position: 'relative',
-      overflow: 'hidden', color: '#fff',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.10)'
-    }}>
+    <div
+      className="rounded-[18px] px-[22px] py-5 flex flex-col min-h-[160px] relative overflow-hidden text-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
+      style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}
+    >
       {/* Top row: icon + close circle */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{
-          width: '40px', height: '40px', borderRadius: '12px',
-          background: 'rgba(255,255,255,0.28)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+      <div className="flex justify-between items-start">
+        <div className="w-10 h-10 rounded-xl bg-white/28 flex items-center justify-center">
           <Icon size={20} color="#fff" strokeWidth={2} />
         </div>
-        <div style={{
-          width: '22px', height: '22px', borderRadius: '50%',
-          background: 'rgba(255,255,255,0.25)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '14px', cursor: 'pointer', color: '#fff', fontWeight: 700,
-          lineHeight: 1
-        }}>×</div>
+        <div className="w-[22px] h-[22px] rounded-full bg-white/25 flex items-center justify-center text-[14px] cursor-pointer text-white font-bold leading-none">×</div>
       </div>
 
       {/* Bottom row: label left, value right */}
-      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '13px', fontWeight: 600, opacity: 0.9, maxWidth: '90px', lineHeight: 1.3 }}>
+      <div className="mt-auto flex items-end justify-between">
+        <div className="text-[13px] font-semibold opacity-90 max-w-[90px] leading-snug">
           {label}
         </div>
-        <div style={{ fontSize: '52px', fontWeight: 800, lineHeight: 0.9, letterSpacing: '-2px' }}>
+        <div className="text-[52px] font-extrabold leading-[0.9] tracking-[-2px]">
           {value}
         </div>
       </div>
@@ -59,18 +44,17 @@ function StatCard({ label, value, type }) {
 /* ── Event Row with colored date badge ─────────────────────────────────── */
 function EventRow({ date, month, title, sub, color }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 0' }}>
-      <div style={{
-        width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
-        background: `${color}18`, border: `1.5px solid ${color}`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <div style={{ fontSize: '13px', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{date}</div>
-        <div style={{ fontSize: '8px', fontWeight: 700, color: color, textTransform: 'uppercase' }}>{month}</div>
+    <div className="flex items-start gap-2.5 py-2">
+      <div
+        className="w-10 h-10 rounded-lg shrink-0 border-[1.5px] flex flex-col items-center justify-center"
+        style={{ background: `${color}18`, borderColor: color }}
+      >
+        <div className="text-[13px] font-extrabold text-[#111827] leading-none">{date}</div>
+        <div className="text-[8px] font-bold uppercase" style={{ color: color }}>{month}</div>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-        <div style={{ fontSize: '11px', color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-bold text-[#111827] truncate">{title}</div>
+        <div className="text-[11px] text-[#9CA3AF] truncate">{sub}</div>
       </div>
     </div>
   )
@@ -88,21 +72,18 @@ function HiringRow({ name, role, status }) {
   const initials = name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div style={{
-        width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, #CBD5E1, #94A3B8)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '13px', fontWeight: 700, color: '#fff'
-      }}>{initials}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>{name}</div>
-        <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{role.split(' ')[0]}</div>
+    <div className="flex items-center gap-2.5">
+      <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#CBD5E1] to-[#94A3B8] flex items-center justify-center text-[13px] font-bold text-white">{initials}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-[#111827]">{name}</div>
+        <div className="text-[11px] text-[#9CA3AF]">{role.split(' ')[0]}</div>
       </div>
-      <div style={{
-        padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-        background: badge.bg, color: badge.color, flexShrink: 0, whiteSpace: 'nowrap'
-      }}>{role}</div>
+      <div
+        className="px-2.5 py-[3px] rounded text-[10px] font-bold shrink-0 whitespace-nowrap"
+        style={{ background: badge.bg, color: badge.color }}
+      >
+        {role}
+      </div>
     </div>
   )
 }
@@ -110,16 +91,9 @@ function HiringRow({ name, role, status }) {
 /* ── Quick Action Tile ──────────────────────────────────────────────────── */
 function QATile({ icon: Icon, label }) {
   return (
-    <div style={{
-      background: '#F9FAFB', borderRadius: '12px', padding: '14px 10px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-      cursor: 'pointer', transition: 'background 0.15s'
-    }}
-    onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-    onMouseLeave={e => e.currentTarget.style.background = '#F9FAFB'}
-    >
+    <div className="bg-[#F9FAFB] rounded-xl px-2.5 py-3.5 flex flex-col items-center gap-2 cursor-pointer transition-colors duration-150 hover:bg-[#F3F4F6]">
       <Icon size={19} color="#6B7280" strokeWidth={1.8} />
-      <div style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textAlign: 'center' }}>{label}</div>
+      <div className="text-[11px] font-semibold text-[#6B7280] text-center">{label}</div>
     </div>
   )
 }
@@ -127,7 +101,7 @@ function QATile({ icon: Icon, label }) {
 /* ── Card wrapper ──────────────────────────────────────────────────────── */
 function Card({ children, style }) {
   return (
-    <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '20px', ...style }}>
+    <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5" style={style}>
       {children}
     </div>
   )
@@ -135,7 +109,7 @@ function Card({ children, style }) {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ADMIN DASHBOARD
-═══════════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════════════════ */
 export default function AdminDashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -153,117 +127,61 @@ export default function AdminDashboard() {
   return (
     <div className="animate-fade">
       {/* ── Welcome Header Card ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
-        borderRadius: '20px',
-        padding: '24px 30px',
-        marginBottom: '20px',
-        color: '#fff',
-        boxShadow: '0 10px 25px -5px rgba(6, 78, 59, 0.3), 0 8px 10px -6px rgba(6, 78, 59, 0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '24px',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.08)'
-      }}>
+      <div className="bg-gradient-to-br from-[#064E3B] to-[#065F46] rounded-[20px] px-[30px] py-6 mb-5 text-white shadow-[0_10px_25px_-5px_rgba(6,78,59,0.3),0_8px_10px_-6px_rgba(6,78,59,0.3)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/8">
         {/* Glowing ambient lights */}
-        <div style={{
-          position: 'absolute', top: '-50px', right: '-50px',
-          width: '200px', height: '200px', borderRadius: '50%',
-          background: 'rgba(200, 240, 74, 0.15)', filter: 'blur(40px)',
-          pointerEvents: 'none'
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-50px', left: '-50px',
-          width: '180px', height: '180px', borderRadius: '50%',
-          background: 'rgba(16, 185, 129, 0.12)', filter: 'blur(45px)',
-          pointerEvents: 'none'
-        }} />
+        <div className="absolute -top-[50px] -right-[50px] w-[200px] h-[200px] rounded-full bg-[#C8F04A]/15 blur-[40px] pointer-events-none" />
+        <div className="absolute -bottom-[50px] -left-[50px] w-[180px] h-[180px] rounded-full bg-[#10B981]/12 blur-[45px] pointer-events-none" />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', zIndex: 1 }}>
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, #C8F04A, #10B981)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px', fontWeight: 800, color: '#064E3B',
-            boxShadow: '0 4px 14px rgba(200, 240, 74, 0.4)',
-            border: '2px solid rgba(255, 255, 255, 0.2)'
-          }}>
+        <div className="flex items-center gap-5 z-[1]">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C8F04A] to-[#10B981] flex items-center justify-center text-[24px] font-extrabold text-[#064E3B] shadow-[0_4px_14px_rgba(200,240,74,0.4)] border-2 border-white/20">
             {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: '#A7F3D0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+            <div className="text-xs text-[#A7F3D0] font-bold uppercase tracking-wider mb-1">
               Logged In Session · {displayRole}
             </div>
-            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            <h1 className="text-[24px] font-extrabold text-white m-0 tracking-tight leading-normal">
               {displayName}
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: '#D1FAE5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="flex items-center gap-4 mt-1.5 flex-wrap">
+              <span className="text-[13px] text-[#D1FAE5] flex items-center gap-1.5">
                 📧 {displayEmail}
               </span>
-              <span style={{ fontSize: '13px', color: '#D1FAE5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="text-[13px] text-[#D1FAE5] flex items-center gap-1.5">
                 📱 {displayPhone}
               </span>
-              <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.1)', color: '#F1F5F9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.15)', fontWeight: 600 }}>
+              <span className="text-[11px] bg-white/10 text-[#F1F5F9] px-2 py-0.5 rounded-md border border-white/15 font-semibold">
                 Ref Code: {displayRefCode}
               </span>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', zIndex: 1 }}>
-          <button style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '10px',
-            color: '#fff',
-            padding: '10px 18px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-          >
+        <div className="flex gap-3 z-[1]">
+          <button className="bg-white/8 border border-white/12 rounded-lg text-white px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors duration-200 hover:bg-white/15">
             System Status
           </button>
-          <button className="btn-lime" style={{
-            padding: '10px 20px',
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}>
+          <button className="btn-lime px-5 py-2.5 rounded-lg text-[13px] font-bold cursor-pointer">
             Manager Controls
           </button>
         </div>
       </div>
 
       {/* ── Info Banner ──────────────────────────────────────────── */}
-      <div style={{
-        background: '#fff', borderRadius: '12px', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        border: '1px solid #F3F4F6'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '16px' }}>⚡</span>
-          <span style={{ fontSize: '13px', color: '#374151' }}>
-            <strong style={{ color: '#111827' }}>Take Action :</strong> The appraisal cycle is around the corner. Let's get started.
+      <div className="bg-white rounded-xl px-5 py-3 flex items-center justify-between mb-5 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-[#F3F4F6]">
+        <div className="flex items-center gap-2.5">
+          <span className="text-base">⚡</span>
+          <span className="text-[13px] text-[#374151]">
+            <strong className="text-[#111827]">Take Action :</strong> The appraisal cycle is around the corner. Let's get started.
           </span>
         </div>
-        <button className="btn-lime" style={{ fontSize: '13px', padding: '9px 18px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
+        <button className="btn-lime text-[13px] px-4 py-2 rounded-lg whitespace-nowrap">
           Send Reminders
         </button>
       </div>
 
       {/* ── Stat Cards Row ───────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '20px' }}>
+      <div className="grid grid-cols-4 gap-4 mb-5">
         <StatCard label="Total Employees" value="289" type="teal"   />
         <StatCard label="On Leave"        value="08"  type="orange" />
         <StatCard label="Hiring Roles"    value="03"  type="coral"  />
@@ -271,27 +189,27 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Middle Row: Venn + News & Events + Hiring Applications ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: '16px', marginBottom: '16px' }}>
+      <div className="grid grid-cols-[1fr_1.3fr_1fr] gap-4 mb-4">
 
         {/* Venn / Location Bubbles */}
         <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>Location</div>
-            <ExternalLink size={14} color="#9CA3AF" style={{ cursor: 'pointer' }} />
+          <div className="flex justify-between items-center mb-3">
+            <div className="text-[13px] font-bold text-[#111827]">Location</div>
+            <ExternalLink size={14} className="cursor-pointer text-[#9CA3AF]" />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0', position: 'relative', height: '130px' }}>
+          <div className="flex items-center justify-center gap-0 relative h-[130px]">
             {/* Bubble cluster */}
-            <div style={{ position: 'relative', width: '160px', height: '130px' }}>
-              <div style={{ position:'absolute', width:'90px', height:'90px', borderRadius:'50%', background:'rgba(99,102,241,0.18)', top:'0', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'16px',fontWeight:800,color:'#4F46E5' }}>122</div>
-              <div style={{ position:'absolute', width:'58px', height:'58px', borderRadius:'50%', background:'rgba(16,185,129,0.18)', bottom:'10px', right:'8px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'13px',fontWeight:800,color:'#059669' }}>38</div>
-              <div style={{ position:'absolute', width:'46px', height:'46px', borderRadius:'50%', background:'rgba(245,158,11,0.2)', bottom:'5px', left:'30px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'12px',fontWeight:800,color:'#D97706' }}>27</div>
-              <div style={{ position:'absolute', width:'38px', height:'38px', borderRadius:'50%', background:'rgba(239,68,68,0.15)', top:'30px', left:'5px', display:'flex',alignItems:'center',justifyContent:'center', fontSize:'11px',fontWeight:800,color:'#DC2626' }}>14</div>
+            <div className="relative w-40 h-[130px]">
+              <div className="absolute w-[90px] h-[90px] rounded-full bg-indigo-500/18 top-0 left-[30px] flex items-center justify-center text-base font-extrabold text-[#4F46E5]">122</div>
+              <div className="absolute w-[58px] h-[58px] rounded-full bg-emerald-500/18 bottom-2.5 right-2 flex items-center justify-center text-[13px] font-extrabold text-[#059669]">38</div>
+              <div className="absolute w-[46px] h-[46px] rounded-full bg-amber-500/20 bottom-1.25 left-[30px] flex items-center justify-center text-xs font-extrabold text-[#D97706]">27</div>
+              <div className="absolute w-[38px] h-[38px] rounded-full bg-red-500/15 top-[30px] left-1.25 flex items-center justify-center text-[11px] font-extrabold text-[#DC2626]">14</div>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+          <div className="flex flex-col gap-1 mt-2">
             {[['#4F46E5','Remote'],['#059669','France'],['#D97706','India'],['#DC2626','USA']].map(([color, label]) => (
-              <div key={label} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'11px', color:'#6B7280' }}>
-                <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: color, flexShrink:0 }} />
+              <div key={label} className="flex items-center gap-1.5 text-[11px] text-[#6B7280]">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                 {label}
               </div>
             ))}
@@ -300,11 +218,11 @@ export default function AdminDashboard() {
 
         {/* News & Events */}
         <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>News & Events</div>
-            <ExternalLink size={14} color="#9CA3AF" style={{ cursor: 'pointer' }} />
+          <div className="flex justify-between items-center mb-2">
+            <div className="text-sm font-extrabold text-[#111827]">News & Events</div>
+            <ExternalLink size={14} className="cursor-pointer text-[#9CA3AF]" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+          <div className="grid grid-cols-2 gap-x-3">
             <EventRow date="03" month="Aug" title="Board Meeting"   sub="Project Meeting"               color="#A78BFA" />
             <EventRow date="29" month="Aug" title="Holiday - India" sub="Holi by GmaxepayHR Team"          color="#10B981" />
             <EventRow date="13" month="Aug" title="New Joinee"      sub="Welcome aboard, Rafi Ansari"   color="#F59E0B" />
@@ -316,17 +234,13 @@ export default function AdminDashboard() {
 
         {/* Hiring Applications */}
         <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827' }}>Hiring Applications</div>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px',
-              background: '#C8F04A', border: 'none', borderRadius: '8px',
-              fontSize: '12px', fontWeight: 700, cursor: 'pointer'
-            }}>
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm font-extrabold text-[#111827]">Hiring Applications</div>
+            <button className="flex items-center gap-1 px-3 py-1.25 bg-[#C8F04A] border-0 rounded-lg text-xs font-bold cursor-pointer hover:bg-[#b8e040] transition-colors duration-150">
               <Share2 size={12} /> Share
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="flex flex-col gap-3.5">
             <HiringRow name="Harper Lee"       role="Creative Lead"      status="processing" />
             <HiringRow name="Francis Degas"    role="Front End Developer" status="selected" />
             <HiringRow name="Leonora Carington" role="Product Manager"   status="processing" />
@@ -336,23 +250,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Bottom Row: Hiring Updates + Quick Actions ───────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="grid grid-cols-2 gap-4">
 
         {/* Hiring Updates */}
         <Card>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Hiring Updates</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="text-sm font-extrabold text-[#111827] mb-3.5">Hiring Updates</div>
+          <div className="flex flex-col gap-2.5">
             {[
               { label: 'Shortlisted Candidates' },
               { label: 'Upcoming Interviews' },
               { label: 'Rejected Applications' },
             ].map((item, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '12px 16px', background: '#F9FAFB', borderRadius: '10px', cursor: 'pointer'
-              }}>
-                <span style={{ fontSize: '13px', fontWeight: 500, color: '#374151' }}>{item.label}</span>
-                <ChevronRight size={16} color="#C8F04A" strokeWidth={2.5} />
+              <div key={i} className="flex items-center justify-between px-4 py-3 bg-[#F9FAFB] rounded-lg cursor-pointer transition-colors duration-150 hover:bg-[#F3F4F6]">
+                <span className="text-[13px] font-medium text-[#374151]">{item.label}</span>
+                <ChevronRight size={16} className="text-[#C8F04A]" strokeWidth={2.5} />
               </div>
             ))}
           </div>
@@ -360,8 +271,8 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <Card>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', marginBottom: '14px' }}>Quick Actions</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
+          <div className="text-sm font-extrabold text-[#111827] mb-3.5">Quick Actions</div>
+          <div className="grid grid-cols-3 gap-3">
             <QATile icon={FileText}       label="Contracts"   />
             <QATile icon={CreditCard}     label="Payments"    />
             <QATile icon={ShieldCheck}    label="Security"    />

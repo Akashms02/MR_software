@@ -10,7 +10,7 @@ import Footer from './Footer'
 
 export default function LandingPage() {
   return (
-    <div style={{ background: '#fff', minHeight: '100vh' }}>
+    <div className="bg-white min-h-screen">
       <Navbar />
       <HeroSection />
       <StatsBar />

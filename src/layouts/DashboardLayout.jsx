@@ -18,32 +18,19 @@ export default function DashboardLayout({ children }) {
   const isEmployee = !isSuperAdmin && !isAdmin;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F0F2F5', fontFamily: "'Inter', sans-serif" }}>
-      {/* ══════════════════════════════════════════════════════
-          SIDEBAR
-      ══════════════════════════════════════════════════════ */}
+    <div className="flex min-h-screen bg-[#F0F2F5] font-[Inter,sans-serif]">
       <Sidebar 
         isSuperAdmin={isSuperAdmin}
         isEmployee={isEmployee}
         displayName={displayName}
         displayRole={displayRole}
       />
-
-      {/* ══════════════════════════════════════════════════════
-          MAIN AREA
-      ══════════════════════════════════════════════════════ */}
-      <div style={{ marginLeft: '220px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        
-        {/* Top Header */}
+      <div className="ml-[220px] flex-1 flex flex-col min-w-0">
         <Header role={role} />
-
-        {/* Page Content */}
-        <main style={{ flex: 1, padding: '0 32px 32px 32px', overflowY: 'auto' }}>
+        <main className="flex-1 px-8 pb-8 overflow-y-auto">
           {children}
         </main>
-
       </div>
     </div>
   )
 }
-

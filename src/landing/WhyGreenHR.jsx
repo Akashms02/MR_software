@@ -7,31 +7,32 @@ const PILLARS = [
 
 export default function WhyGmaxepayHR() {
   return (
-    <section id="whyus" className="section-spacing" style={{ background: 'var(--bg-section)' }}>
-      <div className="section-container">
+    <section id="whyus" className="py-20 bg-slate-50">
+      <div className="max-w-6xl mx-auto px-4 md:px-8">
         {/* Header */}
-        <div style={{ marginBottom: '56px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="section-label">🌿 Why GmaxepayHR</div>
-          <h2 className="section-title">Built on 4 Core Pillars</h2>
-          <p className="section-sub">
+        <div className="mb-14 text-center flex flex-col items-center">
+          <div className="text-[12px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-[20px] uppercase tracking-[1px] mb-3">
+            🌿 Why GmaxepayHR
+          </div>
+          <h2 className="text-[32px] md:text-[38px] font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
+            Built on 4 Core Pillars
+          </h2>
+          <p className="text-[15px] text-gray-500 max-w-xl leading-relaxed">
             The four fundamental principles that make GmaxepayHR the preferred HRMS for pharma enterprises.
           </p>
         </div>
 
         {/* Grid */}
-        <div className="whyus-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {PILLARS.map((p, i) => (
-            <div key={i} className="pillar-card">
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '10px',
-                background: 'var(--green-light)', border: '1px solid var(--green-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '22px', marginBottom: '16px',
-              }}>{p.icon}</div>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+              <div className="w-12 h-12 rounded-[10px] bg-green-50 border border-green-200 flex items-center justify-center text-[22px] mb-4">
+                {p.icon}
+              </div>
+              <h3 className="text-[16px] font-bold text-gray-950 mb-2">
                 {p.title}
               </h3>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: 1.65 }}>{p.desc}</p>
+              <p className="text-[14px] text-gray-500 leading-[1.65]">{p.desc}</p>
             </div>
           ))}
         </div>

@@ -22,35 +22,29 @@ export default function EmployeePayslip() {
     <div>
       <SectionHeader title="My Payslips" sub="View and download your monthly payslips" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Current Payslip */}
-        <Card style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '16px', borderBottom: '1px solid #f3f4f6', marginBottom: '18px' }}>
+        <Card className="p-6">
+          <div className="flex justify-between items-start pb-4 border-b border-gray-100 mb-4.5">
             <div>
-              <div style={{ fontWeight: 800, fontSize: '18px', color: '#16a34a' }}>GmaxepayHR Pharma</div>
-              <div style={{ fontSize: '12px', color: '#9ca3af' }}>Payslip — April 2026</div>
+              <div className="font-extrabold text-[18px] text-green-600">GmaxepayHR Pharma</div>
+              <div className="text-[12px] text-gray-400">Payslip — April 2026</div>
             </div>
-            <OutlineBtn style={{ fontSize: '12px', padding: '6px 12px' }}>⬇ PDF</OutlineBtn>
+            <OutlineBtn className="text-[12px] py-1.5 px-3">⬇ PDF</OutlineBtn>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0', marginBottom: '18px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '16px' }}>👤</div>
+          <div className="flex items-center gap-3 p-3 bg-green-50/50 rounded-xl border border-green-200 mb-4.5">
+            <div className="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center text-white text-[16px]">👤</div>
             <div>
-              <div style={{ fontWeight: 700, color: '#111827', fontSize: '14px' }}>{ME.name}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>{ME.id} · {ME.dept}</div>
+              <div className="font-bold text-gray-900 text-[14px]">{ME.name}</div>
+              <div className="text-[12px] text-gray-500">{ME.id} · {ME.dept}</div>
             </div>
           </div>
 
           {breakdown(ME.salary).map(({ k, v, type }) => (
-            <div key={k} style={{
-              display: 'flex', justifyContent: 'space-between', padding: '9px 0',
-              borderBottom: '1px solid #f9fafb',
-              background: type === 'net' ? '#f0fdf4' : 'transparent',
-              paddingLeft: type === 'net' ? '8px' : 0, paddingRight: type === 'net' ? '8px' : 0,
-              borderRadius: type === 'net' ? '6px' : 0,
-            }}>
-              <span style={{ fontSize: '13px', color: type === 'ded' ? '#dc2626' : type === 'net' ? '#16a34a' : '#6b7280', fontWeight: type === 'net' ? 700 : 500 }}>{k}</span>
-              <span style={{ fontSize: '13px', color: type === 'net' ? '#16a34a' : type === 'ded' ? '#dc2626' : '#111827', fontWeight: type === 'net' ? 800 : 500 }}>
+            <div key={k} className={`flex justify-between py-2 border-b border-gray-50/50 ${type === 'net' ? 'bg-green-50/50 px-2 rounded-lg' : ''}`}>
+              <span className={`text-[13px] ${type === 'ded' ? 'text-red-600' : type === 'net' ? 'text-green-600 font-bold' : 'text-gray-500 font-medium'}`}>{k}</span>
+              <span className={`text-[13px] ${type === 'net' ? 'text-green-600 font-extrabold' : type === 'ded' ? 'text-red-600 font-medium' : 'text-gray-900 font-medium'}`}>
                 {type === 'ded' ? '−' : ''}₹{v.toLocaleString('en-IN')}
               </span>
             </div>
@@ -58,24 +52,16 @@ export default function EmployeePayslip() {
         </Card>
 
         {/* History */}
-        <Card style={{ padding: '20px' }}>
-          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginBottom: '16px' }}>Payslip History</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Card className="p-5">
+          <div className="font-bold text-[14px] text-gray-900 mb-4">Payslip History</div>
+          <div className="flex flex-col gap-2.5">
             {MONTHS.map((m, i) => (
-              <div key={m} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '12px 14px', borderRadius: '10px', background: '#f9fafb',
-                border: '1px solid #f3f4f6',
-                transition: 'border-color 0.15s, background 0.15s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#bbf7d0'; e.currentTarget.style.background = '#f0fdf4' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#f3f4f6'; e.currentTarget.style.background = '#f9fafb' }}
-              >
+              <div key={m} className="flex items-center justify-between p-3 px-3.5 rounded-xl bg-gray-50 border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-150">
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{m}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>₹{Math.round(ME.salary * 0.63).toLocaleString('en-IN')} net</div>
+                  <div className="text-[13px] font-semibold text-gray-900">{m}</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5">₹{Math.round(ME.salary * 0.63).toLocaleString('en-IN')} net</div>
                 </div>
-                <button style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                <button className="py-1 px-3 rounded-md border border-gray-200 bg-white text-gray-500 text-[12px] hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer font-medium">
                   ⬇ Download
                 </button>
               </div>
