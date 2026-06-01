@@ -149,15 +149,6 @@ const TeamManagement = () => {
             <Plus size={18} strokeWidth={3} />
             Onboard New Member
           </button>
-
-          {/* New doctor onboarding button */}
-          <button
-            onClick={() => navigate('/admin/myteam/onboard-doctor')}
-            className="flex items-center gap-2 bg-[#C8F04A] text-gray-900 px-5.5 py-3 rounded-xl border-none font-extrabold text-sm cursor-pointer shadow-[0_4px_14px_rgba(200,240,74,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(200,240,74,0.35)]"
-          >
-            <Plus size={18} strokeWidth={3} />
-            Onboard Doctor
-          </button>
         </div>
       </div>
 

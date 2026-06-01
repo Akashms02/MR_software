@@ -39,7 +39,7 @@ const geocodeAddressFree = async (q) => {
   return null;
 };
 
-const DoctorOnboarding = () => {
+const MSEDoctorOnboarding = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -113,7 +113,7 @@ const DoctorOnboarding = () => {
   const bestHomeAccRef = useRef(null);
 
   const handleCancel = () => {
-    navigate('/admin/requests');
+    navigate('/medical-sales-executive/dashboard');
   };
 
   // --- Clinic Map Initialization & Lifecycle ---
@@ -632,7 +632,7 @@ const DoctorOnboarding = () => {
       {/* Main Card Form */}
       <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_10px_25px_rgba(0,0,0,0.02)] p-9 flex flex-col gap-7">
         <div>
-          <h3 className="text-[18px] font-extrabold text-[#111827] margin: 0">
+          <h3 className="text-[18px] font-extrabold text-[#111827] m-0">
             {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Profile & Interactive Geolocation
           </h3>
           <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
@@ -795,7 +795,7 @@ const DoctorOnboarding = () => {
                 )}
 
                 {clinicGeoError && (
-                  <span className="text-[11.5px] color-[#EF4444] font-semibold mt-1">
+                  <span className="text-[11.5px] text-[#EF4444] font-semibold mt-1">
                     ⚠️ {clinicGeoError}
                   </span>
                 )}
@@ -1192,4 +1192,4 @@ const DoctorOnboarding = () => {
   );
 };
 
-export default DoctorOnboarding;
+export default MSEDoctorOnboarding;

@@ -1,26 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import {
+  punchInAction,
+  punchOutAction,
+  locationCheckInAction,
+  locationCheckOutAction,
+  fetchMyAttendanceAction,
+  fetchMyVisitsAction
+} from '../../redux/actions/attendanceActions';
+import {
+  findTodayAttendance,
+  findActiveVisit,
+  isPunchActive,
+  isVisitActive,
+  isSameCalendarDay,
+  localTodayKey,
+  visitCheckInCoords,
+} from '../../utils/attendanceUtils';
+import { fetchMeRequestsAction } from '../../redux/actions/requestActions';
+import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'mr_field_attendance_db';
 
-const HEALTHCARE_TARGETS = [
-  { id: '1', name: 'Dr. Ramesh Sharma',  type: 'Doctor',   specialty: 'Cardiology',       clinic: 'City Heart Clinic' },
-  { id: '2', name: 'Dr. Sunita Patel',   type: 'Doctor',   specialty: 'Pediatrics',        clinic: 'Metro General Hospital' },
-  { id: '3', name: 'Dr. Vivek Verma',    type: 'Doctor',   specialty: 'Orthopedics',       clinic: 'Verma Ortho Care' },
-  { id: '4', name: 'Dr. Neha Gupta',     type: 'Doctor',   specialty: 'General Physician', clinic: 'Care Clinic' },
-  { id: '5', name: 'Apollo Pharmacy',    type: 'Pharmacy', specialty: 'Chemist',           clinic: 'Indiranagar Branch' },
-  { id: '6', name: 'Wellness Medicos',   type: 'Pharmacy', specialty: 'Chemist',           clinic: 'Malleshwaram Hub' },
-  { id: '7', name: 'City Multi-Specialty Hospital', type: 'Hospital', specialty: 'Multi-Specialty', clinic: 'Jayanagar' },
-  { id: '8', name: 'Dr. Arun Mehta',    type: 'Doctor',   specialty: 'Neurology',          clinic: 'NeuroHealth Centre' },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr  = () => new Date().toISOString().split('T')[0];
 const nowTime   = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-const uid       = () => Math.random().toString(36).slice(2, 9);
-
 function readDb()      { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
 function saveDb(arr)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
@@ -43,6 +50,72 @@ function parseTimeToDate(timeStr) {
 
 function typeIcon(type) {
   return `[${type.toUpperCase()}]`;
+}
+
+function LocationStatusBar({ loading, message }) {
+  if (loading) {
+    return (
+      <div className="w-full bg-blue-50 border border-blue-200 rounded-xl px-3.5 py-2.5 flex items-center justify-center gap-2 text-[12px] font-semibold text-blue-800">
+        <Loader2 size={15} className="animate-spin shrink-0" />
+        Fetching your location…
+      </div>
+    );
+  }
+  if (message) {
+    return (
+      <div className="w-full bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-center text-[12px] font-semibold text-emerald-800">
+        {message}
+      </div>
+    );
+  }
+  return null;
+}
+
+// ─── Confirm card (replaces browser alert/confirm) ───────────────────────────
+function ConfirmCard({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel, tone = 'danger' }) {
+  const confirmBg = tone === 'danger'
+    ? 'linear-gradient(135deg,#EF4444,#DC2626)'
+    : 'linear-gradient(135deg,#3B82F6,#2563EB)';
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/55 z-[1200] flex items-center justify-center p-4"
+      onClick={onCancel}
+      role="presentation"
+    >
+      <div
+        className="bg-white rounded-3xl w-full max-w-[400px] overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.28)] animate-[modalIn_0.25s_ease-out]"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-card-title"
+      >
+        <div className={`px-5.5 py-4.5 ${tone === 'danger' ? 'bg-gradient-to-br from-red-800 to-red-600' : 'bg-gradient-to-br from-blue-900 to-blue-500'}`}>
+          <h3 id="confirm-card-title" className="m-0 text-white font-extrabold text-[17px]">{title}</h3>
+        </div>
+        <div className="p-5.5">
+          <p className="m-0 text-[14px] text-gray-600 leading-relaxed">{message}</p>
+          <div className="grid grid-cols-2 gap-3 mt-5">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="py-3 rounded-2xl border border-gray-200 bg-white text-gray-700 font-bold text-[14px] cursor-pointer hover:bg-gray-50"
+            >
+              {cancelLabel}
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="py-3 rounded-2xl border-none text-white font-extrabold text-[14px] cursor-pointer shadow-[0_4px_14px_rgba(239,68,68,0.3)]"
+              style={{ background: confirmBg }}
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Toast ─────────────────────────────────────────────────────────────────────
@@ -141,28 +214,23 @@ function PhotoCaptureModal({ title, onDone, onClose }) {
   );
 }
 
-// ─── Visit Check-In Modal ─────────────────────────────────────────────────────
-function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
+// ─── Visit Check-In Modal (Visit In → POST /attendance/location/check-in) ─────
+function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTargets = [], targetsLoading, onRequestOnboarding }) {
   const [search, setSearch]       = useState('');
   const [selectedId, setSelectedId] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [customType, setCustomType] = useState('Doctor');
-  const [isCustom, setIsCustom]   = useState(false);
   const [notes, setNotes]         = useState('');
   const [photo, setPhoto]         = useState(null);
   const [showPhoto, setShowPhoto] = useState(false);
 
-  const filtered = HEALTHCARE_TARGETS.filter(t =>
+  const filtered = visitTargets.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.type.toLowerCase().includes(search.toLowerCase()) ||
-    t.clinic.toLowerCase().includes(search.toLowerCase())
+    t.specialty?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedTarget = isCustom
-    ? { id: uid(), name: customName, type: customType, specialty: customType, clinic: '' }
-    : HEALTHCARE_TARGETS.find(t => t.id === selectedId);
+  const selectedTarget = visitTargets.find(t => String(t.id) === String(selectedId));
 
-  const canSubmit = isCustom ? customName.trim().length > 0 : !!selectedId;
+  const canSubmit = !!selectedId && !!selectedTarget;
 
   return (
     <div className="fixed inset-0 bg-black/55 z-[1000] flex items-center justify-center p-4">
@@ -172,64 +240,73 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
         <div className="bg-gradient-to-br from-blue-900 to-blue-500 px-5.5 py-4.5 flex justify-between items-center shrink-0">
           <div>
             <div className="text-white/70 text-[11px] font-bold tracking-wider">FIELD VISIT</div>
-            <div className="text-white font-extrabold text-[16px]">Visit Check-In</div>
+            <div className="text-white font-extrabold text-[16px]">Visit In</div>
           </div>
           <button onClick={onClose} className="bg-white/20 border-none text-white rounded-xl px-3 py-1.5 cursor-pointer text-[15px]">✕</button>
         </div>
 
         <div className="p-5.5 flex flex-col gap-4 overflow-y-auto flex-1">
 
-          {/* Location + Time Strip */}
-          <div className="bg-[#F0FDF4] rounded-xl px-3.5 py-3 flex gap-4 text-[12px] font-bold text-[#065F46]">
-            <span>GPS Location Verified</span>
-            <span>Time: {new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true })}</span>
-            {gpsLoading && <span className="text-blue-500">Getting location...</span>}
-          </div>
+          <LocationStatusBar loading={gpsLoading} message={!gpsLoading ? gpsMessage : ''} />
+          {!gpsLoading && !gpsMessage && (
+            <div className="bg-[#F0FDF4] rounded-xl px-3.5 py-2.5 text-[12px] font-semibold text-[#065F46] text-center">
+              Time: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+            </div>
+          )}
 
-          {/* Search / Select Target */}
-          {!isCustom ? (
-            <div>
-              <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Search Doctor / Hospital / Pharmacy</label>
-              <input
-                type="text" value={search} onChange={e => { setSearch(e.target.value); setSelectedId(''); }}
-                placeholder="Type to search..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border mb-2"
-                autoFocus
-              />
-              <div className="max-h-[180px] overflow-y-auto flex flex-col gap-1.5 border border-gray-105 rounded-xl p-2">
-                {filtered.map(t => (
-                  <div key={t.id} onClick={() => { setSelectedId(t.id); setSearch(t.name); }}
+          {/* Approved onboarding targets (doctor / chemist) */}
+          <div>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">
+              Approved doctors &amp; chemists
+              <span className="text-gray-400 font-medium ml-1">(from onboarding requests)</span>
+            </label>
+            <input
+              type="text" value={search} onChange={e => { setSearch(e.target.value); setSelectedId(''); }}
+              placeholder="Search approved targets..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border mb-2"
+              autoFocus
+              disabled={targetsLoading}
+            />
+            <div className="max-h-[200px] overflow-y-auto flex flex-col gap-1.5 border border-gray-105 rounded-xl p-2">
+              {targetsLoading ? (
+                <p className="text-center text-[12px] text-gray-400 py-4 m-0">Loading approved list…</p>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-4 px-2">
+                  <p className="m-0 text-[12px] text-gray-500 font-semibold">No approved doctors or chemists yet.</p>
+                  <p className="m-0 mt-1 text-[11px] text-gray-400">Submit an onboarding request and wait for admin approval.</p>
+                  {onRequestOnboarding && (
+                    <button
+                      type="button"
+                      onClick={onRequestOnboarding}
+                      className="mt-2.5 px-3 py-2 rounded-lg border-none bg-blue-600 text-white text-[12px] font-bold cursor-pointer"
+                    >
+                      Request onboarding
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filtered.map(t => (
+                  <div
+                    key={t.id}
+                    onClick={() => { setSelectedId(String(t.id)); setSearch(t.name); }}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 border ${
-                      selectedId === t.id ? 'bg-[#EFF6FF] border-[#3B82F6]' : 'bg-[#FAFAFA] border-transparent'
+                      String(selectedId) === String(t.id) ? 'bg-[#EFF6FF] border-[#3B82F6]' : 'bg-[#FAFAFA] border-transparent'
                     }`}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 uppercase">{t.type.toUpperCase()}</span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">Approved</span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 uppercase">{t.type}</span>
                         <span className="text-[13px] font-bold text-gray-800">{t.name}</span>
                       </div>
-                      <div className="text-[11px] text-gray-400 mt-0.5">{t.clinic} · {t.specialty}</div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">{t.specialty}</div>
                     </div>
-                    {selectedId === t.id && <span className="text-blue-500 text-[16px]">✓</span>}
+                    {String(selectedId) === String(t.id) && <span className="text-blue-500 text-[16px]">✓</span>}
                   </div>
-                ))}
-                <button onClick={() => setIsCustom(true)} className="p-2 rounded-lg border border-dashed border-gray-300 bg-[#F9FAFB] text-gray-500 font-semibold text-[12px] cursor-pointer text-center">
-                  + Custom Visit Target
-                </button>
-              </div>
+                ))
+              )}
             </div>
-          ) : (
-            <div className="border border-gray-200 rounded-2xl p-3.5 flex flex-col gap-2.5">
-              <div className="flex justify-between items-center">
-                <span className="font-extrabold text-[13px] text-gray-800">Custom Visit Target</span>
-                <button onClick={() => setIsCustom(false)} className="bg-transparent border-none text-blue-500 text-[12px] cursor-pointer font-semibold">Back to list</button>
-              </div>
-              <input type="text" value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Doctor / Hospital / Pharmacy name..." className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" autoFocus />
-              <select value={customType} onChange={e => setCustomType(e.target.value)} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border">
-                {['Doctor','Hospital','Pharmacy','Clinic','Lab'].map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-          )}
+          </div>
 
           {/* Notes */}
           <div>
@@ -264,7 +341,13 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
                 : 'bg-gradient-to-br from-blue-900 to-blue-500 text-white cursor-pointer shadow-[0_4px_16px_rgba(59,130,246,0.35)]'
             }`}
           >
-            {gpsLoading ? 'Getting Location...' : 'Confirm Check-In'}
+            {gpsLoading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin" /> Fetching location…
+              </span>
+            ) : (
+              'Confirm Visit In'
+            )}
           </button>
         </div>
       </div>
@@ -281,7 +364,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading }) {
 }
 
 // ─── Visit Check-Out Modal ─────────────────────────────────────────────────────
-function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading }) {
+function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }) {
   const [products,  setProducts]  = useState('');
   const [samples,   setSamples]   = useState('');
   const [feedback,  setFeedback]  = useState('');
@@ -292,17 +375,20 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading }) {
         <div className="bg-gradient-to-br from-emerald-800 to-emerald-600 px-5.5 py-4.5 flex justify-between items-center shrink-0">
           <div>
             <div className="text-white/70 text-[11px] font-bold">VISIT COMPLETE</div>
-            <div className="text-white font-extrabold text-[16px]">Check-Out</div>
+            <div className="text-white font-extrabold text-[16px]">Visit Out</div>
           </div>
           <button onClick={onClose} className="bg-white/20 border-none text-white rounded-xl px-3 py-1.5 cursor-pointer text-[15px]">✕</button>
         </div>
         <div className="p-5.5 flex flex-col gap-3.5 overflow-y-auto flex-1">
+          <LocationStatusBar loading={gpsLoading} message={!gpsLoading ? gpsMessage : ''} />
           {/* Visit Summary */}
           <div className="bg-[#F0FDF4] rounded-xl p-3.5 flex flex-col gap-1">
             <div className="text-[10px] font-extrabold text-[#047857] tracking-wider uppercase">{visit.type.toUpperCase()}</div>
             <div>
               <div className="font-extrabold text-[14px] text-gray-900">{visit.name}</div>
-              <div className="text-[12px] text-gray-500">{visit.clinic} · Checked-in at <strong>{visit.checkInTime}</strong></div>
+              <div className="text-[12px] text-gray-500">
+                {visit.specialty ? `${visit.specialty} · ` : ''}Visit in at <strong>{visit.checkInTime}</strong>
+              </div>
             </div>
           </div>
 
@@ -329,7 +415,13 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading }) {
               gpsLoading ? 'bg-gray-350 cursor-not-allowed shadow-none' : 'bg-emerald-600 cursor-pointer shadow-[0_4px_16px_rgba(5,150,105,0.3)]'
             }`}
           >
-            {gpsLoading ? 'Getting Location...' : 'Confirm Check-Out'}
+            {gpsLoading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin" /> Fetching location…
+              </span>
+            ) : (
+              'Confirm Visit Out'
+            )}
           </button>
         </div>
       </div>
@@ -366,11 +458,18 @@ export default function MRDashboard() {
   const mrName    = user?.fullName || user?.name || 'Akash Kumar';
 
   // ── State ──────────────────────────────────────────────────────────────────
-  const [db,          setDb]          = useState([]);
-  const [activeDay,   setActiveDay]   = useState(null);
-  const [activeVisit, setActiveVisit] = useState(null);
+  const dispatch = useDispatch();
+  const { myAttendance = [], myVisits = [], loading } = useSelector(state => state.attendance || {});
+  const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
+  const approvedVisitTargets = useMemo(
+    () => getApprovedVisitTargets(requests),
+    [requests]
+  );
+
   const [toast,       setToast]       = useState(null);
-  const [gpsLoading,  setGpsLoading]  = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState('');
+  const [gpsAction, setGpsAction] = useState(null);
 
   // timer
   const [elapsed, setElapsed] = useState(0); // seconds since day start
@@ -378,47 +477,87 @@ export default function MRDashboard() {
 
   // modals
   const [modal, setModal] = useState(null); // null | 'visitIn' | 'visitOut'
+  const [punchOutConfirmOpen, setPunchOutConfirmOpen] = useState(false);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const todayDateKey = localTodayKey();
+  const formatIsoToTime = (isoStr) => {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const mapVisitFromApi = (v) => {
+    const inCoords = visitCheckInCoords(v);
+    return {
+      id: v.id,
+      name: v.targetName || v.name || 'Unknown Target',
+      type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
+      specialty: v.specialty || '',
+      checkInTime: formatIsoToTime(v.checkInTime),
+      checkInCoords: inCoords || { lat: null, lng: null },
+      checkOutTime: formatIsoToTime(v.checkOutTime),
+      status: isVisitActive(v) ? 'ACTIVE' : 'COMPLETED',
+      products: v.productsDiscussed || v.products || '',
+      samples: v.samplesGiven || v.samples || '',
+      feedback: v.feedback || '',
+    };
+  };
+
+  const todayAttendance = findTodayAttendance(myAttendance, todayDateKey);
+
+  const todayVisitsFromApi = myVisits.filter(
+    (v) => v.checkInTime && isSameCalendarDay(v.checkInTime, todayDateKey)
+  );
+
+  const mappedTodayVisits = todayVisitsFromApi.map(mapVisitFromApi);
+
+  const activeDay = todayAttendance
+    ? {
+        status: isPunchActive(todayAttendance) ? 'ACTIVE' : 'ENDED',
+        startTime: formatIsoToTime(todayAttendance.punchInTime),
+        endTime: formatIsoToTime(todayAttendance.punchOutTime),
+        punchInTime: todayAttendance.punchInTime,
+        startLocation: {
+          lat: todayAttendance.punchInLatitude,
+          lng: todayAttendance.punchInLongitude,
+          name: todayAttendance.punchInRemarks || 'GPS Location',
+        },
+        endLocation: todayAttendance.punchOutTime
+          ? {
+              lat: todayAttendance.punchOutLatitude,
+              lng: todayAttendance.punchOutLongitude,
+              name: todayAttendance.punchOutRemarks || 'GPS Location',
+            }
+          : null,
+        visits: mappedTodayVisits,
+      }
+    : null;
+
+  const activeVisitRecord = findActiveVisit(myVisits, todayDateKey);
+  const activeVisit = activeVisitRecord ? mapVisitFromApi(activeVisitRecord) : null;
 
   // ── Init ───────────────────────────────────────────────────────────────────
-  useEffect(() => { load(); }, []);
-
-  const load = () => {
-    const data = readDb();
-    let rec = data.find(r => r.mrId === mrId && r.date === todayStr());
-    
-    // For testing: automatically make status "ACTIVE" (checked in) on refresh if not already active
-    if (!rec || rec.status !== 'ACTIVE') {
-      rec = {
-        id: `${mrId}-${todayStr()}`,
-        mrId,
-        mrName,
-        date: todayStr(),
-        status: 'ACTIVE',
-        startTime: rec?.startTime || '09:00 AM',
-        startLocation: rec?.startLocation || { lat: 12.9716, lng: 77.5946, name: 'Office Check-in (Auto)' },
-        endTime: null,
-        endLocation: null,
-        visits: rec?.visits || [],
-      };
-      const updated = [...data.filter(r => !(r.mrId === mrId && r.date === todayStr())), rec];
-      saveDb(updated);
-      setDb(updated);
-    } else {
-      setDb(data);
-    }
-
-    setActiveDay(rec);
-    const av = rec.visits?.find(v => v.status === 'ACTIVE');
-    setActiveVisit(av || null);
-  };
+  useEffect(() => {
+    dispatch(fetchMyAttendanceAction());
+    dispatch(fetchMyVisitsAction());
+    dispatch(fetchMeRequestsAction());
+  }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
   useEffect(() => {
     clearInterval(timerRef.current);
-    if (activeDay && activeDay.status === 'ACTIVE') {
-      const start = parseTimeToDate(activeDay.startTime);
+    if (activeDay && activeDay.status === 'ACTIVE' && activeDay.punchInTime) {
+      const start = new Date(activeDay.punchInTime);
       const tick = () => {
-        if (start) setElapsed(Math.floor((Date.now() - start.getTime()) / 1000));
+        if (start && !isNaN(start.getTime())) {
+          const diff = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
+          setElapsed(diff);
+        }
       };
       tick();
       timerRef.current = setInterval(tick, 1000);
@@ -426,112 +565,147 @@ export default function MRDashboard() {
       setElapsed(0);
     }
     return () => clearInterval(timerRef.current);
-  }, [activeDay]);
+  }, [activeDay?.status, activeDay?.punchInTime]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  const getGps = () => new Promise(res => {
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      p  => { setGpsLoading(false); res({ lat: p.coords.latitude,  lng: p.coords.longitude }); },
-      () => { setGpsLoading(false); res({ lat: 12.9716 + (Math.random() - 0.5) * 0.01, lng: 77.5946 + (Math.random() - 0.5) * 0.01 }); },
-      { timeout: 8000 }
-    );
-  });
+  const clearGpsFeedback = (delay = 2500) => {
+    setTimeout(() => {
+      setGpsMessage('');
+      setGpsAction(null);
+    }, delay);
+  };
 
-  const persist = (updatedDb) => { saveDb(updatedDb); setDb(updatedDb); };
+  const getGps = (actionKey) =>
+    new Promise((res) => {
+      setGpsLoading(true);
+      setGpsAction(actionKey);
+      setGpsMessage('');
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          setGpsLoading(false);
+          setGpsMessage('Location captured successfully');
+          showToast('Location captured successfully', 'success');
+          clearGpsFeedback();
+          res({ lat: p.coords.latitude, lng: p.coords.longitude });
+        },
+        () => {
+          setGpsLoading(false);
+          setGpsMessage('GPS unavailable — using approximate location');
+          showToast('GPS unavailable — using approximate location', 'success');
+          clearGpsFeedback(3000);
+          res({
+            lat: 12.9716 + (Math.random() - 0.5) * 0.01,
+            lng: 77.5946 + (Math.random() - 0.5) * 0.01,
+          });
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    });
+
+  const btnLabel = (defaultLabel, actionKey) => {
+    if (gpsLoading && gpsAction === actionKey) {
+      return (
+        <span className="inline-flex items-center gap-2">
+          <Loader2 size={15} className="animate-spin" />
+          Fetching location…
+        </span>
+      );
+    }
+    return defaultLabel;
+  };
 
   // ── Actions ────────────────────────────────────────────────────────────────
   const handleStartDay = async () => {
-    const coords = await getGps();
-    const data   = readDb();
-    const rec    = {
-      id: `${mrId}-${todayStr()}`,
-      mrId, mrName, date: todayStr(), status: 'ACTIVE',
-      startTime: nowTime(), startLocation: { ...coords, name: 'GPS Location' },
-      endTime: null, endLocation: null, visits: [],
-    };
-    const updated = [...data.filter(r => !(r.mrId === mrId && r.date === todayStr())), rec];
-    persist(updated);
-    setActiveDay(rec);
-    showToast(`Day started at ${rec.startTime} ✅`);
+    const coords = await getGps('punchIn');
+    try {
+      const res = await dispatch(
+        punchInAction({
+          latitude: coords.lat,
+          longitude: coords.lng,
+          workType: 'FIELD_WORK',
+          remarks: 'Punching in from dashboard',
+        })
+      );
+      const time = formatIsoToTime(res?.data?.punchInTime || new Date());
+      showToast(`Day started at ${time} ✅`);
+      // State is updated by punchInAction; refetch can race and clear UI if API lags
+    } catch (err) {
+      showToast(err.message || 'Failed to punch in', 'error');
+    }
   };
 
-  const handleEndDay = async () => {
-    if (!window.confirm('End your workday? No more check-ins will be possible today.')) return;
-    const coords  = await getGps();
-    const data    = readDb();
-    const updated = data.map(r =>
-      r.mrId === mrId && r.date === todayStr()
-        ? { ...r, status: 'ENDED', endTime: nowTime(), endLocation: { ...coords, name: 'GPS Location' } }
-        : r
-    );
-    persist(updated);
-    const rec = updated.find(r => r.mrId === mrId && r.date === todayStr());
-    setActiveDay(rec);
-    showToast('Day ended successfully 🏁');
+  const handleEndDay = () => {
+    setPunchOutConfirmOpen(true);
+  };
+
+  const confirmEndDay = async () => {
+    setPunchOutConfirmOpen(false);
+    const coords = await getGps('punchOut');
+    try {
+      await dispatch(
+        punchOutAction({
+          latitude: coords.lat,
+          longitude: coords.lng,
+          remarks: 'Punching out from dashboard',
+        })
+      );
+      showToast('Day ended successfully 🏁');
+    } catch (err) {
+      showToast(err.message || 'Failed to punch out', 'error');
+    }
   };
 
   const handleVisitCheckIn = async ({ target, notes, photo }) => {
-    const coords = await getGps();
-    const visit  = {
-      id: uid(), name: target.name, type: target.type,
-      specialty: target.specialty, clinic: target.clinic,
-      checkInTime: nowTime(), checkInCoords: coords,
-      checkInPhoto: photo, checkInNotes: notes,
-      status: 'ACTIVE', checkOutTime: null, checkOutCoords: null,
-      products: '', samples: '', feedback: '',
-    };
-    const data    = readDb();
-    const updated = data.map(r =>
-      r.mrId === mrId && r.date === todayStr()
-        ? { ...r, visits: [...(r.visits || []), visit] }
-        : r
-    );
-    persist(updated);
-    const rec = updated.find(r => r.mrId === mrId && r.date === todayStr());
-    setActiveDay(rec);
-    setActiveVisit(visit);
-    setModal(null);
-    showToast(`Checked in at ${target.name} ✅`);
+    const coords = await getGps('visitIn');
+    try {
+      await dispatch(
+        locationCheckInAction({
+          visitType: target.apiType || (target.type === 'Pharmacy' ? 'CHEMIST' : 'DOCTOR'),
+          targetId: Number(target.id),
+          latitude: coords.lat,
+          longitude: coords.lng,
+        })
+      );
+      setModal(null);
+      showToast(`Visit started at ${target.name} ✅`);
+    } catch (err) {
+      showToast(err.message || 'Failed to start visit', 'error');
+    }
   };
 
   const handleVisitCheckOut = async ({ products, samples, feedback }) => {
-    const coords  = await getGps();
-    const data    = readDb();
-    const updated = data.map(r => {
-      if (r.mrId !== mrId || r.date !== todayStr()) return r;
-      return {
-        ...r,
-        visits: r.visits.map(v =>
-          v.id === activeVisit.id
-            ? { ...v, status: 'COMPLETED', checkOutTime: nowTime(), checkOutCoords: coords, products, samples, feedback }
-            : v
-        )
-      };
-    });
-    persist(updated);
-    const rec = updated.find(r => r.mrId === mrId && r.date === todayStr());
-    setActiveDay(rec);
-    setActiveVisit(null);
-    setModal(null);
-    showToast(`Checked out from ${activeVisit.name} ✅`);
+    const coords = await getGps('visitOut');
+    try {
+      await dispatch(
+        locationCheckOutAction({
+          latitude: coords.lat,
+          longitude: coords.lng,
+          productsDiscussed: products,
+          samplesGiven: samples,
+          feedback: feedback,
+        })
+      );
+      setModal(null);
+      showToast(`Visit completed at ${activeVisit?.name || 'location'} ✅`);
+    } catch (err) {
+      showToast(err.message || 'Failed to complete visit', 'error');
+    }
   };
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const ds            = !activeDay ? 'NOT_STARTED' : activeDay.status; // 'NOT_STARTED'|'ACTIVE'|'ENDED'
   const todayVisits   = activeDay?.visits || [];
   const doneVisits    = todayVisits.filter(v => v.status === 'COMPLETED');
-  const allCompleted  = db.filter(r => r.mrId === mrId).flatMap(r => r.visits?.filter(v => v.status === 'COMPLETED') || []);
-  const daysWorked    = db.filter(r => r.mrId === mrId && r.status !== 'NOT_STARTED').length;
+  const allCompleted  = myVisits.filter(v => v.status === 'COMPLETED').map(mapVisitFromApi);
+  const daysWorked    = myAttendance.length;
 
-  // Filter planned upcoming calls from HEALTHCARE_TARGETS that have not been visited today
-  const upcomingCalls = HEALTHCARE_TARGETS.filter(target => 
-    !todayVisits.some(v => v.name === target.name)
+  // Planned calls = approved onboarding targets not yet visited today
+  const upcomingCalls = approvedVisitTargets.filter(
+    (target) => !todayVisits.some((v) => v.name === target.name)
   );
   const mockTimes = ['10:30 AM', '12:00 PM', '02:30 PM', '04:00 PM', '05:30 PM'];
 
@@ -581,7 +755,6 @@ export default function MRDashboard() {
         
         {/* Left Card: Operations Control */}
         <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col">
-          {/* Header */}
           <div className="bg-slate-50 border-b border-gray-200 px-5 py-3.5 flex justify-between items-center shrink-0">
             <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Operations Control</span>
             <span className={`text-[11px] font-bold px-3 py-1 rounded-2xl ${ds === 'ACTIVE' ? 'bg-[#DCFCE7] text-[#15803D]' : ds === 'ENDED' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}>
@@ -590,8 +763,6 @@ export default function MRDashboard() {
           </div>
 
           <div className="p-6 flex flex-col items-center gap-5 justify-center flex-1">
-            
-            {/* Live Timer Clock */}
             <div className="text-center">
               <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                 {ds === 'ACTIVE' ? 'Time Elapsed' : ds === 'ENDED' ? 'Workday Duration' : 'Timer Ready'}
@@ -606,58 +777,55 @@ export default function MRDashboard() {
               )}
             </div>
 
-            {/* Action Buttons Grid - Exactly Two Buttons */}
+            {(gpsLoading || gpsMessage) && (
+              <LocationStatusBar loading={gpsLoading} message={!gpsLoading ? gpsMessage : ''} />
+            )}
+
             <div className="grid grid-cols-2 gap-3 w-full">
-              
-              {/* Button 1: Workday Attendance Control (Check In / Check Out) */}
               {ds === 'NOT_STARTED' || ds === 'ENDED' ? (
-                <Btn 
-                  onClick={handleStartDay} 
-                  disabled={gpsLoading} 
-                  bg="linear-gradient(135deg,#10B981,#059669)" 
-                  shadow="rgba(16,185,129,0.25)" 
-                  label="Check In" 
+                <Btn
+                  onClick={handleStartDay}
+                  disabled={gpsLoading}
+                  bg="linear-gradient(135deg,#10B981,#059669)"
+                  shadow="rgba(16,185,129,0.25)"
+                  label={btnLabel('Check In', 'punchIn')}
                 />
               ) : (
-                <Btn 
-                  onClick={handleEndDay} 
-                  disabled={gpsLoading || !!activeVisit} 
-                  bg="linear-gradient(135deg,#EF4444,#DC2626)" 
-                  shadow="rgba(239,68,68,0.25)" 
-                  label="Check Out"
+                <Btn
+                  onClick={handleEndDay}
+                  disabled={gpsLoading || !!activeVisit}
+                  bg="linear-gradient(135deg,#EF4444,#DC2626)"
+                  shadow="rgba(239,68,68,0.25)"
+                  label={btnLabel('Check Out', 'punchOut')}
                   title={activeVisit ? 'Check out of your current visit first' : ''}
                 />
               )}
 
-              {/* Button 2: Visit Control (Visit In / Visit Out) */}
               {!activeVisit ? (
-                <Btn 
-                  onClick={() => setModal('visitIn')} 
-                  disabled={ds !== 'ACTIVE'} 
-                  bg="linear-gradient(135deg,#3B82F6,#2563EB)" 
-                  shadow="rgba(59,130,246,0.25)" 
-                  label="Visit In" 
+                <Btn
+                  onClick={() => setModal('visitIn')}
+                  disabled={ds !== 'ACTIVE' || gpsLoading}
+                  bg="linear-gradient(135deg,#3B82F6,#2563EB)"
+                  shadow="rgba(59,130,246,0.25)"
+                  label={gpsLoading && gpsAction === 'visitIn' ? btnLabel('Visit In', 'visitIn') : 'Visit In'}
                 />
               ) : (
-                <Btn 
-                  onClick={() => setModal('visitOut')} 
-                  disabled={ds !== 'ACTIVE'} 
-                  bg="linear-gradient(135deg,#F97316,#EA580C)" 
-                  shadow="rgba(249,115,22,0.25)" 
-                  label="Visit Out" 
-                  pulse 
+                <Btn
+                  onClick={() => setModal('visitOut')}
+                  disabled={ds !== 'ACTIVE' || gpsLoading}
+                  bg="linear-gradient(135deg,#F97316,#EA580C)"
+                  shadow="rgba(249,115,22,0.25)"
+                  label="Visit Out"
+                  pulse
                 />
               )}
-
             </div>
 
-            {/* Active Visit Mini-Status */}
             {activeVisit && (
               <div className="w-full bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl px-3.5 py-2.5 text-[12px] text-[#C2410C] text-center font-semibold">
                 Active visit: {activeVisit.name} (since {activeVisit.checkInTime})
               </div>
             )}
-
           </div>
         </div>
 
@@ -726,11 +894,23 @@ export default function MRDashboard() {
             </button>
           </div>
 
-          {upcomingCalls.length === 0 ? (
+          {approvedVisitTargets.length === 0 ? (
+            <div className="text-center p-10 px-5 text-blue-800 bg-[#EFF6FF] rounded-xl border border-[#BFDBFE] flex-1 flex flex-col justify-center">
+              <div className="font-extrabold text-[14.5px] mt-1.5">No approved visit targets yet</div>
+              <div className="text-[12px] text-[#1D4ED8] mt-1">Submit a doctor or chemist onboarding request and wait for approval to plan field visits.</div>
+              <button
+                type="button"
+                onClick={() => navigate('/mr/onboard-doctor')}
+                className="mt-3 mx-auto px-4 py-2 rounded-xl border-none bg-blue-600 text-white text-[12px] font-bold cursor-pointer"
+              >
+                Request onboarding
+              </button>
+            </div>
+          ) : upcomingCalls.length === 0 ? (
             <div className="text-center p-10 px-5 text-emerald-600 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] flex-1 flex flex-col justify-center">
               <span className="text-[24px]">🎉</span>
               <div className="font-extrabold text-[14.5px] mt-1.5">All Planned Calls Completed!</div>
-              <div className="text-[12px] text-[#047857] mt-1">You have visited all scheduled doctor and chemist sites for today. Good work!</div>
+              <div className="text-[12px] text-[#047857] mt-1">You have visited all approved doctor and chemist sites for today. Good work!</div>
             </div>
           ) : (
             <div className="upcoming-calls-container flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -755,7 +935,7 @@ export default function MRDashboard() {
                         <span className="text-[13px] font-extrabold text-gray-800">{target.name}</span>
                       </div>
                       <div className="text-[11.5px] text-gray-500 mt-0.5">
-                        {target.clinic} · <span className="text-blue-500 font-semibold">{target.specialty}</span>
+                        <span className="text-blue-500 font-semibold">{target.specialty}</span>
                       </div>
                     </div>
                   </div>
@@ -771,7 +951,7 @@ export default function MRDashboard() {
           {/* Quick Links */}
           <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
             <h3 className="m-0 mb-2.5 text-[13.5px] font-extrabold text-gray-800">Quick Links</h3>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5 mb-2.5">
               {[
                 { label:'View Attendance', fn: () => navigate('/mr/attendance') },
                 { label:'Submit Allowance',    fn: () => {} },
@@ -787,6 +967,12 @@ export default function MRDashboard() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => navigate('/mr/onboard-doctor')}
+              className="w-full py-2.5 rounded-xl border-none bg-blue-600 hover:bg-blue-700 text-white font-bold text-[12px] cursor-pointer text-center transition-all flex items-center justify-center gap-1.5"
+            >
+              ➕ Request Doctor Onboarding
+            </button>
           </div>
 
           {/* Upcoming Holidays */}
@@ -820,9 +1006,24 @@ export default function MRDashboard() {
 
 
       {/* ── Modals ───────────────────────────────────────────────────────── */}
+      {punchOutConfirmOpen && (
+        <ConfirmCard
+          title="End workday?"
+          message="You will not be able to check in again today. Please finish any open visit before checking out."
+          confirmLabel="Check Out"
+          cancelLabel="Cancel"
+          onConfirm={confirmEndDay}
+          onCancel={() => setPunchOutConfirmOpen(false)}
+          tone="danger"
+        />
+      )}
       {modal === 'visitIn' && (
         <VisitCheckInModal
           gpsLoading={gpsLoading}
+          gpsMessage={gpsMessage}
+          visitTargets={approvedVisitTargets}
+          targetsLoading={requestsLoading}
+          onRequestOnboarding={() => { setModal(null); navigate('/mr/onboard-doctor'); }}
           onSubmit={handleVisitCheckIn}
           onClose={() => setModal(null)}
         />
@@ -831,6 +1032,7 @@ export default function MRDashboard() {
         <VisitCheckOutModal
           visit={activeVisit}
           gpsLoading={gpsLoading}
+          gpsMessage={gpsMessage}
           onSubmit={handleVisitCheckOut}
           onClose={() => setModal(null)}
         />
@@ -849,19 +1051,22 @@ export default function MRDashboard() {
 
 // ─── Reusable Button ───────────────────────────────────────────────────────────
 function Btn({ label, onClick, disabled, bg, shadow, pulse, title }) {
+  const isLoadingLabel = typeof label !== 'string';
   return (
     <button 
       onClick={onClick} 
       disabled={disabled} 
       title={title}
-      className={`px-5.5 py-3 rounded-2xl border-none font-extrabold text-[14px] transition-all duration-200 flex items-center gap-2 justify-center whitespace-nowrap ${
-        disabled 
+      className={`px-5.5 py-3 rounded-2xl border-none font-extrabold text-[14px] transition-all duration-200 flex items-center gap-2 justify-center whitespace-nowrap min-h-[48px] ${
+        disabled && !isLoadingLabel
           ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
-          : 'text-white cursor-pointer'
+          : disabled && isLoadingLabel
+            ? 'bg-gray-400 text-white cursor-wait shadow-none'
+            : 'text-white cursor-pointer'
       } ${pulse && !disabled ? 'animate-[btnPulse_2s_infinite]' : ''}`}
       style={{ 
-        background: disabled ? undefined : bg, 
-        boxShadow: disabled ? 'none' : `0 4px 14px ${shadow}` 
+        background: disabled && !isLoadingLabel ? undefined : isLoadingLabel ? '#94A3B8' : bg, 
+        boxShadow: disabled && !isLoadingLabel ? 'none' : isLoadingLabel ? 'none' : `0 4px 14px ${shadow}` 
       }}
     >
       {label}

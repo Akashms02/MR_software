@@ -7,6 +7,8 @@ import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import MSETourPlanPage from '../../pages/medical-sales-executive/MSETourPlanPage'
+import MSEDoctorOnboarding from '../../pages/medical-sales-executive/MSEDoctorOnboarding'
+import MSERequestsPage from '../../pages/medical-sales-executive/MSERequestsPage'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -22,7 +24,9 @@ export default function MedicalSalesExecutiveLayoutRouter() {
         <Route path="/" element={<MedicalSalesExecutiveDashboard />} />
         <Route path="dashboard" element={<MedicalSalesExecutiveDashboard />} />
         <Route path="tourplan" element={<MSETourPlanPage />} />
+        <Route path="requests" element={<MSERequestsPage />} />
         <Route path="reports" element={<MSEReports />} />
+        <Route path="onboard-doctor" element={<MSEDoctorOnboarding />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />

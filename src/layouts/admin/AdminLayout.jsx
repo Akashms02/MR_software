@@ -16,7 +16,8 @@ import {
   BarChart2,
   Map,
   Calendar,
-  Navigation
+  Navigation,
+  UserPlus
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
@@ -62,6 +63,7 @@ export default function AdminLayout({ children }) {
 
   const navItems = [
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/admin/dashboard' },
+    { id: 'requests',     icon: UserPlus,        label: 'Onboarding Requests', path: '/admin/requests' },
     { id: 'employees',    icon: Users,           label: 'Employees',     path: '/admin/employees' },
     { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },
     { id: 'reports',      icon: BarChart2,       label: 'Reports & Analytics', path: '/admin/reports' },
