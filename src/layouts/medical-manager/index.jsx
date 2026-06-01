@@ -5,7 +5,7 @@ import MedicalManagerDashboard from '../../pages/medical-manager/MedicalManagerD
 import EmployeePayslip from '../../pages/employee/EmployeePayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
-import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
+import MMDoctorOnboarding from '../../pages/medical-manager/MMDoctorOnboarding'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -23,7 +23,7 @@ export default function MedicalManagerLayoutRouter() {
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
-        <Route path="onboard-doctor" element={<DoctorOnboarding />} />
+        <Route path="onboard-doctor" element={<MMDoctorOnboarding />} />
         <Route path="settings" element={<SettingsPlaceholder />} />
         <Route path="*" element={<Navigate to="/medical-manager/dashboard" replace />} />
       </Routes>

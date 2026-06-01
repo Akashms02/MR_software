@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const MedicalSalesExecutiveDashboard = () => {
+  const navigate = useNavigate();
   const stats = [
     { label: 'Monthly Sales Target', value: '₹2.4L / ₹4.0L', sub: '60% Achieved', color: 'text-teal-600', bg: 'bg-teal-50', icon: '📈' },
     { label: 'Distributor Orders', value: '18 Booked', sub: 'This Week', color: 'text-blue-500', bg: 'bg-blue-50', icon: '🛒' },
@@ -90,7 +92,13 @@ const MedicalSalesExecutiveDashboard = () => {
         <div className="bg-white border border-gray-100 rounded-[18px] p-6" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
           <h3 className="m-0 mb-4 text-base font-extrabold text-gray-800">Sales Actions</h3>
           <div className="flex flex-col gap-2.5">
-            <button className="w-full py-3 rounded-xl border-none bg-teal-600 text-white font-bold text-[13px] cursor-pointer transition-opacity hover:opacity-90 text-center">
+            <button
+              onClick={() => navigate('/medical-sales-executive/onboard-doctor')}
+              className="w-full py-3 rounded-xl border-none bg-teal-600 text-white font-bold text-[13px] hover:opacity-90 transition-opacity text-center cursor-pointer"
+            >
+              ➕ Onboard Doctor / Pharmacist
+            </button>
+            <button className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center">
               📝 Book Distributor Order
             </button>
             <button className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center">

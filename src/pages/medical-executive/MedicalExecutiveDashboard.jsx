@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { fetchTeamDcrsAction, reviewDcrAction } from '../../redux/actions/dcrActions';
 import { Loader2, Check, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const MedicalExecutiveDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { teamDcrs, loading, error, success } = useSelector((state) => state.dcr);
 
   const [reviewingId, setReviewingId] = useState(null);
@@ -232,6 +234,12 @@ const MedicalExecutiveDashboard = () => {
               ) : (
                 '✅ Approve All Pending DCRs'
               )}
+            </button>
+            <button
+              onClick={() => navigate('/medical-executive/onboard-doctor')}
+              className="w-full py-3 rounded-xl border-none bg-indigo-600 text-white font-bold text-[13px] hover:opacity-90 transition-opacity text-center cursor-pointer"
+            >
+              ➕ Onboard Doctor / Pharmacist
             </button>
             <button className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center">
               📢 Launch New Product Campaign
