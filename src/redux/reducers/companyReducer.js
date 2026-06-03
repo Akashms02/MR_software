@@ -6,6 +6,7 @@ import {
   COMPANY_OFFER_LETTER_GENERATE_SUCCESS,
   COMPANY_PAYSLIP_GENERATE_SUCCESS,
   COMPANY_RELEIVING_LETTER_GENERATE_SUCCESS,
+  COMPANY_TERMINATION_LETTER_GENERATE_SUCCESS,
 } from "../actionType/companyActionType";
 
 const initialState = {
@@ -67,6 +68,13 @@ export const companyReducer = (state = initialState, action) => {
         error: null,
         success: true,
         message: action?.payload?.message || "Departments fetched successfully",
+      }
+    case COMPANY_TERMINATION_LETTER_GENERATE_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        terminationLetterGenerate: action?.payload?.message || "Termination letter generated successfully",
+        terminationLetterPDF: action?.payload?.data?.terminationLetterPDF,
       }
     case COMPANY_OFFER_LETTER_GENERATE_SUCCESS:
       return {
