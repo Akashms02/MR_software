@@ -1,6 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Clock, Square, MapPin, Calendar } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { fetchMyAttendanceAction, fetchMyVisitsAction } from '../../redux/actions/attendanceActions';
+import {
+  findTodayAttendance,
+  isPunchActive,
+  isPunchEnded,
+  isVisitActive,
+  isSameCalendarDay,
+  localTodayKey,
+  parseCoord,
+  visitCheckInCoords,
+  visitCheckOutCoords,
+} from '../../utils/attendanceUtils';
 
 // Inline SVG base64 Marker Icons for Leaflet to prevent asset loading bugs
 const BLUE_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
@@ -23,209 +38,92 @@ const RED_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
 `);
 
 export default function MRAttendancePage() {
+  const navigate = useNavigate();
   const { user } = useSelector(state => state.auth);
   const mrId = user?.id ? String(user.id) : "mr-01";
   const mrName = user?.fullName || user?.name || "Akash Kumar";
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayKey = localTodayKey();
 
-  // Core Working States
-  const [db, setDb] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const dispatch = useDispatch();
+  const { myAttendance = [], myVisits = [] } = useSelector(state => state.attendance || {});
+  const [selectedDate, setSelectedDate] = useState(todayKey);
 
-  // UI Refs for Leaflet Map
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const routeLineRef = useRef(null);
   const markersRef = useRef([]);
 
-  // 1. Initialize Leaflet CSS dynamically to avoid setup hurdles
   useEffect(() => {
-    if (!document.getElementById('leaflet-css')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
+    dispatch(fetchMyAttendanceAction());
+    dispatch(fetchMyVisitsAction());
+  }, [dispatch]);
+
+  const formatIsoToTime = (isoStr) => {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (e) {
+      return '';
     }
-  }, []);
-
-  // 2. Initialize Database & Mock Data on Mount
-  useEffect(() => {
-    initializeDatabase();
-  }, []);
-
-  const initializeDatabase = () => {
-    let localDb = localStorage.getItem('mr_field_attendance_db');
-    if (!localDb) {
-      // Create comprehensive historical mockup data for demonstration
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
-
-      const initialMock = [
-        {
-          id: `${mrId}-${dayBefore}`,
-          mrId: mrId,
-          mrName: mrName,
-          date: dayBefore,
-          status: 'ENDED',
-          startTime: '09:12 AM',
-          startLocation: { lat: 12.9716, lng: 77.5946, name: 'MG Road Office Check-in' },
-          startSelfie: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-          endTime: '05:30 PM',
-          endLocation: { lat: 12.9830, lng: 77.6110, name: 'Commercial Street Exit' },
-          visits: [
-            {
-              id: 'v1',
-              name: 'Dr. Ramesh Sharma',
-              type: 'Doctor',
-              specialty: 'Cardiology',
-              clinic: 'City Heart Clinic',
-              checkInTime: '10:30 AM',
-              checkInCoords: { lat: 12.9716, lng: 77.5946 },
-              checkOutTime: '11:05 AM',
-              checkOutCoords: { lat: 12.9720, lng: 77.5950 },
-              status: 'COMPLETED',
-              products: 'Cardace 5mg, Lipvas 10mg',
-              samples: 'Cardace (10 Tabs)',
-              feedback: 'Doctor agreed to increase prescription count for hypertensive patients.',
-              checkInPhoto: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=150'
-            },
-            {
-              id: 'v2',
-              name: 'Apollo Pharmacy',
-              type: 'Pharmacy',
-              specialty: 'Chemist',
-              clinic: 'Indiranagar Branch',
-              checkInTime: '01:45 PM',
-              checkInCoords: { lat: 12.9785, lng: 77.6408 },
-              checkOutTime: '02:15 PM',
-              checkOutCoords: { lat: 12.9785, lng: 77.6408 },
-              status: 'COMPLETED',
-              products: 'Amlong 5mg stocking',
-              samples: 'Visual aid pamphlets (2 packs)',
-              feedback: 'Stock checked, placed order for 50 boxes of Lipvas.',
-              checkInPhoto: null
-            }
-          ]
-        },
-        {
-          id: `${mrId}-${yesterday}`,
-          mrId: mrId,
-          mrName: mrName,
-          date: yesterday,
-          status: 'ENDED',
-          startTime: '09:05 AM',
-          startLocation: { lat: 12.9650, lng: 77.5890, name: 'Basavanagudi Start' },
-          startSelfie: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-          endTime: '06:00 PM',
-          endLocation: { lat: 12.9780, lng: 77.5995, name: 'Richmond Town Wrap' },
-          visits: [
-            {
-              id: 'v3',
-              name: 'Dr. Vivek Verma',
-              type: 'Doctor',
-              specialty: 'Orthopedics',
-              clinic: 'Verma Ortho Care',
-              checkInTime: '11:15 AM',
-              checkInCoords: { lat: 12.9650, lng: 77.5890 },
-              checkOutTime: '11:55 AM',
-              checkOutCoords: { lat: 12.9655, lng: 77.5895 },
-              status: 'COMPLETED',
-              products: 'Chymoral Forte discussions',
-              samples: 'Chymoral Forte (2 Strips)',
-              feedback: 'Very positive response. Doctor has been prescribing regularly.',
-              checkInPhoto: null
-            },
-            {
-              id: 'v4',
-              name: 'Dr. Sunita Patel',
-              type: 'Doctor',
-              specialty: 'Pediatrics',
-              clinic: 'Metro General Hospital',
-              checkInTime: '03:10 PM',
-              checkInCoords: { lat: 12.9780, lng: 77.5995 },
-              checkOutTime: '03:50 PM',
-              checkOutCoords: { lat: 12.9782, lng: 77.5997 },
-              status: 'COMPLETED',
-              products: 'Augmentin DDS Suspessions',
-              samples: 'Augmentin DDS Pediatric samples (5 bottles)',
-              feedback: 'Inquired about syrup stock levels in local pharmacies.',
-              checkInPhoto: null
-            }
-          ]
-        }
-      ];
-      localStorage.setItem('mr_field_attendance_db', JSON.stringify(initialMock));
-      localDb = JSON.stringify(initialMock);
-    }
-
-    let parsed = JSON.parse(localDb);
-    let todaysRecord = parsed.find(r => r.mrId === mrId && r.date === todayStr);
-
-    // For testing: automatically make status "ACTIVE" (checked in) on refresh if not already active
-    if (!todaysRecord || todaysRecord.status !== 'ACTIVE') {
-      todaysRecord = {
-        id: `${mrId}-${todayStr}`,
-        mrId: mrId,
-        mrName: mrName,
-        date: todayStr,
-        status: 'ACTIVE',
-        startTime: todaysRecord?.startTime || '09:00 AM',
-        startLocation: todaysRecord?.startLocation || { lat: 12.9716, lng: 77.5946, name: 'Office Check-in (Auto)' },
-        endTime: null,
-        endLocation: null,
-        visits: todaysRecord?.visits || [],
-      };
-      parsed = [...parsed.filter(r => !(r.mrId === mrId && r.date === todayStr)), todaysRecord];
-      localStorage.setItem('mr_field_attendance_db', JSON.stringify(parsed));
-    }
-
-    setDb(parsed);
   };
 
-  // 3. Leaflet Map setup & updates
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    const runMapInit = async () => {
-      try {
-        const L = window.L;
-        if (!L) {
-          setTimeout(runMapInit, 300); // Poll until Leaflet script is ready from CDN
-          return;
-        }
-
-        // Initialize Map
-        if (!mapInstanceRef.current) {
-          mapInstanceRef.current = L.map(mapContainerRef.current, {
-            center: [12.9716, 77.5946],
-            zoom: 13,
-            zoomControl: false
-          });
-
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap contributors © CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
-          }).addTo(mapInstanceRef.current);
-
-          L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
-        }
-
-        updateMapLayer();
-      } catch (err) {
-        console.error("Leaflet initiation failed", err);
-      }
+  const mapVisitFromApi = (v) => {
+    const inCoords = visitCheckInCoords(v);
+    const outCoords = visitCheckOutCoords(v);
+    return {
+      id: v.id,
+      name: v.targetName || v.name || 'Unknown Target',
+      type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
+      specialty: v.specialty || '',
+      checkInTime: formatIsoToTime(v.checkInTime),
+      checkInCoords: inCoords,
+      checkOutTime: formatIsoToTime(v.checkOutTime),
+      checkOutCoords: outCoords,
+      status: isVisitActive(v) ? 'ACTIVE' : 'COMPLETED',
+      products: v.productsDiscussed || v.products || '',
+      samples: v.samplesGiven || v.samples || '',
+      feedback: v.feedback || '',
     };
+  };
 
-    runMapInit();
-  }, [db, selectedDate]);
+  const punchRecord = useMemo(() => {
+    if (selectedDate === todayKey) return findTodayAttendance(myAttendance, selectedDate);
+    return myAttendance.find((a) => a.punchInTime && isSameCalendarDay(a.punchInTime, selectedDate));
+  }, [myAttendance, selectedDate, todayKey]);
 
-  // Redraw path markers and lines on Leaflet
-  const updateMapLayer = () => {
-    const L = window.L;
-    if (!L || !mapInstanceRef.current) return;
+  const visitsForDate = useMemo(
+    () => myVisits.filter((v) => v.checkInTime && isSameCalendarDay(v.checkInTime, selectedDate)),
+    [myVisits, selectedDate]
+  );
+
+  const activeRecord = useMemo(() => {
+    if (!punchRecord) return null;
+    const startCoords = parseCoord(punchRecord.punchInLatitude, punchRecord.punchInLongitude);
+    const endCoords = punchRecord.punchOutTime
+      ? parseCoord(punchRecord.punchOutLatitude, punchRecord.punchOutLongitude)
+      : null;
+    return {
+      id: punchRecord.id,
+      mrId,
+      mrName,
+      date: selectedDate,
+      status: isPunchActive(punchRecord) ? 'ACTIVE' : isPunchEnded(punchRecord) ? 'ENDED' : 'OFFLINE',
+      startTime: formatIsoToTime(punchRecord.punchInTime),
+      startLocation: startCoords
+        ? { ...startCoords, name: punchRecord.punchInRemarks || 'Workday punch-in' }
+        : null,
+      endTime: formatIsoToTime(punchRecord.punchOutTime),
+      endLocation: endCoords
+        ? { ...endCoords, name: punchRecord.punchOutRemarks || 'Workday punch-out' }
+        : null,
+      visits: visitsForDate.map(mapVisitFromApi),
+    };
+  }, [punchRecord, visitsForDate, mrId, mrName, selectedDate]);
+
+  const updateMapLayer = (targetRecord) => {
+    if (!mapInstanceRef.current) return;
 
     // 1. Remove old markers and lines
     markersRef.current.forEach(m => m.remove());
@@ -235,9 +133,7 @@ export default function MRAttendancePage() {
       routeLineRef.current = null;
     }
 
-    // 2. Select target record (based on selectedDate)
-    let targetRecord = db.find(r => r.mrId === mrId && r.date === selectedDate);
-
+    // 2. Select target record
     if (!targetRecord) {
       mapInstanceRef.current.setView([12.9716, 77.5946], 13);
       return;
@@ -255,27 +151,30 @@ export default function MRAttendancePage() {
       });
     };
 
-    // 3. Add Start point
-    if (targetRecord.startLocation?.lat) {
+    // Workday punch-in
+    if (targetRecord.startLocation?.lat != null) {
       const p = targetRecord.startLocation;
       pathCoordinates.push([p.lat, p.lng]);
       
       const startMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>📍 Start Office Check-In</strong><br/>Time: ${targetRecord.startTime}<br/>Location: ${p.name || 'GPS Verified'}`)
+      .bindPopup(`<strong>Workday punch-in</strong><br/>Time: ${targetRecord.startTime}`)
       .addTo(mapInstanceRef.current);
 
       markersRef.current.push(startMarker);
     }
 
-    // 4. Add Visits points
+    // Field visits (visit-in GPS → visit-out GPS when completed)
     if (targetRecord.visits && targetRecord.visits.length > 0) {
       targetRecord.visits.forEach(v => {
-        if (v.checkInCoords?.lat) {
+        if (v.checkInCoords?.lat != null) {
           pathCoordinates.push([v.checkInCoords.lat, v.checkInCoords.lng]);
 
           const isCompleted = v.status === 'COMPLETED';
+          if (isCompleted && v.checkOutCoords?.lat != null) {
+            pathCoordinates.push([v.checkOutCoords.lat, v.checkOutCoords.lng]);
+          }
           
           let imageTag = '';
           if (v.checkInPhoto) {
@@ -286,9 +185,9 @@ export default function MRAttendancePage() {
 
           const popupContent = `
             <div style="font-family:'Inter',sans-serif; font-size:12px; min-width:140px; max-width: 220px;">
-              <strong style="color:${isCompleted ? '#059669' : '#EF4444'}">${v.type.toUpperCase()}: ${v.name}</strong><br/>
-              <strong>Check-in:</strong> ${v.checkInTime}<br/>
-              ${isCompleted ? `<strong>Check-out:</strong> ${v.checkOutTime || 'N/A'}<br/><strong>Products:</strong> ${v.products || 'N/A'}` : '<span style="color:#EF4444;font-weight:700;">🟢 ACTIVE VISIT NOW</span>'}
+              <strong style="color:${isCompleted ? '#059669' : '#EA580C'}">${v.type}: ${v.name}</strong><br/>
+              <strong>Visit in:</strong> ${v.checkInTime}<br/>
+              ${isCompleted ? `<strong>Visit out:</strong> ${v.checkOutTime || '—'}<br/><strong>Products:</strong> ${v.products || '—'}` : '<span style="color:#EA580C;font-weight:700;">Visit still open</span>'}
               ${imageTag}
             </div>
           `;
@@ -300,19 +199,28 @@ export default function MRAttendancePage() {
           .addTo(mapInstanceRef.current);
 
           markersRef.current.push(pinMarker);
+
+          if (isCompleted && v.checkOutCoords?.lat != null) {
+            const outMarker = L.marker([v.checkOutCoords.lat, v.checkOutCoords.lng], {
+              icon: getCustomIcon(GREEN_PIN, 28, 28)
+            })
+            .bindPopup(`<strong>Visit out</strong><br/>${v.name}<br/>${v.checkOutTime}`)
+            .addTo(mapInstanceRef.current);
+            markersRef.current.push(outMarker);
+          }
         }
       });
     }
 
-    // 5. Add End point if ended
-    if (targetRecord.status === 'ENDED' && targetRecord.endLocation?.lat) {
+    // Workday punch-out
+    if (targetRecord.status === 'ENDED' && targetRecord.endLocation?.lat != null) {
       const p = targetRecord.endLocation;
       pathCoordinates.push([p.lat, p.lng]);
 
       const endMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>🏁 Workday Ended</strong><br/>Time: ${targetRecord.endTime}<br/>Location: ${p.name || 'GPS Verified'}`)
+      .bindPopup(`<strong>Workday punch-out</strong><br/>Time: ${targetRecord.endTime}`)
       .addTo(mapInstanceRef.current);
 
       markersRef.current.push(endMarker);
@@ -335,13 +243,43 @@ export default function MRAttendancePage() {
     }
   };
 
-  const activeRecord = db.find(r => r.mrId === mrId && r.date === selectedDate);
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    mapInstanceRef.current = L.map(mapContainerRef.current, {
+      center: [12.9716, 77.5946],
+      zoom: 13,
+      zoomControl: false,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 20,
+    }).addTo(mapInstanceRef.current);
+    L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
+
+    return () => {
+      mapInstanceRef.current?.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mapInstanceRef.current) updateMapLayer(activeRecord);
+  }, [activeRecord]);
+
   const visits = activeRecord?.visits || [];
+  const openVisit = visits.find((v) => v.status === 'ACTIVE');
   const completedVisits = visits.filter(v => v.status === 'COMPLETED').length;
 
   const statusLabel = activeRecord
-    ? (activeRecord.status === 'ACTIVE' ? 'Active / Working' : activeRecord.status === 'ENDED' ? 'Workday Completed' : 'Offline / Off-Duty')
-    : 'Offline / Off-Duty';
+    ? (activeRecord.status === 'ACTIVE'
+        ? openVisit
+          ? `On duty · visit open at ${openVisit.name}`
+          : 'On duty · no open visit'
+        : activeRecord.status === 'ENDED'
+          ? 'Workday finished'
+          : 'Off duty')
+    : 'No workday on this date';
 
   return (
     <div className="p-2.5 animate-[fadeSlideIn_0.35s_ease-out]">
@@ -352,9 +290,18 @@ export default function MRAttendancePage() {
           <span className="text-[11px] text-gray-500 font-extrabold uppercase tracking-[1.5px]">
             FIELD OPERATIONS LEDGER
           </span>
-          <h2 className="text-[26px] font-extrabold text-gray-900 mt-1 mb-0 tracking-[-0.5px]">Field Attendance & Pathway</h2>
-          <p className="text-[13px] text-gray-500 mt-1 mb-0">Review geographic paths, check-in timelines, and call summaries for the selected date.</p>
+          <h2 className="text-[26px] font-extrabold text-gray-900 mt-1 mb-0 tracking-[-0.5px]">Field Attendance Map</h2>
+          <p className="text-[13px] text-gray-500 mt-1 mb-0">
+            Blue = workday punch · Green = completed visit · Orange pin = visit still open
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate('/mr/dashboard')}
+          className="px-4 py-2 rounded-xl border-none bg-blue-600 text-white text-[12px] font-bold cursor-pointer"
+        >
+          Go to dashboard
+        </button>
 
         {/* Date Filter Calendar Picker */}
         <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
@@ -383,7 +330,7 @@ export default function MRAttendancePage() {
             {activeRecord?.status === 'ACTIVE' ? '🟢' : activeRecord?.status === 'ENDED' ? '🏁' : '🛑'}
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Workday Status</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Status</div>
             <div className="text-[13.5px] font-extrabold text-gray-800">{statusLabel}</div>
           </div>
         </div>
@@ -394,7 +341,7 @@ export default function MRAttendancePage() {
             <Clock size={18} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Start Time</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Punch in</div>
             <div className="text-[13.5px] font-extrabold text-gray-800">{activeRecord?.startTime || '—'}</div>
           </div>
         </div>
@@ -405,7 +352,7 @@ export default function MRAttendancePage() {
             <Square size={16} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">End Time</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Punch out</div>
             <div className="text-[13.5px] font-extrabold text-gray-800">
               {activeRecord?.status === 'ACTIVE' ? 'Active Duty' : activeRecord?.endTime || '—'}
             </div>
@@ -418,8 +365,10 @@ export default function MRAttendancePage() {
             <MapPin size={18} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Completed Calls</div>
-            <div className="text-[13.5px] font-extrabold text-gray-800">{completedVisits} of {visits.length} logged</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Visits</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">
+              {completedVisits} done{openVisit ? ' · 1 open' : ''}{visits.length === 0 ? '' : ` / ${visits.length}`}
+            </div>
           </div>
         </div>
       </div>
@@ -432,12 +381,9 @@ export default function MRAttendancePage() {
           {/* Map Title block */}
           <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
             <div>
-              <h3 className="text-[14.5px] font-extrabold text-gray-900 m-0">Workday Pathway Map</h3>
-              <span className="text-[11.5px] text-gray-400">Chronological Travel Routing</span>
+              <h3 className="text-[14.5px] font-extrabold text-gray-900 m-0">Route map</h3>
+              <span className="text-[11.5px] text-gray-400">Punch-in → visits → punch-out</span>
             </div>
-            <span className="text-[11px] font-extrabold text-[#3B82F6] bg-[#EFF6FF] px-2 py-0.5 rounded">
-              GPS LIVE ACTIVE
-            </span>
           </div>
 
           {/* Actual Leaflet Container */}
@@ -447,35 +393,26 @@ export default function MRAttendancePage() {
           />
           
           {/* Map Legend */}
-          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-4 flex-wrap text-[11.5px] font-bold text-gray-600 shrink-0">
-            <div className="flex items-center gap-6">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-              <span>Start / End Points</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-              <span>Completed Visits</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
-              <span>Active Visits</span>
-            </div>
+          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-5 flex-wrap text-[11.5px] font-semibold text-gray-600 shrink-0">
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Workday punch</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Visit completed</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Visit open</span>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Chronological Timeline */}
         <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] h-[584px] flex flex-col">
           <div className="border-b border-gray-100 pb-3.5 mb-4 shrink-0">
-            <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Chronological Activity Trail</h3>
-            <span className="text-[12px] text-gray-400">Step-by-step route timeline</span>
+            <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Day timeline</h3>
+            <span className="text-[12px] text-gray-400">Workday and field visits</span>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 pl-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {!activeRecord ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center">
                 <Calendar size={28} className="mb-2.5 text-gray-400" />
-                <div className="text-[14px] font-bold text-gray-600">No Workday Logged</div>
-                <div className="text-[12px] text-gray-400 mt-1 max-w-[240px]">No field attendance records exist for this selected date.</div>
+                <div className="text-[14px] font-bold text-gray-600">No workday on this date</div>
+                <div className="text-[12px] text-gray-400 mt-1 max-w-[240px]">Punch in from the dashboard to start tracking your route.</div>
               </div>
             ) : (
               <div className="relative border-l-2 border-dashed border-gray-200 ml-3 pl-6 py-2">
@@ -486,11 +423,13 @@ export default function MRAttendancePage() {
                   
                   <div className="bg-[#F8FAFC] rounded-xl border border-gray-200 p-3 px-4">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">[START WORKDAY]</span>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">PUNCH IN</span>
                       <span className="text-[11px] text-gray-400 font-semibold">{activeRecord.startTime}</span>
                     </div>
-                    <div className="text-[13px] font-extrabold text-gray-800">Check-In Registered</div>
-                    <div className="text-[12px] text-gray-500 mt-0.5">📍 {activeRecord.startLocation?.name || 'GPS Coordinates Verified'}</div>
+                    <div className="text-[13px] font-extrabold text-gray-800">Workday started</div>
+                    {activeRecord.startLocation?.lat != null && (
+                      <div className="text-[11px] text-gray-500 mt-0.5">GPS recorded on map</div>
+                    )}
                     {activeRecord.startSelfie && (
                       <div className="mt-2">
                         <img src={activeRecord.startSelfie} alt="Start Selfie" className="w-[60px] h-[60px] rounded-lg object-cover border border-gray-200 cursor-pointer" onClick={() => window.open(activeRecord.startSelfie, '_blank')} />
@@ -502,7 +441,7 @@ export default function MRAttendancePage() {
                 {/* 2. VISITS TIMELINE NODES (Single card per visit containing both check-in and check-out logs inside) */}
                 {visits.length === 0 ? (
                   <div className="p-4 bg-[#FAFAFA] rounded-xl border border-dashed border-gray-200 text-gray-400 text-[12px] text-center mb-6">
-                    No doctor or pharmacy visits logged for this workday yet.
+                    No field visits yet. Use <strong>Visit in</strong> on the dashboard after punch-in.
                   </div>
                 ) : (
                   visits.map((v, idx) => {
@@ -540,12 +479,12 @@ export default function MRAttendancePage() {
                                   </span>
                                 ) : (
                                   <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#FEF2F2] text-[#B91C1C] animate-pulse">
-                                    IN PROGRESS
+                                    VISIT OPEN
                                   </span>
                                 )}
                               </div>
                               <h4 className="text-[14.5px] font-extrabold text-gray-800 mt-1 mb-0.5">{v.name}</h4>
-                              <div className="text-[11.5px] text-gray-500">🏥 {v.clinic || 'Doctor Clinic'}</div>
+                              {v.specialty && <div className="text-[11.5px] text-gray-500">{v.specialty}</div>}
                             </div>
                             <span className="text-[16px]">{v.type === 'Pharmacy' ? '🧪' : '🩺'}</span>
                           </div>
@@ -553,7 +492,7 @@ export default function MRAttendancePage() {
                           {/* Check-In Section */}
                           <div className={isCompleted ? "mb-3" : "mb-0"}>
                             <div className="flex justify-between text-[11px] text-gray-600 font-bold mb-1">
-                              <span>📥 CHECK-IN LOG</span>
+                              <span>📥 VISIT IN</span>
                               <span>{v.checkInTime}</span>
                             </div>
                             {v.checkInNotes && (
@@ -572,7 +511,7 @@ export default function MRAttendancePage() {
                           {isCompleted && (
                             <div className="border-t border-dashed border-gray-250 pt-2.5 mt-2.5">
                               <div className="flex justify-between text-[11px] text-emerald-700 font-bold mb-1.5">
-                                <span>📤 CHECK-OUT LOG</span>
+                                <span>📤 VISIT OUT</span>
                                 <span>{v.checkOutTime}</span>
                               </div>
                               <div className="flex flex-col gap-1 text-[12px] text-gray-700">
@@ -602,11 +541,11 @@ export default function MRAttendancePage() {
                     
                     <div className="bg-[#F8FAFC] rounded-xl border border-gray-300 p-3 px-4">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#475569]">[END WORKDAY]</span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#475569]">PUNCH OUT</span>
                         <span className="text-[11px] text-gray-400 font-semibold">{activeRecord.endTime}</span>
                       </div>
-                      <div className="text-[13px] font-extrabold text-gray-800">Workday Operations Closed</div>
-                      <div className="text-[12px] text-gray-500 mt-0.5">🏁 Ended at: {activeRecord.endLocation?.name || 'GPS Coordinates Verified'}</div>
+                      <div className="text-[13px] font-extrabold text-gray-800">Workday ended</div>
+                      <div className="text-[12px] text-gray-500 mt-0.5">Punch-out at {activeRecord.endTime}</div>
                     </div>
                   </div>
                 ) : (
@@ -615,8 +554,12 @@ export default function MRAttendancePage() {
                     <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
                     
                     <div className="bg-[#ECFDF5] rounded-xl border border-dashed border-[#A7F3D0] p-3 px-4 text-[#065F46]">
-                      <div className="text-[12px] font-bold">🟢 WORKDAY ACTIVE</div>
-                      <div className="text-[11.5px] text-[#047857] mt-0.5">Representative is currently on field duty. End of day report pending.</div>
+                      <div className="text-[12px] font-bold">🟢 Workday still active</div>
+                      <div className="text-[11.5px] text-[#047857] mt-0.5">
+                        {openVisit
+                          ? `Finish visit at ${openVisit.name}, then punch out on the dashboard.`
+                          : 'Punch out on the dashboard when your day is done.'}
+                      </div>
                     </div>
                   </div>
                 )}

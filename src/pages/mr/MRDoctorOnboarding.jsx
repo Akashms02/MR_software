@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { onboardMember, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
 import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart } from 'lucide-react';
 import L from 'leaflet';
+import { useDispatch } from 'react-redux';
+import { submitOnboardingRequestAction } from '../../redux/actions/requestActions';
 
 // Free OSM geocoding helpers
 const extractCityPincode = (addressObj) => {
@@ -39,15 +39,18 @@ const geocodeAddressFree = async (q) => {
   return null;
 };
 
-const DoctorOnboarding = () => {
-  const dispatch = useDispatch();
+const MRDoctorOnboarding = () => {
   const navigate = useNavigate();
-
-  // Redux state selectors
-  const { success: reduxSuccess, error: reduxError } = useSelector((state) => state.team);
+  const dispatch = useDispatch();
 
   // Role details (can onboard DOCTOR or PHARMACIST)
   const [role, setRole] = useState('DOCTOR');
+
+  // Additional Role-Specific Fields
+  const [doctorSpeciality, setDoctorSpeciality] = useState('CARDIOLOGIST');
+  const [doctorQualification, setDoctorQualification] = useState('');
+  const [doctorLicenseNumber, setDoctorLicenseNumber] = useState('');
+  const [chemistContactPerson, setChemistContactPerson] = useState('');
 
   // Basic Account details
   const [fullName, setFullName] = useState('');
@@ -113,7 +116,7 @@ const DoctorOnboarding = () => {
   const bestHomeAccRef = useRef(null);
 
   const handleCancel = () => {
-    navigate('/admin/requests');
+    navigate('/mr/requests');
   };
 
   // --- Clinic Map Initialization & Lifecycle ---
@@ -208,38 +211,12 @@ const DoctorOnboarding = () => {
     }
   }, [personalLatitude, personalLongitude]);
 
-  // --- Geolocation State Sync hooks & Redux Redirection listeners ---
   useEffect(() => {
-    dispatch(clearSuccess());
-    dispatch(clearErrors());
     return () => {
-      dispatch(clearSuccess());
-      dispatch(clearErrors());
       stopClinicWatch();
       stopHomeWatch();
     };
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (reduxSuccess) {
-      setLocalSuccess(`${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} onboarded successfully! Redirecting...`);
-      setLocalError(null);
-      setIsSubmitting(false);
-      const timer = setTimeout(() => {
-        dispatch(clearSuccess());
-        handleCancel();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [reduxSuccess, role, dispatch]);
-
-  useEffect(() => {
-    if (reduxError) {
-      setLocalError(reduxError);
-      setLocalSuccess(null);
-      setIsSubmitting(false);
-    }
-  }, [reduxError]);
+  }, []);
 
   const stopClinicWatch = () => {
     if (clinicWatchIdRef.current !== null && 'geolocation' in navigator) {
@@ -563,6 +540,12 @@ const DoctorOnboarding = () => {
     if (!fullName.trim()) return setLocalError('Full Name is required.');
     if (!email.trim()) return setLocalError('Email is required.');
     if (!phone.trim()) return setLocalError('Phone number is required.');
+    if (role === 'DOCTOR') {
+      if (!doctorQualification.trim()) return setLocalError('Doctor Qualification is required.');
+      if (!doctorLicenseNumber.trim()) return setLocalError('Doctor License Number is required.');
+    } else if (role === 'PHARMACIST') {
+      if (!chemistContactPerson.trim()) return setLocalError('Chemist Contact Person is required.');
+    }
     if (!personalFirstName.trim()) return setLocalError('First Name is required.');
     if (!personalSurname.trim()) return setLocalError('Surname is required.');
     if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
@@ -576,35 +559,36 @@ const DoctorOnboarding = () => {
     setIsSubmitting(true);
     try {
       const payload = {
-        fullName: fullName.trim(),
+        type: role === 'PHARMACIST' ? 'CHEMIST' : 'DOCTOR',
+        name: fullName.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        role: role,
-        reportingToId: null,
-        employeeId: null,
+        address: personalCurrentAddress.trim(),
+        city: city || 'Chennai',
+        state: 'Tamil Nadu',
+        pincode: pincode || '600008',
         latitude: parseFloat(latitude) || 13.082680,
-        longitude: parseFloat(longitude) || 80.270720,
-        personal: {
-          firstName: personalFirstName.trim(),
-          middleName: personalMiddleName.trim(),
-          surname: personalSurname.trim(),
-          dateOfBirth: personalDateOfBirth,
-          gender: personalGender,
-          bloodGroup: personalBloodGroup,
-          maritalStatus: personalMaritalStatus,
-          fatherName: personalFatherName.trim(),
-          motherName: personalMotherName.trim(),
-          currentAddress: personalCurrentAddress.trim(),
-          permanentAddress: personalSameAsCurrentAddress ? personalCurrentAddress.trim() : personalPermanentAddress.trim(),
-          sameAsCurrentAddress: personalSameAsCurrentAddress,
-          latitude: parseFloat(personalLatitude) || 13.082680,
-          longitude: parseFloat(personalLongitude) || 80.270720
-        }
+        longitude: parseFloat(longitude) || 80.270720
       };
 
-      await dispatch(onboardMember(payload));
+      if (role === 'DOCTOR') {
+        payload.doctorSpeciality = doctorSpeciality;
+        payload.doctorQualification = doctorQualification.trim();
+        payload.doctorLicenseNumber = doctorLicenseNumber.trim();
+      } else {
+        payload.chemistContactPerson = chemistContactPerson.trim();
+      }
+
+      console.log("MR Onboarding Approval Request Payload:", payload);
+      localStorage.setItem('last_submitted_payload', JSON.stringify(payload));
+      await dispatch(submitOnboardingRequestAction(payload));
+      setLocalSuccess(`Approval request to onboard new ${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} submitted successfully!`);
+      setIsSubmitting(false);
+      setTimeout(() => {
+        handleCancel();
+      }, 1500);
     } catch (err) {
-      setLocalError(err.message || 'Onboarding request failed.');
+      setLocalError(err.response?.data?.message || err.message || 'Onboarding request failed.');
       setIsSubmitting(false);
     }
   };
@@ -621,10 +605,10 @@ const DoctorOnboarding = () => {
         </button>
         <div>
           <span className="text-[11px] text-[#7C3AED] font-extrabold uppercase tracking-[1px]">
-            REGISTRATION PORTAL
+            REQUEST APPROVAL PORTAL
           </span>
           <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">
-            Onboard New {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}
+            Request to Onboard New {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}
           </h2>
         </div>
       </div>
@@ -632,11 +616,11 @@ const DoctorOnboarding = () => {
       {/* Main Card Form */}
       <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_10px_25px_rgba(0,0,0,0.02)] p-9 flex flex-col gap-7">
         <div>
-          <h3 className="text-[18px] font-extrabold text-[#111827] margin: 0">
+          <h3 className="text-[18px] font-extrabold text-[#111827] m-0">
             {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Profile & Interactive Geolocation
           </h3>
           <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
-            Fill in the information below. Drag map pin to center coordinates, search by address, or capture live device GPS.
+            Provide information to submit a request to onboard a new {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}. Submitted requests will be reviewed by admin, ME, or MSE.
           </p>
         </div>
 
@@ -726,6 +710,69 @@ const DoctorOnboarding = () => {
                   </div>
                 </div>
               </div>
+
+              {role === 'DOCTOR' && (
+                <div className="grid grid-cols-3 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Doctor Speciality <span className="text-[#EF4444]">*</span></label>
+                    <select
+                      value={doctorSpeciality}
+                      onChange={(e) => setDoctorSpeciality(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    >
+                      <option value="CARDIOLOGIST">Cardiology</option>
+                      <option value="PEDIATRICIAN">Pediatrics</option>
+                      <option value="ORTHOPEDIC">Orthopedics</option>
+                      <option value="GENERAL_PHYSICIAN">General Physician</option>
+                      <option value="DERMATOLOGIST">Dermatology</option>
+                      <option value="NEUROLOGIST">Neurology</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Doctor Qualification <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. MBBS, MD"
+                      value={doctorQualification}
+                      onChange={(e) => { setDoctorQualification(e.target.value); setLocalError(null); }}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">License Number <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. MC-12345"
+                      value={doctorLicenseNumber}
+                      onChange={(e) => { setDoctorLicenseNumber(e.target.value); setLocalError(null); }}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {role === 'PHARMACIST' && (
+                <div className="grid grid-cols-2 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Chemist Contact Person <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Wong"
+                      value={chemistContactPerson}
+                      onChange={(e) => { setChemistContactPerson(e.target.value); setLocalError(null); }}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -795,7 +842,7 @@ const DoctorOnboarding = () => {
                 )}
 
                 {clinicGeoError && (
-                  <span className="text-[11.5px] color-[#EF4444] font-semibold mt-1">
+                  <span className="text-[11.5px] text-[#EF4444] font-semibold mt-1">
                     ⚠️ {clinicGeoError}
                   </span>
                 )}
@@ -1169,10 +1216,10 @@ const DoctorOnboarding = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={15} className="animate-spin" /> Onboarding...
+                  <Loader2 size={15} className="animate-spin" /> Submitting Request...
                 </>
               ) : (
-                `Onboard ${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}`
+                `Request Approval for ${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'}`
               )}
             </button>
           </div>
@@ -1192,4 +1239,4 @@ const DoctorOnboarding = () => {
   );
 };
 
-export default DoctorOnboarding;
+export default MRDoctorOnboarding;

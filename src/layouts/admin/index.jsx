@@ -17,6 +17,7 @@ import AdminFieldTracking from '../../pages/admin/AdminFieldTracking'
 import Documents from '../../pages/admin/Documents'
 import AdminLeaveReviewPage from '../../pages/admin/AdminLeaveReviewPage'
 import Settings from '../../pages/admin/Settings'
+import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -27,6 +28,7 @@ export default function AdminLayoutRouter() {
         <Route path="employees" element={<AdminEmployees />} />
         <Route path="finance" element={<AdminPayroll />} />
         <Route path="reports" element={<AdminReports />} />
+        <Route path="requests" element={<AdminRequestsPage />} />
         <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
         <Route path="fieldtracking" element={<AdminFieldTracking />} />
         <Route path="leaves" element={<AdminLeaveReviewPage />} />

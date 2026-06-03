@@ -285,7 +285,8 @@ axios.interceptors.request.use(
             } catch (e) {}
             mockData = { success: true, status: 200, data: dcrs };
           } else if (cfg.url.includes('/dcr/') && cfg.url.includes('/review') && cfg.method === 'put') {
-            const parts = cfg.url.split('/');
+            const urlWithoutParams = cfg.url.split('?')[0];
+            const parts = urlWithoutParams.split('/');
             const reviewIdx = parts.indexOf('review');
             const dcrId = parseInt(parts[reviewIdx - 1]);
             
@@ -450,7 +451,677 @@ axios.interceptors.request.use(
                 ]
               };
             }
-          }
+          } else if (cfg.url.includes('/requests/me') && cfg.method === 'get') {
+              let requests = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) {
+                  requests = JSON.parse(saved);
+                } else {
+                  requests = [
+                    {
+                      id: 201,
+                      type: "DOCTOR",
+                      name: "Dr. Stephen Strange",
+                      email: "doctorstrange@example.com",
+                      phone: "9876543009",
+                      address: "Sanctum Sanctorum",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600008",
+                      latitude: 13.08268,
+                      longitude: 80.27072,
+                      doctorSpeciality: "NEUROLOGY",
+                      doctorQualification: "MD, PhD",
+                      doctorLicenseNumber: "MC-99999",
+                      doctorId: 201,
+                      status: "APPROVED",
+                      remarks: "Approved for field visits",
+                      submittedBy: "Marcus Rep"
+                    },
+                    {
+                      id: 202,
+                      type: "CHEMIST",
+                      name: "Strange Remedies Pharmacy",
+                      email: "strangeremedies@example.com",
+                      phone: "9876543008",
+                      address: "Bleecker Street",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600008",
+                      latitude: 13.08270,
+                      longitude: 80.27074,
+                      chemistContactPerson: "Wong",
+                      chemistId: 202,
+                      status: "APPROVED",
+                      remarks: "Approved chemist",
+                      submittedBy: "Marcus Rep"
+                    },
+                    {
+                      id: 203,
+                      type: "DOCTOR",
+                      name: "Dr. Ramesh Sharma",
+                      email: "ramesh@example.com",
+                      phone: "9876543010",
+                      address: "City Heart Clinic, Anna Nagar",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600040",
+                      latitude: 13.08500,
+                      longitude: 80.27200,
+                      doctorSpeciality: "CARDIOLOGY",
+                      doctorQualification: "MD",
+                      doctorLicenseNumber: "MC-10001",
+                      doctorId: 203,
+                      status: "APPROVED",
+                      remarks: "",
+                      submittedBy: "Marcus Rep"
+                    },
+                    {
+                      id: 204,
+                      type: "DOCTOR",
+                      name: "Dr. Sunita Patel",
+                      email: "sunita@example.com",
+                      phone: "9876543011",
+                      address: "Metro General Hospital",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600006",
+                      latitude: 13.08000,
+                      longitude: 80.26800,
+                      doctorSpeciality: "PEDIATRICS",
+                      doctorId: 204,
+                      status: "PENDING",
+                      remarks: "",
+                      submittedBy: "Marcus Rep"
+                    }
+                  ];
+                  localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
+                }
+              } catch (e) {}
+              let statusFilter = '';
+              try {
+                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+                statusFilter = new URL(urlStr).searchParams.get('status') || '';
+              } catch (e) {}
+              const list = statusFilter
+                ? requests.filter((r) => String(r.status).toUpperCase() === statusFilter.toUpperCase())
+                : requests;
+              mockData = { success: true, status: 200, data: list };
+            } else if (cfg.url.includes('/requests/pending') && cfg.method === 'get') {
+              let requests = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) {
+                  requests = JSON.parse(saved);
+                } else {
+                  requests = [
+                    {
+                      id: 201,
+                      type: "DOCTOR",
+                      name: "Dr. Stephen Strange",
+                      email: "doctorstrange@example.com",
+                      phone: "9876543009",
+                      address: "Sanctum Sanctorum, New York",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600008",
+                      latitude: 13.08268,
+                      longitude: 80.27072,
+                      doctorSpeciality: "NEUROLOGY",
+                      doctorQualification: "MD, PhD",
+                      doctorLicenseNumber: "MC-99999",
+                      status: "PENDING",
+                      remarks: "",
+                      submittedBy: "Marcus Rep"
+                    },
+                    {
+                      id: 202,
+                      type: "CHEMIST",
+                      name: "Strange Remedies Pharmacy",
+                      email: "strangeremedies@example.com",
+                      phone: "9876543008",
+                      address: "Bleecker Street, New York",
+                      city: "Chennai",
+                      state: "Tamil Nadu",
+                      pincode: "600008",
+                      latitude: 13.08268,
+                      longitude: 80.27072,
+                      chemistContactPerson: "Wong",
+                      status: "PENDING",
+                      remarks: "",
+                      submittedBy: "Marcus Rep"
+                    }
+                  ];
+                  localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
+                }
+              } catch (e) {}
+              let statusFilter = 'PENDING';
+              try {
+                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+                const raw = (new URL(urlStr).searchParams.get('status') || 'PENDING').toUpperCase();
+                statusFilter = raw === 'ALL' ? 'ALL' : raw;
+              } catch (e) {}
+              const list =
+                statusFilter === 'ALL'
+                  ? requests
+                  : requests.filter((r) => String(r.status).toUpperCase() === statusFilter);
+              mockData = { success: true, status: 200, data: list };
+            } else if (cfg.url.includes('/requests/') && cfg.url.includes('/review') && cfg.method === 'put') {
+              const urlWithoutParams = cfg.url.split('?')[0];
+              const parts = urlWithoutParams.split('/');
+              const reviewIdx = parts.indexOf('review');
+              const requestId = parseInt(parts[reviewIdx - 1]);
+
+              let status = 'APPROVED';
+              let remarks = '';
+              try {
+                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+                const urlObj = new URL(urlStr);
+                status = urlObj.searchParams.get('status') || 'APPROVED';
+                remarks = urlObj.searchParams.get('remarks') || '';
+              } catch (e) {}
+
+              let requests = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) requests = JSON.parse(saved);
+              } catch (e) {}
+
+              const req = requests.find(r => r.id === requestId);
+              if (req) {
+                req.status = status;
+                req.remarks = remarks;
+                if (status === 'APPROVED') {
+                  if (req.type === 'CHEMIST') req.chemistId = req.chemistId || req.id;
+                  else req.doctorId = req.doctorId || req.id;
+                }
+                localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
+              }
+              mockData = { success: true, status: 200, message: `Request status updated to ${status}.` };
+            } else if (cfg.url.includes('/requests') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let requests = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) requests = JSON.parse(saved);
+              } catch (e) {}
+
+              const newReq = {
+                id: Math.floor(Math.random() * 10000),
+                type: body.type || 'DOCTOR',
+                name: body.name || '',
+                email: body.email || '',
+                phone: body.phone || '',
+                address: body.address || '',
+                city: body.city || '',
+                state: body.state || '',
+                pincode: body.pincode || '',
+                latitude: body.latitude || 13.08268,
+                longitude: body.longitude || 80.27072,
+                doctorSpeciality: body.doctorSpeciality || '',
+                doctorQualification: body.doctorQualification || '',
+                doctorLicenseNumber: body.doctorLicenseNumber || '',
+                chemistContactPerson: body.chemistContactPerson || '',
+                status: 'PENDING',
+                remarks: '',
+                submittedBy: 'Marcus Rep'
+              };
+              requests.push(newReq);
+              localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
+              mockData = { success: true, status: 201, data: newReq };
+            } else if (cfg.url.includes('/attendance/punch-in') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_attendance_db') || '[]');
+              } catch (e) {}
+              
+              const todayStr = new Date().toISOString().split('T')[0];
+              db = db.filter(a => !a.punchInTime.startsWith(todayStr));
+              
+              const newLog = {
+                id: Math.floor(Math.random() * 100000),
+                employeeId: token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001',
+                employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                punchInTime: new Date().toISOString(),
+                punchInLatitude: body.latitude,
+                punchInLongitude: body.longitude,
+                punchInRemarks: body.remarks,
+                punchOutTime: null,
+                punchOutLatitude: null,
+                punchOutLongitude: null,
+                punchOutRemarks: null,
+                workType: body.workType || 'FIELD_WORK',
+                status: 'PUNCHED_IN'
+              };
+              db.push(newLog);
+              localStorage.setItem('mock_attendance_db', JSON.stringify(db));
+              mockData = { success: true, status: 200, data: newLog };
+              
+            } else if (cfg.url.includes('/attendance/punch-out') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_attendance_db') || '[]');
+              } catch (e) {}
+              
+              const todayStr = new Date().toISOString().split('T')[0];
+              const activeLogIndex = db.findIndex(a => a.punchInTime.startsWith(todayStr) && !a.punchOutTime);
+              let updatedLog = null;
+              if (activeLogIndex !== -1) {
+                db[activeLogIndex] = {
+                  ...db[activeLogIndex],
+                  punchOutTime: new Date().toISOString(),
+                  punchOutLatitude: body.latitude,
+                  punchOutLongitude: body.longitude,
+                  punchOutRemarks: body.remarks,
+                  status: 'PUNCHED_OUT'
+                };
+                updatedLog = db[activeLogIndex];
+              } else {
+                updatedLog = {
+                  id: Math.floor(Math.random() * 100000),
+                  employeeId: token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001',
+                  employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                  punchInTime: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+                  punchInLatitude: body.latitude,
+                  punchInLongitude: body.longitude,
+                  punchOutTime: new Date().toISOString(),
+                  punchOutLatitude: body.latitude,
+                  punchOutLongitude: body.longitude,
+                  punchOutRemarks: body.remarks,
+                  workType: 'FIELD_WORK',
+                  status: 'PUNCHED_OUT'
+                };
+                db.push(updatedLog);
+              }
+              localStorage.setItem('mock_attendance_db', JSON.stringify(db));
+              mockData = { success: true, status: 200, data: updatedLog };
+
+            } else if (cfg.url.includes('/attendance/me') && cfg.method === 'get') {
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_attendance_db') || '[]');
+              } catch (e) {}
+              
+              const empId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+              const empName = token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User';
+              
+              if (db.length === 0) {
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+                db = [
+                  {
+                    id: 1,
+                    employeeId: empId,
+                    employeeName: empName,
+                    punchInTime: `${dayBefore}T09:12:00Z`,
+                    punchInLatitude: 12.9716,
+                    punchInLongitude: 77.5946,
+                    punchInRemarks: "Punching in",
+                    punchOutTime: `${dayBefore}T17:30:00Z`,
+                    punchOutLatitude: 12.9830,
+                    punchOutLongitude: 77.6110,
+                    punchOutRemarks: "Exiting for the day",
+                    workType: "FIELD_WORK",
+                    status: "PUNCHED_OUT"
+                  },
+                  {
+                    id: 2,
+                    employeeId: empId,
+                    employeeName: empName,
+                    punchInTime: `${yesterday}T09:05:00Z`,
+                    punchInLatitude: 12.9650,
+                    punchInLongitude: 77.5890,
+                    punchInRemarks: "Starting route",
+                    punchOutTime: `${yesterday}T18:00:00Z`,
+                    punchOutLatitude: 12.9780,
+                    punchOutLongitude: 77.5995,
+                    punchOutRemarks: "Ending day",
+                    workType: "FIELD_WORK",
+                    status: "PUNCHED_OUT"
+                  }
+                ];
+                localStorage.setItem('mock_attendance_db', JSON.stringify(db));
+              }
+              
+              const filtered = db.filter(a => String(a.employeeId) === String(empId));
+              mockData = { success: true, status: 200, data: filtered };
+
+            } else if (cfg.url.includes('/attendance/team') && cfg.method === 'get') {
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_attendance_db') || '[]');
+              } catch (e) {}
+              
+              const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+              const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+              
+              if (db.length <= 2) {
+                const teamMembers = [
+                  { id: 'EMP-MR-001', name: 'Marcus Rep' },
+                  { id: '1', name: 'Marcus Rep' },
+                  { id: '2', name: 'Amit Verma' },
+                  { id: '3', name: 'Rohan Deshmukh' },
+                  { id: '4', name: 'Sanjay Dutt' }
+                ];
+                
+                const newLogs = [];
+                teamMembers.forEach((m, idx) => {
+                  newLogs.push({
+                    id: 10 + idx * 2,
+                    employeeId: m.id,
+                    employeeName: m.name,
+                    punchInTime: `${dayBefore}T09:12:00Z`,
+                    punchInLatitude: 12.9716 + idx * 0.002,
+                    punchInLongitude: 77.5946 - idx * 0.002,
+                    punchInRemarks: "Punching in",
+                    punchOutTime: `${dayBefore}T17:30:00Z`,
+                    punchOutLatitude: 12.9830 + idx * 0.002,
+                    punchOutLongitude: 77.6110 - idx * 0.002,
+                    punchOutRemarks: "Ending day",
+                    workType: "FIELD_WORK",
+                    status: "PUNCHED_OUT"
+                  });
+                  newLogs.push({
+                    id: 11 + idx * 2,
+                    employeeId: m.id,
+                    employeeName: m.name,
+                    punchInTime: `${yesterday}T09:05:00Z`,
+                    punchInLatitude: 12.9650 - idx * 0.001,
+                    punchInLongitude: 77.5890 + idx * 0.001,
+                    punchInRemarks: "Starting route",
+                    punchOutTime: `${yesterday}T18:00:00Z`,
+                    punchOutLatitude: 12.9780 - idx * 0.001,
+                    punchOutLongitude: 77.5995 + idx * 0.001,
+                    punchOutRemarks: "Ending day",
+                    workType: "FIELD_WORK",
+                    status: "PUNCHED_OUT"
+                  });
+                });
+                db = [...db, ...newLogs];
+                localStorage.setItem('mock_attendance_db', JSON.stringify(db));
+              }
+              mockData = { success: true, status: 200, data: db };
+
+            } else if (cfg.url.includes('/attendance/location/check-in') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
+              } catch (e) {}
+              
+              const empId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+              const empName = token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User';
+              
+              let approvedTargets = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) {
+                  approvedTargets = JSON.parse(saved)
+                    .filter((r) => r.status === 'APPROVED')
+                    .map((r) => ({
+                      id: r.doctorId || r.chemistId || r.id,
+                      name: r.name,
+                      type: r.type === 'CHEMIST' ? 'Pharmacy' : 'Doctor',
+                      specialty: r.doctorSpeciality || r.chemistContactPerson || '',
+                      clinic: [r.address, r.city].filter(Boolean).join(', ') || r.city || '',
+                    }));
+                }
+              } catch (e) {}
+              const t = approvedTargets.find(item => String(item.id) === String(body.targetId)) || {
+                name: 'Unknown Target',
+                type: body.visitType === 'CHEMIST' ? 'Pharmacy' : 'Doctor',
+                specialty: 'General',
+                clinic: 'Unknown clinic',
+              };
+              
+              const newVisit = {
+                id: Math.floor(Math.random() * 100000),
+                employeeId: empId,
+                employeeName: empName,
+                visitType: body.visitType || t.type.toUpperCase(),
+                targetId: body.targetId,
+                targetName: t.name,
+                clinicName: t.clinic,
+                specialty: t.specialty,
+                checkInTime: new Date().toISOString(),
+                checkInLatitude: body.latitude,
+                checkInLongitude: body.longitude,
+                checkOutTime: null,
+                checkOutLatitude: null,
+                checkOutLongitude: null,
+                productsDiscussed: "",
+                samplesGiven: "",
+                feedback: "",
+                status: "CHECKED_IN",
+                gpsVerified: true
+              };
+              db.push(newVisit);
+              localStorage.setItem('mock_visits_db', JSON.stringify(db));
+              mockData = { success: true, status: 200, data: newVisit };
+
+            } else if (cfg.url.includes('/attendance/location/check-out') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
+              } catch (e) {}
+              
+              const empId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+              
+              const activeIndex = db.findIndex(v => String(v.employeeId) === String(empId) && v.status === 'CHECKED_IN');
+              let updatedVisit = null;
+              if (activeIndex !== -1) {
+                db[activeIndex] = {
+                  ...db[activeIndex],
+                  checkOutTime: new Date().toISOString(),
+                  checkOutLatitude: body.latitude,
+                  checkOutLongitude: body.longitude,
+                  productsDiscussed: body.productsDiscussed,
+                  samplesGiven: body.samplesGiven,
+                  feedback: body.feedback,
+                  status: 'COMPLETED'
+                };
+                updatedVisit = db[activeIndex];
+              } else {
+                updatedVisit = {
+                  id: Math.floor(Math.random() * 100000),
+                  employeeId: empId,
+                  employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                  visitType: 'DOCTOR',
+                  targetId: 1,
+                  targetName: 'Dr. Ramesh Sharma',
+                  clinicName: 'City Heart Clinic',
+                  specialty: 'Cardiology',
+                  checkInTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+                  checkInLatitude: body.latitude,
+                  checkInLongitude: body.longitude,
+                  checkOutTime: new Date().toISOString(),
+                  checkOutLatitude: body.latitude,
+                  checkOutLongitude: body.longitude,
+                  productsDiscussed: body.productsDiscussed,
+                  samplesGiven: body.samplesGiven,
+                  feedback: body.feedback,
+                  status: 'COMPLETED',
+                  gpsVerified: true
+                };
+                db.push(updatedVisit);
+              }
+              localStorage.setItem('mock_visits_db', JSON.stringify(db));
+              mockData = { success: true, status: 200, data: updatedVisit };
+
+            } else if (cfg.url.includes('/attendance/location/me') && cfg.method === 'get') {
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
+              } catch (e) {}
+              
+              const empId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+              
+              if (db.length === 0) {
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+                db = [
+                  {
+                    id: 1001,
+                    employeeId: empId,
+                    employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                    visitType: 'DOCTOR',
+                    targetId: 1,
+                    targetName: 'Dr. Ramesh Sharma',
+                    clinicName: 'City Heart Clinic',
+                    specialty: 'Cardiology',
+                    checkInTime: `${dayBefore}T10:30:00Z`,
+                    checkInLatitude: 12.9716,
+                    checkInLongitude: 77.5946,
+                    checkOutTime: `${dayBefore}T11:05:00Z`,
+                    checkOutLatitude: 12.9720,
+                    checkOutLongitude: 77.5950,
+                    productsDiscussed: 'Cardace 5mg, Lipvas 10mg',
+                    samplesGiven: 'Cardace (10 Tabs)',
+                    feedback: 'Doctor agreed to increase prescription count for hypertensive patients.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  },
+                  {
+                    id: 1002,
+                    employeeId: empId,
+                    employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                    visitType: 'CHEMIST',
+                    targetId: 5,
+                    targetName: 'Apollo Pharmacy',
+                    clinicName: 'Indiranagar Branch',
+                    specialty: 'Chemist',
+                    checkInTime: `${dayBefore}T13:45:00Z`,
+                    checkInLatitude: 12.9785,
+                    checkInLongitude: 77.6408,
+                    checkOutTime: `${dayBefore}T14:15:00Z`,
+                    checkOutLatitude: 12.9785,
+                    checkOutLongitude: 77.6408,
+                    productsDiscussed: 'Amlong 5mg stocking',
+                    samplesGiven: 'Visual aid pamphlets (2 packs)',
+                    feedback: 'Stock checked, placed order for 50 boxes of Lipvas.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  },
+                  {
+                    id: 1003,
+                    employeeId: empId,
+                    employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                    visitType: 'DOCTOR',
+                    targetId: 3,
+                    targetName: 'Dr. Vivek Verma',
+                    clinicName: 'Verma Ortho Care',
+                    specialty: 'Orthopedics',
+                    checkInTime: `${yesterday}T11:15:00Z`,
+                    checkInLatitude: 12.9650,
+                    checkInLongitude: 77.5890,
+                    checkOutTime: `${yesterday}T11:55:00Z`,
+                    checkOutLatitude: 12.9655,
+                    checkOutLongitude: 77.5895,
+                    productsDiscussed: 'Chymoral Forte discussions',
+                    samplesGiven: 'Chymoral Forte (2 Strips)',
+                    feedback: 'Very positive response. Doctor has been prescribing regularly.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  },
+                  {
+                    id: 1004,
+                    employeeId: empId,
+                    employeeName: token === 'mock-mr-token' ? 'Marcus Rep' : 'Admin User',
+                    visitType: 'DOCTOR',
+                    targetId: 2,
+                    targetName: 'Dr. Sunita Patel',
+                    clinicName: 'Metro General Hospital',
+                    specialty: 'Pediatrics',
+                    checkInTime: `${yesterday}T15:10:00Z`,
+                    checkInLatitude: 12.9780,
+                    checkInLongitude: 77.5995,
+                    checkOutTime: `${yesterday}T15:50:00Z`,
+                    checkOutLatitude: 12.9782,
+                    checkOutLongitude: 77.5997,
+                    productsDiscussed: 'Augmentin DDS Suspessions',
+                    samplesGiven: 'Augmentin DDS Pediatric samples (5 bottles)',
+                    feedback: 'Inquired about syrup stock levels in local pharmacies.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  }
+                ];
+                localStorage.setItem('mock_visits_db', JSON.stringify(db));
+              }
+              
+              const filtered = db.filter(v => String(v.employeeId) === String(empId));
+              mockData = { success: true, status: 200, data: filtered };
+
+            } else if (cfg.url.includes('/attendance/location/team') && cfg.method === 'get') {
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
+              } catch (e) {}
+              
+              if (db.length <= 4) {
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+                const teamMembers = [
+                  { id: 'EMP-MR-001', name: 'Marcus Rep' },
+                  { id: '1', name: 'Marcus Rep' },
+                  { id: '2', name: 'Amit Verma' },
+                  { id: '3', name: 'Rohan Deshmukh' },
+                  { id: '4', name: 'Sanjay Dutt' }
+                ];
+                
+                const newVisits = [];
+                teamMembers.forEach((m, idx) => {
+                  newVisits.push({
+                    id: 2000 + idx * 2,
+                    employeeId: m.id,
+                    employeeName: m.name,
+                    visitType: 'DOCTOR',
+                    targetId: 1,
+                    targetName: 'Dr. Ramesh Sharma',
+                    clinicName: 'City Heart Clinic',
+                    specialty: 'Cardiology',
+                    checkInTime: `${dayBefore}T10:30:00Z`,
+                    checkInLatitude: 12.9716 + idx * 0.001,
+                    checkInLongitude: 77.5946 - idx * 0.001,
+                    checkOutTime: `${dayBefore}T11:05:00Z`,
+                    checkOutLatitude: 12.9720 + idx * 0.001,
+                    checkOutLongitude: 77.5950 - idx * 0.001,
+                    productsDiscussed: 'Cardace 5mg, Lipvas 10mg',
+                    samplesGiven: 'Cardace (10 Tabs)',
+                    feedback: 'Hypertensive patients feedback was positive.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  });
+                  newVisits.push({
+                    id: 2001 + idx * 2,
+                    employeeId: m.id,
+                    employeeName: m.name,
+                    visitType: 'DOCTOR',
+                    targetId: 2,
+                    targetName: 'Dr. Sunita Patel',
+                    clinicName: 'Metro General Hospital',
+                    specialty: 'Pediatrics',
+                    checkInTime: `${yesterday}T15:10:00Z`,
+                    checkInLatitude: 12.9780 - idx * 0.001,
+                    checkInLongitude: 77.5995 + idx * 0.001,
+                    checkOutTime: `${yesterday}T15:50:00Z`,
+                    checkOutLatitude: 12.9782 - idx * 0.001,
+                    checkOutLongitude: 77.5997 + idx * 0.001,
+                    productsDiscussed: 'Augmentin DDS Suspessions',
+                    samplesGiven: 'Pediatric samples',
+                    feedback: 'Dr. Patel promised to increase brand prescriptions.',
+                    status: 'COMPLETED',
+                    gpsVerified: true
+                  });
+                });
+                db = [...db, ...newVisits];
+                localStorage.setItem('mock_visits_db', JSON.stringify(db));
+              }
+              mockData = { success: true, status: 200, data: db };
+            }
 
           return {
             data: mockData,

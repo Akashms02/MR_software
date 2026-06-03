@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMyTeam } from '../../redux/actions/teamActions';
+import { fetchTeamAttendanceAction, fetchTeamVisitsAction } from '../../redux/actions/attendanceActions';
 import { 
   Users, MapPin, CheckCircle, Clock, Navigation, 
   Map, Award, Calendar, RefreshCw, BarChart2, Eye, ShieldAlert,
@@ -42,7 +43,7 @@ export default function AdminFieldTracking() {
   const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
 
   // Local state
-  const [db, setDb] = useState([]);
+  const { teamAttendance = [], teamVisits = [] } = useSelector(state => state.attendance || {});
   const [selectedMrId, setSelectedMrId] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -62,19 +63,94 @@ export default function AdminFieldTracking() {
     dispatch(getMyTeam());
   }, [dispatch]);
 
-  // 2. Initialize database from localStorage and select first MR
+  // 2. Fetch team logs on mount
   useEffect(() => {
-    const localDb = localStorage.getItem('mr_field_attendance_db');
-    if (localDb) {
-      setDb(JSON.parse(localDb));
-    }
-  }, []);
+    dispatch(fetchTeamAttendanceAction());
+    dispatch(fetchTeamVisitsAction());
+  }, [dispatch]);
 
   useEffect(() => {
     if (mrList.length > 0 && !selectedMrId) {
       setSelectedMrId(String(mrList[0].id || mrList[0].employeeId || '1'));
     }
   }, [mrList, selectedMrId]);
+
+  const isSameDay = (date1, date2) => {
+    if (!date1 || !date2) return false;
+    try {
+      const d1 = new Date(date1);
+      const d2 = new Date(date2);
+      return (
+        d1.getDate() === d2.getDate() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getFullYear() === d2.getFullYear()
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const formatIsoToTime = (isoStr) => {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const mapVisitFromApi = (v) => ({
+    id: v.id,
+    name: v.targetName || v.name || 'Unknown Target',
+    type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
+    specialty: v.specialty || '',
+    clinic: v.clinicName || v.clinic || '',
+    checkInTime: formatIsoToTime(v.checkInTime),
+    checkInCoords: { lat: v.checkInLatitude, lng: v.checkInLongitude },
+    checkOutTime: formatIsoToTime(v.checkOutTime),
+    checkOutCoords: { lat: v.checkOutLatitude, lng: v.checkOutLongitude },
+    status: v.status === 'CHECKED_IN' ? 'ACTIVE' : 'COMPLETED',
+    products: v.productsDiscussed || v.products || '',
+    samples: v.samplesGiven || v.samples || '',
+    feedback: v.feedback || '',
+  });
+
+  // Find the details of the selected MR profile
+  const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId) || { fullName: 'Representative' };
+
+  const punchRecord = teamAttendance.find(
+    (a) => String(a.employeeId) === String(selectedMrId) && a.punchInTime && isSameDay(a.punchInTime, selectedDate)
+  );
+
+  const visitsForMrAndDate = teamVisits.filter(
+    (v) => String(v.employeeId) === String(selectedMrId) && v.checkInTime && isSameDay(v.checkInTime, selectedDate)
+  );
+
+  const targetRecord = punchRecord
+    ? {
+        id: punchRecord.id,
+        mrId: selectedMrId,
+        mrName: selectedMrProfile?.fullName || selectedMrProfile?.name || 'Representative',
+        date: selectedDate,
+        status: punchRecord.status === 'PUNCHED_IN' ? 'ACTIVE' : punchRecord.status === 'PUNCHED_OUT' ? 'ENDED' : 'OFFLINE',
+        startTime: formatIsoToTime(punchRecord.punchInTime),
+        startLocation: {
+          lat: punchRecord.punchInLatitude,
+          lng: punchRecord.punchInLongitude,
+          name: punchRecord.punchInRemarks || 'GPS Verified',
+        },
+        endTime: formatIsoToTime(punchRecord.punchOutTime),
+        endLocation: punchRecord.punchOutTime
+          ? {
+              lat: punchRecord.punchOutLatitude,
+              lng: punchRecord.punchOutLongitude,
+              name: punchRecord.punchOutRemarks || 'GPS Verified',
+            }
+          : null,
+        visits: visitsForMrAndDate.map(mapVisitFromApi),
+      }
+    : null;
 
   // 3. Setup and configure Leaflet Map
   useEffect(() => {
@@ -102,14 +178,14 @@ export default function AdminFieldTracking() {
         L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
       }
 
-      drawRoutesOnMap();
+      drawRoutesOnMap(targetRecord);
     };
 
     initMap();
-  }, [db, selectedMrId, selectedDate]);
+  }, [teamAttendance, teamVisits, selectedMrId, selectedDate]);
 
   // 4. Map rendering function
-  const drawRoutesOnMap = () => {
+  const drawRoutesOnMap = (record) => {
     const L = window.L;
     if (!L || !mapInstanceRef.current) return;
 
@@ -121,11 +197,8 @@ export default function AdminFieldTracking() {
       routeLineRef.current = null;
     }
 
-    const mrKey = selectedMrId;
-    const targetRecord = db.find(r => String(r.mrId) === mrKey && r.date === selectedDate);
-
     // If no record, show default center
-    if (!targetRecord) {
+    if (!record) {
       mapInstanceRef.current.setView([12.9716, 77.5946], 13);
       return;
     }
@@ -143,22 +216,22 @@ export default function AdminFieldTracking() {
     };
 
     // Plot Start Point
-    if (targetRecord.startLocation?.lat) {
-      const p = targetRecord.startLocation;
+    if (record.startLocation?.lat) {
+      const p = record.startLocation;
       pathCoordinates.push([p.lat, p.lng]);
       
       const startM = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>📍 Workday Start Check-In</strong><br/>Time: ${targetRecord.startTime}<br/>Coords: ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`)
+      .bindPopup(`<strong>📍 Workday Start Check-In</strong><br/>Time: ${record.startTime}<br/>Coords: ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`)
       .addTo(mapInstanceRef.current);
 
       markersRef.current.push(startM);
     }
 
     // Plot Visit Points
-    if (targetRecord.visits && targetRecord.visits.length > 0) {
-      targetRecord.visits.forEach(v => {
+    if (record.visits && record.visits.length > 0) {
+      record.visits.forEach(v => {
         if (v.checkInCoords?.lat) {
           pathCoordinates.push([v.checkInCoords.lat, v.checkInCoords.lng]);
 
@@ -183,14 +256,14 @@ export default function AdminFieldTracking() {
     }
 
     // Plot End Point
-    if (targetRecord.status === 'ENDED' && targetRecord.endLocation?.lat) {
-      const p = targetRecord.endLocation;
+    if (record.status === 'ENDED' && record.endLocation?.lat) {
+      const p = record.endLocation;
       pathCoordinates.push([p.lat, p.lng]);
 
       const endM = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>🏁 Workday End Check-Out</strong><br/>Time: ${targetRecord.endTime}<br/>Location: ${p.name || 'GPS Wrap'}`)
+      .bindPopup(`<strong>🏁 Workday End Check-Out</strong><br/>Time: ${record.endTime}<br/>Location: ${p.name || 'GPS Wrap'}`)
       .addTo(mapInstanceRef.current);
 
       markersRef.current.push(endM);
@@ -214,8 +287,7 @@ export default function AdminFieldTracking() {
   };
 
   // Helper Stats calculations
-  const getSelectedStats = () => {
-    const rec = db.find(r => String(r.mrId) === selectedMrId && r.date === selectedDate);
+  const getSelectedStats = (rec) => {
     if (!rec) return { status: 'OFFLINE', duration: '—', visits: 0, distance: '0.0 km', start: '—', end: '—', record: null };
 
     const completedVisits = rec.visits?.filter(v => v.status === 'COMPLETED').length || 0;
@@ -253,16 +325,18 @@ export default function AdminFieldTracking() {
     };
   };
 
-  const currentStats = getSelectedStats();
+  const currentStats = getSelectedStats(targetRecord);
 
   // Unified Overview metrics for the whole MR team today
   const getTeamOverviewToday = () => {
     const todayStr = new Date().toISOString().split('T')[0];
-    const todaysLogs = db.filter(r => r.date === todayStr);
+    const todaysLogs = teamAttendance.filter(a => a.punchInTime && isSameDay(a.punchInTime, todayStr));
     
-    const activeWorkingCount = todaysLogs.filter(r => r.status === 'ACTIVE').length;
-    const completedWorkdayCount = todaysLogs.filter(r => r.status === 'ENDED').length;
-    const totalVisitsMet = todaysLogs.reduce((acc, r) => acc + (r.visits?.length || 0), 0);
+    const activeWorkingCount = todaysLogs.filter(r => r.status === 'PUNCHED_IN').length;
+    const completedWorkdayCount = todaysLogs.filter(r => r.status === 'PUNCHED_OUT').length;
+    
+    const todaysVisits = teamVisits.filter(v => v.checkInTime && isSameDay(v.checkInTime, todayStr));
+    const totalVisitsMet = todaysVisits.length;
 
     return {
       activeField: activeWorkingCount,
@@ -272,9 +346,6 @@ export default function AdminFieldTracking() {
   };
 
   const overview = getTeamOverviewToday();
-
-  // Find the details of the selected MR profile
-  const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId) || { fullName: 'Representative' };
 
   return (
     <div className="animate-[fadeIn_0.35s_ease-out] font-sans">
@@ -317,7 +388,7 @@ export default function AdminFieldTracking() {
         <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
           <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Database Verified Routes</div>
           <div className="text-[26px] font-extrabold text-[#6366F1] mt-1.5">
-            {db.length} Logs
+            {teamAttendance.length} Logs
           </div>
         </div>
 
