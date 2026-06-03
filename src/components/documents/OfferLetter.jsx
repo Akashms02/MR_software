@@ -593,24 +593,7 @@ export default function OfferLetter({ onBack }) {
               <ArrowLeft size={16} /> Back to Hub
             </OutlineBtn>
             <h3 className="text-base font-extrabold text-gray-900">Noel Pharma Offer Customizer</h3>
-          </div>
-
-          {/* Quick Preload */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-500">Load Database Template:</span>
-            <select
-              onChange={e => handleLoadEmployee(e.target.value)}
-              defaultValue=""
-              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer"
-            >
-              <option value="" disabled>Select Employee Template…</option>
-              {employees.map(emp => (
-                <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
-                  {emp.fullName || emp.name} ({emp.designation || 'Employee'})
-                </option>
-              ))}
-            </select>
-          </div>
+          </div>          
         </div>
 
         {/* Input Matrix Grid */}
