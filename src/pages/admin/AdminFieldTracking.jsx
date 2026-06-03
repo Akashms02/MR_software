@@ -43,9 +43,17 @@ export default function AdminFieldTracking() {
   const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
 
   // Local state
-  const { teamAttendance = [], teamVisits = [] } = useSelector(state => state.attendance || {});
+  const { teamAttendance = [], teamVisits = [], loading: attendanceLoading } = useSelector(state => state.attendance || {});
+  const isLoading = teamLoading || attendanceLoading;
+  
   const [selectedMrId, setSelectedMrId] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const handleRefresh = () => {
+    dispatch(getMyTeam());
+    dispatch(fetchTeamAttendanceAction());
+    dispatch(fetchTeamVisitsAction());
+  };
 
   // UI Refs
   const mapContainerRef = useRef(null);
@@ -54,9 +62,13 @@ export default function AdminFieldTracking() {
   const markersRef = useRef([]);
 
   // Extract MR List from team list
-  const mrList = (team || []).filter(
-    (member) => (member.role || '').toUpperCase().trim() === 'MR'
-  );
+  const mrList = (team || []).filter((member) => {
+    const role = (member.role || '').toUpperCase().trim();
+    const name = (member.fullName || member.name || '').toLowerCase();
+    const isMr = role === 'MR' || role === 'MEDICAL_REPRESENTATIVE';
+    const isSuperAdmin = name.includes('superadmin') || name.includes('admin');
+    return isMr && !isSuperAdmin;
+  });
 
   // 1. Fetch team list on mount
   useEffect(() => {
@@ -117,23 +129,35 @@ export default function AdminFieldTracking() {
   });
 
   // Find the details of the selected MR profile
-  const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId) || { fullName: 'Representative' };
+  const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId || String(mr.employeeId) === selectedMrId) || { fullName: 'Representative' };
 
-  const punchRecord = teamAttendance.find(
-    (a) => String(a.employeeId) === String(selectedMrId) && a.punchInTime && isSameDay(a.punchInTime, selectedDate)
-  );
+  const punchRecord = teamAttendance.find((a) => {
+    const logMrId = String(a.mrId || a.employeeId || '');
+    const targetMrId = String(selectedMrId);
+    const matchesMrId = logMrId === targetMrId;
+    const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
+    const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
+    return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
+           a.punchInTime && isSameDay(a.punchInTime, selectedDate);
+  });
 
-  const visitsForMrAndDate = teamVisits.filter(
-    (v) => String(v.employeeId) === String(selectedMrId) && v.checkInTime && isSameDay(v.checkInTime, selectedDate)
-  );
+  const visitsForMrAndDate = teamVisits.filter((v) => {
+    const logMrId = String(v.mrId || v.employeeId || '');
+    const targetMrId = String(selectedMrId);
+    const matchesMrId = logMrId === targetMrId;
+    const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
+    const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
+    return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
+           v.checkInTime && isSameDay(v.checkInTime, selectedDate);
+  });
 
   const targetRecord = punchRecord
     ? {
         id: punchRecord.id,
         mrId: selectedMrId,
-        mrName: selectedMrProfile?.fullName || selectedMrProfile?.name || 'Representative',
+        mrName: selectedMrProfile?.fullName || selectedMrProfile?.name || punchRecord.mrName || 'Representative',
         date: selectedDate,
-        status: punchRecord.status === 'PUNCHED_IN' ? 'ACTIVE' : punchRecord.status === 'PUNCHED_OUT' ? 'ENDED' : 'OFFLINE',
+        status: (punchRecord.punchInTime && !punchRecord.punchOutTime) ? 'ACTIVE' : (punchRecord.punchInTime && punchRecord.punchOutTime) ? 'ENDED' : 'OFFLINE',
         startTime: formatIsoToTime(punchRecord.punchInTime),
         startLocation: {
           lat: punchRecord.punchInLatitude,
@@ -332,8 +356,8 @@ export default function AdminFieldTracking() {
     const todayStr = new Date().toISOString().split('T')[0];
     const todaysLogs = teamAttendance.filter(a => a.punchInTime && isSameDay(a.punchInTime, todayStr));
     
-    const activeWorkingCount = todaysLogs.filter(r => r.status === 'PUNCHED_IN').length;
-    const completedWorkdayCount = todaysLogs.filter(r => r.status === 'PUNCHED_OUT').length;
+    const activeWorkingCount = todaysLogs.filter(r => r.punchInTime && !r.punchOutTime).length;
+    const completedWorkdayCount = todaysLogs.filter(r => r.punchInTime && r.punchOutTime).length;
     
     const todaysVisits = teamVisits.filter(v => v.checkInTime && isSameDay(v.checkInTime, todayStr));
     const totalVisitsMet = todaysVisits.length;
@@ -359,6 +383,14 @@ export default function AdminFieldTracking() {
           <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Field Representative Tracking</h2>
           <p className="text-[13px] text-[#6B7280] mt-0.75 mb-0">Monitor Medical Representatives working hours, live routes, GPS locations, and call report submissions.</p>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white hover:bg-black font-extrabold rounded-xl transition-all duration-200 text-xs shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+          REFRESH PATHWAYS
+        </button>
       </div>
 
       {/* Overview Cards Row */}
