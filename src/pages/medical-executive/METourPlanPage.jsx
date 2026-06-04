@@ -29,7 +29,7 @@ const METourPlanPage = () => {
     return nextMonth.toISOString().slice(0, 7);
   });
   const [planDays, setPlanDays] = useState([
-    { plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }
+    { plannedDate: '', targetTerritory: '', activityType: 'FIELD_WORK' }
   ]);
 
   // ME theme: Indigo
@@ -54,13 +54,6 @@ const METourPlanPage = () => {
 
   useEffect(() => {
     dispatch(fetchMyTourPlansAction());
-    const loadDoctors = async () => {
-      try {
-        const res = await axios.get(`${API_ROUTE}/doctor`);
-        if (res.data && res.data.data) setDoctors(res.data.data);
-      } catch (err) { console.warn('Could not load doctors database.'); }
-    };
-    loadDoctors();
   }, [dispatch]);
 
   const triggerLocalNotification = (type, msg) => {
@@ -74,7 +67,7 @@ const METourPlanPage = () => {
       const lastDate = planDays[planDays.length - 1].plannedDate;
       if (lastDate) { const d = new Date(lastDate); d.setDate(d.getDate() + 1); nextDateStr = d.toISOString().split('T')[0]; }
     }
-    setPlanDays([...planDays, { plannedDate: nextDateStr, targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }]);
+    setPlanDays([...planDays, { plannedDate: nextDateStr, targetTerritory: '', activityType: 'FIELD_WORK' }]);
   };
 
   const removeDayField = (idx) => {
@@ -86,14 +79,7 @@ const METourPlanPage = () => {
     const updated = [...planDays]; updated[idx][field] = value; setPlanDays(updated);
   };
 
-  const handleDoctorCheckboxChange = (dayIdx, docId, checked) => {
-    const updated = [...planDays];
-    const currentDocIds = [...updated[dayIdx].plannedDoctorIds];
-    if (checked) { if (!currentDocIds.includes(docId)) currentDocIds.push(docId); }
-    else { const pos = currentDocIds.indexOf(docId); if (pos > -1) currentDocIds.splice(pos, 1); }
-    updated[dayIdx].plannedDoctorIds = currentDocIds;
-    setPlanDays(updated);
-  };
+
 
   const handleSaveDraft = async (e, andSubmit = false) => {
     if (e) e.preventDefault();
@@ -105,14 +91,18 @@ const METourPlanPage = () => {
     try {
       const payload = {
         targetMonth: `${targetMonth}-01`,
-        planDays: planDays.map(d => ({ plannedDate: d.plannedDate, targetTerritory: d.targetTerritory || 'N/A', plannedDoctorIds: d.plannedDoctorIds.map(id => parseInt(id)), activityType: d.activityType, remarks: d.remarks || '' }))
+        planDays: planDays.map(d => ({
+          plannedDate: d.plannedDate,
+          targetTerritory: d.targetTerritory || 'N/A',
+          activityType: d.activityType
+        }))
       };
       const res = await dispatch(saveTourPlanDraftAction(payload));
       const createdPlan = res?.data || res;
       if (createdPlan && createdPlan.id) {
         if (andSubmit) await dispatch(submitTourPlanAction(createdPlan.id));
         dispatch(fetchMyTourPlansAction());
-        setPlanDays([{ plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }]);
+        setPlanDays([{ plannedDate: '', targetTerritory: '', activityType: 'FIELD_WORK' }]);
         setActiveTab('list');
       }
     } catch (err) { /* Caught in store */ } finally { setActionLoading(false); }
@@ -340,30 +330,9 @@ const METourPlanPage = () => {
                     </div>
                   </div>
 
-                  {day.activityType === 'FIELD_WORK' && (
-                    <div className="mb-4">
-                      <label className="block text-xs font-bold text-gray-700 mb-2">Select Target Healthcare Professionals to Call</label>
-                      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5 max-h-[130px] overflow-y-auto bg-white border border-gray-200 p-3 rounded-[10px]">
-                        {doctorListOptions.map((doc) => {
-                          const isChecked = day.plannedDoctorIds.includes(doc.id);
-                          return (
-                            <label key={doc.id} className={`flex items-center gap-2 text-[12.5px] text-gray-600 cursor-pointer py-1 px-1.5 rounded-md transition-colors duration-150 ${isChecked ? 'bg-gray-50' : ''}`}>
-                              <input type="checkbox" checked={isChecked} onChange={(e) => handleDoctorCheckboxChange(idx, doc.id, e.target.checked)} className="w-3.5 h-3.5 accent-gray-900" />
-                              <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                <span className="font-semibold text-gray-800">{doc.fullName}</span>
-                                <span className="text-[11px] text-gray-400 ml-1">({doc.speciality || 'GEN'})</span>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Daily Objectives / Remarks</label>
-                    <input type="text" value={day.remarks} onChange={(e) => handleDayChange(idx, 'remarks', e.target.value)} placeholder="e.g. Introduce cardiological visual aids, collect feedback on MR-Cardio" className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] outline-none box-border" />
-                  </div>
+
+
                 </div>
               ))}
             </div>
@@ -429,31 +398,13 @@ const METourPlanPage = () => {
                         {day.activityType.replace('_', ' ')}
                       </span>
                     </div>
-                    <div className="grid grid-cols-[1fr_2fr] gap-4 mb-2 border-t border-gray-100 pt-2">
+                    <div className="border-t border-gray-100 pt-2">
                       <div>
                         <div className="text-[10.5px] font-bold text-gray-400 uppercase">Target Territory</div>
                         <div className="text-[13px] text-gray-700 font-semibold mt-0.5 flex items-center gap-1"><MapPin size={12} color="#9CA3AF" />{day.targetTerritory || 'N/A'}</div>
                       </div>
-                      <div>
-                        <div className="text-[10.5px] font-bold text-gray-400 uppercase">Daily Objectives</div>
-                        <div className={`text-[12.5px] text-gray-600 mt-0.5 ${day.remarks ? '' : 'italic'}`}>{day.remarks || 'No remarks provided.'}</div>
-                      </div>
                     </div>
-                    {day.activityType === 'FIELD_WORK' && day.plannedDoctorIds && day.plannedDoctorIds.length > 0 && (
-                      <div className="border-t border-gray-100 pt-2 mt-2">
-                        <div className="text-[10.5px] font-bold text-gray-400 uppercase mb-1">Target Doctors ({day.plannedDoctorIds.length})</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {day.plannedDoctorIds.map((docId) => {
-                            const doc = doctorListOptions.find(d => d.id === docId) || { fullName: `Dr. ID: ${docId}`, speciality: '' };
-                            return (
-                              <span key={docId} className="inline-flex py-0.5 px-2 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-bold">
-                                👨‍⚕️ {doc.fullName} {doc.speciality && `(${doc.speciality})`}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+
                   </div>
                 ))}
               </div>

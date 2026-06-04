@@ -30,7 +30,7 @@ const MRTourPlanPage = () => {
     return nextMonth.toISOString().slice(0, 7); // YYYY-MM
   });
   const [planDays, setPlanDays] = useState([
-    { plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }
+    { plannedDate: '', targetTerritory: '', activityType: 'FIELD_WORK' }
   ]);
 
   useEffect(() => {
@@ -57,17 +57,6 @@ const MRTourPlanPage = () => {
 
   useEffect(() => {
     dispatch(fetchMyTourPlansAction());
-    const loadDoctors = async () => {
-      try {
-        const res = await axios.get(`${API_ROUTE}/doctor`);
-        if (res.data && res.data.data) {
-          setDoctors(res.data.data);
-        }
-      } catch (err) {
-        console.warn('Could not load doctors database.');
-      }
-    };
-    loadDoctors();
   }, [dispatch]);
 
   const triggerLocalNotification = (type, msg) => {
@@ -92,7 +81,7 @@ const MRTourPlanPage = () => {
     }
     setPlanDays([
       ...planDays,
-      { plannedDate: nextDateStr, targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }
+      { plannedDate: nextDateStr, targetTerritory: '', activityType: 'FIELD_WORK' }
     ]);
   };
 
@@ -110,22 +99,7 @@ const MRTourPlanPage = () => {
     setPlanDays(updated);
   };
 
-  const handleDoctorCheckboxChange = (dayIdx, docId, checked) => {
-    const updated = [...planDays];
-    const currentDocIds = [...updated[dayIdx].plannedDoctorIds];
-    if (checked) {
-      if (!currentDocIds.includes(docId)) {
-        currentDocIds.push(docId);
-      }
-    } else {
-      const pos = currentDocIds.indexOf(docId);
-      if (pos > -1) {
-        currentDocIds.splice(pos, 1);
-      }
-    }
-    updated[dayIdx].plannedDoctorIds = currentDocIds;
-    setPlanDays(updated);
-  };
+
 
   const handleSaveDraft = async (e, andSubmit = false) => {
     if (e) e.preventDefault();
@@ -151,9 +125,7 @@ const MRTourPlanPage = () => {
         planDays: planDays.map(d => ({
           plannedDate: d.plannedDate,
           targetTerritory: d.targetTerritory || 'N/A',
-          plannedDoctorIds: d.plannedDoctorIds.map(id => parseInt(id)),
-          activityType: d.activityType,
-          remarks: d.remarks || ''
+          activityType: d.activityType
         }))
       };
 
@@ -166,7 +138,7 @@ const MRTourPlanPage = () => {
           await dispatch(submitTourPlanAction(planId));
         }
         dispatch(fetchMyTourPlansAction());
-        setPlanDays([{ plannedDate: '', targetTerritory: '', plannedDoctorIds: [], activityType: 'FIELD_WORK', remarks: '' }]);
+        setPlanDays([{ plannedDate: '', targetTerritory: '', activityType: 'FIELD_WORK' }]);
         setActiveTab('list');
       }
     } catch (err) {
@@ -456,47 +428,9 @@ const MRTourPlanPage = () => {
                     </div>
                   </div>
 
-                  {/* Planned Doctor Selections */}
-                  {day.activityType === 'FIELD_WORK' && (
-                    <div className="mb-4">
-                      <label className="block text-[12px] font-bold text-[#374151] mb-2">
-                        Select Target Healthcare Professionals to Call
-                      </label>
-                      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5 max-h-[130px] overflow-y-auto bg-white border-[1.5px] border-gray-200 p-3 rounded-xl">
-                        {doctorListOptions.map((doc) => {
-                          const isChecked = day.plannedDoctorIds.includes(doc.id);
-                          return (
-                            <label key={doc.id} className={`flex items-center gap-2 text-[12.5px] text-[#4B5563] cursor-pointer p-1 rounded-md transition-colors duration-150 ${
-                              isChecked ? 'bg-[#F9FAFB]' : 'transparent'
-                            }`}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(e) => handleDoctorCheckboxChange(idx, doc.id, e.target.checked)}
-                                className="w-3.5 h-3.5 accent-gray-900"
-                              />
-                              <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                <span className="font-semibold text-[#1F2937]">{doc.fullName}</span>
-                                <span className="text-[11px] text-[#9CA3AF] ml-1">({doc.speciality || 'GEN'})</span>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Day Remarks */}
-                  <div>
-                    <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Daily Objectives / Remarks</label>
-                    <input
-                      type="text"
-                      value={day.remarks}
-                      onChange={(e) => handleDayChange(idx, 'remarks', e.target.value)}
-                      placeholder="e.g. Introduce cardiological visual aids, collect feedback on MR-Cardio"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
-                    />
-                  </div>
+
+
                 </div>
               ))}
             </div>
@@ -571,7 +505,7 @@ const MRTourPlanPage = () => {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-[1fr_2fr] gap-4 mb-2 border-t border-[#F3F4F6] pt-2">
+                    <div className="mb-2 border-t border-[#F3F4F6] pt-2">
                       <div>
                         <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Target Territory</div>
                         <div className="text-[13px] color-[#374151] font-semibold mt-0.5 flex items-center gap-1">
@@ -579,29 +513,9 @@ const MRTourPlanPage = () => {
                           {day.targetTerritory || 'N/A'}
                         </div>
                       </div>
-                      <div>
-                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Daily Objectives</div>
-                        <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${day.remarks ? '' : 'italic'}`}>
-                          {day.remarks || 'No remarks provided.'}
-                        </div>
-                      </div>
                     </div>
 
-                    {day.activityType === 'FIELD_WORK' && day.plannedDoctorIds && day.plannedDoctorIds.length > 0 && (
-                      <div className="border-t border-[#F3F4F6] pt-2 mt-2">
-                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase mb-1">Target Doctors ({day.plannedDoctorIds.length})</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {day.plannedDoctorIds.map((docId) => {
-                            const doc = doctorListOptions.find(d => d.id === docId) || { fullName: `Dr. ID: ${docId}`, speciality: '' };
-                            return (
-                              <span key={docId} className="inline-flex px-2 py-0.5 rounded bg-[#E0E7FF] text-[#4F46E5] text-[11px] font-bold">
-                                👨‍⚕️ {doc.fullName} {doc.speciality && `(${doc.speciality})`}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+
                   </div>
                 ))}
               </div>
