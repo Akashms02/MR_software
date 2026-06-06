@@ -10,6 +10,7 @@ import METourPlanPage from '../../pages/medical-executive/METourPlanPage'
 import MEDoctorOnboarding from '../../pages/medical-executive/MEDoctorOnboarding'
 import MERequestsPage from '../../pages/medical-executive/MERequestsPage'
 import MEFieldTracking from '../../pages/medical-executive/MEFieldTracking'
+import MELeaveReviewPage from '../../pages/medical-executive/MELeaveReviewPage'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -28,6 +29,7 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="requests" element={<MERequestsPage />} />
         <Route path="reports" element={<MEReports />} />
         <Route path="fieldtracking" element={<MEFieldTracking />} />
+        <Route path="leaves" element={<MELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MEDoctorOnboarding />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />

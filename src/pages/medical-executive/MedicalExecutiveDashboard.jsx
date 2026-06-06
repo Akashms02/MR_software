@@ -247,6 +247,12 @@ const MedicalExecutiveDashboard = () => {
             >
               📍 Field Tracking
             </button>
+            <button
+              onClick={() => navigate('/medical-executive/leaves')}
+              className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center"
+            >
+              📅 Leave Approvals
+            </button>
             <button className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center">
               📢 Launch New Product Campaign
             </button>
