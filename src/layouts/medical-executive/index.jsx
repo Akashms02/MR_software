@@ -9,6 +9,7 @@ import WaterCooler from '../../pages/admin/WaterCooler'
 import METourPlanPage from '../../pages/medical-executive/METourPlanPage'
 import MEDoctorOnboarding from '../../pages/medical-executive/MEDoctorOnboarding'
 import MERequestsPage from '../../pages/medical-executive/MERequestsPage'
+import MEFieldTracking from '../../pages/medical-executive/MEFieldTracking'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -26,6 +27,7 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="tourplan" element={<METourPlanPage />} />
         <Route path="requests" element={<MERequestsPage />} />
         <Route path="reports" element={<MEReports />} />
+        <Route path="fieldtracking" element={<MEFieldTracking />} />
         <Route path="onboard-doctor" element={<MEDoctorOnboarding />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />
