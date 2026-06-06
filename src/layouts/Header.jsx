@@ -12,6 +12,7 @@ function getPageTitle(activePage, role) {
   if (activePage === 'recruitment') return 'Recruitment > Candidates'
   if (activePage === 'myteam') return 'My Team'
   if (activePage === 'fieldtracking') return 'Field Tracking'
+  if (activePage === 'leaves') return 'Leave Approvals'
   
   const navItem = 
     ADMIN_NAV.find(n => n.id === activePage) || 
