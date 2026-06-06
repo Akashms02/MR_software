@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3, MapPin, UserPlus } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3, MapPin, UserPlus, Navigation } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import Header from '../Header'
 
@@ -45,6 +45,7 @@ export default function MedicalSalesExecutiveLayout({ children }) {
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/medical-sales-executive/dashboard' },
     { id: 'requests',     icon: UserPlus,        label: 'Onboarding Requests', path: '/medical-sales-executive/requests' },
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/medical-sales-executive/tourplan' },
+    { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/medical-sales-executive/fieldtracking' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-sales-executive/reports' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/medical-sales-executive/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/medical-sales-executive/me' },
