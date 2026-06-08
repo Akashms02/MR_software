@@ -61,7 +61,7 @@ body {
 #root { width: 100%; min-height: 100vh; }
 
 /* ─── Scrollbar ─────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
 

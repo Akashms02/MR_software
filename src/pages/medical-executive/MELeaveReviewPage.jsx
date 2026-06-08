@@ -1,28 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Loader2, Check, X, Calendar, AlertCircle, CheckCircle2, MessageSquare, Eye, Users } from 'lucide-react';
+import { Loader2, Check, X, Calendar, AlertCircle, CheckCircle2, MessageSquare, Eye, Users, Plus, Send } from 'lucide-react';
 import {
   fetchTeamLeavesAction,
   reviewLeaveAction,
+  fetchMyLeavesAction,
+  applyLeaveAction,
   clearLeaveErrorsAction,
   clearLeaveSuccessAction
 } from '../../redux/actions/leaveActions';
 
 const MELeaveReviewPage = () => {
   const dispatch = useDispatch();
-  const { teamLeaves, loading, error, success } = useSelector((state) => state.leave);
+  const { teamLeaves, leaves, loading, error, success } = useSelector((state) => state.leave);
 
+  const [activeTab, setActiveTab] = useState('team'); // 'team', 'history', or 'apply'
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
   const [localSuccess, setLocalSuccess] = useState(null);
   const [localError, setLocalError] = useState(null);
 
-  // Inspector Modal State
+  // Inspector Modal State for Team Leaves
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
   const [inspectLeave, setInspectLeave] = useState(null);
 
+  // Form State for Apply Leave
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [leaveType, setLeaveType] = useState('CASUAL');
+  const [reason, setReason] = useState('');
+  const [formLoading, setFormLoading] = useState(false);
+
   useEffect(() => {
     dispatch(fetchTeamLeavesAction());
+    dispatch(fetchMyLeavesAction());
   }, [dispatch]);
 
   useEffect(() => {
@@ -47,6 +58,16 @@ const MELeaveReviewPage = () => {
     }
   }, [error, dispatch]);
 
+  const triggerLocalNotification = (type, msg) => {
+    if (type === 'success') {
+      setLocalSuccess(msg);
+      setTimeout(() => setLocalSuccess(null), 4000);
+    } else {
+      setLocalError(msg);
+      setTimeout(() => setLocalError(null), 4000);
+    }
+  };
+
   const handleReview = async (leaveId, status) => {
     const remarks = remarksMap[leaveId] || (status === 'APPROVED' ? 'Approved. Enjoy your time off!' : 'Rejected. Due to team availability.');
     setReviewingId(leaveId);
@@ -65,6 +86,47 @@ const MELeaveReviewPage = () => {
       // Handled by store errors hook
     } finally {
       setReviewingId(null);
+    }
+  };
+
+  const handleApplyLeave = async (e) => {
+    e.preventDefault();
+    setLocalError(null);
+    setLocalSuccess(null);
+
+    // Form validations
+    if (!startDate || !endDate || !leaveType || !reason.trim()) {
+      triggerLocalNotification('error', 'All fields are required.');
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end < start) {
+      triggerLocalNotification('error', 'End Date cannot be before Start Date.');
+      return;
+    }
+
+    setFormLoading(true);
+    try {
+      await dispatch(applyLeaveAction({
+        startDate,
+        endDate,
+        leaveType,
+        reason: reason.trim()
+      }));
+      
+      // Reset form on success
+      setStartDate('');
+      setEndDate('');
+      setLeaveType('CASUAL');
+      setReason('');
+      setActiveTab('history'); // Switch to history tab on success
+    } catch (err) {
+      // Errors handled by redux error binding
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -119,10 +181,10 @@ const MELeaveReviewPage = () => {
             PORTAL: MEDICAL EXECUTIVE
           </span>
           <h2 className="text-[28px] font-extrabold mt-3.5 mb-1.5 tracking-[-0.5px]">
-            Leave Approvals & Administration
+            Leave Management & Approvals
           </h2>
           <p className="m-0 text-sm text-white/80 max-w-[500px]">
-            Process and review leave applications requested by medical representatives and executives under your line management.
+            Apply for personal time off, view your leave request history, and review leave applications requested by medical representatives.
           </p>
         </div>
         <div className="absolute -right-10 -bottom-10 text-[180px] opacity-[0.08] select-none pointer-events-none">
@@ -144,127 +206,328 @@ const MELeaveReviewPage = () => {
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[28px]">
-        {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] cursor-pointer"
-          >
-            <div
-              className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0"
-              style={{ background: s.bg }}
-            >
-              {s.icon}
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px]">
-                {s.label}
-              </div>
-              <div className="text-[20px] font-extrabold text-[#1F2937] my-0.5">
-                {s.value}
-              </div>
-              <div
-                className="text-[11px] font-semibold"
-                style={{ color: s.color }}
-              >
-                {s.sub}
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Tab controls */}
+      <div className="flex gap-2.5 mb-6">
+        <button
+          onClick={() => setActiveTab('team')}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'team' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          Team Leave Requests
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'history' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          My Leave History
+        </button>
+        <button
+          onClick={() => setActiveTab('apply')}
+          className={`flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'apply' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Plus size={15} strokeWidth={2.5} /> Apply for Leave
+        </button>
       </div>
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-          <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
-            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Team Leave Applications</h3>
-            <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1 rounded-[20px]">
-              Pending: {pendingCount} requests
-            </span>
-          </div>
-
-          {loading && teamLeaves.length === 0 ? (
-            <div className="flex flex-col items-center py-[60px] gap-2.5">
-              <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
-              <span className="text-[13px] text-[#9CA3AF]">Loading team leaves...</span>
+        {/* Tab 1: Team Approvals */}
+        {activeTab === 'team' && (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[4px]">
+              {stats.map((s, i) => (
+                <div
+                  key={i}
+                  className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] cursor-pointer"
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0"
+                    style={{ background: s.bg }}
+                  >
+                    {s.icon}
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px]">
+                      {s.label}
+                    </div>
+                    <div className="text-[20px] font-extrabold text-[#1F2937] my-0.5">
+                      {s.value}
+                    </div>
+                    <div
+                      className="text-[11px] font-semibold"
+                      style={{ color: s.color }}
+                    >
+                      {s.sub}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : teamLeaves.length === 0 ? (
-            <div className="py-[60px] text-center text-[#9CA3AF] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB]">
-              <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
-              <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">All caught up! No leave requests pending approval.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
-                    {['Staff Member', 'Leave Category', 'Duration', 'Dates', 'Status', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamLeaves.map((leave) => {
-                    const reporterInitial = leave.employeeName ? leave.employeeName.charAt(0).toUpperCase() : 'E';
-                    const daysCount = calculateDays(leave.startDate, leave.endDate);
-                    return (
-                      <tr key={leave.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
-                        {/* Staff member name */}
-                        <td className="p-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
-                              {reporterInitial}
-                            </div>
-                            <div>
-                              <div className="text-[13.5px] font-extrabold text-[#1F2937]">{leave.employeeName || 'Field staff'}</div>
-                              <div className="text-[11px] text-[#9CA3AF]">{leave.employeeRole || 'Medical Representative'}</div>
-                            </div>
-                          </div>
-                        </td>
 
-                        {/* Leave Type */}
-                        <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
-                          {formatLeaveType(leave.leaveType)}
-                        </td>
+            <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+              <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
+                <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Team Leave Applications</h3>
+                <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1 rounded-[20px]">
+                  Pending: {pendingCount} requests
+                </span>
+              </div>
 
-                        {/* Duration */}
-                        <td className="p-4 text-[13px] text-[#1F2937] font-bold">
-                          {daysCount} Day{daysCount !== 1 ? 's' : ''}
-                        </td>
-
-                        {/* Dates */}
-                        <td className="p-4 text-[13.5px] text-[#4B5563] font-semibold">
-                          {leave.startDate} to {leave.endDate}
-                        </td>
-
-                        {/* Status */}
-                        <td className="p-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold ${getStatusBadgeClass(leave.status)}`}>
-                            {leave.status}
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="p-4">
-                          <button
-                            onClick={() => handleInspect(leave)}
-                            className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
-                          >
-                            <Eye size={12} /> Inspect Request
-                          </button>
-                        </td>
+              {loading && teamLeaves.length === 0 ? (
+                <div className="flex flex-col items-center py-[60px] gap-2.5">
+                  <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
+                  <span className="text-[13px] text-[#9CA3AF]">Loading team leaves...</span>
+                </div>
+              ) : teamLeaves.length === 0 ? (
+                <div className="py-[60px] text-center text-[#9CA3AF] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB]">
+                  <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
+                  <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">All caught up! No leave requests pending approval.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left">
+                    <thead>
+                      <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                        {['Staff Member', 'Leave Category', 'Duration', 'Dates', 'Status', 'Actions'].map((h) => (
+                          <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {teamLeaves.map((leave) => {
+                        const reporterInitial = leave.employeeName ? leave.employeeName.charAt(0).toUpperCase() : 'E';
+                        const daysCount = calculateDays(leave.startDate, leave.endDate);
+                        return (
+                          <tr key={leave.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
+                            <td className="p-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
+                                  {reporterInitial}
+                                </div>
+                                <div>
+                                  <div className="text-[13.5px] font-extrabold text-[#1F2937]">{leave.employeeName || 'Field staff'}</div>
+                                  <div className="text-[11px] text-[#9CA3AF]">{leave.employeeRole || 'Medical Representative'}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
+                              {formatLeaveType(leave.leaveType)}
+                            </td>
+                            <td className="p-4 text-[13px] text-[#1F2937] font-bold">
+                              {daysCount} Day{daysCount !== 1 ? 's' : ''}
+                            </td>
+                            <td className="p-4 text-[13.5px] text-[#4B5563] font-semibold">
+                              {leave.startDate} to {leave.endDate}
+                            </td>
+                            <td className="p-4">
+                              <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold ${getStatusBadgeClass(leave.status)}`}>
+                                {leave.status}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <button
+                                onClick={() => handleInspect(leave)}
+                                className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
+                              >
+                                <Eye size={12} /> Inspect Request
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
+
+        {/* Tab 2: My Leave History */}
+        {activeTab === 'history' && (
+          <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
+              <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">My Leave History</h3>
+            </div>
+
+            {loading && leaves.length === 0 ? (
+              <div className="flex flex-col items-center py-[60px] gap-2.5">
+                <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
+                <span className="text-[13px] text-[#9CA3AF]">Loading my leaves...</span>
+              </div>
+            ) : leaves.length === 0 ? (
+              <div className="py-[60px] text-center text-[#9CA3AF]">
+                <Calendar size={40} className="mx-auto mb-3 stroke-[1.5]" />
+                <p className="m-0 text-[14px] font-medium">No leave applications logged yet.</p>
+                <button
+                  onClick={() => setActiveTab('apply')}
+                  className="mt-3.5 bg-[#111827] text-white border-none px-4 py-2 rounded-lg font-bold text-[12.5px] cursor-pointer hover:bg-gray-800 transition-colors duration-150"
+                >
+                  Apply for Leave
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                      {['Leave Type', 'Start Date', 'End Date', 'Duration', 'Reason', 'Status', 'Manager Feedback'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaves.map((leave) => {
+                      const days = calculateDays(leave.startDate, leave.endDate);
+                      return (
+                        <tr key={leave.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
+                          <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
+                            {formatLeaveType(leave.leaveType)}
+                          </td>
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
+                            {leave.startDate}
+                          </td>
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
+                            {leave.endDate}
+                          </td>
+                          <td className="px-4 py-4 text-[13px] text-[#1F2937] font-bold">
+                            {days} Day{days !== 1 ? 's' : ''}
+                          </td>
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.reason}>
+                            {leave.reason}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${getStatusBadgeClass(leave.status)}`}>
+                              {leave.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-[12.5px] text-[#6B7280] italic max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.managerRemarks || leave.remarks || ''}>
+                            {leave.managerRemarks || leave.remarks || '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 3: Apply Leave Form */}
+        {activeTab === 'apply' && (
+          <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-7 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+            <form onSubmit={handleApplyLeave} className="flex flex-col gap-6">
+              <div className="border-b border-[#F3F4F6] pb-5">
+                <h4 className="text-[16px] font-extrabold text-[#111827] m-0">Request Time Off</h4>
+                <p className="text-[12px] text-[#6B7280] mt-[2px] mb-0">Submit a leave request for processing. Once sent, your manager will be notified.</p>
+              </div>
+
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
+                {/* Start Date */}
+                <div>
+                  <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                    Start Date <span className="text-[#EF4444]">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
+                  />
+                </div>
+
+                {/* End Date */}
+                <div>
+                  <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                    End Date <span className="text-[#EF4444]">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
+                  />
+                </div>
+
+                {/* Leave Type */}
+                <div>
+                  <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                    Leave Category <span className="text-[#EF4444]">*</span>
+                  </label>
+                  <select
+                    value={leaveType}
+                    onChange={(e) => setLeaveType(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none box-border font-sans"
+                  >
+                    <option value="CASUAL">Casual Leave</option>
+                    <option value="SICK">Sick Leave</option>
+                    <option value="PRIVILEGE">Privilege Leave</option>
+                    <option value="MATERNITY">Maternity Leave</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[12px] font-bold text-[#374151]">
+                  Reason for Leave <span className="text-[#EF4444]">*</span>
+                </label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Explain the purpose of your leave request here..."
+                  required
+                  className="w-full h-[100px] px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] resize-none outline-none box-border font-sans"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 justify-end border-t border-[#F3F4F6] pt-5 mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('team')}
+                  className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150"
+                >
+                  {formLoading ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={13} /> Submit Request
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Inspect & Review Modal */}
@@ -326,7 +589,6 @@ const MELeaveReviewPage = () => {
 
             {/* Modal Review input + Footer */}
             <div className="px-6 py-5 border-t-[1.5px] border-[#F3F4F6] flex flex-col gap-4 shrink-0 bg-[#FAFAFA]">
-              
               {/* Remarks input */}
               {inspectLeave.status === 'PENDING' && (
                 <div className="flex flex-col gap-1.5">

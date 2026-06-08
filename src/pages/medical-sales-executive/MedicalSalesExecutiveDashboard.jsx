@@ -108,7 +108,7 @@ const MedicalSalesExecutiveDashboard = () => {
               onClick={() => navigate('/medical-sales-executive/leaves')}
               className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center"
             >
-              📅 Leave Approvals
+              📅 Leaves & Approvals
             </button>
             <button className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer transition-colors hover:bg-gray-50 text-center">
               📝 Book Distributor Order

@@ -116,17 +116,8 @@ const AdminRequestsPage = () => {
 
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] p-1">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-7">
-        <div>
-          <span className="text-[11px] text-[#065F46] font-extrabold uppercase tracking-wider">
-            PORTAL: SYSTEM ADMIN
-          </span>
-          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Onboarding Approval Requests</h2>
-          <p className="text-[13px] text-[#6B7280] mt-[3px] mb-0">
-            Review, approve, or reject Doctor &amp; Chemist onboarding requests.
-          </p>
-        </div>
+      {/* Page Header actions (portal label and duplicate headings removed) */}
+      <div className="flex justify-end mb-7">
         <button
           onClick={() => navigate('/admin/myteam/onboard-doctor')}
           className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:bg-[#b8e040] transition-all duration-150 outline-none"
@@ -150,70 +141,74 @@ const AdminRequestsPage = () => {
         </div>
       )}
 
-      {/* Filters Bar */}
-      <div className="flex items-center gap-4 mb-5 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[220px] max-w-[340px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, type, MR..."
-            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#E5E7EB] text-[13px] outline-none bg-white focus:border-[#C8F04A] transition-colors duration-150 font-sans"
-          />
-        </div>
-        {/* Status Tabs */}
-        <div className="flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-1 gap-0.5">
-          {STATUS_TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3.5 py-1.5 rounded-lg text-[12.5px] font-bold transition-all duration-150 border-none cursor-pointer flex items-center gap-1.5 ${
-                activeTab === tab
-                  ? 'bg-white shadow-sm text-[#111827]'
-                  : 'bg-transparent text-[#9CA3AF] hover:text-[#374151]'
-              }`}
-            >
-              {tab}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
-                activeTab === tab ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-transparent text-[#D1D5DB]'
-              }`}>
-                {counts[tab]}
-              </span>
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => fetchRequests(activeTab)}
-          className="ml-auto p-2 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#C8F04A] cursor-pointer transition-all duration-150 flex items-center gap-1.5 text-[12.5px] font-semibold"
-          title="Refresh"
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
-      </div>
-
       {/* Content wrapper */}
-      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-7">
+      <div className="bg-white rounded-[18px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-6 flex flex-col h-[calc(100vh-150px)] min-h-[400px]">
+        {/* Card Header with Filters inside */}
+        <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
+          <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Onboarding Requests</h3>
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative w-60">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8.5 pr-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12px] outline-none bg-[#F9FAFB] focus:bg-white focus:border-[#C8F04A] transition-colors duration-150 font-sans"
+              />
+            </div>
+            {/* Status Tabs */}
+            <div className="flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-0.5 gap-0.5">
+              {STATUS_TABS.map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-150 border-none cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === tab
+                      ? 'bg-white shadow-xs text-[#111827]'
+                      : 'bg-transparent text-[#9CA3AF] hover:text-[#374151]'
+                  }`}
+                >
+                  {tab}
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                    activeTab === tab ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-transparent text-[#D1D5DB]'
+                  }`}>
+                    {counts[tab]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchRequests(activeTab)}
+              className="p-1.5 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#C8F04A] cursor-pointer transition-all duration-150 flex items-center justify-center shrink-0"
+              title="Refresh"
+            >
+              <RefreshCw size={13} />
+            </button>
+          </div>
+        </div>
         {loading ? (
-          <div className="flex flex-col items-center p-[60px] gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 gap-3">
             <Loader2 size={24} className="animate-spin text-[#065F46]" />
             <span className="text-[13.5px] text-[#9CA3AF]">Loading requests...</span>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-[60px] text-center text-[#9CA3AF]">
+          <div className="flex flex-col items-center justify-center flex-1 text-center text-[#9CA3AF]">
             <FileText size={40} className="mx-auto mb-3 stroke-[1.5]" />
             <p className="m-0 text-[14px] font-medium">
               {searchQuery || activeTab !== 'All' ? 'No requests match your filters.' : 'No onboarding requests found.'}
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="flex-1 overflow-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
                   {['S.No', 'MR Name', 'Type', 'Name', 'Email / Phone', 'Address', 'Details', 'Status / Action'].map(h => (
-                    <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider whitespace-nowrap">{h}</th>
+                    <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider whitespace-nowrap bg-white">{h}</th>
                   ))}
                 </tr>
               </thead>

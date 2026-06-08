@@ -17,10 +17,10 @@ import {
   Map,
   Calendar,
   Navigation,
-  UserPlus
+  UserPlus,
+  Bell
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
-import Header from '../Header'
 
 function SidebarAvatar({ name, size = 38 }) {
   const initials = name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
@@ -46,6 +46,40 @@ function SnowflakeLogo() {
       <line x1="4.93" y1="19.07" x2="19.07" y2="4.93" />
       <circle cx="12" cy="12" r="2" fill="white" stroke="none" />
     </svg>
+  )
+}
+
+function AdminHeader() {
+  const location = useLocation()
+  const pathParts = location.pathname.split('/')
+  const activePage = pathParts[pathParts.length - 1] || 'dashboard'
+
+  const getTitle = () => {
+    if (activePage === 'dashboard') return 'Admin Dashboard'
+    if (activePage === 'requests') return 'Onboarding Requests'
+    if (activePage === 'employees') return 'Employees'
+    if (activePage === 'reports') return 'Reports & Analytics'
+    if (activePage === 'tourplans') return 'Tour Plans'
+    if (activePage === 'fieldtracking') return 'Field Tracking'
+    if (activePage === 'leaves') return 'Leave Approvals'
+    if (activePage === 'myteam') return 'My Team'
+    if (activePage === 'hrdocuments') return 'HR Documents'
+    if (activePage === 'settings') return 'Settings'
+    return 'Admin Dashboard'
+  }
+
+  return (
+    <header className="h-[72px] bg-transparent flex items-center px-8 gap-4 shrink-0">
+      <div className="shrink-0">
+        <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight m-0">
+          {getTitle()}
+        </h1>
+      </div>
+      <div className="flex-1" />
+      <button className="w-[38px] h-[38px] rounded-[10px] bg-white border border-gray-200 flex items-center justify-center cursor-pointer shrink-0">
+        <Bell size={18} color="#9CA3AF" />
+      </button>
+    </header>
   )
 }
 
@@ -136,7 +170,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       <div className="ml-[220px] flex-1 flex flex-col min-w-0">
-        <Header role="ADMIN" />
+        <AdminHeader />
         <main className="flex-1 px-8 pb-8 overflow-y-auto">
           {children}
         </main>

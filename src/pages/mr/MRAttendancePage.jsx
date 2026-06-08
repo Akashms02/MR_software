@@ -282,27 +282,10 @@ export default function MRAttendancePage() {
     : 'No workday on this date';
 
   return (
-    <div className="p-2.5 animate-[fadeSlideIn_0.35s_ease-out]">
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       
-      {/* Header Panel & Date Filter */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3.5 border-b border-gray-200 pb-5">
-        <div>
-          <span className="text-[11px] text-gray-500 font-extrabold uppercase tracking-[1.5px]">
-            FIELD OPERATIONS LEDGER
-          </span>
-          <h2 className="text-[26px] font-extrabold text-gray-900 mt-1 mb-0 tracking-[-0.5px]">Field Attendance Map</h2>
-          <p className="text-[13px] text-gray-500 mt-1 mb-0">
-            Blue = workday punch · Green = completed visit · Orange pin = visit still open
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/mr/dashboard')}
-          className="px-4 py-2 rounded-xl border-none bg-blue-600 text-white text-[12px] font-bold cursor-pointer"
-        >
-          Go to dashboard
-        </button>
-
+      {/* Date Filter & Actions Bar */}
+      <div className="flex justify-end items-center mb-4 shrink-0">
         {/* Date Filter Calendar Picker */}
         <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
           <Calendar size={15} className="text-gray-500" />
@@ -319,7 +302,7 @@ export default function MRAttendancePage() {
       </div>
 
       {/* Daily Stats Ribbon */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4 shrink-0">
         {/* Card 1: Status */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
           <div 
@@ -374,10 +357,10 @@ export default function MRAttendancePage() {
       </div>
 
       {/* Split Layout grid */}
-      <div className="grid grid-cols-[1.2fr_1fr] gap-6 items-stretch">
+      <div className="grid grid-cols-[1.2fr_1fr] gap-6 flex-1 min-h-0 overflow-hidden mb-1">
         
         {/* LEFT COLUMN: Map container */}
-        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col">
+        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col min-h-0 h-full">
           {/* Map Title block */}
           <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
             <div>
@@ -389,7 +372,7 @@ export default function MRAttendancePage() {
           {/* Actual Leaflet Container */}
           <div 
             ref={mapContainerRef} 
-            className="w-full h-[480px] bg-[#FAFAFA] z-10 flex-1"
+            className="w-full bg-[#FAFAFA] z-10 flex-1 min-h-0"
           />
           
           {/* Map Legend */}
@@ -401,13 +384,13 @@ export default function MRAttendancePage() {
         </div>
 
         {/* RIGHT COLUMN: Chronological Timeline */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] h-[584px] flex flex-col">
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col min-h-0 h-full">
           <div className="border-b border-gray-100 pb-3.5 mb-4 shrink-0">
             <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Day timeline</h3>
             <span className="text-[12px] text-gray-400">Workday and field visits</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 pl-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex-1 overflow-y-auto pr-1 pl-2">
             {!activeRecord ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center">
                 <Calendar size={28} className="mb-2.5 text-gray-400" />

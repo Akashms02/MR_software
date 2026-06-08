@@ -23,6 +23,7 @@ const AdminTourPlanReviewPage = () => {
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
   const [inspectPlan, setInspectPlan] = useState(null);
   const [doctors, setDoctors] = useState([]);
+  const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => {
     dispatch(fetchTeamTourPlansAction());
@@ -81,12 +82,25 @@ const AdminTourPlanReviewPage = () => {
   const totalCount = teamTourPlans.length;
   const approvedCount = teamTourPlans.filter(p => p.status === 'APPROVED').length;
 
+  const uniqueEmployees = new Set(teamTourPlans.map(p => p.mrId || p.employeeId || p.mrName || p.employeeName).filter(Boolean));
+  const repsCount = uniqueEmployees.size;
+
+  const uniqueTerritories = new Set(
+    teamTourPlans.flatMap(p => p.planDays || []).map(d => d.targetTerritory?.trim()).filter(Boolean)
+  );
+  const activeTerritoriesCount = uniqueTerritories.size;
+
   const stats = [
-    { label: 'Pending Review', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Action required' : 'All caught up!', color: '#D97706', bg: '#FFFBEB', icon: '📋' },
-    { label: 'Approved Plans', value: `${approvedCount}`, sub: 'For target months', color: '#10B981', bg: '#ECFDF5', icon: '✅' },
-    { label: 'Total Reps Under Management', value: '8 Field Staff', sub: 'MRs, MEs & MSEs', color: '#6366F1', bg: '#EEF2FF', icon: '👥' },
-    { label: 'Active Territories', value: '14 Regions', sub: 'Target Coverage', color: '#06B6D4', bg: '#ECFEFF', icon: '🗺️' },
+    { label: 'Pending Review', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Review required' : 'All caught up!', color: '#D97706', bg: '#FFFBEB', icon: '📋' },
+    { label: 'Approved Plans', value: `${approvedCount}`, sub: `${approvedCount} of ${totalCount} plans approved`, color: '#10B981', bg: '#ECFDF5', icon: '✅' },
+    { label: 'Reps Under Management', value: `${repsCount} Field Staff`, sub: `${repsCount} active field reps`, color: '#6366F1', bg: '#EEF2FF', icon: '👥' },
+    { label: 'Active Territories', value: `${activeTerritoriesCount} Regions`, sub: `Across ${activeTerritoriesCount} regions`, color: '#06B6D4', bg: '#ECFEFF', icon: '🗺️' },
   ];
+
+  const filteredPlans = teamTourPlans.filter(plan => {
+    if (filterStatus === 'ALL') return true;
+    return plan.status === filterStatus;
+  });
 
   const formatMonthLabel = (dateStr) => {
     if (!dateStr) return '—';
@@ -99,12 +113,7 @@ const AdminTourPlanReviewPage = () => {
     }
   };
 
-  const doctorListOptions = doctors.length > 0 ? doctors : [
-    { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic' },
-    { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital' },
-    { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care' },
-    { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic' },
-  ];
+  const doctorListOptions = doctors;
 
   const handleInspect = (plan) => {
     setInspectPlan(plan);
@@ -112,25 +121,7 @@ const AdminTourPlanReviewPage = () => {
   };
 
   return (
-    <div className="animate-[fadeIn_0.4s_ease-out] p-[10px]">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-[20px] p-[30px] text-white mb-[28px] shadow-[0_10px_25px_rgba(15, 23, 42, 0.15)] relative overflow-hidden">
-        <div className="relative z-[2]">
-          <span className="bg-white/15 text-[#C8F04A] px-3 py-1.5 rounded-[20px] text-[11px] font-extrabold tracking-[1px]">
-            PORTAL: SYSTEM ADMIN
-          </span>
-          <h2 className="text-[28px] font-extrabold mt-3.5 mb-1.5 tracking-[-0.5px]">
-            Tour Plan Administration
-          </h2>
-          <p className="m-0 text-sm text-white/80 max-w-[500px]">
-            Review, approve or reject monthly tour programs submitted by medical representatives and executives.
-          </p>
-        </div>
-        <div className="absolute -right-10 -bottom-10 text-[180px] opacity-[0.08] select-none pointer-events-none">
-          🗺️
-        </div>
-      </div>
-
+    <div className="animate-[fadeIn_0.4s_ease-out] p-1">
       {/* Notifications */}
       {localSuccess && (
         <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
@@ -158,15 +149,15 @@ const AdminTourPlanReviewPage = () => {
             >
               {s.icon}
             </div>
-            <div>
-              <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px]">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px] truncate">
                 {s.label}
               </div>
-              <div className="text-[20px] font-extrabold text-[#1F2937] my-0.5">
+              <div className="text-[20px] font-extrabold text-[#1F2937] leading-none my-1.5">
                 {s.value}
               </div>
               <div
-                className="text-[11px] font-semibold"
+                className="text-[11px] font-semibold truncate"
                 style={{ color: s.color }}
               >
                 {s.sub}
@@ -178,49 +169,77 @@ const AdminTourPlanReviewPage = () => {
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col h-[calc(100vh-220px)] min-h-[350px]">
           <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
-            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Submitted Tour Plans Awaiting Approval</h3>
-            <span className="text-[12.5px] font-bold text-[#10B981] bg-[#ECFDF5] px-3 py-1 rounded-[20px]">
-              Pending: {pendingCount} plans
-            </span>
+            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Submitted Tour Plans</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-bold mr-1">Filter:</span>
+              <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200/50">
+                {[
+                  { value: 'ALL', label: 'All' },
+                  { value: 'SUBMITTED', label: 'Pending' },
+                  { value: 'APPROVED', label: 'Approved' },
+                  { value: 'REJECTED', label: 'Rejected' }
+                ].map((tab) => {
+                  const isActive = filterStatus === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setFilterStatus(tab.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border-none ${
+                        isActive
+                          ? 'bg-[#111827] text-white shadow-sm'
+                          : 'text-gray-500 hover:text-[#111827] bg-transparent'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
+                Pending: {pendingCount}
+              </span>
+            </div>
           </div>
-
+ 
           {loading && teamTourPlans.length === 0 ? (
-            <div className="flex flex-col items-center py-[60px] gap-2.5">
+            <div className="flex flex-col items-center justify-center flex-1 gap-2.5">
               <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
               <span className="text-[13px] text-[#9CA3AF]">Loading team tour plans...</span>
             </div>
-          ) : teamTourPlans.length === 0 ? (
-            <div className="py-[60px] text-center text-[#9CA3AF] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB]">
+          ) : filteredPlans.length === 0 ? (
+            <div className="flex flex-col items-center justify-center flex-1 text-center text-[#9CA3AF]">
               <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
-              <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">All caught up! No tour plans pending approval.</p>
+              <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No tour plans found matching the filter.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                  <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
                     {['Staff Member', 'Target Month', 'Scheduled Days', 'Status', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
+                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {teamTourPlans.map((plan) => {
-                    const reporterInitial = plan.employeeName ? plan.employeeName.charAt(0).toUpperCase() : 'E';
+                  {filteredPlans.map((plan) => {
+                    const displayName = plan.mrName || plan.employeeName || 'Field Employee';
+                    const displayInitial = displayName.charAt(0).toUpperCase();
                     return (
                       <tr key={plan.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
                         {/* Staff member name */}
                         <td className="p-4">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
-                              {reporterInitial}
+                              {displayInitial}
                             </div>
                             <div>
-                              <div className="text-[13.5px] font-bold text-[#1F2937]">{plan.employeeName || 'Field Employee'}</div>
+                              <div className="text-[13.5px] font-bold text-[#1F2937]">{displayName}</div>
                               <div className="text-[11px] text-[#9CA3AF]">{plan.employeeRole || 'Medical Representative'}</div>
                             </div>
                           </div>
@@ -270,7 +289,7 @@ const AdminTourPlanReviewPage = () => {
             <div className="px-6 py-5 border-b-[1.5px] border-[#F3F4F6] flex justify-between items-center shrink-0">
               <div>
                 <h3 className="text-[17px] font-extrabold text-[#111827] m-0">
-                  Review Tour Plan: {inspectPlan.employeeName || 'Staff Member'}
+                  Review Tour Plan: {inspectPlan.mrName || inspectPlan.employeeName || 'Staff Member'}
                 </h3>
                 <span className="text-xs text-[#9CA3AF]">
                   Target Month: {formatMonthLabel(inspectPlan.targetMonth)} • Plan Status: {inspectPlan.status}
@@ -281,6 +300,20 @@ const AdminTourPlanReviewPage = () => {
 
             {/* Modal Scroll Content */}
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+              {inspectPlan.managerRemarks && (
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-250/60 flex flex-col gap-1 shrink-0">
+                  <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Review Remarks / Comments</div>
+                  <div className="text-[13px] text-[#374151] font-semibold italic">
+                    "{inspectPlan.managerRemarks}"
+                  </div>
+                  {inspectPlan.approvedByName && (
+                    <div className="text-[10.5px] text-[#9CA3AF] mt-0.5 font-medium">
+                      Reviewed by: <span className="font-bold text-[#4B5563]">{inspectPlan.approvedByName}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Daily schedule listing */}
               <div className="flex flex-col gap-3.5">
                 <div className="text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
@@ -314,15 +347,26 @@ const AdminTourPlanReviewPage = () => {
                       </div>
                     </div>
 
-                    {day.activityType === 'FIELD_WORK' && day.plannedDoctorIds && day.plannedDoctorIds.length > 0 && (
+                    {day.activityType === 'FIELD_WORK' && ((day.plannedDoctorIds && day.plannedDoctorIds.length > 0) || (day.plannedDoctors && day.plannedDoctors.length > 0)) && (
                       <div className="border-t border-[#F3F4F6] pt-2 mt-2">
-                        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase mb-1">Doctors Scheduled ({day.plannedDoctorIds.length})</div>
+                        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase mb-1">
+                          Doctors Scheduled ({(day.plannedDoctorIds?.length || 0) + (day.plannedDoctors?.length || 0)})
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {day.plannedDoctorIds.map((docId) => {
+                          {day.plannedDoctorIds?.map((docId) => {
                             const doc = doctorListOptions.find(d => d.id === docId) || { fullName: `Dr. ID: ${docId}`, speciality: '' };
                             return (
                               <span key={docId} className="inline-flex px-2 py-[3px] rounded-md bg-[#E0E7FF] text-[#4F46E5] text-[10.5px] font-bold">
                                 👨‍⚕️ {doc.fullName} {doc.speciality && `(${doc.speciality})`}
+                              </span>
+                            );
+                          })}
+                          {day.plannedDoctors?.map((doc, idx) => {
+                            const docName = typeof doc === 'object' ? (doc.fullName || doc.name) : doc;
+                            const docSpec = typeof doc === 'object' ? doc.speciality : '';
+                            return (
+                              <span key={idx} className="inline-flex px-2 py-[3px] rounded-md bg-[#E0E7FF] text-[#4F46E5] text-[10.5px] font-bold">
+                                👨‍⚕️ {docName} {docSpec && `(${docSpec})`}
                               </span>
                             );
                           })}

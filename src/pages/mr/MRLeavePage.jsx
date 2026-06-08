@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import { Calendar, Plus, CheckCircle2, AlertCircle, Clock, FileText, Send, Loader2 } from 'lucide-react';
 import {
   fetchMyLeavesAction,
@@ -10,9 +11,10 @@ import {
 
 const MRLeavePage = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { leaves, loading, error, success } = useSelector((state) => state.leave);
 
-  const [activeTab, setActiveTab] = useState('list'); // 'list' or 'new'
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
   
   // Local notification triggers
   const [errorMsg, setErrorMsg] = useState(null);
@@ -131,34 +133,23 @@ const MRLeavePage = () => {
   };
 
   return (
-    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-7">
-        <div>
-          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
-            PORTAL: MEDICAL REPRESENTATIVE
-          </span>
-          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Leave Management</h2>
-          <p className="text-[13px] text-[#6B7280] mt-[3px] mb-0">Request leaves and view approval history from your reporting manager.</p>
-        </div>
-      </div>
-
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       {/* Notifications */}
       {successMsg && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-3 shrink-0">
           <CheckCircle2 size={16} />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-3 shrink-0">
           <AlertCircle size={16} />
           {errorMsg}
         </div>
       )}
 
       {/* Tab controls */}
-      <div className="flex gap-2.5 mb-6">
+      <div className="flex gap-2.5 mb-4 shrink-0">
         <button
           onClick={() => setActiveTab('list')}
           className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
@@ -182,17 +173,17 @@ const MRLeavePage = () => {
       </div>
 
       {/* Content wrapper */}
-      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-7">
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
         
         {/* Tab 1: Leaves list */}
         {activeTab === 'list' && (
           loading && leaves.length === 0 ? (
-            <div className="flex flex-col items-center p-[60px] gap-3">
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
               <Loader2 size={24} className="animate-spin text-[#111827]" />
               <span className="text-[13.5px] text-[#9CA3AF]">Loading leave requests...</span>
             </div>
           ) : leaves.length === 0 ? (
-            <div className="p-[60px] text-center text-[#9CA3AF]">
+            <div className="flex-1 flex flex-col items-center justify-center text-center text-[#9CA3AF]">
               <Calendar size={40} className="mx-auto mb-3 stroke-[1.5]" />
               <p className="m-0 text-[14px] font-medium">No leave applications logged yet.</p>
               <button
@@ -203,7 +194,8 @@ const MRLeavePage = () => {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="overflow-y-auto flex-1 pr-1">
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b-[1.5px] border-[#F3F4F6]">
@@ -254,12 +246,13 @@ const MRLeavePage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
           )
         )}
 
         {/* Tab 2: Apply Leave Form */}
         {activeTab === 'new' && (
-          <form onSubmit={handleApplyLeave} className="flex flex-col gap-6">
+          <form onSubmit={handleApplyLeave} className="flex flex-col gap-6 overflow-y-auto flex-1 pr-1">
             <div className="border-b border-[#F3F4F6] pb-5">
               <h4 className="text-[16px] font-extrabold text-[#111827] margin-0">Request Time Off</h4>
               <p className="text-[12px] text-[#6B7280] mt-[2px] mb-0">Submit a leave request for processing. Once sent, your manager will be notified.</p>

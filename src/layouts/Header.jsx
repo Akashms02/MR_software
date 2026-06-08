@@ -6,13 +6,16 @@ import { ADMIN_NAV, SUPER_ADMIN_NAV, EMPLOYEE_NAV } from './navConfig'
 function getPageTitle(activePage, role) {
   if (activePage === 'dashboard') {
     if (role === 'ADMIN') return 'Admin Dashboard'
-    return 'Good Morning'
+    return 'Dashboard'
   }
+  if (activePage === 'dcr') return 'Daily Call Reports (DCR)'
   if (activePage === 'me') return 'Me > Leaves'
   if (activePage === 'recruitment') return 'Recruitment > Candidates'
   if (activePage === 'myteam') return 'My Team'
   if (activePage === 'fieldtracking') return 'Field Tracking'
   if (activePage === 'leaves') return 'Leave Approvals'
+  if (activePage === 'requests') return 'Onboarding Requests'
+  if (activePage === 'tourplans') return 'Tour Plan'
   
   const navItem = 
     ADMIN_NAV.find(n => n.id === activePage) || 
@@ -25,8 +28,9 @@ function getPageTitle(activePage, role) {
 function getPageSub(activePage, role) {
   if (activePage === 'dashboard') {
     if (role === 'ADMIN') return null
-    return '18 Aug 2023'
+    return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
+  if (activePage === 'dcr') return 'Log and track call visits submitted to your reporting manager.'
   if (activePage === 'me') return 'Working Hard? Request time off!'
   if (activePage === 'recruitment') return '189 Total'
   return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -64,7 +68,7 @@ export default function Header({ role }) {
       <div className="flex-1" />
 
       {/* Search Bar */}
-      {!(activePage === 'dashboard' && role === 'ADMIN') && (
+      {role !== 'ADMIN' && role !== 'EMPLOYEE' && (
         <div className="relative w-60 shrink-0">
           <Search
             size={15}

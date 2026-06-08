@@ -109,47 +109,14 @@ const TeamManagement = () => {
   return (
     <div className="animate-[fadeIn_0.35s_ease-out]">
       {/* ── Action Bar ────────────────────────────────────────────── */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        {/* Resume search */}
-        <form
-          onSubmit={handleResumeSubmit}
-          className="flex gap-2 items-center"
+      <div className="flex justify-end items-center mb-6">
+        <button
+          onClick={() => navigate('/admin/myteam/onboard')}
+          className="flex items-center gap-2 bg-gray-900 text-white px-5.5 py-3 rounded-xl border-none font-bold text-sm cursor-pointer shadow-[0_4px_14px_rgba(17,24,39,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(17,24,39,0.25)]"
         >
-          <div className="relative">
-            <RefreshCw
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              value={resumeId}
-              onChange={(e) => setResumeId(e.target.value)}
-              placeholder="Enter Employee ID to resume onboarding…"
-              className="pl-9 pr-3.5 py-[11px] rounded-xl border-[1.5px] border-gray-200 w-[310px] text-[13px] outline-none transition-[border-color] duration-200 focus:border-indigo-500 bg-white"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={!resumeId.trim()}
-            className={`px-4.5 py-[11px] rounded-xl border-[1.5px] border-gray-200 font-bold text-[13px] transition-all duration-200 ${
-              resumeId.trim()
-                ? 'bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200'
-                : 'bg-[#FAFAFA] text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            Resume Onboarding
-          </button>
-        </form>
-
-        <div className="flex gap-2.5">
-          {/* New onboarding button */}
-          <button
-            onClick={() => navigate('/admin/myteam/onboard')}
-            className="flex items-center gap-2 bg-gray-900 text-white px-5.5 py-3 rounded-xl border-none font-bold text-sm cursor-pointer shadow-[0_4px_14px_rgba(17,24,39,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(17,24,39,0.25)]"
-          >
-            <Plus size={18} strokeWidth={3} />
-            Onboard New Member
-          </button>
-        </div>
+          <Plus size={18} strokeWidth={3} />
+          Onboard New Member
+        </button>
       </div>
 
       {/* ── Stats Bar ─────────────────────────────────────────────── */}
@@ -172,9 +139,9 @@ const TeamManagement = () => {
       </div>
 
       {/* ── Team Table ────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border-[1.5px] border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="bg-white rounded-2xl border-[1.5px] border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-[calc(100vh-270px)] min-h-[350px]">
         {/* Table toolbar */}
-        <div className="px-6 py-4.5 border-b-[1.5px] border-gray-100 flex justify-between items-center">
+        <div className="px-6 py-4.5 border-b-[1.5px] border-gray-100 flex justify-between items-center shrink-0">
           <div className="relative">
             <Search
               size={16}
@@ -191,16 +158,16 @@ const TeamManagement = () => {
             {filteredTeam.length} member{filteredTeam.length !== 1 ? 's' : ''}
           </span>
         </div>
-
+ 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="flex-1 overflow-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="sticky top-0 bg-gray-50 z-[10]">
                 {['Member', 'Contact', 'Role', 'Status', 'Action'].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 text-[11px] font-extrabold text-gray-500 uppercase tracking-wider border-b-[1.5px] border-gray-100"
+                    className="px-5 py-3.5 text-[11px] font-extrabold text-gray-500 uppercase tracking-wider border-b-[1.5px] border-gray-100 bg-gray-50"
                   >
                     {h}
                   </th>

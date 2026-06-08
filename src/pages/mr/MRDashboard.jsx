@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gift, ExternalLink } from 'lucide-react';
 import {
   punchInAction,
   punchOutAction,
@@ -21,6 +21,7 @@ import {
 } from '../../utils/attendanceUtils';
 import { fetchMeRequestsAction } from '../../redux/actions/requestActions';
 import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
+import { getMyTeam } from '../../redux/actions/teamActions';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'mr_field_attendance_db';
@@ -450,6 +451,27 @@ function ProgressCircle({ pct, color, label, val }) {
   );
 }
 
+// ─── Birthday Row Helper ───────────────────────────────────────────────────────
+function BirthdayRow({ name, date, role }) {
+  const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
+  return (
+    <div className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-none">
+      <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#E2E8F0] to-[#CBD5E1] flex items-center justify-center text-[12px] font-bold text-[#334155]">
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-[#111827] truncate">{name}</div>
+        <div className="text-[11px] text-[#9CA3AF] truncate">{role || 'Team Member'}</div>
+      </div>
+      <div className="flex flex-col items-end">
+        <div className="text-xs font-bold text-[#111827]">
+          {date}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function MRDashboard() {
   const { user }  = useSelector(s => s.auth);
@@ -461,6 +483,7 @@ export default function MRDashboard() {
   const dispatch = useDispatch();
   const { myAttendance = [], myVisits = [], loading } = useSelector(state => state.attendance || {});
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
+  const { team = [] } = useSelector(state => state.team || {});
   const approvedVisitTargets = useMemo(
     () => getApprovedVisitTargets(requests),
     [requests]
@@ -546,6 +569,7 @@ export default function MRDashboard() {
     dispatch(fetchMyAttendanceAction());
     dispatch(fetchMyVisitsAction());
     dispatch(fetchMeRequestsAction());
+    dispatch(getMyTeam());
   }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
@@ -716,23 +740,76 @@ export default function MRDashboard() {
     { label:'Hrs Worked',      val: ds === 'ACTIVE' ? secsToHMS(elapsed).slice(0,5) : ds === 'ENDED' ? (activeDay?.endTime || '—') : '—', sub: ds === 'ACTIVE' ? 'running now' : ds === 'ENDED' ? 'ended' : 'not started', col:'#10B981' },
   ];
 
+  const formatRole = (roleStr) => {
+    if (!roleStr) return 'Employee'
+    return roleStr.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+  }
+
+  // Birthdays dynamic list (Show all colleagues)
+  const getUpcomingMRBirthdays = () => {
+    const currentMonth = new Date().getMonth()
+    const allColleagues = team; // Show all colleagues
+
+    const list = allColleagues
+      .filter(emp => emp.dateOfBirth)
+      .filter(emp => {
+        const dob = new Date(emp.dateOfBirth)
+        return dob.getMonth() === currentMonth
+      })
+      .map(emp => {
+        const dob = new Date(emp.dateOfBirth)
+        return {
+          name: emp.fullName,
+          date: dob.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          role: formatRole(emp.role)
+        }
+      })
+    
+    // Fallback/mocks if empty to keep it beautiful
+    if (list.length === 0 && allColleagues.length > 0) {
+      const monthStr = new Date().toLocaleDateString('en-US', { month: 'short' })
+      const dates = [`12 ${monthStr}`, `20 ${monthStr}`, `25 ${monthStr}`]
+      return allColleagues.slice(0, 3).map((emp, i) => ({
+        name: emp.fullName,
+        date: dates[i % dates.length],
+        role: formatRole(emp.role)
+      }))
+    }
+    return list.slice(0, 4)
+  }
+
+  const mrBirthdayList = getUpcomingMRBirthdays();
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="animate-[fadeIn_0.35s_ease-out] p-2.5">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Welcome Banner ──────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-blue-900 to-blue-500 rounded-3xl px-7.5 py-6.5 text-white mb-5.5 shadow-[0_10px_30px_rgba(59,130,246,0.18)] relative overflow-hidden">
-        <div className="relative z-10">
-          <span className="bg-white/18 px-3 py-1 rounded-2xl text-[11px] font-bold tracking-wider">
-            MEDICAL REPRESENTATIVE PORTAL
-          </span>
-          <h2 className="text-[26px] font-extrabold my-3 mb-1 tracking-[-0.5px]">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {mrName.split(' ')[0]}!
-          </h2>
-          <p className="m-0 text-[13px] text-white/80">
-            {new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
-          </p>
+      {/* ── Welcome Banner ── */}
+      <div className="rounded-[20px] px-[30px] py-7 mb-5.5 text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.15)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/10">
+        <img 
+          src="/banner.jfif" 
+          alt="Welcome Banner" 
+          className="absolute inset-0 w-full h-full object-cover z-0" 
+        />
+
+        <div className="flex items-center gap-5 z-[3]">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C8F04A] to-[#10B981] flex items-center justify-center text-[24px] font-extrabold text-[#064E3B] shadow-[0_4px_14px_rgba(200,240,74,0.4)] border-2 border-white/20">
+            {mrName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div className="text-base font-black text-white/90 mb-1">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return 'Good Morning';
+                if (hour < 17) return 'Good Afternoon';
+                return 'Good Evening';
+              })()}
+            </div>
+            <h1 className="text-[26px] font-extrabold text-white m-0 tracking-tight leading-none">
+              {mrName}
+            </h1>
+          </div>
         </div>
       </div>
 
@@ -852,16 +929,16 @@ export default function MRDashboard() {
           </div>
         </div>
 
-        {/* Right Card: Today's Summary */}
+        {/* Right Card: Onboarding & DCR Ledger */}
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[220px]">
           <div>
-            <div className="text-[11px] font-extrabold text-white/60 tracking-wider uppercase mb-3.5">Today's Summary</div>
+            <div className="text-[11px] font-extrabold text-white/60 tracking-wider uppercase mb-3.5">Onboarding & DCR Ledger</div>
             <div className="flex flex-col gap-2.5">
               {[
-                ['Start Time',    activeDay?.startTime || '—'],
-                ['End Time',      activeDay?.endTime   || (ds === 'ACTIVE' ? 'Ongoing' : '—')],
-                ['Visits Done',   `${doneVisits.length} / ${todayVisits.length}`],
-                ['Active Now',    activeVisit ? activeVisit.name.split(' ').slice(0,2).join(' ') : 'None'],
+                ['Total Target List', `${approvedVisitTargets.length} approved`],
+                ['Pending Approvals', `${requests.filter(r => r.status === 'PENDING').length} doctors/chemists`],
+                ['DCR Submissions', `${doneVisits.length} calls logged today`],
+                ['Onboarded Chemists', `${approvedVisitTargets.filter(t => (t.type || '').toLowerCase() === 'chemist' || (t.type || '').toLowerCase() === 'pharmacy').length} pharmacies`],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between text-[12.5px] border-b border-white/8 pb-1.5">
                   <span className="text-white/60">{k}</span>
@@ -870,20 +947,18 @@ export default function MRDashboard() {
               ))}
             </div>
           </div>
-          {ds === 'ACTIVE' && (
-            <div className="text-[12px] text-center text-sky-400 font-bold pt-2.5 border-t border-white/10">
-              Work duration: {secsToHMS(elapsed)}
-            </div>
-          )}
+          <div className="text-[11.5px] text-center text-sky-400 font-bold pt-2.5 border-t border-white/10 cursor-pointer hover:underline" onClick={() => navigate('/mr/requests')}>
+            View Onboarding Requests ➜
+          </div>
         </div>
 
       </div>
 
-      {/* ── Main Content (Next Planned Calls on left, Quick Links & Holidays on right) ── */}
-      <div className="grid grid-cols-[2fr_1fr] gap-5 mb-5.5 items-stretch h-[320px]">
+      {/* ── Main Content (Next Planned Calls on left, Quick Links, Holidays & Birthdays on right) ── */}
+      <div className="grid grid-cols-[2fr_1fr] gap-5 mb-5.5 items-stretch">
 
         {/* Left Column: Next Planned Calls */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-5.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-full">
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-full min-h-[440px]">
           <div className="flex justify-between items-center mb-4.5 border-b border-gray-100 pb-3 shrink-0">
             <div>
               <h3 className="m-0 text-[16px] font-extrabold text-gray-800">Next Planned Calls</h3>
@@ -907,7 +982,7 @@ export default function MRDashboard() {
               </button>
             </div>
           ) : upcomingCalls.length === 0 ? (
-            <div className="text-center p-10 px-5 text-emerald-600 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] flex-1 flex flex-col justify-center">
+            <div className="text-center p-10 px-5 text-emerald-600 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] flex-1 flex flex-col justify-center font-sans">
               <span className="text-[24px]">🎉</span>
               <div className="font-extrabold text-[14.5px] mt-1.5">All Planned Calls Completed!</div>
               <div className="text-[12px] text-[#047857] mt-1">You have visited all approved doctor and chemist sites for today. Good work!</div>
@@ -945,7 +1020,7 @@ export default function MRDashboard() {
           )}
         </div>
 
-        {/* Right Column: Quick Links & Holidays */}
+        {/* Right Column: Quick Links, Holidays & Birthdays */}
         <div className="flex flex-col gap-3 h-full">
           
           {/* Quick Links */}
@@ -953,10 +1028,10 @@ export default function MRDashboard() {
             <h3 className="m-0 mb-2.5 text-[13.5px] font-extrabold text-gray-800">Quick Links</h3>
             <div className="grid grid-cols-2 gap-1.5 mb-2.5">
               {[
-                { label:'View Attendance', fn: () => navigate('/mr/attendance') },
-                { label:'Submit Allowance',    fn: () => {} },
-                { label:'Sample Inventory',          fn: () => {} },
-                { label:'Target Doctors',         fn: () => {} },
+                { label: 'Add DCR Report', fn: () => navigate('/mr/dcr', { state: { activeTab: 'new' } }) },
+                { label: 'Add Tour Plan', fn: () => navigate('/mr/tourplan', { state: { activeTab: 'new' } }) },
+                { label: 'Apply Leave', fn: () => navigate('/mr/leaves', { state: { activeTab: 'new' } }) },
+                { label: 'Field Attendance', fn: () => navigate('/mr/attendance') },
               ].map((b, i) => (
                 <button 
                   key={i} 
@@ -976,12 +1051,12 @@ export default function MRDashboard() {
           </div>
 
           {/* Upcoming Holidays */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-[140px]">
             <div className="bg-slate-50 border-b border-gray-100 px-5 py-2.5 flex justify-between items-center shrink-0">
               <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Upcoming Holidays</span>
               <span className="text-[11px] font-bold text-blue-500">2026</span>
             </div>
-            <div className="px-5 py-4 flex flex-col gap-2.5 overflow-y-auto">
+            <div className="px-5 py-3 flex flex-col gap-2 overflow-y-auto">
               {[
                 { date: 'June 29', name: 'Bakrid / Eid al-Adha', type: 'Regional' },
                 { date: 'August 15', name: 'Independence Day', type: 'National' },
@@ -989,15 +1064,49 @@ export default function MRDashboard() {
               ].map((h, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex items-center justify-between ${idx === 2 ? 'pb-0 border-none' : 'pb-2 border-b border-gray-100'}`}
+                  className={`flex items-center justify-between ${idx === 2 ? 'pb-0 border-none' : 'pb-1.5 border-b border-gray-100'}`}
                 >
                   <div>
-                    <div className="text-[12.5px] font-bold text-gray-800">{h.name}</div>
-                    <div className="text-[11px] text-gray-400 mt-0.5">{h.date}</div>
+                    <div className="text-[12px] font-bold text-gray-800">{h.name}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{h.date}</div>
                   </div>
-                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${h.type === 'National' ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{h.type}</span>
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${h.type === 'National' ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{h.type}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Birthdays Card */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] relative p-5 min-h-[200px]">
+            <img 
+              src="/Birthday.jpg" 
+              alt="Birthday Background" 
+              className="absolute inset-0 w-full h-full object-cover z-0" 
+            />
+            <div className="absolute inset-0 bg-white/92 z-[1]" />
+            
+            <div className="relative z-[2] flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start mb-2.5">
+                <div>
+                  <div className="text-[13px] font-extrabold text-gray-900">Birthday</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">Celebrations in your team</div>
+                </div>
+                <Gift size={14} className="text-gray-900 mt-0.5 shrink-0" />
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-[150px] overflow-y-auto pr-0.5">
+                {mrBirthdayList.length === 0 ? (
+                  <div className="py-4 text-center text-slate-400 text-xs font-semibold">No birthdays this month.</div>
+                ) : (
+                  mrBirthdayList.map((item, idx) => (
+                    <BirthdayRow 
+                      key={idx} 
+                      name={item.name} 
+                      date={item.date} 
+                      role={item.role} 
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
 

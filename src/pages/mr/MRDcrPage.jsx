@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { ClipboardList, Plus, Trash2, CheckCircle2, AlertCircle, Calendar, Clock, MapPin, Eye, Send, Loader2 } from 'lucide-react';
@@ -14,9 +15,10 @@ import {
 
 const MRDcrPage = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { dcrs, loading: dcrLoading, error: dcrError, success: dcrSuccess, currentDcr } = useSelector((state) => state.dcr);
 
-  const [activeTab, setActiveTab] = useState('list'); // 'list' or 'new'
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
   const [doctors, setDoctors] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   
@@ -210,34 +212,23 @@ const MRDcrPage = () => {
   ];
 
   return (
-    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
-      {/* Header section */}
-      <div className="flex justify-between items-center mb-7">
-        <div>
-          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
-            PORTAL: MEDICAL REPRESENTATIVE
-          </span>
-          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Daily Call Reports (DCR)</h2>
-          <p className="text-[13px] text-[#6B7280] mt-[3px] mb-0">Log and track call visits submitted to your reporting manager.</p>
-        </div>
-      </div>
-
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       {/* Notifications */}
       {successMsg && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-3 shrink-0">
           <CheckCircle2 size={16} />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-3 shrink-0">
           <AlertCircle size={16} />
           {errorMsg}
         </div>
       )}
 
       {/* Tab controls */}
-      <div className="flex gap-2.5 mb-6">
+      <div className="flex gap-2.5 mb-4 shrink-0">
         <button
           onClick={() => setActiveTab('list')}
           className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
@@ -261,100 +252,102 @@ const MRDcrPage = () => {
       </div>
 
       {/* Content wrapper */}
-      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-7">
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
         
         {/* Tab 1: Logs list */}
         {activeTab === 'list' && (
           dcrLoading && dcrs.length === 0 ? (
-            <div className="flex flex-col items-center p-[60px] gap-3">
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
               <Loader2 size={24} className="animate-spin text-[#111827]" />
               <span className="text-[13.5px] text-[#9CA3AF]">Loading call reports...</span>
             </div>
           ) : dcrs.length === 0 ? (
-            <div className="p-[60px] text-center text-[#9CA3AF]">
+            <div className="flex-1 flex flex-col items-center justify-center text-center text-[#9CA3AF]">
               <ClipboardList size={40} className="mx-auto mb-3 stroke-[1.5]" />
               <p className="m-0 text-[14px] font-medium">No Daily Call Reports logged yet.</p>
               <button
                 onClick={() => setActiveTab('new')}
-                className="mt-3.5 bg-[#111827] text-white border-none px-4 py-2 rounded-lg font-bold text-[12.5px] cursor-pointer hover:bg-gray-800 transition-colors duration-150"
+                className="mt-3.5 bg-[#111827] text-white border-none px-4 py-2.5 rounded-lg font-bold text-[12.5px] cursor-pointer hover:bg-gray-800 transition-colors duration-150"
               >
                 Log Your First Call
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
-                    {['Report Date', 'Total Visits', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dcrs.map((dcr) => {
-                    return (
-                      <tr key={dcr.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
-                        {/* Date */}
-                        <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
-                          <span className="flex items-center gap-2">
-                            <Calendar size={14} className="text-[#9CA3AF]" />
-                            {dcr.reportDate}
-                          </span>
-                        </td>
-                        {/* Visit count */}
-                        <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
-                          {dcr.visits?.length || 0} Doctor{dcr.visits?.length !== 1 ? 's' : ''} visited
-                        </td>
-                        {/* Status */}
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold ${getStatusBadgeClass(dcr.status)}`}>
-                            {dcr.status}
-                          </span>
-                        </td>
-                        {/* Remarks */}
-                        <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {dcr.remarks || '—'}
-                        </td>
-                        {/* Actions */}
-                        <td className="px-4 py-4">
-                          <div className="flex gap-2 items-center">
-                            <button
-                              onClick={() => handleViewDcrDetails(dcr.id)}
-                              title="View Details"
-                              className="flex items-center gap-1 bg-[#F3F4F6] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#374151] hover:bg-[#E5E7EB] transition-colors duration-150"
-                            >
-                              <Eye size={12} /> View
-                            </button>
-                            {dcr.status === 'DRAFT' && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="overflow-y-auto flex-1 pr-1">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                      {['Report Date', 'Total Visits', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dcrs.map((dcr) => {
+                      return (
+                        <tr key={dcr.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
+                          {/* Date */}
+                          <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
+                            <span className="flex items-center gap-2">
+                              <Calendar size={14} className="text-[#9CA3AF]" />
+                              {dcr.reportDate}
+                            </span>
+                          </td>
+                          {/* Visit count */}
+                          <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
+                            {dcr.visits?.length || 0} Doctor{dcr.visits?.length !== 1 ? 's' : ''} visited
+                          </td>
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold ${getStatusBadgeClass(dcr.status)}`}>
+                              {dcr.status}
+                            </span>
+                          </td>
+                          {/* Remarks */}
+                          <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {dcr.remarks || '—'}
+                          </td>
+                          {/* Actions */}
+                          <td className="px-4 py-4">
+                            <div className="flex gap-2 items-center">
                               <button
-                                onClick={() => handleSubmitDcr(dcr.id)}
-                                disabled={actionLoading}
-                                title="Submit report to manager"
-                                className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#111827] hover:opacity-90 transition-opacity duration-150"
+                                onClick={() => handleViewDcrDetails(dcr.id)}
+                                title="View Details"
+                                className="flex items-center gap-1 bg-[#F3F4F6] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#374151] hover:bg-[#E5E7EB] transition-colors duration-150"
                               >
-                                <Send size={11} /> Submit
+                                <Eye size={12} /> View
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                              {dcr.status === 'DRAFT' && (
+                                <button
+                                  onClick={() => handleSubmitDcr(dcr.id)}
+                                  disabled={actionLoading}
+                                  title="Submit report to manager"
+                                  className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#111827] hover:opacity-90 transition-opacity duration-150"
+                                >
+                                  <Send size={11} /> Submit
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )
         )}
 
         {/* Tab 2: New DCR Draft */}
         {activeTab === 'new' && (
-          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex flex-col gap-6">
-            <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#F3F4F6] pb-5">
+          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex-1 flex flex-col min-h-0">
+            <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#F3F4F6] pb-4 mb-4 shrink-0">
               <div>
-                <h4 className="text-[16px] font-extrabold text-[#111827] margin-0">Create Daily Call Log</h4>
+                <h4 className="text-[16px] font-extrabold text-[#111827] m-0">Create Daily Call Log</h4>
                 <p className="text-[12px] text-[#6B7280] mt-[2px] mb-0">Record visited healthcare professionals and samples distributed today.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -370,9 +363,9 @@ const MRDcrPage = () => {
             </div>
 
             {/* Visits list */}
-            <div className="flex flex-col gap-5">
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4 mb-4">
               {visits.map((visit, idx) => (
-                <div key={idx} className="p-6 border border-gray-200 rounded-2xl bg-[#FAFAFA] relative animate-[fadeIn_0.25s]">
+                <div key={idx} className="p-5 border border-gray-200 rounded-2xl bg-[#FAFAFA] relative animate-[fadeIn_0.25s]">
                   {/* Remove visit button */}
                   <button
                     type="button"
@@ -474,32 +467,33 @@ const MRDcrPage = () => {
               ))}
             </div>
 
-            {/* Add visit button */}
-            <button
-              type="button"
-              onClick={addVisitField}
-              className="self-start flex items-center gap-1.5 bg-[#111827] text-white border-none px-4.5 py-2.5 rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-[1px]"
-            >
-              <Plus size={14} /> Add Another Visit Log
-            </button>
-
-            {/* Action buttons */}
-            <div className="flex gap-3 justify-end border-t border-[#F3F4F6] pt-5 mt-2.5">
-              <button
-                type="submit"
-                disabled={actionLoading}
-                className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
-              >
-                {actionLoading ? 'Saving...' : 'Save Draft'}
-              </button>
+            {/* Bottom Actions Row */}
+            <div className="flex justify-between items-center border-t border-[#F3F4F6] pt-4 mt-auto shrink-0">
               <button
                 type="button"
-                onClick={() => handleSaveDraft(null, true)}
-                disabled={actionLoading}
-                className="px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150"
+                onClick={addVisitField}
+                className="flex items-center gap-1.5 bg-[#111827] text-white border-none px-4.5 py-2.5 rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-[1px]"
               >
-                {actionLoading ? 'Submitting...' : 'Save & Submit report'}
+                <Plus size={14} /> Add Another Visit Log
               </button>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-155"
+                >
+                  {actionLoading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveDraft(null, true)}
+                  disabled={actionLoading}
+                  className="px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-155"
+                >
+                  {actionLoading ? 'Submitting...' : 'Save & Submit report'}
+                </button>
+              </div>
             </div>
           </form>
         )}
