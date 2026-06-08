@@ -60,29 +60,10 @@ const MRRequestsPage = () => {
   };
 
   return (
-    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-7">
-        <div>
-          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
-            PORTAL: MEDICAL REPRESENTATIVE
-          </span>
-          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Onboarding Requests</h2>
-          <p className="text-[13px] text-[#6B7280] mt-[3px] mb-0">
-            Submit request to onboard new doctor or chemist and track their approval status.
-          </p>
-        </div>
-        <button
-          onClick={handleRequestOnboarding}
-          className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:opacity-90 transition-opacity duration-150 outline-none"
-        >
-          <Plus size={15} strokeWidth={2.5} /> Request Onboarding
-        </button>
-      </div>
-
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       {/* Error State */}
       {error && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5 shrink-0">
           <AlertCircle size={16} />
           {error}
           <button onClick={fetchRequests} className="ml-auto bg-transparent border-none text-[#B91C1C] font-bold underline cursor-pointer flex items-center gap-1">
@@ -92,7 +73,7 @@ const MRRequestsPage = () => {
       )}
 
       {/* Filters Bar */}
-      <div className="flex items-center gap-4 mb-5 flex-wrap">
+      <div className="flex items-center gap-4 mb-5 flex-wrap shrink-0">
         <div className="relative flex-1 min-w-[220px] max-w-[340px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
           <input
@@ -123,23 +104,32 @@ const MRRequestsPage = () => {
             </button>
           ))}
         </div>
-        <button
-          onClick={fetchRequests}
-          className="ml-auto p-2 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#C8F04A] cursor-pointer transition-all duration-150 flex items-center gap-1.5 text-[12.5px] font-semibold"
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={fetchRequests}
+            className="p-2 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#C8F04A] cursor-pointer transition-all duration-150 flex items-center gap-1.5 text-[12.5px] font-semibold"
+            title="Refresh"
+          >
+            <RefreshCw size={14} /> 
+          </button>
+          <button
+            onClick={handleRequestOnboarding}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:opacity-90 transition-opacity duration-150 outline-none"
+          >
+            <Plus size={14} strokeWidth={2.5} /> Request Onboarding
+          </button>
+        </div>
       </div>
 
       {/* Content wrapper */}
-      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-7">
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center p-[60px] gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 p-[60px] gap-3">
             <Loader2 size={24} className="animate-spin text-[#111827]" />
             <span className="text-[13.5px] text-[#9CA3AF]">Loading requests...</span>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-[60px] text-center text-[#9CA3AF]">
+          <div className="flex-1 flex flex-col items-center justify-center p-[60px] text-center text-[#9CA3AF]">
             <FileText size={40} className="mx-auto mb-3 stroke-[1.5]" />
             <p className="m-0 text-[14px] font-medium">{searchQuery || activeTab !== 'All' ? 'No requests match your filters.' : 'No onboarding requests submitted yet.'}</p>
             <button
@@ -150,12 +140,12 @@ const MRRequestsPage = () => {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-auto flex-1 pr-1">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-10">
                   {['S.No', 'Type', 'Name', 'Email', 'Phone', 'Address', 'Role Specific Details', 'Status', 'Review Remarks'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
+                    <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider bg-white">
                       {h}
                     </th>
                   ))}

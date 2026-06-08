@@ -53,15 +53,10 @@ const Documents = () => {
   ]
 
   return (
-    <div className="pb-10">
+    <div className="pb-8 animate-[fadeIn_0.35s_ease-out]">
       {activeView === 'hub' && (
         <>
-          <SectionHeader
-            title="HR Document Generator Hub"
-            sub="Design, customize, and print high-fidelity corporate documents instantly."
-          />
-
-          <div className="grid grid-cols-1 gap-6 mt-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2 h-[calc(100vh-140px)] min-h-[480px]">
             {documentCards.map((card) => (
               <div
                 key={card.key}
@@ -69,11 +64,11 @@ const Documents = () => {
                 className={`
                   group cursor-pointer rounded-3xl border border-gray-200 bg-white p-7
                   shadow-sm transition-all duration-300 ease-in-out
-                  hover:-translate-y-2 hover:shadow-2xl
+                  hover:-translate-y-2 hover:shadow-2xl h-full
                   ${card.accent}
                 `}
               >
-                <div className="flex flex-col justify-between h-full min-h-[280px]">
+                <div className="flex flex-col justify-between h-full">
                   <div>
                     <div
                       className={`

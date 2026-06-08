@@ -11,6 +11,7 @@ import { fetchProfile } from '../../redux/actions/authActions'
 import { getMyTeam } from '../../redux/actions/teamActions'
 import { fetchTeamLeavesAction } from '../../redux/actions/leaveActions'
 import { fetchTeamAttendanceAction } from '../../redux/actions/attendanceActions'
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
 
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
@@ -444,7 +445,7 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
                           {member.photoUrl ? (
-                            <img src={member.photoUrl} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
+                            <img src={getFullAssetUrl(member.photoUrl)} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#CBD5E1] to-[#94A3B8] text-white text-[12px] font-bold flex items-center justify-center">
                               {initials}

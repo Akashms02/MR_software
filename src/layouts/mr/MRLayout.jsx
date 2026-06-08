@@ -1,9 +1,8 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
-import Header from '../Header'
 
 function SidebarAvatar({ name, size = 38 }) {
   const initials = name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
@@ -29,6 +28,41 @@ function SnowflakeLogo() {
   )
 }
 
+function MRHeader() {
+  const location = useLocation()
+  const pathParts = location.pathname.split('/')
+  const activePage = pathParts[pathParts.length - 1] || 'dashboard'
+
+  const getTitle = () => {
+    if (activePage === 'dashboard') return 'Dashboard'
+    if (activePage === 'dcr') return 'DCR Reports'
+    if (activePage === 'requests') return 'Onboarding Requests'
+    if (activePage === 'attendance') return 'Field Attendance'
+    if (activePage === 'tourplan') return 'Tour Plans'
+    if (activePage === 'reports') return 'Reports & Analytics'
+    if (activePage === 'leaves') return 'Leave Management'
+    if (activePage === 'finance') return 'My Payslips'
+    if (activePage === 'me') return 'Me'
+    if (activePage === 'settings') return 'Settings'
+    if (activePage === 'onboard-doctor') return 'Doctor Onboarding'
+    return 'Dashboard'
+  }
+
+  return (
+    <header className="h-[72px] bg-transparent flex items-center px-8 gap-4 shrink-0">
+      <div className="shrink-0">
+        <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight m-0">
+          {getTitle()}
+        </h1>
+      </div>
+      <div className="flex-1" />
+      <button className="w-[38px] h-[38px] rounded-[10px] bg-white border border-gray-200 flex items-center justify-center cursor-pointer shrink-0">
+        <Bell size={18} color="#9CA3AF" />
+      </button>
+    </header>
+  )
+}
+
 export default function MRLayout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -51,12 +85,11 @@ export default function MRLayout({ children }) {
     { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/mr/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
-    { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/mr/watercooler' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
   ]
 
   return (
-    <div className="flex min-h-screen bg-[#F0F2F5] font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#F0F2F5] font-sans">
       <aside className="w-[220px] shrink-0 bg-white flex flex-col fixed top-0 left-0 bottom-0 z-[100] shadow-[2px_0_16px_rgba(0,0,0,0.04)]">
         {/* Logo */}
         <div className="h-[72px] flex items-center px-5 gap-2.5 shrink-0 border-b border-[#F3F4F6]">
@@ -115,8 +148,8 @@ export default function MRLayout({ children }) {
         </div>
       </aside>
 
-      <div className="ml-[220px] flex-1 flex flex-col min-w-0">
-        <Header role="EMPLOYEE" />
+      <div className="ml-[220px] flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+        <MRHeader />
         <main className="flex-1 px-8 pb-8 overflow-y-auto">
           {children}
         </main>
