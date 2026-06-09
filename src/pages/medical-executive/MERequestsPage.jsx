@@ -109,8 +109,9 @@ const MERequestsPage = () => {
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]"><Check size={10} strokeWidth={3} /> Approved</span>;
       case 'REJECTED':
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]"><X size={10} strokeWidth={3} /> Rejected</span>;
+      case 'PENDING':
       default:
-        return null;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#FFFBEB] text-[#D97706] border border-[#FCD34D]"><Loader2 size={10} className="animate-spin text-[#D97706]" /> Pending</span>;
     }
   };
 
@@ -237,7 +238,16 @@ const MERequestsPage = () => {
                         </div>
                       )}
                     </td>
-                    {/* Status / Action — single merged column */}
+                    {/* Status Column */}
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-1">
+                        <div>{getStatusBadge(req.status)}</div>
+                        {req.remarks && (
+                          <div className="text-[11px] text-[#6B7280] italic ml-1 max-w-[130px] truncate" title={req.remarks}>"{req.remarks}"</div>
+                        )}
+                      </div>
+                    </td>
+                    {/* Actions Column */}
                     <td className="px-4 py-4">
                       {req.status === 'PENDING' ? (
                         <div className="flex gap-2">
@@ -256,30 +266,8 @@ const MERequestsPage = () => {
                             <X size={16} strokeWidth={2.5} />
                           </button>
                         </div>
-                      ) : req.status === 'APPROVED' ? (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-7 h-7 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center flex-shrink-0">
-                              <Check size={14} strokeWidth={3} className="text-[#059669]" />
-                            </div>
-                            <span className="text-[12.5px] font-extrabold text-[#059669]">Approved</span>
-                          </div>
-                          {req.remarks && (
-                            <div className="text-[11px] text-[#6B7280] italic ml-[34px] max-w-[130px] truncate" title={req.remarks}>"{req.remarks}"</div>
-                          )}
-                        </div>
                       ) : (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-7 h-7 rounded-full bg-[#FEF2F2] border border-[#FCA5A5] flex items-center justify-center flex-shrink-0">
-                              <X size={14} strokeWidth={3} className="text-[#DC2626]" />
-                            </div>
-                            <span className="text-[12.5px] font-extrabold text-[#DC2626]">Rejected</span>
-                          </div>
-                          {req.remarks && (
-                            <div className="text-[11px] text-[#6B7280] italic ml-[34px] max-w-[130px] truncate" title={req.remarks}>"{req.remarks}"</div>
-                          )}
-                        </div>
+                        <span className="text-[#9CA3AF] font-bold">—</span>
                       )}
                     </td>
                   </tr>

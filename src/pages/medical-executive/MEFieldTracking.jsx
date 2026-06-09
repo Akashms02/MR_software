@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchTeamAttendanceAction, fetchTeamVisitsAction } from '../../redux/actions/attendanceActions';
+import { parseCoord, visitCheckInCoords, visitCheckOutCoords } from '../../utils/attendanceUtils';
 import { 
   Users, MapPin, CheckCircle, Clock, Navigation, 
   Map, Award, Calendar, RefreshCw, BarChart2, Eye, ShieldAlert,
-  ChevronRight, Camera, Search, UserCheck
+  ChevronRight, Camera, Search, UserCheck, Square
 } from 'lucide-react';
-import { Card } from '../../components/ui';
 
 // Inline SVG base64 Marker Icons for Leaflet to prevent asset loading bugs
 const BLUE_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
@@ -26,13 +28,6 @@ const RED_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="34" height="34">
     <path fill="%23EF4444" stroke="%23FFFFFF" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     <circle cx="12" cy="9" r="2" fill="%23FFFFFF"/>
-  </svg>
-`);
-
-const PULSE_MR_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
-    <circle cx="12" cy="12" r="10" fill="%23C8F04A" fill-opacity="0.3" stroke="%23111827" stroke-width="1.5"/>
-    <circle cx="12" cy="12" r="5" fill="%23111827"/>
   </svg>
 `);
 
@@ -62,13 +57,15 @@ export default function MEFieldTracking() {
   const markersRef = useRef([]);
 
   // Extract MR List from team list
-  const mrList = (team || []).filter((member) => {
-    const role = (member.role || '').toUpperCase().trim();
-    const name = (member.fullName || member.name || '').toLowerCase();
-    const isMr = role === 'MR' || role === 'MEDICAL_REPRESENTATIVE';
-    const isSuperAdmin = name.includes('superadmin') || name.includes('admin');
-    return isMr && !isSuperAdmin;
-  });
+  const mrList = useMemo(() => {
+    return (team || []).filter((member) => {
+      const role = (member.role || '').toUpperCase().trim();
+      const name = (member.fullName || member.name || '').toLowerCase();
+      const isMr = role === 'MR' || role === 'MEDICAL_REPRESENTATIVE';
+      const isSuperAdmin = name.includes('superadmin') || name.includes('admin');
+      return isMr && !isSuperAdmin;
+    });
+  }, [team]);
 
   // 1. Fetch team list on mount
   useEffect(() => {
@@ -112,108 +109,85 @@ export default function MEFieldTracking() {
     }
   };
 
-  const mapVisitFromApi = (v) => ({
-    id: v.id,
-    name: v.targetName || v.name || 'Unknown Target',
-    type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
-    specialty: v.specialty || '',
-    clinic: v.clinicName || v.clinic || '',
-    checkInTime: formatIsoToTime(v.checkInTime),
-    checkInCoords: { lat: v.checkInLatitude, lng: v.checkInLongitude },
-    checkOutTime: formatIsoToTime(v.checkOutTime),
-    checkOutCoords: { lat: v.checkOutLatitude, lng: v.checkOutLongitude },
-    status: v.status === 'CHECKED_IN' ? 'ACTIVE' : 'COMPLETED',
-    products: v.productsDiscussed || v.products || '',
-    samples: v.samplesGiven || v.samples || '',
-    feedback: v.feedback || '',
-  });
+  const mapVisitFromApi = (v) => {
+    const inCoords  = visitCheckInCoords(v);
+    const outCoords = visitCheckOutCoords(v);
+    return {
+      id: v.id,
+      name: v.targetName || v.name || 'Unknown Target',
+      type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
+      specialty: v.specialty || '',
+      clinic: v.clinicName || v.clinic || '',
+      checkInTime: formatIsoToTime(v.checkInTime),
+      checkInCoords: inCoords,
+      checkOutTime: formatIsoToTime(v.checkOutTime),
+      checkOutCoords: outCoords,
+      status: v.status === 'CHECKED_IN' ? 'ACTIVE' : 'COMPLETED',
+      products: v.productsDiscussed || v.products || '',
+      samples: v.samplesGiven || v.samples || '',
+      feedback: v.feedback || '',
+      checkInPhoto: v.checkInPhoto || v.selfie || null
+    };
+  };
 
   // Find the details of the selected MR profile
-  const selectedMrProfile = mrList.find(mr => String(mr.id) === selectedMrId || String(mr.employeeId) === selectedMrId) || { fullName: 'Representative' };
+  const selectedMrProfile = useMemo(() => {
+    return mrList.find(mr => String(mr.id) === selectedMrId || String(mr.employeeId) === selectedMrId) || { fullName: 'Representative' };
+  }, [mrList, selectedMrId]);
 
-  const punchRecord = teamAttendance.find((a) => {
-    const logMrId = String(a.mrId || a.employeeId || '');
-    const targetMrId = String(selectedMrId);
-    const matchesMrId = logMrId === targetMrId;
-    const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
-    const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
-    return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
-           a.punchInTime && isSameDay(a.punchInTime, selectedDate);
-  });
+  const punchRecord = useMemo(() => {
+    return teamAttendance.find((a) => {
+      const logMrId = String(a.mrId || a.employeeId || '');
+      const targetMrId = String(selectedMrId);
+      const matchesMrId = logMrId === targetMrId;
+      const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
+      const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
+      return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
+             a.punchInTime && isSameDay(a.punchInTime, selectedDate);
+    });
+  }, [teamAttendance, selectedMrId, selectedMrProfile, selectedDate]);
 
-  const visitsForMrAndDate = teamVisits.filter((v) => {
-    const logMrId = String(v.mrId || v.employeeId || '');
-    const targetMrId = String(selectedMrId);
-    const matchesMrId = logMrId === targetMrId;
-    const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
-    const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
-    return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
-           v.checkInTime && isSameDay(v.checkInTime, selectedDate);
-  });
+  const visitsForMrAndDate = useMemo(() => {
+    return teamVisits.filter((v) => {
+      const logMrId = String(v.mrId || v.employeeId || '');
+      const targetMrId = String(selectedMrId);
+      const matchesMrId = logMrId === targetMrId;
+      const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
+      const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
+      return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
+             v.checkInTime && isSameDay(v.checkInTime, selectedDate);
+    });
+  }, [teamVisits, selectedMrId, selectedMrProfile, selectedDate]);
 
-  const targetRecord = punchRecord
-    ? {
-        id: punchRecord.id,
-        mrId: selectedMrId,
-        mrName: selectedMrProfile?.fullName || selectedMrProfile?.name || punchRecord.mrName || 'Representative',
-        date: selectedDate,
-        status: (punchRecord.punchInTime && !punchRecord.punchOutTime) ? 'ACTIVE' : (punchRecord.punchInTime && punchRecord.punchOutTime) ? 'ENDED' : 'OFFLINE',
-        startTime: formatIsoToTime(punchRecord.punchInTime),
-        startLocation: {
-          lat: punchRecord.punchInLatitude,
-          lng: punchRecord.punchInLongitude,
-          name: punchRecord.punchInRemarks || 'GPS Verified',
-        },
-        endTime: formatIsoToTime(punchRecord.punchOutTime),
-        endLocation: punchRecord.punchOutTime
-          ? {
-              lat: punchRecord.punchOutLatitude,
-              lng: punchRecord.punchOutLongitude,
-              name: punchRecord.punchOutRemarks || 'GPS Verified',
-            }
-          : null,
-        visits: visitsForMrAndDate.map(mapVisitFromApi),
-      }
-    : null;
-
-  // 3. Setup and configure Leaflet Map
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    const initMap = () => {
-      const L = window.L;
-      if (!L) {
-        setTimeout(initMap, 300);
-        return;
-      }
-
-      if (!mapInstanceRef.current) {
-        mapInstanceRef.current = L.map(mapContainerRef.current, {
-          center: [12.9716, 77.5946],
-          zoom: 13,
-          zoomControl: false
-        });
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          attribution: '© OpenStreetMap contributors © CARTO',
-          maxZoom: 20
-        }).addTo(mapInstanceRef.current);
-
-        L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
-      }
-
-      drawRoutesOnMap(targetRecord);
+  const targetRecord = useMemo(() => {
+    if (!punchRecord) return null;
+    const startCoords = parseCoord(punchRecord.punchInLatitude, punchRecord.punchInLongitude);
+    const endCoords   = punchRecord.punchOutTime
+      ? parseCoord(punchRecord.punchOutLatitude, punchRecord.punchOutLongitude)
+      : null;
+    return {
+      id: punchRecord.id,
+      mrId: selectedMrId,
+      mrName: selectedMrProfile?.fullName || selectedMrProfile?.name || punchRecord.mrName || 'Representative',
+      date: selectedDate,
+      status: (punchRecord.punchInTime && !punchRecord.punchOutTime) ? 'ACTIVE' : (punchRecord.punchInTime && punchRecord.punchOutTime) ? 'ENDED' : 'OFFLINE',
+      startTime: formatIsoToTime(punchRecord.punchInTime),
+      startLocation: startCoords
+        ? { ...startCoords, name: punchRecord.punchInRemarks || 'GPS Verified' }
+        : null,
+      endTime: formatIsoToTime(punchRecord.punchOutTime),
+      endLocation: endCoords
+        ? { ...endCoords, name: punchRecord.punchOutRemarks || 'GPS Verified' }
+        : null,
+      visits: visitsForMrAndDate.map(mapVisitFromApi),
+      startSelfie: punchRecord.startSelfie || null
     };
+  }, [punchRecord, visitsForMrAndDate, selectedMrId, selectedMrProfile, selectedDate]);
 
-    initMap();
-  }, [teamAttendance, teamVisits, selectedMrId, selectedDate]);
+  const updateMapLayer = (rec) => {
+    if (!mapInstanceRef.current) return;
 
-  // 4. Map rendering function
-  const drawRoutesOnMap = (record) => {
-    const L = window.L;
-    if (!L || !mapInstanceRef.current) return;
-
-    // Remove existing markers & lines
+    // 1. Remove old markers and lines
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
     if (routeLineRef.current) {
@@ -221,15 +195,15 @@ export default function MEFieldTracking() {
       routeLineRef.current = null;
     }
 
-    // If no record, show default center
-    if (!record) {
+    // 2. Select target record
+    if (!rec) {
       mapInstanceRef.current.setView([12.9716, 77.5946], 13);
       return;
     }
 
     const pathCoordinates = [];
 
-    // Helper to generate icon
+    // Custom Icon helper
     const getCustomIcon = (pinUrl, width = 32, height = 32) => {
       return L.icon({
         iconUrl: pinUrl,
@@ -239,415 +213,438 @@ export default function MEFieldTracking() {
       });
     };
 
-    // Plot Start Point
-    if (record.startLocation?.lat) {
-      const p = record.startLocation;
+    // Workday punch-in
+    if (rec.startLocation?.lat != null) {
+      const p = rec.startLocation;
       pathCoordinates.push([p.lat, p.lng]);
       
-      const startM = L.marker([p.lat, p.lng], {
+      const startMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>📍 Workday Start Check-In</strong><br/>Time: ${record.startTime}<br/>Coords: ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`)
+      .bindPopup(`<strong>Workday punch-in</strong><br/>Time: ${rec.startTime}`)
       .addTo(mapInstanceRef.current);
 
-      markersRef.current.push(startM);
+      markersRef.current.push(startMarker);
     }
 
-    // Plot Visit Points
-    if (record.visits && record.visits.length > 0) {
-      record.visits.forEach(v => {
-        if (v.checkInCoords?.lat) {
+    // Field visits
+    if (rec.visits && rec.visits.length > 0) {
+      rec.visits.forEach(v => {
+        if (v.checkInCoords?.lat != null) {
           pathCoordinates.push([v.checkInCoords.lat, v.checkInCoords.lng]);
 
           const isCompleted = v.status === 'COMPLETED';
-          const popupHtml = `
-            <div style="font-family:'Inter',sans-serif; font-size:12px; min-width:160px;">
-              <strong style="color:${isCompleted ? '#059669' : '#EF4444'}">${v.type.toUpperCase()}: ${v.name}</strong><br/>
-              <strong>Check-In:</strong> ${v.checkInTime}<br/>
-              ${isCompleted ? `<strong>Check-Out:</strong> ${v.checkOutTime}<br/><strong>Promoted:</strong> ${v.products || 'N/A'}` : '🟢 ACTIVE CALL NOW'}
+          if (isCompleted && v.checkOutCoords?.lat != null) {
+            pathCoordinates.push([v.checkOutCoords.lat, v.checkOutCoords.lng]);
+          }
+          
+          let imageTag = '';
+          if (v.checkInPhoto) {
+            imageTag = `<br/><img src="${v.checkInPhoto}" style="width:120px;height:80px;object-fit:cover;border-radius:6px;margin-top:6px;border:1px solid #E5E7EB"/>`;
+          }
+
+          const popupContent = `
+            <div style="font-family:'Inter',sans-serif; font-size:12px; min-width:140px; max-width: 220px;">
+              <strong style="color:${isCompleted ? '#059669' : '#EA580C'}">${v.type}: ${v.name}</strong><br/>
+              <strong>Visit in:</strong> ${v.checkInTime}<br/>
+              ${isCompleted ? `<strong>Visit out:</strong> ${v.checkOutTime || '—'}<br/><strong>Products:</strong> ${v.products || '—'}` : '<span style="color:#EA580C;font-weight:700;">Visit still open</span>'}
+              ${imageTag}
             </div>
           `;
 
-          const visitM = L.marker([v.checkInCoords.lat, v.checkInCoords.lng], {
+          const pinMarker = L.marker([v.checkInCoords.lat, v.checkInCoords.lng], {
             icon: getCustomIcon(isCompleted ? GREEN_PIN : RED_PIN, 32, 32)
           })
-          .bindPopup(popupHtml)
+          .bindPopup(popupContent)
           .addTo(mapInstanceRef.current);
 
-          markersRef.current.push(visitM);
+          markersRef.current.push(pinMarker);
+
+          if (isCompleted && v.checkOutCoords?.lat != null) {
+            const outMarker = L.marker([v.checkOutCoords.lat, v.checkOutCoords.lng], {
+              icon: getCustomIcon(GREEN_PIN, 28, 28)
+            })
+            .bindPopup(`<strong>Visit out</strong><br/>${v.name}<br/>${v.checkOutTime}`)
+            .addTo(mapInstanceRef.current);
+            markersRef.current.push(outMarker);
+          }
         }
       });
     }
 
-    // Plot End Point
-    if (record.status === 'ENDED' && record.endLocation?.lat) {
-      const p = record.endLocation;
+    // Workday punch-out
+    if (rec.status === 'ENDED' && rec.endLocation?.lat != null) {
+      const p = rec.endLocation;
       pathCoordinates.push([p.lat, p.lng]);
 
-      const endM = L.marker([p.lat, p.lng], {
+      const endMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>🏁 Workday End Check-Out</strong><br/>Time: ${record.endTime}<br/>Location: ${p.name || 'GPS Wrap'}`)
+      .bindPopup(`<strong>Workday punch-out</strong><br/>Time: ${rec.endTime}`)
       .addTo(mapInstanceRef.current);
 
-      markersRef.current.push(endM);
+      markersRef.current.push(endMarker);
     }
 
-    // Draw route overlay
+    // Polyline route connector
     if (pathCoordinates.length > 1) {
       routeLineRef.current = L.polyline(pathCoordinates, {
-        color: '#111827',
-        weight: 3.5,
+        color: '#3B82F6',
+        weight: 3,
         dashArray: '8, 8',
-        opacity: 0.85
+        opacity: 0.8
       }).addTo(mapInstanceRef.current);
 
       mapInstanceRef.current.fitBounds(L.featureGroup(markersRef.current).getBounds(), {
-        padding: [50, 50]
+        padding: [40, 40]
       });
     } else if (pathCoordinates.length === 1) {
       mapInstanceRef.current.setView(pathCoordinates[0], 14);
     }
   };
 
-  // Helper Stats calculations
-  const getSelectedStats = (rec) => {
-    if (!rec) return { status: 'OFFLINE', duration: '—', visits: 0, distance: '0.0 km', start: '—', end: '—', record: null };
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    mapInstanceRef.current = L.map(mapContainerRef.current, {
+      center: [12.9716, 77.5946],
+      zoom: 13,
+      zoomControl: false,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 20,
+    }).addTo(mapInstanceRef.current);
+    L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
+    // Force Leaflet to re-read container size after flex layout settles
+    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 120);
 
-    const completedVisits = rec.visits?.filter(v => v.status === 'COMPLETED').length || 0;
-    
-    // Calculate distance
-    let distanceKm = 0.0;
-    if (rec.startLocation && rec.visits && rec.visits.length > 0) {
-      let prevPoint = rec.startLocation;
-      rec.visits.forEach(v => {
-        if (v.checkInCoords) {
-          const latDiff = Math.abs(v.checkInCoords.lat - prevPoint.lat);
-          const lngDiff = Math.abs(v.checkInCoords.lng - prevPoint.lng);
-          distanceKm += Math.sqrt(latDiff*latDiff + lngDiff*lngDiff) * 111;
-          prevPoint = v.checkInCoords;
-        }
-      });
-      if (rec.status === 'ENDED' && rec.endLocation) {
-        const latDiff = Math.abs(rec.endLocation.lat - prevPoint.lat);
-        const lngDiff = Math.abs(rec.endLocation.lng - prevPoint.lng);
-        distanceKm += Math.sqrt(latDiff*latDiff + lngDiff*lngDiff) * 111;
-      }
-    }
-    if (distanceKm < 0.2 && rec.visits?.length > 0) {
-      distanceKm = rec.visits.length * 2.4 + 1.2;
-    }
-
-    return {
-      status: rec.status,
-      duration: rec.status === 'ENDED' ? '8.2 hrs' : 'Active Working',
-      visits: rec.visits?.length || 0,
-      distance: distanceKm.toFixed(1) + ' km',
-      start: rec.startTime,
-      end: rec.endTime || 'Working',
-      record: rec
+    return () => {
+      mapInstanceRef.current?.remove();
+      mapInstanceRef.current = null;
     };
-  };
+  }, []);
 
-  const currentStats = getSelectedStats(targetRecord);
+  useEffect(() => {
+    if (mapInstanceRef.current) updateMapLayer(targetRecord);
+  }, [targetRecord]);
 
-  // Unified Overview metrics for the whole MR team today
-  const getTeamOverviewToday = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todaysLogs = teamAttendance.filter(a => a.punchInTime && isSameDay(a.punchInTime, todayStr));
-    
-    const activeWorkingCount = todaysLogs.filter(r => r.punchInTime && !r.punchOutTime).length;
-    const completedWorkdayCount = todaysLogs.filter(r => r.punchInTime && r.punchOutTime).length;
-    
-    const todaysVisits = teamVisits.filter(v => v.checkInTime && isSameDay(v.checkInTime, todayStr));
-    const totalVisitsMet = todaysVisits.length;
+  const visits = targetRecord?.visits || [];
+  const openVisit = visits.find((v) => v.status === 'ACTIVE');
+  const completedVisits = visits.filter(v => v.status === 'COMPLETED').length;
 
-    return {
-      activeField: activeWorkingCount,
-      completedField: completedWorkdayCount,
-      totalVisitsToday: totalVisitsMet
-    };
-  };
-
-  const overview = getTeamOverviewToday();
+  const statusLabel = targetRecord
+    ? (targetRecord.status === 'ACTIVE'
+        ? openVisit
+          ? `On duty · visit open at ${openVisit.name}`
+          : 'On duty · no open visit'
+        : targetRecord.status === 'ENDED'
+          ? 'Workday finished'
+          : 'Off duty')
+    : 'No workday on this date';
 
   return (
-    <div className="animate-[fadeIn_0.35s_ease-out] font-sans">
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       
-      {/* Page Title */}
-      <div className="flex justify-between items-center mb-6">
+      {/* Date Filter & Actions Bar */}
+      <div className="flex justify-between items-center mb-4 shrink-0">
         <div>
-          <span className="text-[11px] text-[#9CA3AF] font-extrabold uppercase tracking-wider">
-            EXECUTIVE PORTAL / FIELD OPERATIONS
-          </span>
-          <h2 className="text-[24px] font-extrabold text-[#111827] mt-1 mb-0">Field Representative Tracking</h2>
-          <p className="text-[13px] text-[#6B7280] mt-0.75 mb-0">Monitor Medical Representatives working hours, live routes, GPS locations, and call report submissions.</p>
+          {/* Left spacer / placeholder */}
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white hover:bg-black font-extrabold rounded-xl transition-all duration-200 text-xs shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-          REFRESH PATHWAYS
-        </button>
+        <div className="flex items-center gap-3">
+          {/* MR Dropdown Selector */}
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
+            <span className="text-[12px] font-bold text-gray-500 uppercase tracking-[0.5px]">Representative:</span>
+            {teamLoading ? (
+              <span className="text-[12px] text-gray-400">Loading...</span>
+            ) : mrList.length === 0 ? (
+              <span className="text-[12px] text-red-500 font-bold">No MRs</span>
+            ) : (
+              <select
+                value={selectedMrId}
+                onChange={(e) => setSelectedMrId(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-[13px] bg-gray-50 font-bold text-gray-800 cursor-pointer outline-none font-sans"
+              >
+                {mrList.map(mr => (
+                  <option key={mr.id} value={String(mr.id)}>
+                    👨‍💼 {mr.fullName || mr.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Date Picker */}
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
+            <Calendar size={15} className="text-gray-500" />
+            <span className="text-[12px] font-bold text-gray-600 uppercase tracking-[0.5px]">Select Date:</span>
+            <input 
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                if (e.target.value) setSelectedDate(e.target.value);
+              }}
+              className="px-3 py-1.5 rounded-lg border border-gray-300 text-[13px] bg-gray-50 font-bold text-gray-800 cursor-pointer outline-none font-sans"
+            />
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="flex items-center justify-center w-[38px] h-[38px] bg-[#111827] text-white hover:bg-black font-extrabold rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
 
-      {/* Overview Cards Row */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Active Field Reps Today</div>
-          <div className="text-[26px] font-extrabold text-[#059669] mt-1.5 flex items-center gap-1.5">
-            {overview.activeField} <span className="text-xs bg-[#ECFDF5] text-[#059669] px-2 py-0.75 rounded-lg">🟢 Live</span>
+      {/* Daily Stats Ribbon */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4 shrink-0">
+        {/* Card 1: Status */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div 
+            className={`w-[38px] h-[38px] rounded-xl flex items-center justify-center text-[18px] ${
+              targetRecord?.status === 'ACTIVE' ? 'bg-[#ECFDF5]' : targetRecord?.status === 'ENDED' ? 'bg-[#EFF6FF]' : 'bg-[#FEF2F2]'
+            }`}
+          >
+            {targetRecord?.status === 'ACTIVE' ? '🟢' : targetRecord?.status === 'ENDED' ? '🏁' : '🛑'}
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Status</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">{statusLabel}</div>
           </div>
         </div>
 
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Workday Completed Today</div>
-          <div className="text-[26px] font-extrabold text-[#1E3A8A] mt-1.5">
-            {overview.completedField} Reps
+        {/* Card 2: Start Time */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#F59E0B15] flex items-center justify-center text-[#D97706]">
+            <Clock size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Punch in</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">{targetRecord?.startTime || '—'}</div>
           </div>
         </div>
 
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Total Visited Calls Today</div>
-          <div className="text-[26px] font-extrabold text-[#F59E0B] mt-1.5">
-            {overview.totalVisitsToday} Visits
+        {/* Card 3: End Time */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#3B82F615] flex items-center justify-center text-[#2563EB]">
+            <Square size={16} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Punch out</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">
+              {targetRecord?.status === 'ACTIVE' ? 'Active Duty' : targetRecord?.endTime || '—'}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-2xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Database Verified Routes</div>
-          <div className="text-[26px] font-extrabold text-[#6366F1] mt-1.5">
-            {teamAttendance.length} Logs
+        {/* Card 4: Completed Visits */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="w-[38px] h-[38px] rounded-xl bg-[#10B98115] flex items-center justify-center text-[#059669]">
+            <MapPin size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5px]">Visits</div>
+            <div className="text-[13.5px] font-extrabold text-gray-800">
+              {completedVisits} done{openVisit ? ' · 1 open' : ''}{visits.length === 0 ? '' : ` / ${visits.length}`}
+            </div>
           </div>
         </div>
-
       </div>
 
-      {/* main grid: filters + timeline on left, interactive map on right */}
-      <div className="grid grid-cols-[1.1fr_1fr] gap-6 items-start">
+      {/* Split Layout grid */}
+      <div className="grid grid-cols-[1.2fr_1fr] gap-6 flex-1 min-h-0 overflow-hidden mb-1">
         
-        {/* LEFT COLUMN: Controls, Details & Chronicle */}
-        <div className="flex flex-col gap-5">
+        {/* LEFT COLUMN: Map container */}
+        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col min-h-0 h-full">
+          {/* Map Title block */}
+          <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
+            <div>
+              <h3 className="text-[14.5px] font-extrabold text-gray-900 m-0">Route map</h3>
+              <span className="text-[11.5px] text-gray-400">Punch-in → visits → punch-out</span>
+            </div>
+          </div>
+
+          {/* Actual Leaflet Container */}
+          <div 
+            ref={mapContainerRef} 
+            className="w-full bg-[#FAFAFA] z-10 flex-1 min-h-0"
+            style={{ height: '100%' }}
+          />
           
-          {/* Query Filters */}
-          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-            <h3 className="text-[15px] font-extrabold text-[#111827] mt-0 mb-4">Filter Field Pathways</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">FIELD REPRESENTATIVE</label>
-                {teamLoading ? (
-                  <div className="text-[13px] text-[#6B7280]">Loading team...</div>
-                ) : mrList.length === 0 ? (
-                  <div className="text-xs text-[#EF4444]">No MR profiles in database.</div>
-                ) : (
-                  <select 
-                    value={selectedMrId}
-                    onChange={(e) => setSelectedMrId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13px] bg-white font-bold text-[#111827]"
-                  >
-                    {mrList.map(mr => (
-                      <option key={mr.id} value={String(mr.id)}>
-                        👨‍💼 {mr.fullName || mr.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+          {/* Map Legend */}
+          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-5 flex-wrap text-[11.5px] font-semibold text-gray-600 shrink-0">
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Workday punch</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Visit completed</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Visit open</span>
+          </div>
+        </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-[#4B5563] mb-1.25">CHOOSE DATE</label>
-                <input 
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border-[1.5px] border-[#E5E7EB] text-[12.5px] font-bold text-[#111827] outline-none"
-                />
-              </div>
-            </div>
+        {/* RIGHT COLUMN: Chronological Timeline */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col min-h-0 h-full">
+          <div className="border-b border-gray-100 pb-3.5 mb-4 shrink-0">
+            <h3 className="text-[15px] font-extrabold text-gray-900 m-0">Day timeline</h3>
+            <span className="text-[12px] text-gray-400">Workday and field visits</span>
           </div>
 
-          {/* Selected Workday Metrics */}
-          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-            <div className="flex justify-between items-center border-b border-[#F3F4F6] pb-3.5 mb-3.5">
-              <div>
-                <h3 className="text-[15.5px] font-extrabold text-[#111827] m-0">{selectedMrProfile.fullName}'s Pathway Summary</h3>
-                <span className="text-[11px] text-[#9CA3AF]">Date logged: {selectedDate}</span>
-              </div>
-              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-xl ${currentStats.status === 'OFFLINE' ? 'bg-[#F3F4F6] text-[#4B5563]' : currentStats.status === 'ENDED' ? 'bg-[#EFF6FF] text-[#2563EB]' : 'bg-[#ECFDF5] text-[#059669]'}`}>
-                {currentStats.status}
-              </span>
-            </div>
-
-            {currentStats.status === 'OFFLINE' ? (
-              <div className="text-center py-5 text-[#9CA3AF]">
-                <ShieldAlert size={36} className="mx-auto mb-3" />
-                <p className="m-0 text-[13.5px]">No field log recorded for this representative on the selected date.</p>
+          <div className="flex-1 overflow-y-auto pr-1 pl-2">
+            {!targetRecord ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center">
+                <Calendar size={28} className="mb-2.5 text-gray-400" />
+                <div className="text-[14px] font-bold text-gray-600">No workday on this date</div>
+                <div className="text-[12px] text-gray-400 mt-1 max-w-[240px]">No punch-in record logged for this representative on the selected date.</div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="relative border-l-2 border-dashed border-gray-200 ml-3 pl-6 py-2">
                 
-                {/* Stats grid */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
-                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Total Duration</div>
-                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.duration}</div>
-                  </div>
-                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
-                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Total Doctor Visits</div>
-                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.visits} Calls</div>
-                  </div>
-                  <div className="bg-[#FAFAFA] p-3 rounded-xl border border-[#EEEEEE]">
-                    <div className="text-[10.5px] text-[#9CA3AF] font-bold">Estimated Travel</div>
-                    <div className="text-[14.5px] font-extrabold text-[#1F2937] mt-1">{currentStats.distance}</div>
-                  </div>
-                </div>
-
-                {/* Clock timings */}
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 bg-[#FAFAFA] rounded-xl border border-[#EEEEEE] flex items-center gap-2.5">
-                    <Clock size={16} color="#3B82F6" />
-                    <div>
-                      <div className="text-[#9CA3AF] font-semibold">Start Day Time</div>
-                      <div className="text-[#374151] font-extrabold mt-0.5">{currentStats.start}</div>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-[#FAFAFA] rounded-xl border border-[#EEEEEE] flex items-center gap-2.5">
-                    <Clock size={16} color="#10B981" />
-                    <div>
-                      <div className="text-[#9CA3AF] font-semibold">End Day Time</div>
-                      <div className="text-[#374151] font-extrabold mt-0.5">{currentStats.end}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Selfie snapshot verification */}
-                {currentStats.record?.startSelfie && (
-                  <div className="flex items-center gap-3 p-3.5 bg-[#FAFAFA] rounded-[14px] border border-[#EEEEEE]">
-                    <img 
-                      src={currentStats.record.startSelfie} 
-                      alt="Workday Start Selfie" 
-                      className="w-14 h-14 rounded-lg object-cover border border-[#E5E7EB]" 
-                    />
-                    <div>
-                      <div className="text-[13px] font-extrabold text-[#1F2937]">Workday Selfie Captured</div>
-                      <div className="text-[11px] text-[#6B7280] mt-0.5">GPS Location: {currentStats.record.startLocation?.name || 'GPS Verified'}</div>
-                      <div className="text-[10px] bg-[#E0F2FE] text-[#0369A1] inline-block px-1.5 py-0.5 rounded mt-1 font-bold">IDENTITY CONFIRMED</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Timeline activity log list */}
-                <div>
-                  <div className="text-[12.5px] font-extrabold text-[#9CA3AF] uppercase mb-3.5">Workday Activity Timeline</div>
+                {/* 1. START WORKDAY NODE */}
+                <div className="relative mb-6">
+                  <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-[0_0_0_3px_rgba(59,130,246,0.15)]" />
                   
-                  <div className="flex flex-col gap-3.5 border-l-2 border-[#E5E7EB] pl-4 ml-2">
-                    
-                    {/* START TICK */}
-                    <div className="relative">
-                      <span className="absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full bg-[#3B82F6] border-2 border-white shadow-[0_0_0_2px_#3B82F6]" />
-                      <div className="text-[11px] text-[#9CA3AF] font-bold">{currentStats.start}</div>
-                      <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">Workday Started</div>
-                      <div className="text-xs text-[#6B7280]">Location: {currentStats.record.startLocation?.name || 'Coordinates locked'}</div>
+                  <div className="bg-[#F8FAFC] rounded-xl border border-gray-200 p-3 px-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">PUNCH IN</span>
+                      <span className="text-[11px] text-gray-400 font-semibold">{targetRecord.startTime}</span>
                     </div>
+                    <div className="text-[13px] font-extrabold text-gray-800">Workday started</div>
+                    {targetRecord.startLocation?.lat != null && (
+                      <div className="text-[11px] text-gray-500 mt-0.5">GPS recorded on map</div>
+                    )}
+                    {targetRecord.startSelfie && (
+                      <div className="mt-2">
+                        <img src={targetRecord.startSelfie} alt="Start Selfie" className="w-[60px] h-[60px] rounded-lg object-cover border border-gray-200 cursor-pointer" onClick={() => window.open(targetRecord.startSelfie, '_blank')} />
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                    {/* VISITS TIMELINE */}
-                    {currentStats.record.visits?.map((v, index) => (
-                      <div key={index} className="relative">
-                        <span className={`absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${v.status === 'COMPLETED' ? 'bg-[#10B981] shadow-[0_0_0_2px_#10B981]' : 'bg-[#EF4444] shadow-[0_0_0_2px_#EF4444]'}`} />
-                        <div className="text-[11px] text-[#9CA3AF] font-bold">{v.checkInTime} {v.checkOutTime ? `- ${v.checkOutTime}` : ''}</div>
-                        <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">{v.type} Visit: {v.name}</div>
-                        <div className="text-xs text-[#6B7280]">Clinic: {v.clinic}</div>
+                {/* 2. VISITS TIMELINE NODES */}
+                {visits.length === 0 ? (
+                  <div className="p-4 bg-[#FAFAFA] rounded-xl border border-dashed border-gray-200 text-gray-400 text-[12px] text-center mb-6">
+                    No field visits logged on this date.
+                  </div>
+                ) : (
+                  visits.map((v, idx) => {
+                    const isCompleted = v.status === 'COMPLETED';
+                    const visitColor = isCompleted ? '#10B981' : '#F59E0B';
+                    return (
+                      <div key={v.id || idx} className="relative mb-6">
+                        {/* Dot indicator */}
+                        <div 
+                          className={`absolute left-[-31px] top-1 w-3 h-3 rounded-full border-2 border-white ${
+                            isCompleted ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]' : 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
+                          }`}
+                        />
                         
-                        {v.status === 'COMPLETED' ? (
-                          <div className="bg-[#FAFAFA] px-3.5 py-2.5 rounded-lg border border-[#EEEEEE] text-xs text-[#4B5563] mt-1.5 flex flex-col gap-1">
-                            <div>💊 <strong>Promoted Brands:</strong> {v.products}</div>
-                            <div>🧪 <strong>Samples Distributed:</strong> {v.samples || 'None'}</div>
-                            <div>📝 <strong>Feedback Summary:</strong> "{v.feedback}"</div>
-                            {v.selfie && (
-                              <div className="mt-1.5">
-                                <img src={v.selfie} alt="Visit Photo" className="w-12 h-12 rounded-md object-cover border border-[#E5E7EB]" />
+                        {/* Single Unified Card */}
+                        <div 
+                          className={`rounded-xl px-[18px] py-3.5 shadow-[0_2px_6px_rgba(0,0,0,0.01)] border ${
+                            isCompleted ? 'bg-[#FCFDFD] border-[#E5E7EB]' : 'bg-[#FFFEFA] border-[#FCD34D]'
+                          }`}
+                        >
+                          {/* Visit Card Header */}
+                          <div className="flex justify-between items-start border-b border-gray-100 pb-2 mb-2.5">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span 
+                                  className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
+                                    isCompleted ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FFFBEB] text-[#92400E]'
+                                  }`}
+                                >
+                                  {v.type || 'Visit'}
+                                </span>
+                                {isCompleted ? (
+                                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">
+                                    COMPLETED
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#FEF2F2] text-[#B91C1C] animate-pulse">
+                                    VISIT OPEN
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-[14.5px] font-extrabold text-gray-800 mt-1 mb-0.5">{v.name}</h4>
+                              {v.specialty && <div className="text-[11.5px] text-gray-500">{v.specialty}</div>}
+                            </div>
+                            <span className="text-[16px]">{v.type === 'Pharmacy' ? '🧪' : '🩺'}</span>
+                          </div>
+
+                          {/* Check-In Section */}
+                          <div className={isCompleted ? "mb-3" : "mb-0"}>
+                            <div className="flex justify-between text-[11px] text-gray-600 font-bold mb-1">
+                              <span>📥 VISIT IN</span>
+                              <span>{v.checkInTime}</span>
+                            </div>
+                            {v.checkInPhoto && (
+                              <div className="mt-2">
+                                <img src={v.checkInPhoto} alt="Check-In Place" className="w-[80px] h-[60px] object-cover rounded border border-gray-200 cursor-pointer" onClick={() => window.open(v.checkInPhoto, '_blank')} />
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <div className="text-xs text-[#EF4444] font-bold mt-1">🟢 Currently on-site meeting doctor</div>
-                        )}
-                      </div>
-                    ))}
 
-                    {/* END TICK */}
-                    {currentStats.status === 'ENDED' && (
-                      <div className="relative">
-                        <span className="absolute -left-[22px] top-0.5 w-2.5 h-2.5 rounded-full bg-[#3B82F6] border-2 border-white shadow-[0_0_0_2px_#3B82F6]" />
-                        <div className="text-[11px] text-[#9CA3AF] font-bold">{currentStats.end}</div>
-                        <div className="text-[13px] font-extrabold text-[#1F2937] mt-0.5">Workday Completed</div>
-                        <div className="text-xs text-[#6B7280]">Location: {currentStats.record.endLocation?.name || 'Lock final exit location'}</div>
+                          {/* Check-Out Section (displays inside the same card if completed) */}
+                          {isCompleted && (
+                            <div className="border-t border-dashed border-gray-250 pt-2.5 mt-2.5">
+                              <div className="flex justify-between text-[11px] text-emerald-700 font-bold mb-1.5">
+                                <span>📤 VISIT OUT</span>
+                                <span>{v.checkOutTime}</span>
+                              </div>
+                              <div className="flex flex-col gap-1 text-[12px] text-gray-700">
+                                <div>💊 <strong>Brands Promoted:</strong> {v.products}</div>
+                                <div>🧪 <strong>Samples Distributed:</strong> {v.samples || 'None'}</div>
+                                <div className="bg-[#ECFDF5] px-2.5 py-1.5 rounded border border-[#D1FAE5] text-[#065F46] mt-1">
+                                  📝 <strong>Feedback Summary:</strong> "{v.feedback}"
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    );
+                  })
+                )}
 
+                {/* 3. END WORKDAY NODE */}
+                {targetRecord.status === 'ENDED' ? (
+                  <div className="relative mb-2">
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-white shadow-[0_0_0_3px_rgba(30,58,138,0.15)]" />
+                    
+                    <div className="bg-[#F8FAFC] rounded-xl border border-gray-300 p-3 px-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#475569]">PUNCH OUT</span>
+                        <span className="text-[11px] text-gray-400 font-semibold">{targetRecord.endTime}</span>
+                      </div>
+                      <div className="text-[13px] font-extrabold text-gray-800">Workday ended</div>
+                      <div className="text-[12px] text-gray-500 mt-0.5">Punch-out at {targetRecord.endTime}</div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="relative mb-2">
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-ping" />
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                    
+                    <div className="bg-[#ECFDF5] rounded-xl border border-dashed border-[#A7F3D0] p-3 px-4 text-[#065F46]">
+                      <div className="text-[12px] font-bold">🟢 Workday still active</div>
+                      <div className="text-[11.5px] text-[#047857] mt-0.5">
+                        {openVisit
+                          ? `Finish visit at ${openVisit.name}, then punch out on the dashboard.`
+                          : 'Punch out on the dashboard when workday is done.'}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Map Visualizer */}
-        <div className="sticky top-6">
-          <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-            
-            {/* Map title block */}
-            <div className="px-5 py-4 border-b border-[#F3F4F6] flex justify-between items-center">
-              <div>
-                <h3 className="text-[14.5px] font-extrabold text-[#111827] m-0">Representative Route Visualizer</h3>
-                <span className="text-[11.5px] text-[#9CA3AF]">Active location pathways</span>
-              </div>
-              {currentStats.status === 'ACTIVE' && (
-                <span className="text-[11.5px] font-bold text-[#059669] bg-[#ECFDF5] px-2 py-0.75 rounded-md inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block animate-ping" />
-                  LIVE STREAMING
-                </span>
-              )}
-            </div>
-
-            {/* Map Canvas */}
-            <div 
-              ref={mapContainerRef} 
-              className="w-full h-[520px] bg-[#FAFAFA] z-10"
-            />
-
-            {/* Map Legend */}
-            <div className="px-5 py-4 border-t border-[#F3F4F6] bg-[#FAFAFA] flex gap-4 flex-wrap text-[11.5px] font-bold text-[#4B5563]">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#3B82F6]" />
-                <span>Start / End Pins</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#10B981]" />
-                <span>Visited Clinics</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full inline-block bg-[#EF4444]" />
-                <span>Active Visits</span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
       </div>
 
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ping {
-          0% { transform: scale(1); opacity: 1; }
-          70%, 100% { transform: scale(2); opacity: 0; }
-        }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );

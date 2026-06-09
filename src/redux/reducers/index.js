@@ -7,6 +7,7 @@ import { reportReducer } from './reportReducer';
 import { dcrReducer } from './dcrReducer';
 import { tourPlanReducer } from './tourPlanReducer';
 import { leaveReducer } from './leaveReducer';
+import { holidayReducer } from './holidayReducer';
 import { requestReducer } from './requestReducer';
 import { attendanceReducer } from './attendanceReducer';
 
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   dcr: dcrReducer,
   tourPlan: tourPlanReducer,
   leave: leaveReducer,
+  holiday: holidayReducer,
   request: requestReducer,
   attendance: attendanceReducer,
 });

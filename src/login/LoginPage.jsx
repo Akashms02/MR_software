@@ -290,7 +290,7 @@ export default function LoginPage() {
                   { email: 'msakash886100@gmail.com', password: 'Akash@1234', role: 'Medical Representative (MR)' },
                   { email: 'employee@mrmedical.com', password: 'password123', role: 'Employee' },
                   { email: 'akashms452002@gmail.com', password: 'Akash@1234', role: 'Medical Executive' },
-                  { email: 'msmadhankumar2002@gmail.com', password: 'Madhan@1234', role: 'Medical Sales Executive' }
+                  { email: 'keerthikmlofficial@gmail.com', password: 'Keerthik@123', role: 'Medical Sales Executive' }
                 ].map((c, i) => (
                   <motion.div
                     whileHover={{ x: 4, backgroundColor: '#f8fafc' }}

@@ -42,7 +42,6 @@ function MSEHeader() {
     if (activePage === 'reports') return 'Reports & Analytics'
     if (activePage === 'finance') return 'My Payslips'
     if (activePage === 'me') return 'Me'
-    if (activePage === 'watercooler') return 'Water Cooler'
     if (activePage === 'settings') return 'Settings'
     return 'Dashboard'
   }
@@ -83,7 +82,6 @@ export default function MedicalSalesExecutiveLayout({ children }) {
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-sales-executive/reports' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/medical-sales-executive/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/medical-sales-executive/me' },
-    { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/medical-sales-executive/watercooler' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-sales-executive/settings' },
   ]
 
