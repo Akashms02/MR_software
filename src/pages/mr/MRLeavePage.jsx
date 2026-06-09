@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-import { Calendar, Plus, CheckCircle2, AlertCircle, Clock, FileText, Send, Loader2 } from 'lucide-react';
+import { Calendar, Plus, CheckCircle2, AlertCircle, Clock, FileText, Send, Loader2, Award, ShieldAlert, HeartHandshake } from 'lucide-react';
 import {
   fetchMyLeavesAction,
   applyLeaveAction,
+  fetchMyBalancesAction,
+  fetchLeaveTypesAction,
   clearLeaveErrorsAction,
   clearLeaveSuccessAction
 } from '../../redux/actions/leaveActions';
@@ -12,7 +14,7 @@ import {
 const MRLeavePage = () => {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { leaves, loading, error, success } = useSelector((state) => state.leave);
+  const { leaves, myBalances, leaveTypes, loading, error, success } = useSelector((state) => state.leave);
 
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
   
@@ -23,7 +25,7 @@ const MRLeavePage = () => {
   // Form State
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [leaveType, setLeaveType] = useState('CASUAL');
+  const [leaveType, setLeaveType] = useState('2');
   const [reason, setReason] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
@@ -51,10 +53,22 @@ const MRLeavePage = () => {
     }
   }, [error, dispatch]);
 
-  // Fetch MR's leaves on mount
+  // Fetch initial data on mount
   useEffect(() => {
     dispatch(fetchMyLeavesAction());
+    dispatch(fetchMyBalancesAction());
+    dispatch(fetchLeaveTypesAction());
   }, [dispatch]);
+
+  // Set default leave type when categories load
+  useEffect(() => {
+    if (leaveTypes && leaveTypes.length > 0) {
+      const exists = leaveTypes.some(t => t.id.toString() === leaveType.toString());
+      if (!exists) {
+        setLeaveType(leaveTypes[0].id.toString());
+      }
+    }
+  }, [leaveTypes, leaveType]);
 
   const triggerLocalNotification = (type, msg) => {
     if (type === 'success') {
@@ -88,18 +102,24 @@ const MRLeavePage = () => {
     setFormLoading(true);
     try {
       await dispatch(applyLeaveAction({
-        startDate,
-        endDate,
-        leaveType,
-        reason: reason.trim()
+        leaveTypeId: parseInt(leaveType),
+        fromDate: startDate,
+        toDate: endDate,
+        reason: reason.trim(),
+        leaveSession: 'FULL_DAY'
       }));
       
       // Reset form on success
       setStartDate('');
       setEndDate('');
-      setLeaveType('CASUAL');
+      if (leaveTypes && leaveTypes.length > 0) {
+        setLeaveType(leaveTypes[0].id.toString());
+      }
       setReason('');
       setActiveTab('list');
+      // Re-fetch history and balances
+      dispatch(fetchMyLeavesAction());
+      dispatch(fetchMyBalancesAction());
     } catch (err) {
       // Errors handled by redux error binding
     } finally {
@@ -119,17 +139,34 @@ const MRLeavePage = () => {
   };
 
   const formatLeaveType = (type) => {
-    return type
+    const t = (type && typeof type === 'object')
+      ? (type.name || type.code || '')
+      : (type || '');
+    return t
       ?.replace('_', ' ')
       ?.toLowerCase()
       ?.replace(/\b\w/g, (char) => char.toUpperCase()) || 'Leave';
   };
 
-  const calculateDays = (start, end) => {
-    if (!start || !end) return 0;
-    const diffTime = Math.abs(new Date(end) - new Date(start));
+  const calculateDays = (start, end, from, to) => {
+    const s = start || from;
+    const e = end || to;
+    if (!s || !e) return 0;
+    const diffTime = Math.abs(new Date(e) - new Date(s));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return diffDays;
+  };
+
+  // Helper for balance cards styling
+  const getBalanceStyle = (code) => {
+    const uc = code?.toUpperCase();
+    if (uc === 'CL' || uc === 'CASUAL') return { border: 'border-amber-100', text: 'text-amber-600', bg: 'bg-amber-50', icon: '🏖️' };
+    if (uc === 'SL' || uc === 'SICK') return { border: 'border-rose-100', text: 'text-rose-600', bg: 'bg-rose-50', icon: '🤒' };
+    if (uc === 'PL' || uc === 'PRIVILEGE' || uc === 'PATERNITY') return { border: 'border-emerald-100', text: 'text-emerald-600', bg: 'bg-emerald-50', icon: '🌟' };
+    if (uc === 'ML' || uc === 'MATERNITY') return { border: 'border-indigo-100', text: 'text-indigo-600', bg: 'bg-indigo-50', icon: '👶' };
+    if (uc === 'EL' || uc === 'EARNED') return { border: 'border-blue-100', text: 'text-blue-600', bg: 'bg-blue-50', icon: '📋' };
+    if (uc === 'CO' || uc === 'COMPENSATORY') return { border: 'border-purple-100', text: 'text-purple-600', bg: 'bg-purple-50', icon: '⏰' };
+    return { border: 'border-blue-100', text: 'text-blue-600', bg: 'bg-blue-50', icon: '📋' };
   };
 
   return (
@@ -145,6 +182,44 @@ const MRLeavePage = () => {
         <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-3 shrink-0">
           <AlertCircle size={16} />
           {errorMsg}
+        </div>
+      )}
+
+      {/* Leave Balance Cards Row */}
+      {activeTab === 'list' && myBalances && myBalances.length > 0 && (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-4 shrink-0">
+          {myBalances.map((bal, idx) => {
+            const code = bal.leaveCode || bal.leaveType?.code || bal.leaveTypeCode || bal.leaveType || '';
+            const name = bal.leaveName || bal.leaveType?.name || bal.leaveTypeName || bal.leaveType || 'Leave';
+            const used = bal.usedDays ?? bal.used ?? 0;
+            const limit = bal.allocatedDays ?? bal.limit ?? bal.totalDays ?? 12;
+            const remaining = bal.remainingDays ?? (limit - used);
+            const style = getBalanceStyle(code || name);
+            const percentUsed = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
+
+            return (
+              <div key={bal.id || idx} className={`bg-white border ${style.border} rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{name}</span>
+                    <h3 className="text-xl font-bold text-gray-800 tracking-tight mt-1">{remaining} <span className="text-xs font-semibold text-gray-400">Days Left</span></h3>
+                  </div>
+                  <span className={`w-8 h-8 rounded-xl ${style.bg} flex items-center justify-center text-lg`}>
+                    {style.icon}
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <div className="flex justify-between text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-tight">
+                    <span>Used: {used} / {limit} D</span>
+                    <span>{percentUsed}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div className={`h-1.5 rounded-full ${percentUsed > 80 ? 'bg-rose-500' : 'bg-[#C8F04A]'}`} style={{ width: `${percentUsed}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -209,22 +284,22 @@ const MRLeavePage = () => {
                 <tbody>
                   {leaves.map((leave) => {
                     return (
-                      <tr key={leave.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
+                      <tr key={leave.leaveId || leave.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
                         {/* Type */}
                         <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
-                          {formatLeaveType(leave.leaveType)}
+                          {formatLeaveType(leave.leaveName || leave.leaveCode || leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType)}
                         </td>
                         {/* Start Date */}
                         <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
-                          {leave.startDate}
+                          {leave.startDate || leave.fromDate}
                         </td>
                         {/* End Date */}
                         <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
-                          {leave.endDate}
+                          {leave.endDate || leave.toDate}
                         </td>
                         {/* Duration */}
                         <td className="px-4 py-4 text-[13px] text-[#1F2937] font-bold">
-                          {calculateDays(leave.startDate, leave.endDate)} Day{calculateDays(leave.startDate, leave.endDate) !== 1 ? 's' : ''}
+                          {calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate)} Day{calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
                         </td>
                         {/* Reason */}
                         <td className="px-4 py-4 text-[13px] text-[#4B5563] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.reason}>
@@ -298,10 +373,21 @@ const MRLeavePage = () => {
                   required
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none box-border font-sans"
                 >
-                  <option value="CASUAL">Casual Leave</option>
-                  <option value="SICK">Sick Leave</option>
-                  <option value="PRIVILEGE">Privilege Leave</option>
-                  <option value="MATERNITY">Maternity Leave</option>
+                  {leaveTypes && leaveTypes.length > 0 ? (
+                    leaveTypes.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="2">Casual Leave</option>
+                      <option value="3">Sick Leave</option>
+                      <option value="4">Earned Leave</option>
+                      <option value="5">Paternity Leave</option>
+                      <option value="1">Compensatory Off</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>

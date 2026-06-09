@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MedicalExecutiveLayout from './MedicalExecutiveLayout'
 import MedicalExecutiveDashboard from '../../pages/medical-executive/MedicalExecutiveDashboard'
 import MEReports from '../../pages/medical-executive/MEReports'
-import EmployeePayslip from '../../pages/employee/EmployeePayslip'
+import MEPayslip from '../../pages/medical-executive/MEPayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import METourPlanPage from '../../pages/medical-executive/METourPlanPage'
@@ -31,7 +31,7 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="fieldtracking" element={<MEFieldTracking />} />
         <Route path="leaves" element={<MELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MEDoctorOnboarding />} />
-        <Route path="finance" element={<EmployeePayslip />} />
+        <Route path="finance" element={<MEPayslip />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />

@@ -79,8 +79,6 @@ const MSETourPlanPage = () => {
     const updated = [...planDays]; updated[idx][field] = value; setPlanDays(updated);
   };
 
-
-
   const handleSaveDraft = async (e, andSubmit = false) => {
     if (e) e.preventDefault();
     setErrorMsg(null); setSuccessMsg(null);
@@ -128,13 +126,6 @@ const MSETourPlanPage = () => {
     }
   };
 
-  const doctorListOptions = doctors.length > 0 ? doctors : [
-    { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic' },
-    { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital' },
-    { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care' },
-    { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic' },
-  ];
-
   const formatMonthLabel = (dateStr) => {
     if (!dateStr) return '—';
     try { const parts = dateStr.split('-'); const d = new Date(parts[0], parts[1] - 1, 1); return d.toLocaleDateString('default', { month: 'long', year: 'numeric' }); }
@@ -142,30 +133,22 @@ const MSETourPlanPage = () => {
   };
 
   return (
-    <div className="animate-[fadeSlideIn_0.35s_ease-out]">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-7">
-        <div>
-          <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest">PORTAL: MEDICAL SALES EXECUTIVE</span>
-          <h2 className="text-2xl font-extrabold text-gray-900 mt-1 mb-0">Tour Plan Management</h2>
-          <p className="text-[13px] text-gray-500 mt-0.5 mb-0">Draft and schedule your monthly field activities and doctor calls.</p>
-        </div>
-      </div>
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
 
       {/* Notifications */}
       {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl flex items-center gap-2 text-emerald-700 text-[13px] font-semibold mb-5">
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-3 shrink-0">
           <CheckCircle2 size={16} />{successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3 rounded-xl flex items-center gap-2 text-red-700 text-[13px] font-semibold mb-5">
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-3 shrink-0">
           <AlertCircle size={16} />{errorMsg}
         </div>
       )}
 
       {/* Tab controls */}
-      <div className="flex gap-2.5 mb-6">
+      <div className="flex gap-2.5 mb-4 shrink-0">
         <button
           onClick={() => setActiveTab('list')}
           className="py-2.5 px-[22px] rounded-xl cursor-pointer font-bold text-[13.5px] transition-all duration-200 outline-none"
@@ -192,18 +175,18 @@ const MSETourPlanPage = () => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-[20px] border border-gray-100 p-7" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+      {/* Content wrapper */}
+      <div className="bg-white rounded-[20px] border border-gray-100 p-6 flex-1 flex flex-col min-h-0 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
 
         {/* Tab 1: Tour Plans List */}
         {activeTab === 'list' && (
           loading && tourPlans.length === 0 ? (
-            <div className="flex flex-col items-center py-[60px] gap-3">
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
               <Loader2 size={24} className="animate-spin text-gray-800" />
               <span className="text-[13.5px] text-gray-400">Loading tour plans...</span>
             </div>
           ) : tourPlans.length === 0 ? (
-            <div className="py-[60px] text-center text-gray-400">
+            <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
               <ClipboardList size={40} className="mx-auto mb-3" strokeWidth={1.5} />
               <p className="m-0 text-sm font-medium">No monthly tour plans created yet.</p>
               <button
@@ -215,85 +198,81 @@ const MSETourPlanPage = () => {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-2 border-gray-100">
-                    {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                      <th key={h} className="py-3 px-4 text-[11.5px] font-extrabold text-gray-400 uppercase tracking-wide">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tourPlans.map((plan) => {
-                    const statusStyle = getStatusBadgeStyle(plan.status);
-                    return (
-                      <tr key={plan.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
-                        <td className="py-4 px-4 text-[13.5px] font-bold text-gray-800">
-                          <span className="flex items-center gap-2"><Calendar size={14} color="#9CA3AF" />{formatMonthLabel(plan.targetMonth)}</span>
-                        </td>
-                        <td className="py-4 px-4 text-[13.5px] text-gray-600 font-semibold">
-                          {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className="inline-flex py-1 px-2.5 rounded-full text-[11px] font-extrabold" style={{ background: statusStyle.bg, color: statusStyle.text, border: statusStyle.border }}>
-                            {plan.status}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-[13px] text-gray-500 italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {plan.remarks || '—'}
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex gap-2 items-center">
-                            <button
-                              onClick={() => handleViewPlanDetails(plan.id)}
-                              className="flex items-center gap-1 bg-gray-100 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors duration-150"
-                            >
-                              <Eye size={12} /> Details
-                            </button>
-                            {plan.status === 'DRAFT' && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="overflow-auto flex-1 pr-1">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-2 border-gray-100">
+                      {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
+                        <th key={h} className="py-3 px-4 text-[11.5px] font-extrabold text-gray-400 uppercase tracking-wide">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tourPlans.map((plan) => {
+                      const statusStyle = getStatusBadgeStyle(plan.status);
+                      return (
+                        <tr key={plan.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
+                          <td className="py-4 px-4 text-[13.5px] font-bold text-gray-800">
+                            <span className="flex items-center gap-2"><Calendar size={14} color="#9CA3AF" />{formatMonthLabel(plan.targetMonth)}</span>
+                          </td>
+                          <td className="py-4 px-4 text-[13.5px] text-gray-600 font-semibold">
+                            {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="inline-flex py-1 px-2.5 rounded-full text-[11px] font-extrabold" style={{ background: statusStyle.bg, color: statusStyle.text, border: statusStyle.border }}>
+                              {plan.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-[13px] text-gray-500 italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {plan.remarks || '—'}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex gap-2 items-center">
                               <button
-                                onClick={() => handleSubmitExistingDraft(plan.id)}
-                                disabled={actionLoading}
-                                className="flex items-center gap-1 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-white transition-opacity hover:opacity-90"
-                                style={{ background: primaryColor }}
+                                onClick={() => handleViewPlanDetails(plan.id)}
+                                className="flex items-center gap-1 bg-gray-100 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors duration-150"
                               >
-                                <Send size={11} /> Submit
+                                <Eye size={12} /> Details
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                              {plan.status === 'DRAFT' && (
+                                <button
+                                  onClick={() => handleSubmitExistingDraft(plan.id)}
+                                  disabled={actionLoading}
+                                  className="flex items-center gap-1 border-none py-1.5 px-3 rounded-lg cursor-pointer text-xs font-bold text-white transition-opacity hover:opacity-90"
+                                  style={{ background: primaryColor }}
+                                >
+                                  <Send size={11} /> Submit
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )
         )}
 
         {/* Tab 2: Create New Tour Plan */}
         {activeTab === 'new' && (
-          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex flex-col gap-6">
-            <div className="flex justify-between items-start flex-wrap gap-4 border-b border-gray-100 pb-5">
-              <div>
-                <h4 className="text-base font-extrabold text-gray-900 m-0">Create Monthly Tour Schedule</h4>
-                <p className="text-xs text-gray-500 mt-0.5 mb-0">Plan daily work routes, hospital call visits and seminars in advance.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-[13px] font-bold text-gray-700">Target Month:</label>
-                <input
-                  type="month"
-                  value={targetMonth}
-                  onChange={(e) => setTargetMonth(e.target.value)}
-                  required
-                  className="py-2 px-3 rounded-[10px] border border-gray-200 text-[13.5px] outline-none"
-                />
-              </div>
+          <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex-1 flex flex-col min-h-0">
+            <div className="flex justify-end items-center gap-2 border-b border-gray-100 pb-4 mb-4 shrink-0">
+              <label className="text-[13px] font-bold text-gray-700">Target Month:</label>
+              <input
+                type="month"
+                value={targetMonth}
+                onChange={(e) => setTargetMonth(e.target.value)}
+                required
+                className="py-2 px-3 rounded-[10px] border border-gray-200 text-[13.5px] outline-none"
+              />
             </div>
 
             {/* Plan Days Cards */}
-            <div className="flex flex-col gap-5">
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-5 mb-4">
               {planDays.map((day, idx) => (
                 <div key={idx} className="p-6 border border-gray-200 rounded-2xl bg-gray-50 relative animate-[fadeIn_0.25s]">
                   <button
@@ -329,39 +308,37 @@ const MSETourPlanPage = () => {
                       <input type="text" value={day.targetTerritory} onChange={(e) => handleDayChange(idx, 'targetTerritory', e.target.value)} placeholder="e.g. Chennai South, Ward 4" required={day.activityType === 'FIELD_WORK'} className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] outline-none box-border" />
                     </div>
                   </div>
-
-
-
-
                 </div>
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={addDayField}
-              className="self-start flex items-center gap-1.5 bg-gray-900 text-white border-none py-2.5 px-[18px] rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-px"
-            >
-              <Plus size={14} /> Add Another Day Plan
-            </button>
-
-            <div className="flex gap-3 justify-end border-t border-gray-100 pt-5 mt-2.5">
-              <button
-                type="submit"
-                disabled={actionLoading}
-                className="py-[11px] px-[22px] rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                {actionLoading ? 'Saving...' : 'Save Draft'}
-              </button>
+            <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto shrink-0">
               <button
                 type="button"
-                onClick={() => handleSaveDraft(null, true)}
-                disabled={actionLoading}
-                className="py-[11px] px-[22px] rounded-xl border-none text-white font-bold text-[13px] cursor-pointer transition-opacity hover:opacity-90"
-                style={{ background: primaryColor, boxShadow: primaryShadow }}
+                onClick={addDayField}
+                className="flex items-center gap-1.5 bg-gray-900 text-white border-none py-2.5 px-[18px] rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-px"
               >
-                {actionLoading ? 'Submitting...' : 'Save & Submit Plan'}
+                <Plus size={14} /> Add Another Day Plan
               </button>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="py-[11px] px-[22px] rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  {actionLoading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveDraft(null, true)}
+                  disabled={actionLoading}
+                  className="py-[11px] px-[22px] rounded-xl border-none text-white font-bold text-[13px] cursor-pointer transition-opacity hover:opacity-90"
+                  style={{ background: primaryColor, boxShadow: primaryShadow }}
+                >
+                  {actionLoading ? 'Submitting...' : 'Save & Submit Plan'}
+                </button>
+              </div>
             </div>
           </form>
         )}

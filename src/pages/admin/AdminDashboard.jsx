@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { getMyTeam } from '../../redux/actions/teamActions'
-import { fetchTeamLeavesAction } from '../../redux/actions/leaveActions'
+import { fetchAdminLeaveTableAction } from '../../redux/actions/leaveActions'
 import { fetchTeamAttendanceAction } from '../../redux/actions/attendanceActions'
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
 
@@ -110,13 +110,13 @@ export default function AdminDashboard() {
   
   const { user } = useSelector((state) => state.auth)
   const { team = [] } = useSelector((state) => state.team || {})
-  const { teamLeaves = [] } = useSelector((state) => state.leave || {})
+  const { adminLeavesTable = [] } = useSelector((state) => state.leave || {})
   const { teamAttendance = [] } = useSelector((state) => state.attendance || {})
 
   useEffect(() => {
     dispatch(fetchProfile())
     dispatch(getMyTeam())
-    dispatch(fetchTeamLeavesAction())
+    dispatch(fetchAdminLeaveTableAction())
     dispatch(fetchTeamAttendanceAction())
   }, [dispatch])
 
@@ -153,14 +153,14 @@ export default function AdminDashboard() {
   const nextHoliday = getNextHoliday()
 
   // Leaves calculation
-  const pendingLeavesCount = teamLeaves.filter(l => l.status === 'PENDING').length
-  const activeOnLeaveCount = teamLeaves.filter(leave => {
+  const pendingLeavesCount = adminLeavesTable.filter(l => l.status === 'PENDING').length
+  const activeOnLeaveCount = adminLeavesTable.filter(leave => {
     if (leave.status !== 'APPROVED') return false
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const start = new Date(leave.startDate)
+    const start = new Date(leave.startDate || leave.fromDate)
     start.setHours(0, 0, 0, 0)
-    const end = new Date(leave.endDate)
+    const end = new Date(leave.endDate || leave.toDate)
     end.setHours(0, 0, 0, 0)
     return today >= start && today <= end
   }).length

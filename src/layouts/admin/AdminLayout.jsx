@@ -62,6 +62,7 @@ function AdminHeader() {
     if (activePage === 'tourplans') return 'Tour Plans'
     if (activePage === 'fieldtracking') return 'Field Tracking'
     if (activePage === 'leaves') return 'Leave Approvals'
+    if (activePage === 'holidays') return 'Holidays'
     if (activePage === 'myteam') return 'My Team'
     if (activePage === 'hrdocuments') return 'HR Documents'
     if (activePage === 'settings') return 'Settings'
@@ -104,6 +105,7 @@ export default function AdminLayout({ children }) {
     { id: 'tourplans',    icon: Map,             label: 'Tour Plans',    path: '/admin/tourplans' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/admin/fieldtracking' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Approvals', path: '/admin/leaves' },
+    { id: 'holidays',     icon: Calendar,        label: 'Holidays',      path: '/admin/holidays' },
     // { id: 'recruitment',  icon: Briefcase,       label: 'Recruitment',   path: '/admin/recruitment' },
     // { id: 'orgstructure', icon: Network,         label: 'Org Structure', path: '/admin/orgstructure' },
     // { id: 'me',           icon: User,            label: 'Me',            path: '/admin/me' },

@@ -3,9 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MedicalSalesExecutiveLayout from './MedicalSalesExecutiveLayout'
 import MedicalSalesExecutiveDashboard from '../../pages/medical-sales-executive/MedicalSalesExecutiveDashboard'
 import MSEReports from '../../pages/medical-sales-executive/MSEReports'
-import EmployeePayslip from '../../pages/employee/EmployeePayslip'
+import MSEPayslip from '../../pages/medical-sales-executive/MSEPayslip'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
-import WaterCooler from '../../pages/admin/WaterCooler'
 import MSETourPlanPage from '../../pages/medical-sales-executive/MSETourPlanPage'
 import MSEDoctorOnboarding from '../../pages/medical-sales-executive/MSEDoctorOnboarding'
 import MSERequestsPage from '../../pages/medical-sales-executive/MSERequestsPage'
@@ -31,9 +30,8 @@ export default function MedicalSalesExecutiveLayoutRouter() {
         <Route path="fieldtracking" element={<MSEFieldTracking />} />
         <Route path="leaves" element={<MSELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MSEDoctorOnboarding />} />
-        <Route path="finance" element={<EmployeePayslip />} />
+        <Route path="finance" element={<MSEPayslip />} />
         <Route path="me" element={<AdminAttendance />} />
-        <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />
         <Route path="*" element={<Navigate to="/medical-sales-executive/dashboard" replace />} />
       </Routes>

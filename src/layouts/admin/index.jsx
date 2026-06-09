@@ -16,6 +16,7 @@ import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
 import AdminFieldTracking from '../../pages/admin/AdminFieldTracking'
 import Documents from '../../pages/admin/Documents'
 import AdminLeaveReviewPage from '../../pages/admin/AdminLeaveReviewPage'
+import Holidays from '../../pages/admin/Holidays'
 import Settings from '../../pages/admin/Settings'
 import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 
@@ -32,6 +33,7 @@ export default function AdminLayoutRouter() {
         <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
         <Route path="fieldtracking" element={<AdminFieldTracking />} />
         <Route path="leaves" element={<AdminLeaveReviewPage />} />
+        <Route path="holidays" element={<Holidays />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="compliance" element={<AdminCompliance />} />
         <Route path="me" element={<AdminAttendance />} />
