@@ -9,7 +9,6 @@ import {
   getWeeklyCross,
   clearReportErrors
 } from '../../redux/actions/reportActions';
-import { getMyTeam } from '../../redux/actions/teamActions';
 import { Card, TableWrap, Th, Td } from '../../components/ui';
 import { 
   Calendar, MapPin, CheckCircle2, AlertCircle, ChevronRight, 
@@ -93,16 +92,9 @@ export default function MEReports() {
     weeklyCross 
   } = useSelector(state => state.reports || {});
 
-  // Team state from Redux
-  const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
+  const { user } = useSelector(state => state.auth || {});
 
-  // Derived MR List from team list
-  const mrList = (team || []).filter(
-    (member) => (member.role || '').toUpperCase().trim() === 'MR'
-  );
-  const mrLoading = teamLoading;
-
-  const [selectedMrId, setSelectedMrId] = useState('');
+  const selectedMrId = String(user?.id || '');
   const [activeReport, setActiveReport] = useState('visit-summary');
 
   // Filters State
@@ -110,18 +102,6 @@ export default function MEReports() {
   const [endDate, setEndDate] = useState(getTodayDateString());
   const [date, setDate] = useState(getTodayDateString()); 
   const [dateInWeek, setDateInWeek] = useState(getTodayDateString());
-
-  // Fetch team on mount
-  useEffect(() => {
-    dispatch(getMyTeam());
-  }, [dispatch]);
-
-  // Automatically select the first MR in the team when loaded
-  useEffect(() => {
-    if (mrList.length > 0 && !selectedMrId) {
-      setSelectedMrId(String(mrList[0].id));
-    }
-  }, [mrList, selectedMrId]);
 
   // Trigger Action Dispatch
   const handleFetchReport = () => {
@@ -177,16 +157,10 @@ export default function MEReports() {
   // Check if data holds valid results
   const hasData = () => {
     if (!currentData) return false;
-    
     if (activeReport === 'datewise-daily' || activeReport === 'call-visit' || activeReport === 'weekly-cross') {
       return Array.isArray(currentData) && currentData.length > 0;
     }
-    
-    if (Array.isArray(currentData) && currentData.length === 0) return false;
-    if (activeReport === 'visit-summary' && !currentData.totalPlanned && (!currentData.territories || currentData.territories.length === 0)) return false;
-    if (activeReport === 'dcr-day' && !currentData.date && (!currentData.doctorsMet || currentData.doctorsMet.length === 0)) return false;
-    if (activeReport === 'daily-activity' && !currentData.date && !currentData.summary) return false;
-    return true;
+    return typeof currentData === 'object' && !Array.isArray(currentData) && Object.keys(currentData).length > 0;
   };
 
   return (
@@ -230,35 +204,7 @@ export default function MEReports() {
               Query Filters
             </h3>
 
-            {/* Representative Selector */}
-            <div className="mb-4">
-              <label className="block text-[11px] font-bold text-gray-600 mb-1.5">FIELD REPRESENTATIVE</label>
-              {mrLoading ? (
-                <div className="text-xs text-gray-500">Loading representatives...</div>
-              ) : mrList.length === 0 ? (
-                <div className="flex flex-col gap-2">
-                  <span className="text-[11px] text-red-500">No MR profiles found.</span>
-                  <input
-                    placeholder="Enter MR ID manually..."
-                    value={selectedMrId}
-                    onChange={(e) => setSelectedMrId(e.target.value)}
-                    className="w-full py-2 px-3 rounded-lg border border-red-300 text-[12.5px] outline-none"
-                  />
-                </div>
-              ) : (
-                <select 
-                  value={selectedMrId}
-                  onChange={(e) => setSelectedMrId(e.target.value)}
-                  className="w-full py-2.5 px-3 rounded-lg border border-gray-200 text-[13px] outline-none text-gray-800 bg-white font-semibold"
-                >
-                  {mrList.map(mr => (
-                    <option key={mr.id} value={String(mr.id)}>
-                      {mr.fullName || mr.name || `MR #${mr.id}`}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+
 
             {/* Range Pickers */}
             {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
@@ -457,61 +403,28 @@ export default function MEReports() {
 
           {/* Condition: Call Visit Report */}
           {activeReport === 'call-visit' && hasData() && (
-            <>
-              {/* Chart: Specialty Target vs Actual */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Specialty Target Call vs Actual Detailed</h3>
-                <div style={{ width: '100%', height: 300 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={currentData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                      <XAxis dataKey="specialty" fontSize={11} stroke="#9CA3AF" />
-                      <YAxis fontSize={11} stroke="#9CA3AF" />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
-                      <Bar name="Target Calls" dataKey="target" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={20} />
-                      <Bar name="Actual Calls" dataKey="actual" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-
-              {/* Table of detail */}
-              <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <Th>Doctor Specialty</Th>
-                      <Th>Target Calls</Th>
-                      <Th>Actual Calls Met</Th>
-                      <Th>Chemist Samples Distributed</Th>
-                      <Th>Achievement</Th>
+            <TableWrap>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <Th>Date</Th>
+                    <Th>Time</Th>
+                    <Th>Doctor Name</Th>
+                    <Th>Products Discussed</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.map((row, idx) => (
+                    <tr key={idx}>
+                      <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.date}</Td>
+                      <Td>{row.time}</Td>
+                      <Td className="font-semibold" style={{ color: '#1F2937' }}>{row.doctorName}</Td>
+                      <Td>{row.products || '—'}</Td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.map((row, idx) => {
-                      const rate = row.target ? `${Math.round((row.actual / row.target) * 100)}%` : '0%';
-                      return (
-                        <tr key={idx}>
-                          <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.specialty}</Td>
-                          <Td>{row.target}</Td>
-                          <Td>{row.actual}</Td>
-                          <Td>{row.samples || 0} units</Td>
-                          <Td>
-                            <span style={{
-                              fontWeight: 700,
-                              color: (row.actual/row.target >= 0.9) ? '#10B981' : '#EF4444',
-                            }}>
-                              {rate}
-                            </span>
-                          </Td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </TableWrap>
-            </>
+                  ))}
+                </tbody>
+              </table>
+            </TableWrap>
           )}
 
           {/* Condition: DCR Day Report */}

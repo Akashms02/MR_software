@@ -144,19 +144,15 @@ export default function MRReports() {
 
   const currentData = getActiveData();
 
+  console.log("[MRReports] activeReport:", activeReport, "currentData:", currentData);
+
   // Check if data holds valid results
   const hasData = () => {
     if (!currentData) return false;
-    
     if (activeReport === 'datewise-daily' || activeReport === 'call-visit' || activeReport === 'weekly-cross') {
       return Array.isArray(currentData) && currentData.length > 0;
     }
-    
-    if (Array.isArray(currentData) && currentData.length === 0) return false;
-    if (activeReport === 'visit-summary' && !currentData.totalPlanned && (!currentData.territories || currentData.territories.length === 0)) return false;
-    if (activeReport === 'dcr-day' && !currentData.date && (!currentData.doctorsMet || currentData.doctorsMet.length === 0)) return false;
-    if (activeReport === 'daily-activity' && !currentData.date && !currentData.summary) return false;
-    return true;
+    return typeof currentData === 'object' && !Array.isArray(currentData) && Object.keys(currentData).length > 0;
   };
 
   return (
@@ -415,60 +411,28 @@ export default function MRReports() {
 
           {/* Condition: Call Visit Report */}
           {activeReport === 'call-visit' && hasData() && (
-            <>
-              {/* Chart: Specialty Target vs Actual */}
-              <Card className="p-6">
-                <h3 className="m-0 mb-5 text-[14.5px] font-extrabold text-[#1F2937]">Specialty Target Call vs Actual Detailed</h3>
-                <div className="w-full h-[300px]">
-                  <ResponsiveContainer>
-                    <BarChart data={currentData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                      <XAxis dataKey="specialty" fontSize={11} stroke="#9CA3AF" />
-                      <YAxis fontSize={11} stroke="#9CA3AF" />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
-                      <Bar name="Target Calls" dataKey="target" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={20} />
-                      <Bar name="Actual Calls" dataKey="actual" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-
-              {/* Table of detail */}
-              <TableWrap>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <Th>Doctor Specialty</Th>
-                      <Th>Target Calls</Th>
-                      <Th>Actual Calls Met</Th>
-                      <Th>Chemist Samples Distributed</Th>
-                      <Th>Achievement</Th>
+            <TableWrap>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <Th>Date</Th>
+                    <Th>Time</Th>
+                    <Th>Doctor Name</Th>
+                    <Th>Products Discussed</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.map((row, idx) => (
+                    <tr key={idx}>
+                      <Td className="font-bold text-[#1F2937]">{row.date}</Td>
+                      <Td>{row.time}</Td>
+                      <Td className="font-semibold text-[#1F2937]">{row.doctorName}</Td>
+                      <Td>{row.products || '—'}</Td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.map((row, idx) => {
-                      const rate = row.target ? `${Math.round((row.actual / row.target) * 100)}%` : '0%';
-                      return (
-                        <tr key={idx}>
-                          <Td className="font-bold text-[#1F2937]">{row.specialty}</Td>
-                          <Td>{row.target}</Td>
-                          <Td>{row.actual}</Td>
-                          <Td>{row.samples || 0} units</Td>
-                          <Td>
-                            <span className={`font-bold ${
-                              (row.actual/row.target >= 0.9) ? 'text-[#10B981]' : 'text-[#EF4444]'
-                            }`}>
-                              {rate}
-                            </span>
-                          </Td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </TableWrap>
-            </>
+                  ))}
+                </tbody>
+              </table>
+            </TableWrap>
           )}
 
           {/* Condition: DCR Day Report */}

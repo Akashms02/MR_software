@@ -120,21 +120,24 @@ export const createHolidayAction = (payload, photo = null) => async (dispatch) =
   dispatch({ type: LOADING_START });
   dispatch({ type: CREATE_HOLIDAY_REQUEST });
   try {
-    let response;
+    const sanitizedPayload = { ...payload };
+    delete sanitizedPayload.id;
+    delete sanitizedPayload.imageUrl;
+
+    const formData = new FormData();
+    Object.entries(sanitizedPayload).forEach(([key, val]) => {
+      if (val !== null && val !== undefined) {
+        formData.append(key, val);
+      }
+    });
     if (photo) {
-      // Multipart form data when photo is provided
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(payload));
       formData.append("photo", photo);
-      response = await axios.post(`${API_ROUTE}/holidays`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    } else {
-      // JSON body
-      response = await axios.post(`${API_ROUTE}/holidays`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
     }
+
+    const response = await axios.post(`${API_ROUTE}/holidays`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: CREATE_HOLIDAY_SUCCESS,
@@ -155,19 +158,24 @@ export const updateHolidayAction = (id, payload, photo = null) => async (dispatc
   dispatch({ type: LOADING_START });
   dispatch({ type: UPDATE_HOLIDAY_REQUEST });
   try {
-    let response;
+    const sanitizedPayload = { ...payload };
+    delete sanitizedPayload.id;
+    delete sanitizedPayload.imageUrl;
+
+    const formData = new FormData();
+    Object.entries(sanitizedPayload).forEach(([key, val]) => {
+      if (val !== null && val !== undefined) {
+        formData.append(key, val);
+      }
+    });
     if (photo) {
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(payload));
       formData.append("photo", photo);
-      response = await axios.put(`${API_ROUTE}/holidays/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    } else {
-      response = await axios.put(`${API_ROUTE}/holidays/${id}`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
     }
+
+    const response = await axios.put(`${API_ROUTE}/holidays/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: UPDATE_HOLIDAY_SUCCESS,

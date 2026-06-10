@@ -185,8 +185,32 @@ const MRLeavePage = () => {
         </div>
       )}
 
+      {/* Tab controls */}
+      <div className="flex gap-2.5 mb-4 shrink-0">
+        <button
+          onClick={() => setActiveTab('list')}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'list' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          My Leave History
+        </button>
+        <button
+          onClick={() => setActiveTab('new')}
+          className={`flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'new' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Plus size={15} strokeWidth={2.5} /> Apply for Leave
+        </button>
+      </div>
+
       {/* Leave Balance Cards Row */}
-      {activeTab === 'list' && myBalances && myBalances.length > 0 && (
+      {myBalances && myBalances.length > 0 && (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-4 shrink-0">
           {myBalances.map((bal, idx) => {
             const code = bal.leaveCode || bal.leaveType?.code || bal.leaveTypeCode || bal.leaveType || '';
@@ -222,30 +246,6 @@ const MRLeavePage = () => {
           })}
         </div>
       )}
-
-      {/* Tab controls */}
-      <div className="flex gap-2.5 mb-4 shrink-0">
-        <button
-          onClick={() => setActiveTab('list')}
-          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-            activeTab === 'list' 
-              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
-              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          My Leave History
-        </button>
-        <button
-          onClick={() => setActiveTab('new')}
-          className={`flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-            activeTab === 'new' 
-              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
-              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          <Plus size={15} strokeWidth={2.5} /> Apply for Leave
-        </button>
-      </div>
 
       {/* Content wrapper */}
       <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -327,16 +327,11 @@ const MRLeavePage = () => {
 
         {/* Tab 2: Apply Leave Form */}
         {activeTab === 'new' && (
-          <form onSubmit={handleApplyLeave} className="flex flex-col gap-6 overflow-y-auto flex-1 pr-1">
-            <div className="border-b border-[#F3F4F6] pb-5">
-              <h4 className="text-[16px] font-extrabold text-[#111827] margin-0">Request Time Off</h4>
-              <p className="text-[12px] text-[#6B7280] mt-[2px] mb-0">Submit a leave request for processing. Once sent, your manager will be notified.</p>
-            </div>
-
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
+          <form onSubmit={handleApplyLeave} className="flex flex-col gap-4 flex-1 pr-1">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
               {/* Start Date */}
               <div>
-                <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                <label className="block text-[12px] font-bold text-[#374151] mb-1">
                   Start Date <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
@@ -344,13 +339,13 @@ const MRLeavePage = () => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
                 />
               </div>
 
               {/* End Date */}
               <div>
-                <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                <label className="block text-[12px] font-bold text-[#374151] mb-1">
                   End Date <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
@@ -358,20 +353,20 @@ const MRLeavePage = () => {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-[13.5px] outline-none box-border font-sans"
                 />
               </div>
 
               {/* Leave Type */}
               <div>
-                <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
+                <label className="block text-[12px] font-bold text-[#374151] mb-1">
                   Leave Category <span className="text-[#EF4444]">*</span>
                 </label>
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none box-border font-sans"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none box-border font-sans"
                 >
                   {leaveTypes && leaveTypes.length > 0 ? (
                     leaveTypes.map((category) => (
@@ -393,7 +388,7 @@ const MRLeavePage = () => {
             </div>
 
             {/* Reason */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               <label className="block text-[12px] font-bold text-[#374151]">
                 Reason for Leave <span className="text-[#EF4444]">*</span>
               </label>
@@ -402,23 +397,23 @@ const MRLeavePage = () => {
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain the purpose of your leave request here..."
                 required
-                className="w-full h-[100px] px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] resize-none outline-none box-border font-sans"
+                className="w-full h-[70px] px-3 py-2 rounded-xl border border-gray-200 text-[13.5px] resize-none outline-none box-border font-sans"
               />
             </div>
 
             {/* Action buttons */}
-            <div className="flex gap-3 justify-end border-t border-[#F3F4F6] pt-5 mt-2.5">
+            <div className="flex gap-3 justify-end border-t border-[#F3F4F6] pt-3 mt-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab('list')}
-                className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                className="px-[22px] py-2 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={formLoading}
-                className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150"
+                className="flex items-center gap-1.5 px-[22px] py-2 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150"
               >
                 {formLoading ? (
                   <>

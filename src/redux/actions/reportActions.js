@@ -24,7 +24,7 @@ import {
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
 const commonError = "Something went wrong!";
-const isSuccess = (status) => status === 200 || status === 201 || status === "SUCCESS";
+const isSuccess = (status) => status === 200 || status === 201 || status === "SUCCESS" || status === true;
 
 export const clearReportErrors = () => (dispatch) => {
   dispatch({ type: CLEAR_REPORT_ERRORS });
@@ -40,11 +40,25 @@ export const getVisitSummary = (mrId, startDate, endDate) => async (dispatch) =>
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const totalWorkingDays = data?.data?.totalWorkingDays || 0;
+      const totalVisits = data?.data?.totalVisits || 0;
+      const uniqueDoctorsVisited = data?.data?.uniqueDoctorsVisited || 0;
+      
+      const formatted = {
+        totalWorkingDays,
+        totalVisits,
+        uniqueDoctorsVisited,
+        totalPlanned: totalWorkingDays, // map to planned card
+        totalCompleted: totalVisits,    // map to completed card
+        successRate: totalWorkingDays ? `${Math.round((totalVisits / totalWorkingDays) * 100)}%` : '0%',
+        territories: [] // no territory breakdown in live API, empty to hide cleanly
+      };
+      
       dispatch({
         type: GET_VISIT_SUMMARY_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_VISIT_SUMMARY_FAILURE,
@@ -70,11 +84,20 @@ export const getDatewiseDaily = (mrId, startDate, endDate) => async (dispatch) =
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const datewiseVisits = data?.data?.datewiseVisits || {};
+      const formatted = Object.entries(datewiseVisits).map(([dateVal, visits]) => ({
+        date: dateVal,
+        visits: visits || 0,
+        chemistCalls: 0,
+        calls: visits || 0, // doctor calls fallback to visits
+        travelKm: 0
+      })).sort((a, b) => b.date.localeCompare(a.date));
+
       dispatch({
         type: GET_DATEWISE_DAILY_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_DATEWISE_DAILY_FAILURE,
@@ -100,11 +123,12 @@ export const getCallVisit = (mrId, startDate, endDate) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const formatted = data?.data?.calls || [];
       dispatch({
         type: GET_CALL_VISIT_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_CALL_VISIT_FAILURE,
@@ -130,11 +154,20 @@ export const getDcrDay = (mrId, date) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const formatted = {
+        date: data?.startDate || date,
+        status: data?.data?.status || 'NO_REPORT',
+        totalVisits: data?.data?.totalVisits || 0,
+        approvedBy: data?.data?.approvedBy || 'Pending',
+        comments: data?.data?.comments || '',
+        expenses: data?.data?.expenses || null,
+        doctorsMet: data?.data?.doctorsMet || []
+      };
       dispatch({
         type: GET_DCR_DAY_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_DCR_DAY_FAILURE,
@@ -160,11 +193,23 @@ export const getDailyActivity = (mrId, date) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const formatted = {
+        date: data?.startDate || date,
+        plannedTerritory: data?.data?.plannedTerritory || 'N/A',
+        tourPlanStatus: data?.data?.tourPlanStatus || 'N/A',
+        summary: {
+          workingStatus: data?.data?.totalVisits > 0 ? 'Present' : 'Absent/No Activity',
+          totalVisits: data?.data?.totalVisits || 0,
+          productiveVisits: data?.data?.totalVisits || 0,
+          nonProductiveVisits: 0,
+          remarks: data?.data?.remarks || ''
+        }
+      };
       dispatch({
         type: GET_DAILY_ACTIVITY_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_DAILY_ACTIVITY_FAILURE,
@@ -190,11 +235,28 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const daysMap = {
+        "MONDAY": "Monday",
+        "TUESDAY": "Tuesday",
+        "WEDNESDAY": "Wednesday",
+        "THURSDAY": "Thursday",
+        "FRIDAY": "Friday",
+        "SATURDAY": "Saturday",
+        "SUNDAY": "Sunday"
+      };
+      const formatted = Object.entries(data?.data?.weeklyMatrix || {}).map(([dayKey, visits]) => ({
+        day: daysMap[dayKey] || dayKey,
+        territory: 'N/A',
+        doctorVisits: visits || 0,
+        chemistCalls: 0,
+        dcrStatus: visits > 0 ? 'COMPLETED' : 'NO_ACTIVITY'
+      }));
+
       dispatch({
         type: GET_WEEKLY_CROSS_SUCCESS,
-        payload: data || response.data,
+        payload: formatted,
       });
-      return { success: true, data: data || response.data };
+      return { success: true, data: formatted };
     }
     dispatch({
       type: GET_WEEKLY_CROSS_FAILURE,

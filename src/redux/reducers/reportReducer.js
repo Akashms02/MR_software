@@ -46,6 +46,7 @@ export const reportReducer = (state = initialState, action) => {
       };
 
     case GET_VISIT_SUMMARY_SUCCESS:
+      console.log("[reportReducer] GET_VISIT_SUMMARY_SUCCESS payload:", action.payload);
       return {
         ...state,
         loading: false,
@@ -54,6 +55,7 @@ export const reportReducer = (state = initialState, action) => {
       };
 
     case GET_DATEWISE_DAILY_SUCCESS:
+      console.log("[reportReducer] GET_DATEWISE_DAILY_SUCCESS payload:", action.payload);
       return {
         ...state,
         loading: false,

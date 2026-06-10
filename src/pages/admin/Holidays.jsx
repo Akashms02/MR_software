@@ -59,7 +59,7 @@ const HolidayDataTable = ({
     onDelete
 }) => {
     return (
-        <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden flex flex-col h-full animate-[fadeSlideIn_0.35s_ease-out]">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-full animate-[fadeSlideIn_0.35s_ease-out]">
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
                 <div className="flex items-center gap-3">
                     <div className={cn("p-2 rounded-xl bg-opacity-10", {
@@ -495,7 +495,7 @@ const Holidays = () => {
     };
 
     const StatsCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
-        <div className="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm relative overflow-hidden group hover:border-blue-100 transition-all flex-1">
+        <div className="bg-white rounded-2xl p-5 shadow-sm relative overflow-hidden group transition-all flex-1">
             <div className={cn("absolute top-0 right-0 w-20 h-20 -mr-8 -mt-8 rounded-full blur-2xl opacity-10 transition-opacity group-hover:opacity-20", colorClass)} />
             <div className="flex justify-between items-start relative z-10">
                 <div>
@@ -531,12 +531,7 @@ const Holidays = () => {
             />
 
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-5 shrink-0">
-                <div>
-                    <h2 className="text-xl font-extrabold text-gray-900 tracking-tight m-0">Holiday Console</h2>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Master calendar & global records</p>
-                </div>
-
+            <div className="flex justify-end bg-transparent mb-5 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 bg-white border border-gray-200 p-1.5 rounded-xl shadow-sm">
                         <button
