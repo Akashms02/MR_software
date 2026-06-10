@@ -12,6 +12,7 @@ import { getMyTeam } from '../../redux/actions/teamActions'
 import { fetchAdminLeaveTableAction } from '../../redux/actions/leaveActions'
 import { fetchTeamAttendanceAction } from '../../redux/actions/attendanceActions'
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
+import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions'
 
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
@@ -50,13 +51,21 @@ function StatCard({ label, value, type }) {
 }
 
 /* ── Birthday Row ── */
-function BirthdayRow({ name, date, role }) {
+function BirthdayRow({ name, date, role, photoUrl }) {
   const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
   return (
     <div className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-none">
-      <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#E2E8F0] to-[#CBD5E1] flex items-center justify-center text-[12px] font-bold text-[#334155]">
-        {initials}
-      </div>
+      {photoUrl ? (
+        <img 
+          src={getFullAssetUrl(photoUrl)} 
+          alt={name} 
+          className="w-[34px] h-[34px] rounded-full object-cover shrink-0" 
+        />
+      ) : (
+        <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#E2E8F0] to-[#CBD5E1] flex items-center justify-center text-[12px] font-bold text-[#334155]">
+          {initials}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-bold text-[#111827] truncate">{name}</div>
         <div className="text-[11px] text-[#9CA3AF] truncate">{role || 'Team Member'}</div>
@@ -92,18 +101,6 @@ function Card({ children, style }) {
   )
 }
 
-const HOLIDAYS = [
-  { date: '2026-01-26', name: 'Republic Day' },
-  { date: '2026-03-13', name: 'Holi' },
-  { date: '2026-04-02', name: 'Good Friday' },
-  { date: '2026-05-01', name: 'May Day' },
-  { date: '2026-08-15', name: 'Independence Day' },
-  { date: '2026-10-02', name: 'Gandhi Jayanti' },
-  { date: '2026-10-22', name: 'Dussehra' },
-  { date: '2026-11-08', name: 'Diwali' },
-  { date: '2026-12-25', name: 'Christmas Day' },
-]
-
 export default function AdminDashboard() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -112,12 +109,14 @@ export default function AdminDashboard() {
   const { team = [] } = useSelector((state) => state.team || {})
   const { adminLeavesTable = [] } = useSelector((state) => state.leave || {})
   const { teamAttendance = [] } = useSelector((state) => state.attendance || {})
+  const { activeUpcomingHolidays = [] } = useSelector((state) => state.holiday || {})
 
   useEffect(() => {
     dispatch(fetchProfile())
     dispatch(getMyTeam())
     dispatch(fetchAdminLeaveTableAction())
     dispatch(fetchTeamAttendanceAction())
+    dispatch(fetchActiveUpcomingHolidaysAction())
   }, [dispatch])
 
   const displayName = user?.fullName || 'Company Admin'
@@ -134,7 +133,12 @@ export default function AdminDashboard() {
   const getNextHoliday = () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const upcoming = HOLIDAYS.map(h => ({ ...h, dateObj: new Date(h.date) }))
+    const upcoming = activeUpcomingHolidays.map(h => {
+      if (!h.date) return { ...h, dateObj: new Date(0) };
+      const dateParts = h.date.split('-');
+      const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+      return { ...h, dateObj };
+    })
       .filter(h => h.dateObj >= today)
       .sort((a, b) => a.dateObj - b.dateObj)
     
@@ -219,7 +223,8 @@ export default function AdminDashboard() {
         return {
           name: emp.fullName,
           date: dob.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-          role: formatRole(emp.role)
+          role: formatRole(emp.role),
+          photoUrl: emp.photoUrl
         }
       })
     
@@ -230,7 +235,8 @@ export default function AdminDashboard() {
       return team.slice(0, 3).map((emp, i) => ({
         name: emp.fullName,
         date: dates[i % dates.length],
-        role: formatRole(emp.role)
+        role: formatRole(emp.role),
+        photoUrl: emp.photoUrl
       }))
     }
     return list.slice(0, 4)
@@ -388,6 +394,7 @@ export default function AdminDashboard() {
                     name={item.name} 
                     date={item.date} 
                     role={item.role} 
+                    photoUrl={item.photoUrl}
                   />
                 ))
               )}

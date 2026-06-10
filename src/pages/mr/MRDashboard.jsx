@@ -22,6 +22,8 @@ import {
 import { fetchMeRequestsAction } from '../../redux/actions/requestActions';
 import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
 import { getMyTeam } from '../../redux/actions/teamActions';
+import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'mr_field_attendance_db';
@@ -452,13 +454,21 @@ function ProgressCircle({ pct, color, label, val }) {
 }
 
 // ─── Birthday Row Helper ───────────────────────────────────────────────────────
-function BirthdayRow({ name, date, role }) {
+function BirthdayRow({ name, date, role, photoUrl }) {
   const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
   return (
     <div className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-none">
-      <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#E2E8F0] to-[#CBD5E1] flex items-center justify-center text-[12px] font-bold text-[#334155]">
-        {initials}
-      </div>
+      {photoUrl ? (
+        <img 
+          src={getFullAssetUrl(photoUrl)} 
+          alt={name} 
+          className="w-[34px] h-[34px] rounded-full object-cover shrink-0" 
+        />
+      ) : (
+        <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-gradient-to-br from-[#E2E8F0] to-[#CBD5E1] flex items-center justify-center text-[12px] font-bold text-[#334155]">
+          {initials}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-bold text-[#111827] truncate">{name}</div>
         <div className="text-[11px] text-[#9CA3AF] truncate">{role || 'Team Member'}</div>
@@ -484,6 +494,7 @@ export default function MRDashboard() {
   const { myAttendance = [], myVisits = [], loading } = useSelector(state => state.attendance || {});
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
   const { team = [] } = useSelector(state => state.team || {});
+  const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
   const approvedVisitTargets = useMemo(
     () => getApprovedVisitTargets(requests),
     [requests]
@@ -570,6 +581,7 @@ export default function MRDashboard() {
     dispatch(fetchMyVisitsAction());
     dispatch(fetchMeRequestsAction());
     dispatch(getMyTeam());
+    dispatch(fetchActiveUpcomingHolidaysAction());
   }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
@@ -761,18 +773,25 @@ export default function MRDashboard() {
         return {
           name: emp.fullName,
           date: dob.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-          role: formatRole(emp.role)
+          role: formatRole(emp.role),
+          photoUrl: emp.photoUrl
         }
       })
     
     // Fallback/mocks if empty to keep it beautiful
-    if (list.length === 0 && allColleagues.length > 0) {
+    if (list.length === 0) {
       const monthStr = new Date().toLocaleDateString('en-US', { month: 'short' })
       const dates = [`12 ${monthStr}`, `20 ${monthStr}`, `25 ${monthStr}`]
-      return allColleagues.slice(0, 3).map((emp, i) => ({
-        name: emp.fullName,
+      const defaultColleagues = allColleagues.length > 0 ? allColleagues : [
+        { fullName: 'Akash M S', role: 'Medical Representative' },
+        { fullName: 'Sagar M S', role: 'Area Manager' },
+        { fullName: 'Harish Kumar', role: 'Regional Manager' }
+      ]
+      return defaultColleagues.slice(0, 3).map((emp, i) => ({
+        name: emp.fullName || emp.name,
         date: dates[i % dates.length],
-        role: formatRole(emp.role)
+        role: formatRole(emp.role),
+        photoUrl: emp.photoUrl
       }))
     }
     return list.slice(0, 4)
@@ -1054,25 +1073,44 @@ export default function MRDashboard() {
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-[140px]">
             <div className="bg-slate-50 border-b border-gray-100 px-5 py-2.5 flex justify-between items-center shrink-0">
               <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Upcoming Holidays</span>
-              <span className="text-[11px] font-bold text-blue-500">2026</span>
+              <span className="text-[11px] font-bold text-blue-500">{new Date().getFullYear()}</span>
             </div>
             <div className="px-5 py-3 flex flex-col gap-2 overflow-y-auto">
-              {[
-                { date: 'June 29', name: 'Bakrid / Eid al-Adha', type: 'Regional' },
-                { date: 'August 15', name: 'Independence Day', type: 'National' },
-                { date: 'October 02', name: 'Gandhi Jayanti', type: 'National' },
-              ].map((h, idx) => (
-                <div 
-                  key={idx} 
-                  className={`flex items-center justify-between ${idx === 2 ? 'pb-0 border-none' : 'pb-1.5 border-b border-gray-100'}`}
-                >
-                  <div>
-                    <div className="text-[12px] font-bold text-gray-800">{h.name}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{h.date}</div>
-                  </div>
-                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${h.type === 'National' ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{h.type}</span>
-                </div>
-              ))}
+              {activeUpcomingHolidays.length === 0 ? (
+                <div className="py-6 text-center text-gray-400 text-xs font-semibold">No upcoming holidays.</div>
+              ) : (
+                activeUpcomingHolidays.slice(0, 5).map((h, idx) => {
+                  let formattedDate = h.date || '';
+                  if (h.date) {
+                    try {
+                      const dateParts = h.date.split('-');
+                      const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+                      formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+                    } catch (e) {
+                      formattedDate = h.date;
+                    }
+                  }
+                  const isNationalOrGazetted = (type) => {
+                    const t = (type || '').toLowerCase();
+                    return t.includes('national') || t.includes('gazetted');
+                  };
+                  const typeLabel = h.primaryType || 'Observance';
+                  const isNat = isNationalOrGazetted(typeLabel);
+                  
+                  return (
+                    <div 
+                      key={h.id || idx} 
+                      className={`flex items-center justify-between ${idx === Math.min(activeUpcomingHolidays.length, 5) - 1 ? 'pb-0 border-none' : 'pb-1.5 border-b border-gray-100'}`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="text-[12px] font-bold text-gray-800 truncate" title={h.name}>{h.name}</div>
+                        <div className="text-[10px] text-gray-400 mt-0.5">{formattedDate}</div>
+                      </div>
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${isNat ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{typeLabel}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -1103,6 +1141,7 @@ export default function MRDashboard() {
                       name={item.name} 
                       date={item.date} 
                       role={item.role} 
+                      photoUrl={item.photoUrl}
                     />
                   ))
                 )}

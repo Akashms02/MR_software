@@ -13,7 +13,7 @@ import {
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
 const commonError = "Something went wrong!";
-const isSuccess = (status) => status === 200 || status === 201 || status === "SUCCESS";
+const isSuccess = (status) => status === 200 || status === 201 || status === "SUCCESS" || status === true;
 
 /* =======================
    GET MY TEAM

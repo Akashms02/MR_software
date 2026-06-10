@@ -43,6 +43,7 @@ const AdminLeaveReviewPage = () => {
 
   // Filter state for Team Leave Applications
   const [filterStatus, setFilterStatus] = useState('ALL'); // 'ALL', 'PENDING', 'APPROVED', 'REJECTED'
+  const [activeTab, setActiveTab] = useState('requests'); // 'requests' or 'policies'
 
   // Configure Leave modal state
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -250,236 +251,264 @@ const AdminLeaveReviewPage = () => {
         </div>
       )}
 
-      {/* Main Content Layout with stack height rules */}
-      <div className="flex-1 flex flex-col gap-6 min-h-0 overflow-y-auto pr-1">
+      {/* Tab controls */}
+      <div className="flex gap-2.5 mb-4 shrink-0">
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'requests' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          Leave Approvals
+        </button>
+        <button
+          onClick={() => setActiveTab('policies')}
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
+            activeTab === 'policies' 
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          Leave Policies & Types
+        </button>
+      </div>
 
+      {/* Main Content Layout */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        
         {/* Section 1: Types of Leave Table */}
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col shrink-0">
-          <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
-            <div>
-              <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Types of Leave & Policies</h3>
-              <p className="text-[11px] text-[#9CA3AF] font-bold uppercase tracking-wider mt-0.5">Configure leave classifications & limits</p>
-            </div>
-            <button
-              onClick={() => {
-                setEditingTypeObj(null);
-                setFormData({
-                  code: '',
-                  name: '',
-                  description: '',
-                  applicableGender: 'ALL',
-                  carryForward: false,
-                  maxAllowedDays: ''
-                });
-                setAddModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150 outline-none"
-            >
-              <Plus size={14} strokeWidth={2.5} /> Add Leave Type
-            </button>
-          </div>
-
-          <div className="max-h-[220px] overflow-y-auto pr-1">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b-[1.5px] border-[#F3F4F6] bg-gray-50/50 sticky top-0 z-10">
-                  {['Leave Type', 'Code', 'Description', 'Gender', 'Days/Year', 'Carry Forward', 'Actions'].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {leaveTypes.map((alloc, i) => {
-                  return (
-                    <tr key={alloc.id || i} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
-                      <td className="px-4 py-3 text-[13.5px] font-bold text-[#1F2937]">
-                        {alloc.name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[11px] font-bold uppercase tracking-wide border border-gray-200">
-                          {alloc.code}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[12.5px] text-gray-500 font-medium">
-                        {alloc.description || 'No policy description provided.'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                          alloc.applicableGender === 'MALE' ? 'bg-blue-50 text-blue-600' :
-                          alloc.applicableGender === 'FEMALE' ? 'bg-pink-50 text-pink-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {alloc.applicableGender || 'ALL'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-gray-800 font-bold">
-                        {alloc.maxAllowedDays ?? alloc.limit ?? alloc.days ?? 0} Days
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                          alloc.carryForward ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
-                        }`}>
-                          {alloc.carryForward ? 'Enabled' : 'Disabled'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <button
-                            type="button"
-                            title="Edit Policy"
-                            className="p-1.5 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-150 text-[#4B5563] cursor-pointer transition-colors"
-                            onClick={() => handleEditAllocation(alloc)}
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            title="Delete Policy"
-                            className="p-1.5 rounded-lg bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-500 cursor-pointer transition-colors"
-                            onClick={(e) => handleDeleteAllocation(alloc, e)}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {!loading && leaveTypes.length === 0 && (
-                  <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-gray-400 font-semibold text-xs uppercase tracking-wider">
-                      No Leave categories defined. Use "Add Leave Type" to create.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Section 2: Requested Leaves Table */}
-        <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-[350px]">
-          {/* Card Header with Filters on the Right */}
-          <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
-            <div>
-              <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Requested Leaves & Approvals</h3>
-              <p className="text-[11px] text-[#9CA3AF] font-bold uppercase tracking-wider mt-0.5">Review and take action on employee requests</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 font-bold mr-1">Filter:</span>
-              <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200/50">
-                {[
-                  { value: 'ALL', label: 'All' },
-                  { value: 'PENDING', label: 'Pending' },
-                  { value: 'APPROVED', label: 'Approved' },
-                  { value: 'REJECTED', label: 'Rejected' }
-                ].map((tab) => {
-                  const isActive = filterStatus === tab.value;
-                  return (
-                    <button
-                      key={tab.value}
-                      type="button"
-                      onClick={() => setFilterStatus(tab.value)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border-none ${
-                        isActive
-                          ? 'bg-[#111827] text-white shadow-sm'
-                          : 'text-gray-500 hover:text-[#111827] bg-transparent'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
+        {activeTab === 'policies' && (
+          <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4 shrink-0">
+              <div>
+                <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Types of Leave & Policies</h3>
+                <p className="text-[11px] text-[#9CA3AF] font-bold uppercase tracking-wider mt-0.5">Configure leave classifications & limits</p>
               </div>
-              <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
-                Pending: {pendingCount}
-              </span>
+              <button
+                onClick={() => {
+                  setEditingTypeObj(null);
+                  setFormData({
+                    code: '',
+                    name: '',
+                    description: '',
+                    applicableGender: 'ALL',
+                    carryForward: false,
+                    maxAllowedDays: ''
+                  });
+                  setAddModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity duration-150 outline-none"
+              >
+                <Plus size={14} strokeWidth={2.5} /> Add Leave Type
+              </button>
             </div>
-          </div>
 
-          {loading && adminLeavesTable.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 gap-2.5">
-              <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
-              <span className="text-[13px] text-[#9CA3AF]">Loading requested leaves...</span>
-            </div>
-          ) : filteredLeaves.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 text-center text-[#9CA3AF]">
-              <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
-              <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No leave requests found matching the filter.</p>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-auto">
+            <div className="overflow-y-auto flex-1 pr-1">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
-                    {['Staff Member', 'Leave Category', 'Duration', 'Dates', 'Status', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
+                  <tr className="border-b-[1.5px] border-[#F3F4F6] bg-gray-50/50 sticky top-0 z-10">
+                    {['Leave Type', 'Code', 'Description', 'Gender', 'Days/Year', 'Carry Forward', 'Actions'].map((h) => (
+                      <th key={h} className="px-4 py-2.5 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLeaves.map((leave) => {
-                    const reporterInitial = leave.employeeName ? leave.employeeName.charAt(0).toUpperCase() : 'E';
-                    const daysCount = calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate);
+                  {leaveTypes.map((alloc, i) => {
                     return (
-                      <tr key={leave.leaveId || leave.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
-                        {/* Staff member name */}
-                        <td className="p-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
-                              {reporterInitial}
-                            </div>
-                            <div>
-                              <div className="text-[13.5px] font-extrabold text-[#1F2937]">{leave.employeeName || 'Field staff'}</div>
-                               <div className="text-[11px] text-[#9CA3AF]">{leave.employeeRole || 'Medical Representative'}</div>
-                            </div>
-                          </div>
+                      <tr key={alloc.id || i} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
+                        <td className="px-4 py-3 text-[13.5px] font-bold text-[#1F2937]">
+                          {alloc.name}
                         </td>
-
-                        {/* Leave Type */}
-                        <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
-                          {formatLeaveType(leave.leaveName || leave.leaveCode || leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType)}
-                        </td>
-
-                        {/* Duration */}
-                        <td className="p-4 text-[13px] text-[#1F2937] font-bold">
-                          {daysCount} Day{daysCount !== 1 ? 's' : ''}
-                        </td>
-
-                        {/* Dates */}
-                        <td className="p-4 text-[13.5px] text-[#4B5563] font-semibold">
-                          {leave.startDate || leave.fromDate} to {leave.endDate || leave.toDate}
-                        </td>
-
-                        {/* Status */}
-                        <td className="p-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold ${getStatusBadgeClass(leave.status)}`}>
-                            {leave.status}
+                        <td className="px-4 py-3">
+                          <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[11px] font-bold uppercase tracking-wide border border-gray-200">
+                            {alloc.code}
                           </span>
                         </td>
-
-                        {/* Actions */}
-                        <td className="p-4">
-                          <button
-                            onClick={() => handleInspect(leave)}
-                            className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
-                          >
-                            <Eye size={12} /> Inspect Request
-                          </button>
+                        <td className="px-4 py-3 text-[12.5px] text-gray-500 font-medium">
+                          {alloc.description || 'No policy description provided.'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                            alloc.applicableGender === 'MALE' ? 'bg-blue-50 text-blue-600' :
+                            alloc.applicableGender === 'FEMALE' ? 'bg-pink-50 text-pink-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {alloc.applicableGender || 'ALL'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-[13px] text-gray-800 font-bold">
+                          {alloc.maxAllowedDays ?? alloc.limit ?? alloc.days ?? 0} Days
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                            alloc.carryForward ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                          }`}>
+                            {alloc.carryForward ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center gap-1.5 justify-start">
+                            <button
+                              type="button"
+                              title="Edit Policy"
+                              className="p-1.5 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-150 text-[#4B5563] cursor-pointer transition-colors"
+                              onClick={() => handleEditAllocation(alloc)}
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              title="Delete Policy"
+                              className="p-1.5 rounded-lg bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-500 cursor-pointer transition-colors"
+                              onClick={(e) => handleDeleteAllocation(alloc, e)}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
                   })}
+
+                  {!loading && leaveTypes.length === 0 && (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-8 text-center text-gray-400 font-semibold text-xs uppercase tracking-wider">
+                        No Leave categories defined. Use "Add Leave Type" to create.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Section 2: Requested Leaves Table */}
+        {activeTab === 'requests' && (
+          <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Card Header with Filters on the Right */}
+            <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4 shrink-0">
+              <div>
+                <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Requested Leaves & Approvals</h3>
+                <p className="text-[11px] text-[#9CA3AF] font-bold uppercase tracking-wider mt-0.5">Review and take action on employee requests</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 font-bold mr-1">Filter:</span>
+                <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200/50">
+                  {[
+                    { value: 'ALL', label: 'All' },
+                    { value: 'PENDING', label: 'Pending' },
+                    { value: 'APPROVED', label: 'Approved' },
+                    { value: 'REJECTED', label: 'Rejected' }
+                  ].map((tab) => {
+                    const isActive = filterStatus === tab.value;
+                    return (
+                      <button
+                        key={tab.value}
+                        type="button"
+                        onClick={() => setFilterStatus(tab.value)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border-none ${
+                          isActive
+                            ? 'bg-[#111827] text-white shadow-sm'
+                            : 'text-gray-500 hover:text-[#111827] bg-transparent'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
+                  Pending: {pendingCount}
+                </span>
+              </div>
+            </div>
+
+            {loading && adminLeavesTable.length === 0 ? (
+              <div className="flex flex-col items-center justify-center flex-1 gap-2.5">
+                <Loader2 size={24} className="animate-spin text-[#111827]" style={{ animationDuration: '0.8s' }} />
+                <span className="text-[13px] text-[#9CA3AF]">Loading requested leaves...</span>
+              </div>
+            ) : filteredLeaves.length === 0 ? (
+              <div className="flex flex-col items-center justify-center flex-1 text-center text-[#9CA3AF]">
+                <CheckCircle2 size={36} className="mx-auto mb-2.5 text-[#10B981]" />
+                <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No leave requests found matching the filter.</p>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto pr-1">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
+                      {['Staff Member', 'Leave Category', 'Duration', 'Dates', 'Status', 'Actions'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLeaves.map((leave) => {
+                      const reporterInitial = leave.employeeName ? leave.employeeName.charAt(0).toUpperCase() : 'E';
+                      const daysCount = calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate);
+                      return (
+                        <tr key={leave.leaveId || leave.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
+                          {/* Staff member name */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
+                                {reporterInitial}
+                              </div>
+                              <div>
+                                <div className="text-[13.5px] font-extrabold text-[#1F2937]">{leave.employeeName || 'Field staff'}</div>
+                                <div className="text-[11px] text-[#9CA3AF]">{leave.employeeRole || 'Medical Representative'}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Leave Type */}
+                          <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
+                            {formatLeaveType(leave.leaveName || leave.leaveCode || leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType)}
+                          </td>
+
+                          {/* Duration */}
+                          <td className="p-4 text-[13px] text-[#1F2937] font-bold">
+                            {daysCount} Day{daysCount !== 1 ? 's' : ''}
+                          </td>
+
+                          {/* Dates */}
+                          <td className="p-4 text-[13.5px] text-[#4B5563] font-semibold">
+                            {leave.startDate || leave.fromDate} to {leave.endDate || leave.toDate}
+                          </td>
+
+                          {/* Status */}
+                          <td className="p-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold ${getStatusBadgeClass(leave.status)}`}>
+                          {leave.status}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="p-4">
+                            <button
+                              onClick={() => handleInspect(leave)}
+                              className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
+                            >
+                              <Eye size={12} /> Inspect Request
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Configure Leave Type Modal */}
