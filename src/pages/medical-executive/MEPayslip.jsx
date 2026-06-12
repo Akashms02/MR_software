@@ -1,7 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import html2pdf from 'html2pdf.js';
 import { Calendar, Download } from 'lucide-react';
+import axios from '../../api/axiosInstance';
+import { API_ROUTE } from '../../data/env';
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
 const breakdown = sal => [
   { k: 'Basic Salary',       v: Math.round(sal * 0.50), type: 'earn' },
@@ -151,23 +158,93 @@ export default function MEPayslip() {
   const [downloading, setDownloading] = useState(false);
   const printableRef = useRef(null);
 
+  const [payslipData, setPayslipData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const empName = user?.fullName || user?.name || 'Medical Executive';
   const empId = user?.employeeId || user?.id || 'ME001';
   const designation = user?.designation || 'Medical Executive';
   const department = user?.department || 'Medical Operations';
   const salary = user?.salary || user?.salaryAmount || 45000;
 
-  // Breakdown figures
-  const basic = Math.round(salary * 0.50);
-  const hra = Math.round(salary * 0.20);
-  const da = Math.round(salary * 0.05);
-  const allowances = Math.round(salary * 0.05);
-  const gross = Math.round(salary * 0.80);
-  const pf = Math.round(salary * 0.12);
-  const esi = Math.round(salary * 0.0075);
-  const tds = Math.round(salary * 0.05);
-  const totalDeductions = pf + esi + tds;
-  const netPay = gross - totalDeductions;
+  const fetchPayslip = async (monthInput) => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const [year, monthNum] = monthInput.split('-');
+      const monthName = MONTH_NAMES[parseInt(monthNum) - 1];
+      const response = await axios.get(`${API_ROUTE}/payslips/my?month=${monthName}&year=${year}`);
+      
+      const data = response.data?.data || response.data;
+      if (data && (Array.isArray(data) ? data.length > 0 : data)) {
+        const payslip = Array.isArray(data) ? data[0] : data;
+        setPayslipData(payslip);
+      } else {
+        setPayslipData(null);
+        setErrorMsg(`No payslip generated for ${monthName} ${year}`);
+      }
+    } catch (err) {
+      console.error("Error fetching payslip:", err);
+      setPayslipData(null);
+      setErrorMsg("Failed to load payslip for this period.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLatestPayslip = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const response = await axios.get(`${API_ROUTE}/payslips/my/latest`);
+      const data = response.data?.data || response.data;
+      
+      if (data) {
+        setPayslipData(data);
+        const monthIndex = MONTH_NAMES.indexOf(data.month);
+        if (monthIndex !== -1 && data.year) {
+          const monthStr = String(monthIndex + 1).padStart(2, '0');
+          setSelectedMonth(`${data.year}-${monthStr}`);
+        }
+      } else {
+        fetchPayslip(selectedMonth);
+      }
+    } catch (err) {
+      console.error("Error fetching latest payslip:", err);
+      fetchPayslip(selectedMonth);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestPayslip();
+  }, []);
+
+  const handleMonthChange = (e) => {
+    const val = e.target.value;
+    setSelectedMonth(val);
+    fetchPayslip(val);
+  };
+
+  // Breakdown figures (from API if available, fallback to mock calculation)
+  const basic = payslipData?.basicSalary || payslipData?.basic || Math.round(salary * 0.50);
+  const hra = payslipData?.hra || Math.round(salary * 0.20);
+  const da = payslipData?.da || Math.round(salary * 0.05);
+  const allowances = payslipData?.allowances || payslipData?.otherAllowances || Math.round(salary * 0.05);
+  const gross = payslipData?.grossSalary || payslipData?.grossPay || payslipData?.gross || (basic + hra + da + allowances);
+  const pf = payslipData?.pf || payslipData?.providentFund || Math.round(salary * 0.12);
+  const esi = payslipData?.esi || Math.round(salary * 0.0075);
+  const tds = payslipData?.tds || Math.round(salary * 0.05);
+  const totalDeductions = payslipData?.totalDeductions || (pf + esi + tds);
+  const netPay = payslipData?.netSalary || payslipData?.netPay || payslipData?.net || (gross - totalDeductions);
+
+  const bankAccount = payslipData?.bankAccount || payslipData?.bank || 'HDFC Bank · *******4820';
+  const pfNumber = payslipData?.pfNumber || payslipData?.pfNo || 'PF-10098273';
+  const daysInMonth = payslipData?.daysInMonth || 30;
+  const workedDays = payslipData?.workedDays || 30;
+  const lopDays = payslipData?.lopDays || 0;
 
   const getFormattedMonth = (monthStr) => {
     if (!monthStr) return '';
@@ -311,7 +388,7 @@ export default function MEPayslip() {
           <input
             type="month"
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={handleMonthChange}
             className="px-3.5 py-2 rounded-xl border border-gray-250 text-[13px] bg-white outline-none font-bold text-[#111827] focus:border-[#C8F04A] transition-colors duration-150 cursor-pointer"
           />
         </div>
@@ -329,7 +406,20 @@ export default function MEPayslip() {
       {/* Payslip Preview Container Card */}
       <div className="bg-[#F8FAFC] rounded-[20px] border border-[#E5E7EB] p-6 flex-1 flex justify-center items-start overflow-y-auto min-h-0">
         
-        {previewUrl ? (
+        {loading ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#C8F04A] rounded-full animate-spin mb-3"></div>
+            <p className="text-[14px] font-bold text-gray-900 m-0">Loading Payslip...</p>
+          </div>
+        ) : errorMsg ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
+            <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3">
+              <Calendar size={24} className="text-amber-500" />
+            </div>
+            <p className="text-[14px] font-bold text-gray-950 m-0">{errorMsg}</p>
+            <p className="text-[12px] text-gray-400 m-0 mt-1">Please select a different month or contact HR.</p>
+          </div>
+        ) : previewUrl ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4 max-w-[800px] w-full flex flex-col items-center">
             {previewUrl.endsWith('.pdf') ? (
               <iframe src={previewUrl} className="w-full h-[600px] border-none rounded-lg" title="Payslip PDF" />
@@ -405,11 +495,11 @@ export default function MEPayslip() {
                     </tr>
                     <tr>
                       <td className="py-1 text-gray-400 font-semibold">Days in Month:</td>
-                      <td className="py-1 text-gray-700">30 Days</td>
+                      <td className="py-1 text-gray-700">{daysInMonth} Days</td>
                     </tr>
                     <tr>
                       <td className="py-1 text-gray-400 font-semibold">Worked Days:</td>
-                      <td className="py-1 font-bold text-emerald-600">30 Days (0 LOP)</td>
+                      <td className="py-1 font-bold text-emerald-600">{workedDays} Days ({lopDays} LOP)</td>
                     </tr>
                   </tbody>
                 </table>

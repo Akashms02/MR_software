@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Calendar, FileText, Search, UserPlus, Navigation, BarChart2, Gift, Map as MapIcon,
-  Loader2, Check, X, AlertCircle, CheckCircle2, ExternalLink, HelpCircle
+  Loader2, Check, X, AlertCircle, CheckCircle2, ExternalLink, HelpCircle, Bell, Coffee
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 import { fetchProfile } from '../../redux/actions/authActions';
 import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchTeamLeavesAction } from '../../redux/actions/leaveActions';
@@ -12,6 +13,7 @@ import { fetchTeamAttendanceAction, fetchTeamVisitsAction } from '../../redux/ac
 import { fetchTeamDcrsAction, reviewDcrAction } from '../../redux/actions/dcrActions';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
+import { getActiveNotices } from '../../redux/actions/noticeActions';
 
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
@@ -109,11 +111,13 @@ const MedicalExecutiveDashboard = () => {
   const { teamAttendance = [], teamVisits = [] } = useSelector((state) => state.attendance || {});
   const { teamDcrs = [], loading: dcrLoading, error: dcrError, success: dcrSuccess } = useSelector((state) => state.dcr || {});
   const { activeUpcomingHolidays = [] } = useSelector((state) => state.holiday || {});
+  const { activeNotices = [] } = useSelector((state) => state.notices || {});
 
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
   const [localSuccess, setLocalSuccess] = useState(null);
   const [localError, setLocalError] = useState(null);
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -123,6 +127,7 @@ const MedicalExecutiveDashboard = () => {
     dispatch(fetchTeamVisitsAction());
     dispatch(fetchTeamDcrsAction());
     dispatch(fetchActiveUpcomingHolidaysAction());
+    dispatch(getActiveNotices());
   }, [dispatch]);
 
   useEffect(() => {
@@ -382,7 +387,7 @@ const MedicalExecutiveDashboard = () => {
   };
 
   return (
-    <div className="animate-fade">
+    <div className="animate-[fadeIn_0.35s_ease-out]">
       {/* ── Welcome Header Card ── */}
       <div className="rounded-[20px] px-[30px] py-7 mb-5 text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.15)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/10">
         <img 
@@ -431,8 +436,8 @@ const MedicalExecutiveDashboard = () => {
         <StatCard label="Next Holiday" value={`${nextHoliday.dateStr} (${nextHoliday.name})`} type="coral" />
       </div>
 
-      {/* ── Middle Row: Roles Chart + Quick Actions + Birthdays ── */}
-      <div className="grid grid-cols-[1fr_1.3fr_1fr] gap-4 mb-4">
+      {/* ── Row 1: Attendance Bubble + Notice Board ── */}
+      <div className="grid grid-cols-[1.1fr_1.9fr] gap-4 mb-5">
         {/* Attendance Distribution Bubble Chart */}
         <Card>
           <div className="flex justify-between items-start mb-3">
@@ -463,49 +468,165 @@ const MedicalExecutiveDashboard = () => {
           </div>
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <div className="mb-3.5">
-            <div className="text-sm font-extrabold text-[#111827]">Quick Actions</div>
-            <div className="text-xs text-[#9CA3AF] mt-0.5">Frequently accessed shortcuts</div>
+        {/* Notice Board */}
+        <Card className="flex flex-col">
+          <div className="flex justify-between items-center mb-4 border-b border-[#F3F4F6] pb-3 shrink-0">
+            <div>
+              <h3 className="m-0 text-sm font-extrabold text-[#111827]">Notice Board</h3>
+              <p className="m-0 text-xs text-[#9CA3AF] mt-0.5">Important company announcements and updates</p>
+            </div>
+            <Bell size={18} className="text-[#0D9488] shrink-0" />
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <QATile icon={UserPlus}       label="Onboard Req." onClick={() => navigate('/medical-executive/requests')} />
-            <QATile icon={Calendar}       label="Leaves Info"  onClick={() => navigate('/medical-executive/leaves')} />
-            <QATile icon={Navigation}     label="Field Track"  onClick={() => navigate('/medical-executive/fieldtracking')} />
-            <QATile icon={MapIcon}        label="Tour Plans"   onClick={() => navigate('/medical-executive/tourplan')} />
-            <QATile icon={Users}          label="Onboard Doc"  onClick={() => navigate('/medical-executive/onboard-doctor')} />
-            <QATile icon={BarChart2}      label="Reports"      onClick={() => navigate('/medical-executive/reports')} />
+          <div className="overflow-y-auto pr-1 flex-1 space-y-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {activeNotices.filter(notice => {
+              if (!notice.expiryDate) return true;
+              try {
+                const [day, month, year] = notice.expiryDate.split('-').map(Number);
+                const expiryDate = new Date(year, month - 1, day);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return expiryDate >= today;
+              } catch (e) { return true; }
+            }).length > 0 ? (
+              activeNotices.filter(notice => {
+                if (!notice.expiryDate) return true;
+                try {
+                  const [day, month, year] = notice.expiryDate.split('-').map(Number);
+                  const expiryDate = new Date(year, month - 1, day);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return expiryDate >= today;
+                } catch (e) { return true; }
+              }).map((notice, i) => (
+                <div
+                  key={notice.id || i}
+                  onClick={() => setSelectedNotice(notice)}
+                  className="group flex items-start gap-3 p-3 rounded-xl bg-white border border-[#F3F4F6] hover:shadow-md hover:border-teal-200 transition-all duration-200 cursor-pointer"
+                >
+                  <div className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
+                    notice.noticeType === 'URGENT' ? "bg-rose-50 text-rose-500 border-rose-100" :
+                    notice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-500 border-blue-100" :
+                    notice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-500 border-amber-100" :
+                    "bg-slate-50 text-slate-400 border-slate-100"
+                  )}>
+                    {notice.noticeType === 'URGENT' ? <AlertCircle size={15} /> :
+                     notice.noticeType === 'EVENT' ? <Calendar size={15} /> :
+                     notice.noticeType === 'HOLIDAY' ? <Coffee size={15} /> :
+                     <Bell size={15} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[12.5px] font-extrabold text-gray-800 truncate group-hover:text-teal-650 transition-colors m-0 leading-tight">
+                      {notice.title}
+                    </h4>
+                    <p className="text-[11px] text-gray-400 font-semibold m-0 mt-1 line-clamp-2 leading-relaxed">
+                      {notice.message || notice.content}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 opacity-30 text-gray-400">
+                <AlertCircle size={24} className="mb-2" />
+                <p className="text-[11px] font-bold uppercase tracking-widest">No active notices</p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Row 2: Quick Actions + Holidays + Birthdays ── */}
+      <div className="grid grid-cols-3 gap-5 mb-5 items-stretch">
+
+        {/* Quick Actions */}
+        <Card className="flex flex-col min-h-[260px]">
+          <div className="mb-3.5 border-b border-[#F3F4F6] pb-3 flex justify-between items-start shrink-0">
+            <div>
+              <div className="text-sm font-extrabold text-[#111827]">Quick Actions</div>
+              <div className="text-xs text-[#9CA3AF] mt-0.5">Frequently accessed shortcuts</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 flex-1 content-start">
+            <QATile icon={UserPlus}   label="Onboard Req." onClick={() => navigate('/medical-executive/requests')} />
+            <QATile icon={Calendar}   label="Leaves Info"  onClick={() => navigate('/medical-executive/leaves')} />
+            <QATile icon={Navigation} label="Field Track"  onClick={() => navigate('/medical-executive/fieldtracking')} />
+            <QATile icon={MapIcon}    label="Tour Plans"   onClick={() => navigate('/medical-executive/tourplan')} />
+            <QATile icon={Users}      label="Onboard Doc"  onClick={() => navigate('/medical-executive/onboard-doctor')} />
+            <QATile icon={BarChart2}  label="Reports"      onClick={() => navigate('/medical-executive/reports')} />
+          </div>
+        </Card>
+
+        {/* Upcoming Holidays */}
+        <Card className="flex flex-col min-h-[260px]">
+          <div className="flex justify-between items-center mb-4 border-b border-[#F3F4F6] pb-3 shrink-0">
+            <div>
+              <h3 className="m-0 text-sm font-extrabold text-[#111827]">Upcoming Holidays</h3>
+              <p className="m-0 text-xs text-[#9CA3AF] mt-0.5">Gazetted and observance holidays</p>
+            </div>
+            <Calendar size={18} className="text-[#0D9488] shrink-0" />
+          </div>
+          <div className="overflow-y-auto pr-1 flex-1 flex flex-col gap-2.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {activeUpcomingHolidays.length === 0 ? (
+              <div className="py-10 text-center text-gray-400 text-xs font-semibold">No upcoming holidays.</div>
+            ) : (
+              activeUpcomingHolidays.slice(0, 5).map((h, idx) => {
+                let formattedDate = h.date || '';
+                if (h.date) {
+                  try {
+                    const dateParts = h.date.split('-');
+                    const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+                    formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+                  } catch (e) { formattedDate = h.date; }
+                }
+                const isNationalOrGazetted = (type) => {
+                  const t = (type || '').toLowerCase();
+                  return t.includes('national') || t.includes('gazetted');
+                };
+                const typeLabel = h.primaryType || 'Observance';
+                const isNat = isNationalOrGazetted(typeLabel);
+                return (
+                  <div
+                    key={h.id || idx}
+                    className={`flex items-center justify-between ${idx === Math.min(activeUpcomingHolidays.length, 5) - 1 ? 'pb-0 border-none' : 'pb-2 border-b border-gray-100'}`}
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="text-[12px] font-bold text-gray-800 truncate" title={h.name}>{h.name}</div>
+                      <div className="text-[10px] text-gray-400 mt-0.5">{formattedDate}</div>
+                    </div>
+                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0 ${isNat ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{typeLabel}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </Card>
 
         {/* Birthdays Card */}
-        <Card style={{ position: 'relative', overflow: 'hidden' }}>
-          <img 
-            src="/Birthday.jpg" 
-            alt="Birthday Background" 
-            className="absolute inset-0 w-full h-full object-cover z-0" 
+        <Card style={{ position: 'relative', overflow: 'hidden' }} className="min-h-[260px]">
+          <img
+            src="/Birthday.jpg"
+            alt="Birthday Background"
+            className="absolute inset-0 w-full h-full object-cover z-0"
           />
-          <div className="absolute inset-0 bg-white/88 z-[1]" />
-          
+          <div className="absolute inset-0 bg-white/92 z-[1]" />
           <div className="relative z-[2] flex flex-col h-full">
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-start mb-3 border-b border-gray-100/60 pb-3">
               <div>
                 <div className="text-sm font-extrabold text-[#111827]">Upcoming Birthdays</div>
                 <div className="text-xs text-[#9CA3AF] mt-0.5">Birthdays in your team this month</div>
               </div>
-              <Gift size={14} className="text-[#111827] mt-0.5" />
+              <Gift size={16} className="text-[#111827] mt-0.5 shrink-0" />
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 overflow-y-auto pr-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {birthdayList.length === 0 ? (
                 <div className="py-8 text-center text-[#9CA3AF] text-xs">No birthdays recorded.</div>
               ) : (
                 birthdayList.map((item, idx) => (
-                  <BirthdayRow 
-                    key={idx} 
-                    name={item.name} 
-                    date={item.date} 
-                    role={item.role} 
+                  <BirthdayRow
+                    key={idx}
+                    name={item.name}
+                    date={item.date}
+                    role={item.role}
                     photoUrl={item.photoUrl}
                   />
                 ))
@@ -513,10 +634,11 @@ const MedicalExecutiveDashboard = () => {
             </div>
           </div>
         </Card>
+
       </div>
 
-      {/* ── Bottom Section: DCR Review & MR Status ── */}
-      <div className="grid grid-cols-[1.5fr_1.1fr] gap-5 items-start mt-5">
+      {/* ── Bottom Row 1: DCR + MR Attendance ── */}
+      <div className="grid grid-cols-[1.1fr_0.9fr] gap-5 items-stretch mt-5">
         
         {/* DCR Pending Card */}
         <Card>
@@ -696,7 +818,79 @@ const MedicalExecutiveDashboard = () => {
             )}
           </div>
         </Card>
+
       </div>
+
+      {selectedNotice && (
+        <div className="fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in scale-in duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-5 flex items-start justify-between border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border",
+                  selectedNotice.noticeType === 'URGENT' ? "bg-rose-50 text-rose-500 border-rose-100" :
+                  selectedNotice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-550 border-blue-100" :
+                  selectedNotice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-550 border-amber-100" :
+                  "bg-slate-50 text-slate-400 border-slate-100"
+                )}>
+                  {selectedNotice.noticeType === 'URGENT' ? <AlertCircle size={20} /> :
+                   selectedNotice.noticeType === 'EVENT' ? <Calendar size={20} /> :
+                   selectedNotice.noticeType === 'HOLIDAY' ? <Coffee size={20} /> :
+                   <Bell size={20} />}
+                </div>
+                <div>
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider",
+                    selectedNotice.noticeType === 'URGENT' ? "bg-rose-50 text-rose-650 border-rose-100" :
+                    selectedNotice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-655 border-blue-100" :
+                    selectedNotice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-655 border-amber-100" :
+                    "bg-slate-50 text-slate-500 border-slate-200"
+                  )}>
+                    {selectedNotice.noticeType}
+                  </span>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1.5">
+                    Posted on {selectedNotice.createdAt ? new Date(selectedNotice.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedNotice(null)}
+                className="p-1.5 hover:bg-slate-105 rounded-lg text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                {selectedNotice.title}
+              </h3>
+              <p className="text-sm text-slate-650 leading-relaxed whitespace-pre-wrap font-medium">
+                {selectedNotice.message || selectedNotice.content}
+              </p>
+              
+              {selectedNotice.expiryDate && (
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <span>Expiry Date</span>
+                  <span className="text-slate-650 font-extrabold">{selectedNotice.expiryDate}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setSelectedNotice(null)}
+                className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

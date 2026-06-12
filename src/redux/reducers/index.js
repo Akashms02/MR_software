@@ -10,6 +10,8 @@ import { leaveReducer } from './leaveReducer';
 import { holidayReducer } from './holidayReducer';
 import { requestReducer } from './requestReducer';
 import { attendanceReducer } from './attendanceReducer';
+import { notificationReducer } from './notificationReducer';
+import { noticeReducer } from './noticeReducer';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -23,6 +25,8 @@ const rootReducer = combineReducers({
   holiday: holidayReducer,
   request: requestReducer,
   attendance: attendanceReducer,
+  notification: notificationReducer,
+  notices: noticeReducer,
 });
 
 export default rootReducer;

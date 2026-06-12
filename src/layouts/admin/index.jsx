@@ -19,6 +19,7 @@ import AdminLeaveReviewPage from '../../pages/admin/AdminLeaveReviewPage'
 import Holidays from '../../pages/admin/Holidays'
 import Settings from '../../pages/admin/Settings'
 import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
+import NoticeManagement from '../../pages/admin/NoticeManagement'
 
 export default function AdminLayoutRouter() {
   return (
@@ -42,6 +43,7 @@ export default function AdminLayoutRouter() {
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="hrdocuments" element={<Documents />} />
+        <Route path="notices" element={<NoticeManagement />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

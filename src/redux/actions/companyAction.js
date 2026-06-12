@@ -101,14 +101,14 @@ export const CompanyOfferLetter = (payload) => async (dispatch) => {
   }
 };
 
-export const CompanyPayslip = (employeeId, payload) => async (dispatch) => {
+export const CompanyPayslip = (employeeId, payload, queryParams = "") => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_PAYSLIP_GENERATE_REQUEST });
   try {
     const config = payload instanceof FormData 
       ? { headers: { 'Content-Type': 'multipart/form-data' } }
       : {};
-    const response = await axios.post(`${API_ROUTE}/admin/payslip/generate/${employeeId}`, payload, config);
+    const response = await axios.post(`${API_ROUTE}/admin/payslip/generate/${employeeId}${queryParams}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {

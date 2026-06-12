@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import axios from '../../api/axiosInstance';
+import { API_ROUTE } from '../../data/env';
 import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchTeamAttendanceAction, fetchTeamVisitsAction } from '../../redux/actions/attendanceActions';
 import { parseCoord, visitCheckInCoords, visitCheckOutCoords } from '../../utils/attendanceUtils';
 import { 
   Users, MapPin, CheckCircle, Clock, Navigation, 
   Map, Award, Calendar, RefreshCw, BarChart2, Eye, ShieldAlert,
-  ChevronRight, Camera, Search, UserCheck, Square
+  ChevronRight, Camera, Search, UserCheck, Square, X, Loader2
 } from 'lucide-react';
 
 // Inline SVG base64 Marker Icons for Leaflet to prevent asset loading bugs
@@ -31,6 +33,128 @@ const RED_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
   </svg>
 `);
 
+// ─── Visit History Modal (Admin View) ───────────────────────────────────────
+function VisitHistoryModal({ target, mrName, onClose }) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!target) return;
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const type = target.type === 'Pharmacy' || target.type === 'CHEMIST' ? 'CHEMIST' : 'DOCTOR';
+        const res = await axios.get(`${API_ROUTE}/attendance/location/history`, {
+          params: {
+            visitType: type,
+            targetId: target.id,
+            mrId: target.mrId
+          }
+        });
+        if (res.data && res.data.success) {
+          setHistory(res.data.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [target]);
+
+  if (!target) return null;
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1500] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in scale-in duration-200">
+        
+        {/* Modal Header */}
+        <div className="px-6 py-5 flex items-start justify-between border-b border-slate-100 bg-slate-50/50">
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VISIT HISTORY</div>
+            <h3 className="text-base font-extrabold text-slate-900 leading-snug mt-0.5">
+              {target.name}
+            </h3>
+            <p className="text-[11px] text-slate-500 font-medium m-0 mt-1">
+              Representative: <span className="font-bold text-slate-700">{mrName}</span>
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors border-none bg-transparent cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400 text-sm font-semibold gap-2">
+              <Loader2 size={24} className="animate-spin text-blue-500" />
+              <span>Loading past visits history...</span>
+            </div>
+          ) : history.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <p className="m-0 text-sm font-bold text-slate-500">No previous visits</p>
+              <p className="m-0 text-xs mt-1">There are no other completed visits recorded by this representative for this location.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {history.map((h) => (
+                <div key={h.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/30 flex flex-col gap-2.5">
+                  <div className="flex justify-between items-center text-xs border-b border-slate-100/50 pb-2">
+                    <span className="font-extrabold text-slate-700">
+                      📅 {new Date(h.checkInTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                    <span className="text-slate-400 font-bold">
+                      Checked in at {h.checkInTime ? new Date(h.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
+                    <div>
+                      <strong>📥 Visit In:</strong> {h.checkInTime ? new Date(h.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </div>
+                    <div>
+                      <strong>📤 Visit Out:</strong> {h.checkOutTime ? new Date(h.checkOutTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </div>
+                  </div>
+
+                  <div className="text-xs space-y-1 text-slate-700">
+                    {h.productsDiscussed && (
+                      <div>💊 <strong>Brands:</strong> {h.productsDiscussed}</div>
+                    )}
+                    {h.samplesGiven && (
+                      <div>🧪 <strong>Samples:</strong> {h.samplesGiven}</div>
+                    )}
+                    {h.feedback && (
+                      <div className="bg-white/80 px-2.5 py-2 rounded border border-slate-100 text-[11px] text-slate-600 italic mt-1.5">
+                        "{h.feedback}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MSEFieldTracking() {
   const dispatch = useDispatch();
   
@@ -43,6 +167,12 @@ export default function MSEFieldTracking() {
   
   const [selectedMrId, setSelectedMrId] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [historyTarget, setHistoryTarget] = useState(null);
+  const [selectedDoctorKey, setSelectedDoctorKey] = useState('');
+
+  useEffect(() => {
+    setSelectedDoctorKey('');
+  }, [selectedMrId, selectedDate]);
 
   const handleRefresh = () => {
     dispatch(getMyTeam());
@@ -114,6 +244,8 @@ export default function MSEFieldTracking() {
     const outCoords = visitCheckOutCoords(v);
     return {
       id: v.id,
+      targetId: v.targetId,
+      visitType: v.visitType,
       name: v.targetName || v.name || 'Unknown Target',
       type: v.visitType === 'DOCTOR' ? 'Doctor' : v.visitType === 'CHEMIST' ? 'Pharmacy' : v.visitType || 'Doctor',
       specialty: v.specialty || '',
@@ -330,6 +462,24 @@ export default function MSEFieldTracking() {
   }, [targetRecord]);
 
   const visits = targetRecord?.visits || [];
+  const uniqueVisitedTargets = useMemo(() => {
+    const seen = new Set();
+    const targets = [];
+    visits.forEach(v => {
+      const key = `${v.visitType || (v.type === 'Pharmacy' || v.type === 'CHEMIST' ? 'CHEMIST' : 'DOCTOR')}-${v.targetId}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        targets.push({
+          targetId: v.targetId,
+          visitType: v.visitType || (v.type === 'Pharmacy' || v.type === 'CHEMIST' ? 'CHEMIST' : 'DOCTOR'),
+          name: v.name,
+          type: v.type
+        });
+      }
+    });
+    return targets;
+  }, [visits]);
+
   const openVisit = visits.find((v) => v.status === 'ACTIVE');
   const completedVisits = visits.filter(v => v.status === 'COMPLETED').length;
 
@@ -377,7 +527,7 @@ export default function MSEFieldTracking() {
           {/* Date Picker */}
           <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
             <Calendar size={15} className="text-gray-500" />
-            <span className="text-[12px] font-bold text-gray-655 uppercase tracking-[0.5px]">Select Date:</span>
+            <span className="text-[12px] font-bold text-gray-600 uppercase tracking-[0.5px]">Select Date:</span>
             <input 
               type="date"
               value={selectedDate}
@@ -387,6 +537,45 @@ export default function MSEFieldTracking() {
               className="px-3 py-1.5 rounded-lg border border-gray-300 text-[13px] bg-gray-50 font-bold text-gray-800 cursor-pointer outline-none font-sans"
             />
           </div>
+
+          {/* Doctor Dropdown Selector */}
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
+            <span className="text-[12px] font-bold text-gray-500 uppercase tracking-[0.5px]">Doctor/Pharmacy:</span>
+            <select
+              value={selectedDoctorKey}
+              onChange={(e) => setSelectedDoctorKey(e.target.value)}
+              disabled={uniqueVisitedTargets.length === 0}
+              className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-[13px] bg-gray-50 font-bold text-gray-800 cursor-pointer outline-none font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">
+                {uniqueVisitedTargets.length === 0 ? 'No visits on this date' : 'Select Doctor/Pharmacy...'}
+              </option>
+              {uniqueVisitedTargets.map(t => (
+                <option key={`${t.visitType}-${t.targetId}`} value={`${t.visitType}-${t.targetId}`}>
+                  {t.visitType === 'CHEMIST' || t.type === 'Pharmacy' ? '🧪' : '🩺'} {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* View History Button */}
+          <button
+            onClick={() => {
+              const selectedTarget = uniqueVisitedTargets.find(t => `${t.visitType}-${t.targetId}` === selectedDoctorKey);
+              if (selectedTarget) {
+                setHistoryTarget({
+                  id: selectedTarget.targetId,
+                  name: selectedTarget.name,
+                  type: selectedTarget.type || (selectedTarget.visitType === 'CHEMIST' ? 'Pharmacy' : 'Doctor'),
+                  mrId: selectedMrId
+                });
+              }
+            }}
+            disabled={!selectedDoctorKey}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[12.5px] rounded-xl transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
+          >
+            View History
+          </button>
 
           {/* Refresh Button */}
           <button
@@ -567,6 +756,12 @@ export default function MSEFieldTracking() {
                               </div>
                               <h4 className="text-[14.5px] font-extrabold text-gray-800 mt-1 mb-0.5">{v.name}</h4>
                               {v.specialty && <div className="text-[11.5px] text-gray-500">{v.specialty}</div>}
+                              <button
+                                onClick={() => setHistoryTarget({ id: v.targetId || v.id, name: v.name, type: v.type, mrId: selectedMrId })}
+                                className="mt-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-650 hover:text-slate-800 text-[10.5px] font-bold inline-flex items-center gap-1 border-none cursor-pointer transition-all active:scale-95"
+                              >
+                                🔍 View History
+                              </button>
                             </div>
                             <span className="text-[16px]">{v.type === 'Pharmacy' ? '🧪' : '🩺'}</span>
                           </div>
@@ -642,6 +837,14 @@ export default function MSEFieldTracking() {
         </div>
 
       </div>
+
+      {historyTarget && (
+        <VisitHistoryModal
+          target={historyTarget}
+          mrName={selectedMrProfile?.fullName || 'Representative'}
+          onClose={() => setHistoryTarget(null)}
+        />
+      )}
 
       <style>{`
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
