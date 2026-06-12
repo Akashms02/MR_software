@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Gift, ExternalLink } from 'lucide-react';
+import axios from '../../api/axiosInstance';
+import { API_ROUTE } from '../../data/env';
+import { Loader2, Gift, ExternalLink, Bell, AlertCircle, Calendar, Coffee, X } from 'lucide-react';
+import { cn } from '../../utils/cn';
+import { getActiveNotices } from '../../redux/actions/noticeActions';
 import {
   punchInAction,
   punchOutAction,
@@ -235,6 +239,39 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
 
   const canSubmit = !!selectedId && !!selectedTarget;
 
+  const [lastVisit, setLastVisit] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (!selectedId || !selectedTarget) {
+      setLastVisit(null);
+      return;
+    }
+    const fetchHistory = async () => {
+      setLoadingHistory(true);
+      try {
+        const type = selectedTarget.type === 'Pharmacy' || selectedTarget.type === 'CHEMIST' ? 'CHEMIST' : 'DOCTOR';
+        const res = await axios.get(`${API_ROUTE}/attendance/location/history`, {
+          params: {
+            visitType: type,
+            targetId: selectedId
+          }
+        });
+        if (res.data && res.data.success && res.data.data && res.data.data.length > 0) {
+          setLastVisit(res.data.data[0]);
+        } else {
+          setLastVisit(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch visit history:', err);
+        setLastVisit(null);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, [selectedId, selectedTarget]);
+
   return (
     <div className="fixed inset-0 bg-black/55 z-[1000] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.25)] animate-[modalIn_0.25s_ease-out]">
@@ -310,6 +347,41 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
               )}
             </div>
           </div>
+
+          {selectedId && selectedTarget && (
+            <div className="bg-slate-50 border border-gray-100 rounded-xl p-3 flex flex-col gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Last Visit Details</span>
+              {loadingHistory ? (
+                <div className="flex items-center gap-1.5 py-1 text-slate-400 text-xs font-semibold">
+                  <Loader2 size={12} className="animate-spin" /> Loading last visit activity...
+                </div>
+              ) : lastVisit ? (
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-[12px] font-extrabold text-slate-700">
+                    <span>{new Date(lastVisit.checkInTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="text-slate-400 text-[11px] font-bold">{lastVisit.checkInTime ? new Date(lastVisit.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</span>
+                  </div>
+                  {lastVisit.productsDiscussed && (
+                    <div className="text-[11.5px] text-slate-600 font-medium">
+                      <span className="font-bold text-slate-750">Products:</span> {lastVisit.productsDiscussed}
+                    </div>
+                  )}
+                  {lastVisit.samplesGiven && (
+                    <div className="text-[11.5px] text-slate-600 font-medium">
+                      <span className="font-bold text-slate-750">Samples:</span> {lastVisit.samplesGiven}
+                    </div>
+                  )}
+                  {lastVisit.feedback && (
+                    <div className="text-[11px] text-slate-500 italic mt-0.5 bg-white/70 px-2 py-1 rounded border border-slate-100/50">
+                      "{lastVisit.feedback}"
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs text-slate-500 font-semibold py-1">No previous completed visits recorded.</span>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           <div>
@@ -495,6 +567,7 @@ export default function MRDashboard() {
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
   const { team = [] } = useSelector(state => state.team || {});
   const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
+  const { activeNotices = [] } = useSelector(state => state.notices || {});
   const approvedVisitTargets = useMemo(
     () => getApprovedVisitTargets(requests),
     [requests]
@@ -504,6 +577,7 @@ export default function MRDashboard() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsMessage, setGpsMessage] = useState('');
   const [gpsAction, setGpsAction] = useState(null);
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
   // timer
   const [elapsed, setElapsed] = useState(0); // seconds since day start
@@ -582,6 +656,7 @@ export default function MRDashboard() {
     dispatch(fetchMeRequestsAction());
     dispatch(getMyTeam());
     dispatch(fetchActiveUpcomingHolidaysAction());
+    dispatch(getActiveNotices());
   }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
@@ -973,8 +1048,8 @@ export default function MRDashboard() {
 
       </div>
 
-      {/* ── Main Content (Next Planned Calls on left, Quick Links, Holidays & Birthdays on right) ── */}
-      <div className="grid grid-cols-[2fr_1fr] gap-5 mb-5.5 items-stretch">
+      {/* ── Main Content ── */}
+      <div className="grid grid-cols-[1.5fr_1.2fr_1.1fr] gap-5 mb-5.5 items-stretch">
 
         {/* Left Column: Next Planned Calls */}
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-full min-h-[440px]">
@@ -1039,9 +1114,106 @@ export default function MRDashboard() {
           )}
         </div>
 
-        {/* Right Column: Quick Links, Holidays & Birthdays */}
-        <div className="flex flex-col gap-3 h-full">
-          
+        {/* Middle Column: Notice Board & Upcoming Holidays */}
+        <div className="flex flex-col gap-4 h-full">
+          {/* Notice Board */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-[250px]">
+            <div className="flex justify-between items-center mb-4.5 border-b border-gray-100 pb-3 shrink-0">
+              <div>
+                <h3 className="m-0 text-[14.5px] font-extrabold text-gray-800">Notice Board</h3>
+                <p className="m-0 text-[11px] text-gray-400">Important company announcements and team updates</p>
+              </div>
+              <Bell size={16} className="text-blue-500 shrink-0" />
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-3 pr-1 max-h-[190px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {activeNotices.length > 0 ? (
+                activeNotices.map((notice, i) => (
+                  <div 
+                    key={notice.id || i} 
+                    onClick={() => setSelectedNotice(notice)}
+                    className="group flex items-start gap-3 p-3 rounded-xl bg-[#FAFAFA] border border-transparent hover:bg-blue-50/40 hover:border-blue-100 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
+                      notice.noticeType === 'URGENT' ? "bg-red-50 text-red-500 border-red-100" :
+                      notice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-500 border-blue-100" :
+                      notice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-500 border-amber-100" :
+                      "bg-blue-50 text-blue-500 border-blue-100"
+                    )}>
+                      {notice.noticeType === 'URGENT' ? <AlertCircle size={15} /> :
+                       notice.noticeType === 'EVENT' ? <Calendar size={15} /> :
+                       notice.noticeType === 'HOLIDAY' ? <Coffee size={15} /> :
+                       <Bell size={15} />}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[12px] font-extrabold text-gray-800 truncate group-hover:text-blue-600 transition-colors m-0 leading-tight">
+                        {notice.title}
+                      </h4>
+                      <p className="text-[10.5px] text-gray-400 font-semibold m-0 mt-1 line-clamp-2 leading-relaxed">
+                        {notice.message || notice.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 opacity-40 text-gray-400">
+                  <AlertCircle size={20} className="mb-1.5" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest">No active notices</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Holidays */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col shrink-0 min-h-[140px] max-h-[200px]">
+            <div className="bg-slate-50 border-b border-gray-100 px-5 py-2.5 flex justify-between items-center shrink-0">
+              <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Upcoming Holidays</span>
+              <span className="text-[11px] font-bold text-blue-500">{new Date().getFullYear()}</span>
+            </div>
+            <div className="px-5 py-3 flex flex-col gap-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {activeUpcomingHolidays.length === 0 ? (
+                <div className="py-6 text-center text-gray-400 text-xs font-semibold">No upcoming holidays.</div>
+              ) : (
+                activeUpcomingHolidays.slice(0, 4).map((h, idx) => {
+                  let formattedDate = h.date || '';
+                  if (h.date) {
+                    try {
+                      const dateParts = h.date.split('-');
+                      const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+                      formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+                    } catch (e) {
+                      formattedDate = h.date;
+                    }
+                  }
+                  const isNationalOrGazetted = (type) => {
+                    const t = (type || '').toLowerCase();
+                    return t.includes('national') || t.includes('gazetted');
+                  };
+                  const typeLabel = h.primaryType || 'Observance';
+                  const isNat = isNationalOrGazetted(typeLabel);
+                  
+                  return (
+                    <div 
+                      key={h.id || idx} 
+                      className={`flex items-center justify-between ${idx === Math.min(activeUpcomingHolidays.length, 4) - 1 ? 'pb-0 border-none' : 'pb-1.5 border-b border-gray-100'}`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="text-[12px] font-bold text-gray-800 truncate" title={h.name}>{h.name}</div>
+                        <div className="text-[10px] text-gray-400 mt-0.5">{formattedDate}</div>
+                      </div>
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${isNat ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{typeLabel}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Quick Links & Birthdays */}
+        <div className="flex flex-col gap-4 h-full">
           {/* Quick Links */}
           <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
             <h3 className="m-0 mb-2.5 text-[13.5px] font-extrabold text-gray-800">Quick Links</h3>
@@ -1069,53 +1241,8 @@ export default function MRDashboard() {
             </button>
           </div>
 
-          {/* Upcoming Holidays */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-[140px]">
-            <div className="bg-slate-50 border-b border-gray-100 px-5 py-2.5 flex justify-between items-center shrink-0">
-              <span className="font-extrabold text-[13px] text-gray-700 tracking-wide">Upcoming Holidays</span>
-              <span className="text-[11px] font-bold text-blue-500">{new Date().getFullYear()}</span>
-            </div>
-            <div className="px-5 py-3 flex flex-col gap-2 overflow-y-auto">
-              {activeUpcomingHolidays.length === 0 ? (
-                <div className="py-6 text-center text-gray-400 text-xs font-semibold">No upcoming holidays.</div>
-              ) : (
-                activeUpcomingHolidays.slice(0, 5).map((h, idx) => {
-                  let formattedDate = h.date || '';
-                  if (h.date) {
-                    try {
-                      const dateParts = h.date.split('-');
-                      const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
-                      formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-                    } catch (e) {
-                      formattedDate = h.date;
-                    }
-                  }
-                  const isNationalOrGazetted = (type) => {
-                    const t = (type || '').toLowerCase();
-                    return t.includes('national') || t.includes('gazetted');
-                  };
-                  const typeLabel = h.primaryType || 'Observance';
-                  const isNat = isNationalOrGazetted(typeLabel);
-                  
-                  return (
-                    <div 
-                      key={h.id || idx} 
-                      className={`flex items-center justify-between ${idx === Math.min(activeUpcomingHolidays.length, 5) - 1 ? 'pb-0 border-none' : 'pb-1.5 border-b border-gray-100'}`}
-                    >
-                      <div className="min-w-0 flex-1 pr-2">
-                        <div className="text-[12px] font-bold text-gray-800 truncate" title={h.name}>{h.name}</div>
-                        <div className="text-[10px] text-gray-400 mt-0.5">{formattedDate}</div>
-                      </div>
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${isNat ? 'bg-[#FEF2F2] text-[#EF4444]' : 'bg-[#F0FDF4] text-[#10B981]'}`}>{typeLabel}</span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
           {/* Birthdays Card */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] relative p-5 min-h-[200px]">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)] relative p-5 flex-1 min-h-[200px]">
             <img 
               src="/Birthday.jpg" 
               alt="Birthday Background" 
@@ -1131,7 +1258,7 @@ export default function MRDashboard() {
                 </div>
                 <Gift size={14} className="text-gray-900 mt-0.5 shrink-0" />
               </div>
-              <div className="flex flex-col gap-1.5 max-h-[150px] overflow-y-auto pr-0.5">
+              <div className="flex flex-col gap-1.5 max-h-[130px] overflow-y-auto pr-0.5">
                 {mrBirthdayList.length === 0 ? (
                   <div className="py-4 text-center text-slate-400 text-xs font-semibold">No birthdays this month.</div>
                 ) : (
@@ -1148,8 +1275,8 @@ export default function MRDashboard() {
               </div>
             </div>
           </div>
-
         </div>
+
       </div>
 
 
@@ -1184,6 +1311,70 @@ export default function MRDashboard() {
           onSubmit={handleVisitCheckOut}
           onClose={() => setModal(null)}
         />
+      )}
+
+      {selectedNotice && (
+        <div className="fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in scale-in duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-5 flex items-start justify-between border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border",
+                  selectedNotice.noticeType === 'URGENT' ? "bg-rose-50 text-rose-500 border-rose-100" :
+                  selectedNotice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-500 border-blue-100" :
+                  selectedNotice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-500 border-amber-100" :
+                  "bg-blue-50 text-blue-500 border-blue-100"
+                )}>
+                  {selectedNotice.noticeType === 'URGENT' ? <AlertCircle size={20} /> :
+                   selectedNotice.noticeType === 'EVENT' ? <Calendar size={20} /> :
+                   selectedNotice.noticeType === 'HOLIDAY' ? <Coffee size={20} /> :
+                   <Bell size={20} />}
+                </div>
+                <div>
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider",
+                    selectedNotice.noticeType === 'URGENT' ? "bg-rose-50 text-rose-650 border-rose-100" :
+                    selectedNotice.noticeType === 'EVENT' ? "bg-blue-50 text-blue-655 border-blue-100" :
+                    selectedNotice.noticeType === 'HOLIDAY' ? "bg-amber-50 text-amber-655 border-amber-100" :
+                    "bg-blue-50 text-blue-600 border-blue-100"
+                  )}>
+                    {selectedNotice.noticeType || 'GENERAL'}
+                  </span>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1.5">
+                    Posted on {selectedNotice.createdAt ? new Date(selectedNotice.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedNotice(null)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                {selectedNotice.title}
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-medium">
+                {selectedNotice.message || selectedNotice.content}
+              </p>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setSelectedNotice(null)}
+                className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`

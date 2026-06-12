@@ -1060,67 +1060,204 @@ axios.interceptors.request.use(
               try {
                 db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
               } catch (e) {}
-              
-              if (db.length <= 4) {
-                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
-                const teamMembers = [
-                  { id: 'EMP-MR-001', name: 'Marcus Rep' },
-                  { id: '1', name: 'Marcus Rep' },
-                  { id: '2', name: 'Amit Verma' },
-                  { id: '3', name: 'Rohan Deshmukh' },
-                  { id: '4', name: 'Sanjay Dutt' }
-                ];
-                
-                const newVisits = [];
-                teamMembers.forEach((m, idx) => {
-                  newVisits.push({
-                    id: 2000 + idx * 2,
-                    employeeId: m.id,
-                    employeeName: m.name,
-                    visitType: 'DOCTOR',
-                    targetId: 1,
-                    targetName: 'Dr. Ramesh Sharma',
-                    clinicName: 'City Heart Clinic',
-                    specialty: 'Cardiology',
-                    checkInTime: `${dayBefore}T10:30:00Z`,
-                    checkInLatitude: 12.9716 + idx * 0.001,
-                    checkInLongitude: 77.5946 - idx * 0.001,
-                    checkOutTime: `${dayBefore}T11:05:00Z`,
-                    checkOutLatitude: 12.9720 + idx * 0.001,
-                    checkOutLongitude: 77.5950 - idx * 0.001,
-                    productsDiscussed: 'Cardace 5mg, Lipvas 10mg',
-                    samplesGiven: 'Cardace (10 Tabs)',
-                    feedback: 'Hypertensive patients feedback was positive.',
-                    status: 'COMPLETED',
-                    gpsVerified: true
-                  });
-                  newVisits.push({
-                    id: 2001 + idx * 2,
-                    employeeId: m.id,
-                    employeeName: m.name,
-                    visitType: 'DOCTOR',
-                    targetId: 2,
-                    targetName: 'Dr. Sunita Patel',
-                    clinicName: 'Metro General Hospital',
-                    specialty: 'Pediatrics',
-                    checkInTime: `${yesterday}T15:10:00Z`,
-                    checkInLatitude: 12.9780 - idx * 0.001,
-                    checkInLongitude: 77.5995 + idx * 0.001,
-                    checkOutTime: `${yesterday}T15:50:00Z`,
-                    checkOutLatitude: 12.9782 - idx * 0.001,
-                    checkOutLongitude: 77.5997 + idx * 0.001,
-                    productsDiscussed: 'Augmentin DDS Suspessions',
-                    samplesGiven: 'Pediatric samples',
-                    feedback: 'Dr. Patel promised to increase brand prescriptions.',
-                    status: 'COMPLETED',
-                    gpsVerified: true
-                  });
-                });
-                db = [...db, ...newVisits];
-                localStorage.setItem('mock_visits_db', JSON.stringify(db));
-              }
               mockData = { success: true, status: 200, data: db };
+            } else if (cfg.url.includes('/attendance/location/history') && cfg.method === 'get') {
+              let db = [];
+              try {
+                db = JSON.parse(localStorage.getItem('mock_visits_db') || '[]');
+              } catch (e) {}
+
+              let visitType = '';
+              let targetId = '';
+              let mrId = '';
+              try {
+                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+                const urlObj = new URL(urlStr);
+                visitType = urlObj.searchParams.get('visitType') || '';
+                targetId = urlObj.searchParams.get('targetId') || '';
+                mrId = urlObj.searchParams.get('mrId') || '';
+              } catch (e) {}
+
+              const currentEmpId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+              const filterMrId = mrId || currentEmpId;
+
+              const history = db.filter(v => {
+                const matchesEmp = String(v.employeeId) === String(filterMrId);
+                const matchesTarget = String(v.targetId) === String(targetId);
+                const matchesType = visitType 
+                  ? v.visitType?.toUpperCase() === visitType.toUpperCase() || v.type?.toUpperCase() === visitType.toUpperCase()
+                  : true;
+                return matchesEmp && matchesTarget && matchesType && v.status === 'COMPLETED';
+              }).sort((a, b) => new Date(b.checkInTime) - new Date(a.checkInTime));
+
+              mockData = { success: true, status: 200, data: history };
+            } else if (cfg.url.includes('/admin/departments') && cfg.method === 'get') {
+              mockData = {
+                success: true,
+                status: 200,
+                data: [
+                  { id: "1", departmentName: "Sales" },
+                  { id: "2", departmentName: "Marketing" },
+                  { id: "3", departmentName: "Operations" }
+                ]
+              };
+            } else if (cfg.url.includes('/admin/roles') && cfg.method === 'get') {
+              mockData = {
+                success: true,
+                status: 200,
+                data: [
+                  { id: "1", designationName: "Medical Representative" },
+                  { id: "2", designationName: "Medical Sales Executive" },
+                  { id: "3", designationName: "Medical Executive" },
+                  { id: "4", designationName: "Regional Manager" }
+                ]
+              };
+            } else if (cfg.url.includes('/notices/active') && cfg.method === 'get') {
+              let notices = [];
+              try {
+                const saved = localStorage.getItem('mock_notices');
+                if (saved) {
+                  notices = JSON.parse(saved);
+                } else {
+                  notices = [
+                    {
+                      id: 1,
+                      title: "Quarterly Strategy Meeting",
+                      message: "All Medical Representatives and Sales Executives are requested to attend the Q2 Strategy Meeting scheduled for next Monday. We will discuss new product launches and territory expansion plans.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 2 * 86400000).toISOString()
+                    },
+                    {
+                      id: 2,
+                      title: "Emergency Update: Server Maintenance",
+                      message: "The HRMS system will undergo scheduled database maintenance tonight from 11:00 PM to 1:00 AM. Access might be intermittent during this period. Please plan your punch-outs accordingly.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString()
+                    },
+                    {
+                      id: 3,
+                      title: "Independence Day Holiday Announcement",
+                      message: "Please note that the office will remain closed on August 15th, 2026, in observance of Independence Day. Regular field visits and reporting will resume from August 16th.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 1 * 86400000).toISOString()
+                    }
+                  ];
+                  localStorage.setItem('mock_notices', JSON.stringify(notices));
+                }
+              } catch (e) {}
+
+              // Filter active notices
+              const activeList = notices.filter(notice => notice.active);
+              mockData = { success: true, status: 200, data: activeList };
+
+            } else if (cfg.url.includes('/notices') && cfg.method === 'get') {
+              let notices = [];
+              try {
+                const saved = localStorage.getItem('mock_notices');
+                if (saved) {
+                  notices = JSON.parse(saved);
+                } else {
+                  notices = [
+                    {
+                      id: 1,
+                      title: "Quarterly Strategy Meeting",
+                      message: "All Medical Representatives and Sales Executives are requested to attend the Q2 Strategy Meeting scheduled for next Monday. We will discuss new product launches and territory expansion plans.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 2 * 86400000).toISOString()
+                    },
+                    {
+                      id: 2,
+                      title: "Emergency Update: Server Maintenance",
+                      message: "The HRMS system will undergo scheduled database maintenance tonight from 11:00 PM to 1:00 AM. Access might be intermittent during this period. Please plan your punch-outs accordingly.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString()
+                    },
+                    {
+                      id: 3,
+                      title: "Independence Day Holiday Announcement",
+                      message: "Please note that the office will remain closed on August 15th, 2026, in observance of Independence Day. Regular field visits and reporting will resume from August 16th.",
+                      active: true,
+                      createdAt: new Date(Date.now() - 1 * 86400000).toISOString()
+                    }
+                  ];
+                  localStorage.setItem('mock_notices', JSON.stringify(notices));
+                }
+              } catch (e) {}
+
+              mockData = { success: true, status: 200, data: notices };
+
+            } else if (cfg.url.includes('/notices') && cfg.method === 'post') {
+              const body = JSON.parse(cfg.data || '{}');
+              let notices = [];
+              try {
+                notices = JSON.parse(localStorage.getItem('mock_notices') || '[]');
+              } catch (e) {}
+
+              const newNotice = {
+                id: Math.floor(Math.random() * 100000),
+                title: body.title,
+                message: body.message || body.content || '',
+                active: body.active !== undefined ? body.active : true,
+                createdAt: new Date().toISOString()
+              };
+
+              notices.unshift(newNotice);
+              localStorage.setItem('mock_notices', JSON.stringify(notices));
+              mockData = { success: true, status: 201, data: newNotice };
+
+            } else if (cfg.url.includes('/notices/') && cfg.url.includes('/toggle-active') && cfg.method === 'patch') {
+              const parts = cfg.url.split('/');
+              const idx = parts.indexOf('toggle-active');
+              const noticeId = parseInt(parts[idx - 1]);
+
+              let notices = [];
+              try {
+                notices = JSON.parse(localStorage.getItem('mock_notices') || '[]');
+              } catch (e) {}
+
+              const notice = notices.find(n => n.id === noticeId);
+              if (notice) {
+                notice.active = !notice.active;
+                localStorage.setItem('mock_notices', JSON.stringify(notices));
+              }
+              mockData = { success: true, status: 200, data: notice };
+
+            } else if (cfg.url.includes('/notices/') && cfg.method === 'put') {
+              const parts = cfg.url.split('/');
+              const noticeId = parseInt(parts[parts.length - 1]);
+              const body = JSON.parse(cfg.data || '{}');
+
+              let notices = [];
+              try {
+                notices = JSON.parse(localStorage.getItem('mock_notices') || '[]');
+              } catch (e) {}
+
+              const noticeIndex = notices.findIndex(n => n.id === noticeId);
+              let updatedNotice = null;
+              if (noticeIndex !== -1) {
+                updatedNotice = {
+                  ...notices[noticeIndex],
+                  title: body.title,
+                  message: body.message || body.content || '',
+                  active: body.active !== undefined ? body.active : notices[noticeIndex].active
+                };
+                notices[noticeIndex] = updatedNotice;
+                localStorage.setItem('mock_notices', JSON.stringify(notices));
+              }
+              mockData = { success: true, status: 200, data: updatedNotice };
+
+            } else if (cfg.url.includes('/notices/') && cfg.method === 'delete') {
+              const parts = cfg.url.split('/');
+              const noticeId = parseInt(parts[parts.length - 1]);
+
+              let notices = [];
+              try {
+                notices = JSON.parse(localStorage.getItem('mock_notices') || '[]');
+              } catch (e) {}
+
+              notices = notices.filter(n => n.id !== noticeId);
+              localStorage.setItem('mock_notices', JSON.stringify(notices));
+              mockData = { success: true, status: 200, data: noticeId };
             }
 
           return {

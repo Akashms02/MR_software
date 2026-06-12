@@ -6,7 +6,7 @@ import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyPayslip } from '../../redux/actions/companyAction'
 import { getMyTeam } from '../../redux/actions/teamActions'
-import { inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
+import { getFullAssetUrl, inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
 
 const oklchToRgb = (l, c, h, a = 1) => {
   const hRad = (h * Math.PI) / 180;
@@ -138,6 +138,34 @@ function numberToRupeesWords(amount) {
   return 'Rupees ' + str.trim() + ' Only'
 }
 
+const formatMonthValue = (val) => {
+  if (!val) return '';
+  const match = val.match(/^(\d{4})-(\d{2})$/);
+  if (match) {
+    const [_, year, monthNum] = match;
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthIndex = parseInt(monthNum, 10) - 1;
+    if (monthIndex >= 0 && monthIndex < 12) {
+      return `${months[monthIndex]} ${year}`;
+    }
+  }
+  return val;
+};
+
+const getDaysInMonth = (monthStr) => {
+  if (!monthStr) return 30;
+  const match = monthStr.match(/^(\d{4})-(\d{2})$/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const monthNum = parseInt(match[2], 10);
+    return new Date(year, monthNum, 0).getDate();
+  }
+  return 30;
+};
+
 export default function SalarySlip({ onBack }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
@@ -151,7 +179,7 @@ export default function SalarySlip({ onBack }) {
   }, [dispatch])
 
   const [selectedId, setSelectedId] = useState('')
-  const [month, setMonth] = useState('May 2026')
+  const [month, setMonth] = useState('2026-05')
 
   // Set first employee as default once team loads
   useEffect(() => {
@@ -253,7 +281,8 @@ export default function SalarySlip({ onBack }) {
       if (!sheetElement) throw new Error('Document preview not ready. Please try again.')
 
       const empName = employee.fullName || employee.name || 'employee'
-      const fileName = `payslip_${empName.replace(/\s+/g, '_').toLowerCase()}_${month.replace(/\s+/g, '_')}_${Date.now()}.pdf`
+      const formattedMonth = formatMonthValue(month)
+      const fileName = `payslip_${empName.replace(/\s+/g, '_').toLowerCase()}_${formattedMonth.replace(/\s+/g, '_')}_${Date.now()}.pdf`
 
       await document.fonts.ready
       await inlineDocumentImages(sheetElement)
@@ -450,11 +479,27 @@ export default function SalarySlip({ onBack }) {
       // Generate PDF as a blob
       const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
 
+      let monthName = ''
+      let yearStr = ''
+      if (month && month.includes('-')) {
+        const parts = month.split('-')
+        yearStr = parts[0]
+        const monthNum = parseInt(parts[1], 10)
+        const months = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ]
+        if (monthNum >= 1 && monthNum <= 12) {
+          monthName = months[monthNum - 1]
+        }
+      }
+
       const formData = new FormData()
       formData.append('email', empEmail)
       formData.append('file', pdfBlob, fileName)
 
-      const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData))
+      const queryParams = monthName && yearStr ? `?month=${monthName}&year=${yearStr}` : ''
+      const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData, queryParams))
 
       if (res?.data) {
         setModalData({
@@ -524,16 +569,12 @@ export default function SalarySlip({ onBack }) {
           Payslip Cycle:
         </label>
 
-        <select
+        <input
+          type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-        >
-          <option value="May 2026">May 2026</option>
-          <option value="April 2026">April 2026</option>
-          <option value="March 2026">March 2026</option>
-          <option value="February 2026">February 2026</option>
-        </select>
+          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+        />
       </div>
     </div>
 
@@ -561,6 +602,96 @@ export default function SalarySlip({ onBack }) {
       </PrimaryBtn>
     </div>
   </div>
+
+  {/* Success / Error Modal */}
+  {showModal && (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl">
+        <button
+          onClick={() => setShowModal(false)}
+          className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
+        >
+          <X size={18} />
+        </button>
+
+        {modalError ? (
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+              <X size={24} className="text-red-500" />
+            </div>
+            <h3 className="text-base font-extrabold text-gray-900">Generation Failed</h3>
+            <p className="text-xs text-gray-500 leading-relaxed max-w-sm">{modalError}</p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-2 w-full rounded-xl bg-gray-950 px-5 py-3 text-xs font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col items-center gap-2 text-center mb-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                <CheckCircle2 size={28} className="text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900">Payslip Dispatched!</h3>
+              <p className="text-xs text-gray-500">The payslip has been emailed successfully to the employee.</p>
+            </div>
+
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                  <Mail size={16} />
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Email Sent To</p>
+                  <p className="text-sm font-bold text-gray-800">{modalData.emailSentTo}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <CheckCircle2 size={16} />
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Delivery Status</p>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-2xs font-extrabold uppercase text-emerald-600 tracking-wider inline-block mt-0.5">
+                    {modalData.status}
+                  </span>
+                </div>
+              </div>
+
+              {modalData.previewUrl && (
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <FileText size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Preview URL</p>
+                    <a
+                      href={getFullAssetUrl(modalData.previewUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition overflow-hidden text-overflow-ellipsis whitespace-nowrap"
+                    >
+                      Open Document <ExternalLink size={12} className="shrink-0" />
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
+            >
+              Done
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )}
 
   {/* Payslip Document */}
   <div
@@ -613,7 +744,7 @@ export default function SalarySlip({ onBack }) {
         </h2>
 
         <p className="mt-1 text-sm font-semibold text-emerald-600">
-          Cycle: {month}
+          Cycle: {formatMonthValue(month)}
         </p>
       </div>
     </div>
@@ -675,14 +806,14 @@ export default function SalarySlip({ onBack }) {
             <tr>
               <td className="py-1 text-gray-500">Days in Month:</td>
               <td className="py-1 text-gray-700">
-                31 Days
+                {getDaysInMonth(month)} Days
               </td>
             </tr>
 
             <tr>
               <td className="py-1 text-gray-500">Worked Days:</td>
               <td className="py-1 font-semibold text-emerald-600">
-                31 Days (0 LOP)
+                {getDaysInMonth(month)} Days (0 LOP)
               </td>
             </tr>
           </tbody>
