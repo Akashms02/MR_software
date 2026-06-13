@@ -12,6 +12,7 @@ import MRTourPlanPage from '../../pages/mr/MRTourPlanPage'
 import MRLeavePage from '../../pages/mr/MRLeavePage'
 import MRDoctorOnboarding from '../../pages/mr/MRDoctorOnboarding'
 import MRRequestsPage from '../../pages/mr/MRRequestsPage'
+import MRSalesPage from '../../pages/mr/MRSalesPage'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -32,6 +33,7 @@ export default function MRLayoutRouter() {
         <Route path="requests" element={<MRRequestsPage />} />
         <Route path="reports" element={<MRReports />} />
         <Route path="leaves" element={<MRLeavePage />} />
+        <Route path="sales" element={<MRSalesPage />} />
         <Route path="onboard-doctor" element={<MRDoctorOnboarding />} />
         <Route path="finance" element={<EmployeePayslip />} />
         <Route path="me" element={<AdminAttendance />} />

@@ -22,7 +22,8 @@ import {
   X,
   Trash2,
   Check,
-  Megaphone
+  Megaphone,
+  TrendingUp
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -79,6 +80,7 @@ function AdminHeader({ onBellClick, unreadCount }) {
     if (activePage === 'hrdocuments') return 'HR Documents'
     if (activePage === 'notices') return 'Notice Board'
     if (activePage === 'settings') return 'Settings'
+    if (activePage === 'sales') return 'Distributor Sales'
     return 'Admin Dashboard'
   }
 
@@ -214,6 +216,7 @@ export default function AdminLayout({ children }) {
     { id: 'employees',    icon: Users,           label: 'Employees',     path: '/admin/employees' },
     // { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },
     { id: 'reports',      icon: BarChart2,       label: 'Reports & Analytics', path: '/admin/reports' },
+    { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/admin/sales' },
     { id: 'tourplans',    icon: Map,             label: 'Tour Plans',    path: '/admin/tourplans' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/admin/fieldtracking' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Approvals', path: '/admin/leaves' },

@@ -20,6 +20,7 @@ import Holidays from '../../pages/admin/Holidays'
 import Settings from '../../pages/admin/Settings'
 import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 import NoticeManagement from '../../pages/admin/NoticeManagement'
+import AdminSalesPage from '../../pages/admin/AdminSalesPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -44,6 +45,7 @@ export default function AdminLayoutRouter() {
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="hrdocuments" element={<Documents />} />
         <Route path="notices" element={<NoticeManagement />} />
+        <Route path="sales" element={<AdminSalesPage />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
