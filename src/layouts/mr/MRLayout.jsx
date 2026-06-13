@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -49,6 +49,7 @@ function MRHeader({ onBellClick, unreadCount }) {
     if (activePage === 'tourplan') return 'Tour Plans'
     if (activePage === 'reports') return 'Reports & Analytics'
     if (activePage === 'leaves') return 'Leave Management'
+    if (activePage === 'sales') return 'Distributor Sales'
     if (activePage === 'finance') return 'My Payslips'
     if (activePage === 'me') return 'Me'
     if (activePage === 'settings') return 'Settings'
@@ -186,6 +187,7 @@ export default function MRLayout({ children }) {
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/mr/tourplan' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/mr/reports' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
+    { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
     { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/mr/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
