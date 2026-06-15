@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X } from 'lucide-react';
+import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function MRSalesPage() {
   const [distributors, setDistributors] = useState([]);
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const [salesDate, setSalesDate] = useState(new Date().toISOString().split('T')[0]);
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
@@ -36,6 +39,53 @@ export default function MRSalesPage() {
 
     fetchDistributors();
   }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const getDistributorName = (d) => {
+    if (!d) return '';
+    if (typeof d.name === 'object' && d.name !== null) {
+      return d.name.fullName || d.name.username || '';
+    }
+    return d.name || d.distributorName || d.fullName || '';
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setIsOpen(true);
+
+    const exactMatch = distributors.find(
+      (d) => String(getDistributorName(d)).toLowerCase() === value.toLowerCase().trim()
+    );
+    if (exactMatch) {
+      setSelectedDistributorId(exactMatch.id || exactMatch._id);
+    } else {
+      setSelectedDistributorId('');
+    }
+  };
+
+  const handleSelectDistributor = (distributor) => {
+    setSelectedDistributorId(distributor.id || distributor._id);
+    setInputValue(getDistributorName(distributor));
+    setIsOpen(false);
+  };
+
+  const handleAddCustomDistributor = () => {
+    setSelectedDistributorId('');
+    setIsOpen(false);
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -88,8 +138,9 @@ export default function MRSalesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedDistributorId) {
-      setErrorMsg('Please select a distributor.');
+    const finalDistributorName = inputValue.trim();
+    if (!finalDistributorName) {
+      setErrorMsg('Please select or type a distributor.');
       return;
     }
     if (!file) {
@@ -101,15 +152,12 @@ export default function MRSalesPage() {
       return;
     }
 
-    const selectedDistributor = distributors.find(d => String(d.id || d._id) === String(selectedDistributorId));
-    const distributorName = selectedDistributor ? (selectedDistributor.name || selectedDistributor.distributorName) : '';
-
     setSubmitting(true);
     setErrorMsg(null);
     setSuccessMsg(null);
 
     const formData = new FormData();
-    formData.append('distributorName', distributorName);
+    formData.append('distributorName', finalDistributorName);
     formData.append('file', file);
     formData.append('salesDate', salesDate);
 
@@ -123,6 +171,7 @@ export default function MRSalesPage() {
       setSuccessMsg('Sales spreadsheet uploaded successfully!');
       // Reset form
       setSelectedDistributorId('');
+      setInputValue('');
       setFile(null);
       setPreviewData([]);
       // Reset date to today
@@ -166,7 +215,7 @@ export default function MRSalesPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Distributor Dropdown */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 relative" ref={dropdownRef}>
               <label className="block text-[12px] font-bold text-gray-750 uppercase tracking-wider">
                 Distributor <span className="text-rose-500">*</span>
               </label>
@@ -176,19 +225,81 @@ export default function MRSalesPage() {
                   Loading distributors...
                 </div>
               ) : (
-                <select
-                  value={selectedDistributorId}
-                  onChange={(e) => setSelectedDistributorId(e.target.value)}
-                  required
-                  className="w-full h-[42px] px-3.5 rounded-xl border border-gray-200 text-[13.5px] font-sans text-gray-800 outline-none bg-white font-medium hover:border-gray-300 focus:border-[#C8F04A] transition-all"
-                >
-                  <option value="">-- Choose Distributor --</option>
-                  {distributors.map((d) => (
-                    <option key={d.id || d._id} value={d.id || d._id}>
-                      {d.name || d.distributorName}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onFocus={() => setIsOpen(true)}
+                    placeholder="Search or type new distributor"
+                    className="w-full h-[42px] pl-3.5 pr-12 rounded-xl border border-gray-200 text-[13.5px] font-sans text-gray-800 outline-none bg-white font-medium hover:border-gray-300 focus:border-[#C8F04A] transition-all"
+                    required
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    {inputValue && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInputValue('');
+                          setSelectedDistributorId('');
+                          setIsOpen(true);
+                        }}
+                        className="text-gray-400 hover:text-gray-650 transition-colors p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="text-gray-400 hover:text-gray-650 transition-colors p-1"
+                    >
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {isOpen && (
+                    <div className="absolute z-50 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] py-1">
+                      {distributors.filter(d => 
+                        String(getDistributorName(d)).toLowerCase().includes(inputValue.toLowerCase())
+                      ).length > 0 ? (
+                        distributors.filter(d => 
+                          String(getDistributorName(d)).toLowerCase().includes(inputValue.toLowerCase())
+                        ).map((d) => (
+                          <button
+                            key={d.id || d._id}
+                            type="button"
+                            onClick={() => handleSelectDistributor(d)}
+                            className={`w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-gray-50 text-gray-755 font-medium cursor-pointer transition-colors flex justify-between items-center ${
+                              String(d.id || d._id) === String(selectedDistributorId) ? 'bg-gray-50 text-gray-900 font-semibold' : ''
+                            }`}
+                          >
+                            <span>{getDistributorName(d)}</span>
+                            {String(d.id || d._id) === String(selectedDistributorId) && (
+                              <span className="text-[11px] text-emerald-600 font-bold bg-[#E6F4EA] px-2 py-0.5 rounded">Selected</span>
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3.5 py-2.5 text-[12.5px] text-gray-400 font-medium italic">
+                          No matching distributor found.
+                        </div>
+                      )}
+
+                      {inputValue.trim() && !distributors.some(d => 
+                        String(getDistributorName(d)).toLowerCase() === inputValue.toLowerCase().trim()
+                      ) && (
+                        <button
+                          type="button"
+                          onClick={handleAddCustomDistributor}
+                          className="w-full text-left px-3.5 py-2.5 text-[13px] border-t border-gray-50 text-[#4F46E5] hover:bg-[#4F46E5]/5 font-bold cursor-pointer transition-colors flex items-center gap-1.5"
+                        >
+                          <span>+ Use "{inputValue.trim()}" as new distributor</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -261,9 +372,9 @@ export default function MRSalesPage() {
           <div className="flex justify-end border-t border-gray-100 pt-5 mt-2">
             <button
               type="submit"
-              disabled={submitting || !selectedDistributorId || !file}
+              disabled={submitting || !inputValue.trim() || !file}
               className={`flex items-center gap-2 py-3 px-6 rounded-xl border-none text-[13.5px] font-extrabold transition-all duration-150 outline-none ${
-                submitting || !selectedDistributorId || !file
+                submitting || !inputValue.trim() || !file
                   ? 'bg-gray-150 text-gray-400 cursor-not-allowed'
                   : 'bg-[#C8F04A] text-gray-900 shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:opacity-90 active:scale-98 cursor-pointer'
               }`}

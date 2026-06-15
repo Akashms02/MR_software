@@ -20,6 +20,46 @@ const getFirstOfMonthString = () => {
   return `${d.getFullYear()}-${month}-01`;
 };
 
+const getDistributorName = (d) => {
+  if (!d) return '';
+  if (typeof d.name === 'object' && d.name !== null) {
+    return d.name.fullName || d.name.username || '';
+  }
+  return d.name || d.distributorName || d.fullName || '';
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—';
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD to DD-MM-YYYY
+    }
+    return dateStr;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
+const formatDateTime = (isoString) => {
+  if (!isoString) return '—';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '—';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+  } catch (e) {
+    return '—';
+  }
+};
+
 export default function AdminSalesPage() {
   const [distributors, setDistributors] = useState([]);
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
@@ -31,11 +71,8 @@ export default function AdminSalesPage() {
   const [distributorsLoading, setDistributorsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Spreadsheet Preview Modal state
-  const [previewingRecord, setPreviewingRecord] = useState(null);
-  const [previewData, setPreviewData] = useState([]);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState(null);
+  // Group Preview Modal state
+  const [previewGroup, setPreviewGroup] = useState(null);
 
   // Fetch distributors on mount
   useEffect(() => {
@@ -64,12 +101,13 @@ export default function AdminSalesPage() {
       };
       
       if (selectedDistributorId) {
-        // Find distributor name or pass distributor ID as required by the API
         const dist = distributors.find(d => String(d.id || d._id) === String(selectedDistributorId));
         if (dist) {
-          // Send distributorName or distributorId
-          params.distributorId = dist.id || dist._id;
-          params.distributorName = dist.name || dist.distributorName;
+          params.distributorId = dist.distributorId || dist.id || dist._id;
+          const nameStr = getDistributorName(dist);
+          if (nameStr) {
+            params.distributorName = nameStr;
+          }
         }
       }
 
@@ -91,58 +129,39 @@ export default function AdminSalesPage() {
     }
   }, [selectedDistributorId, startDate, endDate, distributors]);
 
-  // Read remote file to show preview
-  const handleOpenPreview = async (record) => {
-    const fileUrl = record.fileUrl || record.filePath;
-    if (!fileUrl) {
-      alert('Spreadsheet path not found on this record.');
-      return;
-    }
-
-    const resolvedUrl = getFullAssetUrl(fileUrl);
-    setPreviewingRecord(record);
-    setPreviewLoading(true);
-    setPreviewError(null);
-    setPreviewData([]);
-
-    try {
-      // Fetch the binary file from the resolved URL
-      const response = await axios.get(resolvedUrl, { responseType: 'blob' });
-      const reader = new FileReader();
+  // Get grouped uploads by distributor and salesDate
+  const getGroupedUploads = () => {
+    const groups = [];
+    salesRecords.forEach(record => {
+      const distId = record.distributor?.id || record.distributor?.distributorId || 'unknown-dist';
+      const distName = getDistributorName(record.distributor) || '—';
+      const uploader = record.uploadedBy?.fullName || record.uploadedBy?.email || '—';
+      const salesDate = record.salesDate || '';
       
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-          
-          if (jsonData.length === 0) {
-            setPreviewError('The spreadsheet file is empty.');
-          } else {
-            setPreviewData(jsonData);
-          }
-        } catch (err) {
-          console.error(err);
-          setPreviewError('Failed to parse Excel spreadsheet data.');
-        } finally {
-          setPreviewLoading(false);
-        }
-      };
+      const groupKey = `${distId}-${salesDate}`;
+      let group = groups.find(g => g.key === groupKey);
+      if (!group) {
+        group = {
+          key: groupKey,
+          distributorName: distName,
+          createdAt: record.createdAt,
+          salesDate: salesDate,
+          uploader: uploader,
+          records: []
+        };
+        groups.push(group);
+      }
+      group.records.push(record);
+    });
+    return groups;
+  };
 
-      reader.readAsArrayBuffer(response.data);
-    } catch (err) {
-      console.error('Preview error:', err);
-      setPreviewError('Failed to fetch the file from backend storage.');
-      setPreviewLoading(false);
-    }
+  const handleOpenGroupPreview = (group) => {
+    setPreviewGroup(group);
   };
 
   const handleClosePreview = () => {
-    setPreviewingRecord(null);
-    setPreviewData([]);
-    setPreviewError(null);
+    setPreviewGroup(null);
   };
 
   const handleResetFilters = () => {
@@ -183,7 +202,7 @@ export default function AdminSalesPage() {
                 <option value="">All Distributors</option>
                 {distributors.map((d) => (
                   <option key={d.id || d._id} value={d.id || d._id}>
-                    {d.name || d.distributorName}
+                    {getDistributorName(d)}
                   </option>
                 ))}
               </select>
@@ -255,12 +274,12 @@ export default function AdminSalesPage() {
         )}
 
         {/* Records list table */}
-        {salesRecords.length === 0 ? (
+        {getGroupedUploads().length === 0 ? (
           <Card className="px-6 py-12 text-center bg-white border border-dashed border-[#E5E7EB] flex-1 flex flex-col justify-center items-center">
             <FileSpreadsheet size={40} className="text-gray-300 mb-3" />
-            <h4 className="text-[14.5px] font-extrabold text-[#374151] m-0 mb-1">No Sales Spreadsheets Found</h4>
+            <h4 className="text-[14.5px] font-extrabold text-[#374151] m-0 mb-1">No Sales Records Found</h4>
             <p className="text-[12px] text-[#6B7280] m-0 max-w-[380px]">
-              No Excel uploads have been logged by MRs for the selected date range or distributor.
+              No sales records have been logged by MRs for the selected date range or distributor.
             </p>
           </Card>
         ) : (
@@ -268,61 +287,43 @@ export default function AdminSalesPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <Th>Sales / Upload Date</Th>
+                  <Th>Sales Date</Th>
                   <Th>Distributor Name</Th>
                   <Th>Uploaded By</Th>
-                  <Th>File Name</Th>
+                  <Th>Upload Timestamp</Th>
+                  <Th>Items Count</Th>
                   <Th className="text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody>
-                {salesRecords.map((record) => {
-                  const uploadDate = record.salesDate || record.createdAt || record.date || '—';
-                  const uploader = record.uploadedBy || record.mrName || record.user?.fullName || record.user?.email || 'MR Employee';
-                  
+                {getGroupedUploads().map((group) => {
                   return (
-                    <tr key={record.id || record._id} className="hover:bg-gray-50/40 transition-colors">
-                      <Td className="font-semibold text-gray-900">{uploadDate}</Td>
-                      <Td className="font-bold text-[#1F2937]">{record.distributorName || '—'}</Td>
-                      <Td className="font-semibold">{uploader}</Td>
-                      <Td>
-                        <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-150 px-2.5 py-1 rounded-md max-w-[200px] truncate" title={record.fileName}>
-                          <FileSpreadsheet size={13} className="text-emerald-600 shrink-0" />
-                          <span className="truncate">{record.fileName || 'sales_sheet.xlsx'}</span>
+                    <tr key={group.key} className="hover:bg-gray-50/40 transition-colors">
+                      <Td className="font-semibold text-gray-900">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={14} className="text-gray-400" />
+                          <span>{formatDate(group.salesDate)}</span>
+                        </div>
+                      </Td>
+                      <Td className="font-bold text-[#1F2937]">{group.distributorName}</Td>
+                      <Td className="font-semibold">{group.uploader}</Td>
+                      <Td className="text-gray-500 text-[12.5px] font-medium">
+                        {formatDateTime(group.createdAt)}
+                      </Td>
+                      <Td className="font-medium text-gray-600">
+                        <span className="bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold px-2.5 py-1 rounded-full">
+                          {group.records.length} Items
                         </span>
                       </Td>
                       <Td>
                         <div className="flex gap-2 justify-end">
                           <button
-                            onClick={() => handleOpenPreview(record)}
+                            onClick={() => handleOpenGroupPreview(group)}
                             className="h-8 px-3 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
-                            title="Preview spreadsheet contents"
                           >
                             <Eye size={13} />
-                            Preview
+                            View Excel Data
                           </button>
-                          
-                          {record.fileUrl || record.filePath ? (
-                            <a
-                              href={getFullAssetUrl(record.fileUrl || record.filePath)}
-                              download={record.fileName || 'sales_sheet.xlsx'}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="h-8 px-3 rounded-lg bg-gray-50 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 no-underline justify-center"
-                              title="Download spreadsheet"
-                            >
-                              <Download size={13} />
-                              Download
-                            </a>
-                          ) : (
-                            <button
-                              disabled
-                              className="h-8 px-3 rounded-lg bg-gray-100 border border-gray-150 text-gray-300 font-bold text-[12px] flex items-center gap-1 cursor-not-allowed"
-                            >
-                              <Download size={13} />
-                              Download
-                            </button>
-                          )}
                         </div>
                       </Td>
                     </tr>
@@ -335,16 +336,16 @@ export default function AdminSalesPage() {
       </div>
 
       {/* Spreadsheet Modal Preview */}
-      {previewingRecord && (
+      {previewGroup && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[1000] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-[800px] max-h-[85vh] flex flex-col overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.22)] animate-[scaleIn_0.22s_ease-out]">
             
             {/* Header */}
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 px-6 py-4.5 flex justify-between items-center shrink-0">
               <div className="min-w-0">
-                <span className="text-white/60 text-[10px] font-extrabold uppercase tracking-wider block">Spreadsheet Preview</span>
+                <span className="text-white/60 text-[10px] font-extrabold uppercase tracking-wider block">Excel Data View</span>
                 <span className="text-white font-extrabold text-[15px] truncate block mt-0.5">
-                  {previewingRecord.fileName || 'Spreadsheet Data'}
+                  {previewGroup.distributorName} - Sales Sheet ({formatDate(previewGroup.salesDate)})
                 </span>
               </div>
               <button
@@ -357,88 +358,43 @@ export default function AdminSalesPage() {
 
             {/* Content area */}
             <div className="p-6 overflow-y-auto flex-1 flex flex-col min-h-0 bg-gray-50/50">
-              {previewLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-3">
-                  <RefreshCw className="animate-spin text-gray-400" size={32} />
-                  <span className="text-[13px] font-bold text-gray-500">Downloading and parsing sheet...</span>
-                </div>
-              ) : previewError ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center text-[#B91C1C]">
-                  <AlertCircle size={38} className="mb-3" />
-                  <h4 className="text-[14.5px] font-extrabold m-0">Failed to render preview</h4>
-                  <p className="text-[12px] text-gray-500 max-w-[360px] mt-1.5 leading-relaxed">
-                    {previewError} You can still download the file using the button below.
-                  </p>
-                  <a
-                    href={getFullAssetUrl(previewingRecord.fileUrl || previewingRecord.filePath)}
-                    download={previewingRecord.fileName || 'sales_sheet.xlsx'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex items-center gap-1.5 bg-[#C8F04A] text-gray-900 border-none py-2.5 px-5 rounded-xl font-bold text-[12.5px] cursor-pointer shadow-sm no-underline"
-                  >
-                    <Download size={14} /> Download File
-                  </a>
-                </div>
-              ) : (
-                <div className="border border-gray-150 rounded-xl overflow-auto bg-white flex-1 max-h-[450px]">
-                  <table className="w-full border-collapse text-left text-[12px] font-sans">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-150 sticky top-0">
-                        {previewData[0]?.map((_, colIdx) => (
-                          <th
-                            key={colIdx}
-                            className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-150/40 last:border-none"
-                          >
-                            Col {colIdx + 1}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewData.map((row, rowIdx) => (
-                        <tr
-                          key={rowIdx}
-                          className={`border-b border-gray-100 hover:bg-gray-50/30 transition-colors ${
-                            rowIdx === 0 ? 'bg-gray-50/20 font-bold' : ''
-                          }`}
-                        >
-                          {row.map((cellValue, colIdx) => (
-                            <td
-                              key={colIdx}
-                              className="px-4 py-2.5 text-gray-700 border-r border-gray-50 last:border-none font-medium truncate max-w-[180px]"
-                              title={cellValue !== undefined ? String(cellValue) : ''}
-                            >
-                              {cellValue !== undefined ? String(cellValue) : '—'}
-                            </td>
-                          ))}
+              <div className="border border-gray-150 rounded-xl overflow-auto bg-white flex-1 max-h-[450px]">
+                <table className="w-full border-collapse text-left text-[12px] font-sans">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-150 sticky top-0">
+                      <th className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-150/40">Sales Date</th>
+                      <th className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-150/40">Product Name</th>
+                      <th className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-150/40">Quantity</th>
+                      <th className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-150/40">Unit Price</th>
+                      <th className="px-4 py-3 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-wider last:border-none">Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewGroup.records.map((r, idx) => {
+                      return (
+                        <tr key={r.id || idx} className="border-b border-gray-100 hover:bg-gray-50/30 transition-colors">
+                          <td className="px-4 py-2.5 text-gray-600 border-r border-gray-50 font-medium">{formatDate(r.salesDate)}</td>
+                          <td className="px-4 py-2.5 text-gray-700 border-r border-gray-50 font-semibold">{r.productName || '—'}</td>
+                          <td className="px-4 py-2.5 text-gray-650 border-r border-gray-50 font-medium">{r.quantity || 0}</td>
+                          <td className="px-4 py-2.5 text-gray-650 border-r border-gray-50 font-medium">₹{(r.unitPrice || 0).toFixed(2)}</td>
+                          <td className="px-4 py-2.5 text-[#047857] font-bold">₹{(r.totalAmount || 0).toFixed(2)}</td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
               <span className="text-[11px] text-gray-400 font-semibold">
-                Uploaded Date: {previewingRecord.salesDate || previewingRecord.createdAt || '—'}
+                Uploaded By: {previewGroup.uploader} · {previewGroup.records.length} Total Records
               </span>
               <div className="flex gap-2">
-                <OutlineBtn onClick={handleClosePreview} className="py-2 px-4 text-xs font-bold">
+                <OutlineBtn onClick={handleClosePreview} className="py-2 px-4 text-xs font-bold font-sans">
                   Close
                 </OutlineBtn>
-                {previewingRecord.fileUrl || previewingRecord.filePath ? (
-                  <a
-                    href={getFullAssetUrl(previewingRecord.fileUrl || previewingRecord.filePath)}
-                    download={previewingRecord.fileName || 'sales_sheet.xlsx'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-gray-900 text-white hover:bg-gray-800 border-none py-2 px-4 rounded-[10px] font-bold text-xs cursor-pointer shadow-sm no-underline justify-center"
-                  >
-                    <Download size={12} /> Download Spreadsheet
-                  </a>
-                ) : null}
               </div>
             </div>
 
