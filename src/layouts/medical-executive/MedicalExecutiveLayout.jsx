@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3, MapPin, UserPlus, Navigation, Calendar, Bell, X, Trash2, Check } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, BarChart3, MapPin, UserPlus, Navigation, Calendar, Bell, X, Trash2, Check, TrendingUp } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -48,7 +48,8 @@ function MEHeader({ onBellClick, unreadCount }) {
     if (activePage === 'tourplan') return 'Tour Plans'
     if (activePage === 'fieldtracking') return 'Field Tracking'
     if (activePage === 'reports') return 'Reports & Analytics'
-    if (activePage === 'finance') return 'My Payslips'
+    if (activePage === 'sales') return 'Distributor Sales'
+    if (activePage === 'finance') return 'Documents'
     if (activePage === 'me') return 'Me'
     if (activePage === 'settings') return 'Settings'
     return 'Dashboard'
@@ -183,7 +184,8 @@ export default function MedicalExecutiveLayout({ children }) {
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/medical-executive/tourplan' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/medical-executive/fieldtracking' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-executive/reports' },
-    { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/medical-executive/finance' },
+    { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/medical-executive/sales' },
+    { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/medical-executive/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/medical-executive/me' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-executive/settings' },
   ]

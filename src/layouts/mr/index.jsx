@@ -5,7 +5,7 @@ import MRDashboard from '../../pages/mr/MRDashboard'
 import MRDcrPage from '../../pages/mr/MRDcrPage'
 import MRAttendancePage from '../../pages/mr/MRAttendancePage'
 import MRReports from '../../pages/mr/MRReports'
-import EmployeePayslip from '../../pages/employee/EmployeePayslip'
+import MRDocument from '../../pages/mr/MRDocument'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import MRTourPlanPage from '../../pages/mr/MRTourPlanPage'
@@ -35,7 +35,7 @@ export default function MRLayoutRouter() {
         <Route path="leaves" element={<MRLeavePage />} />
         <Route path="sales" element={<MRSalesPage />} />
         <Route path="onboard-doctor" element={<MRDoctorOnboarding />} />
-        <Route path="finance" element={<EmployeePayslip />} />
+        <Route path="finance" element={<MRDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />

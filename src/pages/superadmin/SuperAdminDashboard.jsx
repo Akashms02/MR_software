@@ -83,7 +83,7 @@ export default function SuperAdminDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { admins } = useSelector((state) => state.admin);
+  const { admins = [] } = useSelector((state) => state.admin || {});
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -96,123 +96,117 @@ export default function SuperAdminDashboard() {
   const displayRole = user?.role?.replace('_', ' ') || 'SUPER ADMIN';
   const displayRefCode = user?.adminReferenceCode || 'ROOT';
 
+  const activeAdminsCount = admins.filter(a => a.enabled !== false).length;
+  const inactiveAdminsCount = admins.filter(a => a.enabled === false).length;
+  const draftAdminsCount = 0;
+  const totalAdminsCount = admins.length;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good Morning'
+    if (hour < 17) return 'Good Afternoon'
+    return 'Good Evening'
+  }
+
   return (
     <div className="animate-fade">
       {/* ── Welcome Header Card ── */}
-      <div className="bg-white rounded-[18px] p-8 md:p-10 mb-6 text-[#111827] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_6px_rgba(0,0,0,0.07)] flex items-center justify-between flex-wrap gap-8 border border-gray-100 transition-all duration-300">
-        <div className="flex items-center gap-6 z-10">
-          <div className="w-[72px] h-[72px] rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-2xl font-black text-white shadow-[0_8px_16px_rgba(79,70,229,0.2)] cursor-default">
+      <div className="rounded-[20px] px-[30px] py-7 mb-5 text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.15)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/10">
+        <img 
+          src="/banner.jfif" 
+          alt="Welcome Banner" 
+          className="absolute inset-0 w-full h-full object-cover z-0" 
+        />
+
+        <div className="flex items-center gap-5 z-[3] w-full">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C8F04A] to-[#10B981] flex items-center justify-center text-[24px] font-extrabold text-[#064E3B] shadow-[0_4px_14px_rgba(200,240,74,0.4)] border-2 border-white/20 shrink-0">
             {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
-          <div className="flex-1">
-            <div className="mb-3">
-              <h2 className="text-[26px] font-black text-secondary m-0 leading-tight tracking-[-0.5px]">
-                {displayName}
-              </h2>
-              <p className="text-[13px] text-muted m-0 mt-2 font-bold uppercase tracking-wider">
-                {displayRole}
-              </p>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-black text-white/90 mb-1">
+              {getGreeting()}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-[13px] text-secondary font-medium">
+            <h1 className="text-[26px] font-extrabold text-white m-0 tracking-tight leading-none">
+              {displayName}
+            </h1>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-2 text-[13px] text-white/80 font-medium mt-3.5">
               <span className="flex items-center gap-2">
                 <span className="text-base">📧</span>
-                <span>{displayEmail}</span>
+                <span className="truncate">{displayEmail}</span>
               </span>
               <span className="flex items-center gap-2">
                 <span className="text-base">📱</span>
                 <span>{displayPhone}</span>
               </span>
-              <span className="flex items-center gap-2 bg-gradient-to-br from-blue-50 to-purple-50 px-3.5 py-1.5 rounded-lg font-semibold text-indigo-600 border border-indigo-50">
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-[2px] px-3 py-1 rounded-lg border border-white/15 text-white max-w-fit">
                 <span className="text-base">🔑</span>
                 <span>{displayRefCode}</span>
               </span>
             </div>
           </div>
         </div>
-
-        <div className="flex gap-3 z-10">
-          <button className="bg-gray-100 border border-gray-200 rounded-lg text-secondary px-5 py-2.5 text-[13px] font-bold cursor-pointer transition-all duration-300 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:bg-gray-200 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5">
-            View Status
-          </button>
-          <button
-            onClick={() => navigate('/superadmin/system-settings')}
-            className="bg-gradient-to-br from-[#C8F04A] to-[#B8E03A] border-none rounded-lg text-[#111827] px-6 py-2.5 text-[13px] font-extrabold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(200,240,74,0.3)] hover:shadow-[0_8px_16px_rgba(200,240,74,0.4)] hover:-translate-y-0.5 tracking-wider"
-          >
-            Manage Platform
-          </button>
-        </div>
-      </div>
-
-      {/* ── Info Banner ── */}
-      <div className="bg-white rounded-xl p-3 md:p-5 flex items-center justify-between mb-5 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-gray-100">
-        <div className="flex items-center gap-2.5">
-          <span className="text-base">🛡️</span>
-          <span className="text-[13px] text-secondary">
-            <strong className="text-secondary font-black">System Alert :</strong> Global system backup completed successfully. No vulnerabilities detected.
-          </span>
-        </div>
-        <button className="btn-lime text-[13px] px-4.5 py-2 rounded-xl whitespace-nowrap">
-          View Logs
-        </button>
       </div>
 
       {/* ── Stat Cards Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
-        <StatCard label="Global Users"    value="12,482" type="teal"   />
-        <StatCard label="Total Branches"  value="18"     type="orange" />
-        <StatCard label="Active Admins"   value={admins ? admins.length : "0"}     type="coral"  />
-        <StatCard label="Server Status"   value="99%"    type="purple" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <StatCard label="Registered Companies" value={String(totalAdminsCount).padStart(2, '0')} type="teal" />
+        <StatCard label="Active Admins" value={String(activeAdminsCount).padStart(2, '0')} type="coral" />
+        <StatCard label="Server Uptime" value="99.9%" type="purple" />
       </div>
 
       {/* ── Middle Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2fr] gap-4 mb-4">
 
         <Card>
           <div className="flex justify-between items-center mb-3">
-            <div className="text-[13px] font-bold text-[#111827]">Global Distribution</div>
-            <ExternalLink size={14} className="cursor-pointer text-gray-400" />
+            <div className="text-[13px] font-bold text-[#111827]">Admin Accounts Status</div>
+            <ExternalLink size={14} className="cursor-pointer text-gray-400" onClick={() => navigate('/superadmin/admins')} />
           </div>
           <div className="flex items-center justify-center gap-0 relative h-[130px]">
+            {/* Overlapping Bubble Cluster */}
             <div className="relative w-40 h-[130px]">
-              <div className="absolute w-[90px] h-[90px] rounded-full bg-indigo-500/15 top-0 left-[30px] flex items-center justify-center text-base font-black text-indigo-600">USHQ</div>
-              <div className="absolute w-[58px] h-[58px] rounded-full bg-emerald-500/15 bottom-2.5 right-2 flex items-center justify-center text-[13px] font-black text-emerald-600">EMEA</div>
-              <div className="absolute w-[46px] h-[46px] rounded-full bg-amber-500/20 bottom-1.25 left-[30px] flex items-center justify-center text-xs font-black text-amber-600">APAC</div>
-              <div className="absolute w-[38px] h-[38px] rounded-full bg-rose-500/15 top-[30px] left-1 flex items-center justify-center text-[11px] font-black text-rose-600">LATAM</div>
+              <div className="absolute w-[90px] h-[90px] rounded-full bg-[#10B981]/15 top-0 left-[30px] flex flex-col items-center justify-center text-[#10B981] z-[3]">
+                <span className="text-[18px] font-black">{activeAdminsCount}</span>
+                <span className="text-[9px] font-bold uppercase">Active</span>
+              </div>
+              <div className="absolute w-[58px] h-[58px] rounded-full bg-[#EF4444]/15 bottom-2.5 right-2 flex flex-col items-center justify-center text-[#EF4444] z-[2]">
+                <span className="text-[13px] font-black">{inactiveAdminsCount}</span>
+                <span className="text-[7.5px] font-bold uppercase">Suspended</span>
+              </div>
+              <div className="absolute w-[46px] h-[46px] rounded-full bg-[#F59E0B]/20 bottom-1.25 left-[25px] flex flex-col items-center justify-center text-[#F59E0B] z-[1]">
+                <span className="text-[11px] font-black">{draftAdminsCount}</span>
+                <span className="text-[7px] font-bold uppercase">Draft</span>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-1 mt-2">
-            {[
-              ['bg-indigo-600','North America'],
-              ['bg-emerald-600','Europe'],
-              ['bg-amber-600','Asia Pacific'],
-              ['bg-rose-600','South America']
-            ].map(([bg, label]) => (
-              <div key={label} className="flex items-center gap-1.5 text-[11px] text-gray-500">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${bg}`} />
-                {label}
+          <div className="flex flex-col gap-1.5 mt-2">
+            <div className="flex items-center justify-between text-[11px] text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#10B981]" />
+                <span>Active Admins</span>
               </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex justify-between items-center mb-2">
-            <div className="text-sm font-extrabold text-secondary">System Updates</div>
-            <ExternalLink size={14} className="cursor-pointer text-gray-400" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3">
-            <EventRow date="01" month="Sep" title="Server Migration" sub="Database cluster switch" color="#A78BFA" />
-            <EventRow date="05" month="Sep" title="Security Patch"   sub="v4.2 Auth Module"        color="#10B981" />
-            <EventRow date="12" month="Sep" title="Global Sync"      sub="Cross-region replication" color="#F59E0B" />
-            <EventRow date="18" month="Sep" title="Downtime"         sub="Scheduled maintenance"    color="#EF4444" />
-            <EventRow date="22" month="Sep" title="API Update"       sub="Deprecating v1 endpoints" color="#3B82F6" />
-            <EventRow date="25" month="Sep" title="Audit Review"     sub="Quarterly compliance check" color="#8B5CF6" />
+              <span className="font-bold text-gray-700">{totalAdminsCount > 0 ? Math.round((activeAdminsCount / totalAdminsCount) * 100) : 0}%</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                <span>Suspended Admins</span>
+              </div>
+              <span className="font-bold text-gray-700">{totalAdminsCount > 0 ? Math.round((inactiveAdminsCount / totalAdminsCount) * 100) : 0}%</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                <span>Draft Admins</span>
+              </div>
+              <span className="font-bold text-gray-700">0%</span>
+            </div>
           </div>
         </Card>
 
         <Card>
           <div className="flex justify-between items-center mb-4">
-            <div className="text-sm font-extrabold text-secondary">Active Admins</div>
+            <div className="text-sm font-extrabold text-secondary">Registered Admins</div>
             <button 
               onClick={() => navigate('/superadmin/admins')}
               className="flex items-center gap-1 px-3 py-1.25 bg-[#C8F04A] border-none rounded-lg text-xs font-bold cursor-pointer"
@@ -230,7 +224,7 @@ export default function SuperAdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {!admins || admins.length === 0 ? (
+                {totalAdminsCount === 0 ? (
                   <tr>
                     <td colSpan="3" className="py-4 px-0.5 text-xs text-gray-500 text-center">
                       No active admins found.
@@ -239,6 +233,7 @@ export default function SuperAdminDashboard() {
                 ) : (
                   admins.slice(0, 4).map((admin) => {
                     const initials = admin.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'A';
+                    const isEnabled = admin.enabled !== false;
                     return (
                       <tr key={admin.id} className="border-b border-gray-100">
                         <td className="py-2 px-0.5">
@@ -255,8 +250,8 @@ export default function SuperAdminDashboard() {
                           {admin.adminReferenceCode || 'ROOT'}
                         </td>
                         <td className="py-2 px-0.5">
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${admin.enabled ? 'bg-[#EFF6FF] text-[#1E40AF]' : 'bg-[#FEF2F2] text-[#991B1B]'}`}>
-                            {admin.enabled ? 'Active' : 'Inactive'}
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isEnabled ? 'bg-[#EFF6FF] text-[#1E40AF]' : 'bg-[#FEF2F2] text-[#991B1B]'}`}>
+                            {isEnabled ? 'Active' : 'Inactive'}
                           </span>
                         </td>
                       </tr>
@@ -267,37 +262,7 @@ export default function SuperAdminDashboard() {
             </table>
           </div>
         </Card>
-      </div>
 
-      {/* ── Bottom Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <div className="text-sm font-extrabold text-[#111827] mb-3.5">Administration Actions</div>
-          <div className="flex flex-col gap-2.5">
-            {[
-              { label: 'Review Global Policies' },
-              { label: 'Manage Data Retention' },
-              { label: 'Configure SSO Integration' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors duration-150">
-                <span className="text-xs font-semibold text-[#374151]">{item.label}</span>
-                <ChevronRight size={16} className="text-[#C8F04A]" strokeWidth={2.5} />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="text-sm font-extrabold text-[#111827] mb-3.5">Super Admin Tools</div>
-          <div className="grid grid-cols-3 gap-3">
-            <QATile icon={Database}       label="Database"    />
-            <QATile icon={Key}            label="API Keys"    />
-            <QATile icon={ShieldCheck}    label="Audit Logs"  />
-            <QATile icon={Server}         label="Backups"     />
-            <QATile icon={Network}        label="Routing"     />
-            <QATile icon={Globe}          label="Regions"     />
-          </div>
-        </Card>
       </div>
     </div>
   )

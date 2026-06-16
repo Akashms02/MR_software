@@ -377,14 +377,14 @@ export default function AdminDashboard() {
           <div className="absolute inset-0 bg-white/88 z-[1]" />
           
           <div className="relative z-[2] flex flex-col h-full">
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-start mb-3 border-b border-gray-100/60 pb-3">
               <div>
                 <div className="text-sm font-extrabold text-[#111827]">Upcoming Birthdays</div>
                 <div className="text-xs text-[#9CA3AF] mt-0.5">Birthdays in your team this month</div>
               </div>
               <Gift size={14} className="text-[#111827] mt-0.5" />
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 overflow-y-auto pr-0.5 flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {birthdayList.length === 0 ? (
                 <div className="py-8 text-center text-[#9CA3AF] text-xs">No birthdays recorded.</div>
               ) : (

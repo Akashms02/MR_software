@@ -60,7 +60,7 @@ const formatDateTime = (isoString) => {
   }
 };
 
-export default function AdminSalesPage() {
+export default function MESalesPage() {
   const [distributors, setDistributors] = useState([]);
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [startDate, setStartDate] = useState(getFirstOfMonthString());

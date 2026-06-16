@@ -14,10 +14,7 @@ import {
 
 export const SUPER_ADMIN_NAV = [
   { id: 'dashboard',    icon: LayoutDashboard, label: 'Global Dashboard' },
-  { id: 'branches',     icon: Network,         label: 'All Branches'     },
   { id: 'admins',       icon: Users,           label: 'Manage Admins'    },
-  { id: 'finance',      icon: Wallet,          label: 'Global Finance'   },
-  { id: 'settings',     icon: Settings,        label: 'System Settings'  },
 ]
 
 export const ADMIN_NAV = [

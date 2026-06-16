@@ -211,9 +211,10 @@ export function TableWrap({ children }) {
   )
 }
 
-export function Th({ children }) {
+export function Th({ children, className = '' }) {
+  const defaultAlign = className.includes('text-') ? '' : 'text-left';
   return (
-    <th className="text-left py-3.5 px-5 text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.5px] bg-gray-50 border-b border-gray-100">
+    <th className={`${defaultAlign} py-3.5 px-5 text-[11px] font-extrabold text-gray-400 uppercase tracking-[0.5px] bg-gray-50 border-b border-gray-100 ${className}`}>
       {children}
     </th>
   )

@@ -657,6 +657,10 @@ export default function TerminationLetter({ onBack }) {
                             This letter serves as formal notification that your employment with M/s. <strong>{companyName}</strong> is being concluded in the capacity of <strong>{terminationType.toLowerCase()}</strong>. This decision has been reached after careful consideration of all relevant factors.
                         </p>
 
+                        <p style={{ margin: 0, textIndent: '40px' }}>
+                            The reason for this separation is: <strong>{reason}</strong>.
+                        </p>
+
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', padding: '8px 10px', borderRadius: '8px', fontSize: '10.5px' }}>
                             <div>
                                 <span style={{ color: '#6b7280', fontWeight: 700, display: 'block', fontSize: '8.5px', textTransform: 'uppercase' }}>Date of Joining</span>
@@ -665,10 +669,6 @@ export default function TerminationLetter({ onBack }) {
                             <div>
                                 <span style={{ color: '#6b7280', fontWeight: 700, display: 'block', fontSize: '8.5px', textTransform: 'uppercase' }}>Last Working Day</span>
                                 <strong style={{ color: '#b91c1c' }}>{formatDateIN(lastWorkingDay || terminationDate)}</strong>
-                            </div>
-                            <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e5e7eb', paddingTop: '6px' }}>
-                                <span style={{ color: '#6b7280', fontWeight: 700, display: 'block', fontSize: '8.5px', textTransform: 'uppercase' }}>Reason for Separation</span>
-                                <span style={{ fontWeight: 600, color: '#374151' }}>{reason}</span>
                             </div>
                         </div>
 
