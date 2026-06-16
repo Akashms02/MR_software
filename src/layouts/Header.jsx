@@ -68,7 +68,7 @@ export default function Header({ role }) {
       <div className="flex-1" />
 
       {/* Search Bar */}
-      {role !== 'ADMIN' && role !== 'EMPLOYEE' && (
+      {role !== 'ADMIN' && role !== 'EMPLOYEE' && role !== 'SUPER_ADMIN' && role !== 'SUPER ADMIN' && (
         <div className="relative w-60 shrink-0">
           <Search
             size={15}

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MedicalExecutiveLayout from './MedicalExecutiveLayout'
 import MedicalExecutiveDashboard from '../../pages/medical-executive/MedicalExecutiveDashboard'
 import MEReports from '../../pages/medical-executive/MEReports'
-import MEPayslip from '../../pages/medical-executive/MEPayslip'
+import MEDocument from '../../pages/medical-executive/MEDocument'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import METourPlanPage from '../../pages/medical-executive/METourPlanPage'
@@ -11,6 +11,7 @@ import MEDoctorOnboarding from '../../pages/medical-executive/MEDoctorOnboarding
 import MERequestsPage from '../../pages/medical-executive/MERequestsPage'
 import MEFieldTracking from '../../pages/medical-executive/MEFieldTracking'
 import MELeaveReviewPage from '../../pages/medical-executive/MELeaveReviewPage'
+import MESalesPage from '../../pages/medical-executive/MESalesPage'
 
 const SettingsPlaceholder = () => (
   <div className="p-6 bg-white rounded-2xl border border-gray-200">
@@ -28,10 +29,11 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="tourplan" element={<METourPlanPage />} />
         <Route path="requests" element={<MERequestsPage />} />
         <Route path="reports" element={<MEReports />} />
+        <Route path="sales" element={<MESalesPage />} />
         <Route path="fieldtracking" element={<MEFieldTracking />} />
         <Route path="leaves" element={<MELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MEDoctorOnboarding />} />
-        <Route path="finance" element={<MEPayslip />} />
+        <Route path="finance" element={<MEDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />

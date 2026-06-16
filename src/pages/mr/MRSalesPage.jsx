@@ -10,7 +10,6 @@ export default function MRSalesPage() {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const [salesDate, setSalesDate] = useState(new Date().toISOString().split('T')[0]);
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   
@@ -147,10 +146,6 @@ export default function MRSalesPage() {
       setErrorMsg('Please upload a sales Excel sheet.');
       return;
     }
-    if (!salesDate) {
-      setErrorMsg('Please select a sales date.');
-      return;
-    }
 
     setSubmitting(true);
     setErrorMsg(null);
@@ -159,7 +154,6 @@ export default function MRSalesPage() {
     const formData = new FormData();
     formData.append('distributorName', finalDistributorName);
     formData.append('file', file);
-    formData.append('salesDate', salesDate);
 
     try {
       const response = await axios.post(`${API_ROUTE}/mr/distributors/sales/upload`, formData, {
@@ -174,8 +168,6 @@ export default function MRSalesPage() {
       setInputValue('');
       setFile(null);
       setPreviewData([]);
-      // Reset date to today
-      setSalesDate(new Date().toISOString().split('T')[0]);
     } catch (err) {
       console.error('Upload failed:', err);
       const errDetail = err.response?.data?.message || err.message || 'Server error occurred during upload.';
@@ -213,7 +205,7 @@ export default function MRSalesPage() {
       {/* Upload and Form Config Card */}
       <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             {/* Distributor Dropdown */}
             <div className="flex flex-col gap-1.5 relative" ref={dropdownRef}>
               <label className="block text-[12px] font-bold text-gray-750 uppercase tracking-wider">
@@ -301,22 +293,6 @@ export default function MRSalesPage() {
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Sales Date Input */}
-            <div className="flex flex-col gap-1.5">
-              <label className="block text-[12px] font-bold text-gray-755 uppercase tracking-wider">
-                Sales Date <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={salesDate}
-                  onChange={(e) => setSalesDate(e.target.value)}
-                  required
-                  className="w-full h-[42px] px-3.5 rounded-xl border border-gray-200 text-[13.5px] font-sans text-gray-800 outline-none hover:border-gray-300 focus:border-[#C8F04A] transition-all"
-                />
-              </div>
             </div>
           </div>
 

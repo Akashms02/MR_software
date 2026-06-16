@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getAdmins,
@@ -132,6 +133,12 @@ const AdminManagement = () => {
         companyCode: editFormData.adminReferenceCode,
       };
       try {
+        // Check if the enabled status has changed and update it
+        const wasEnabled = selectedAdmin.enabled !== false;
+        if (editFormData.enabled !== wasEnabled) {
+          await dispatch(updateCompanyAccess(selectedAdmin.id, editFormData.enabled));
+        }
+
         const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
         if (res) {
           setShowEditModal(false);
@@ -195,7 +202,7 @@ const AdminManagement = () => {
           { label: "Total Admins", value: admins.length },
           {
             label: "Active Sessions",
-            value: Math.floor(admins.length * 0.7),
+            value: admins.filter(a => a.enabled !== false).length,
           },
           { label: "System Access", value: "100%" },
           { label: "Pending Invitations", value: "0" },
@@ -215,8 +222,8 @@ const AdminManagement = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+      <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col h-[calc(100vh-270px)]">
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4 shrink-0">
           <div className="relative">
             <Search
               size={18}
@@ -232,9 +239,9 @@ const AdminManagement = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto flex-1">
           <table className="w-full border-collapse text-left">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_0_rgba(229,231,235,1)]">
               <tr>
                 {["Administrator", "Contact Info", "Role", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-4 text-xs font-bold text-gray-500 uppercase border-b border-gray-200">
@@ -315,12 +322,12 @@ const AdminManagement = () => {
                             disabled={updatingStatusId === admin.id}
                             className={`flex items-center gap-1.5 border-none px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                               isEnabled 
-                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100" 
-                                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+                                ? "bg-rose-50 text-rose-700 hover:bg-rose-100" 
+                                : "bg-blue-50 text-blue-700 hover:bg-blue-100"
                             }`}
                           >
                             {getStatusIcon(admin)}
-                            {isEnabled ? "Enabled" : "Disabled"}
+                            {isEnabled ? "Disable" : "Enable"}
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(admin)}
@@ -341,7 +348,7 @@ const AdminManagement = () => {
       </div>
 
       {/* Register Modal */}
-      {showModal && (
+      {showModal && createPortal(
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
           <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
             {/* Modal Header */}
@@ -477,11 +484,12 @@ const AdminManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Modal */}
-      {showEditModal && (
+      {showEditModal && createPortal(
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
           <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
             {/* Modal Header */}
@@ -636,7 +644,8 @@ const AdminManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Animations */}

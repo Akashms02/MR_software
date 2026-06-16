@@ -43,10 +43,7 @@ export default function SuperAdminLayout({ children }) {
 
   const navItems = [
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Global Dashboard', path: '/superadmin/dashboard' },
-    { id: 'branches',     icon: Network,         label: 'All Branches',     path: '/superadmin/branches' },
     { id: 'admins',       icon: Users,           label: 'Manage Admins',    path: '/superadmin/admins' },
-    { id: 'finance',      icon: Wallet,          label: 'Global Finance',   path: '/superadmin/finance' },
-    { id: 'system-settings', icon: Settings,     label: 'System Settings',  path: '/superadmin/system-settings' },
   ]
 
   return (

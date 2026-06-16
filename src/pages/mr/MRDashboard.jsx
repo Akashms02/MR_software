@@ -1052,7 +1052,7 @@ export default function MRDashboard() {
       <div className="grid grid-cols-[1.5fr_1.2fr_1.1fr] gap-5 mb-5.5 items-stretch">
 
         {/* Left Column: Next Planned Calls */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-full min-h-[440px]">
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col h-[480px]">
           <div className="flex justify-between items-center mb-4.5 border-b border-gray-100 pb-3 shrink-0">
             <div>
               <h3 className="m-0 text-[16px] font-extrabold text-gray-800">Next Planned Calls</h3>
@@ -1250,15 +1250,15 @@ export default function MRDashboard() {
             />
             <div className="absolute inset-0 bg-white/92 z-[1]" />
             
-            <div className="relative z-[2] flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start mb-2.5">
+            <div className="relative z-[2] flex flex-col h-full">
+              <div className="flex justify-between items-start mb-3 border-b border-gray-100/60 pb-3">
                 <div>
                   <div className="text-[13px] font-extrabold text-gray-900">Birthday</div>
                   <div className="text-[11px] text-slate-500 mt-0.5">Celebrations in your team</div>
                 </div>
                 <Gift size={14} className="text-gray-900 mt-0.5 shrink-0" />
               </div>
-              <div className="flex flex-col gap-1.5 max-h-[130px] overflow-y-auto pr-0.5">
+              <div className="flex flex-col gap-1.5 overflow-y-auto pr-0.5 flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {mrBirthdayList.length === 0 ? (
                   <div className="py-4 text-center text-slate-400 text-xs font-semibold">No birthdays this month.</div>
                 ) : (

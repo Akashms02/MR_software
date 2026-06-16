@@ -50,7 +50,7 @@ function MRHeader({ onBellClick, unreadCount }) {
     if (activePage === 'reports') return 'Reports & Analytics'
     if (activePage === 'leaves') return 'Leave Management'
     if (activePage === 'sales') return 'Distributor Sales'
-    if (activePage === 'finance') return 'My Payslips'
+    if (activePage === 'finance') return 'Documents'
     if (activePage === 'me') return 'Me'
     if (activePage === 'settings') return 'Settings'
     if (activePage === 'onboard-doctor') return 'Doctor Onboarding'
@@ -188,7 +188,7 @@ export default function MRLayout({ children }) {
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/mr/reports' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
-    { id: 'finance',      icon: FileText,        label: 'My Payslips',   path: '/mr/finance' },
+    { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/mr/finance' },
     { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
   ]

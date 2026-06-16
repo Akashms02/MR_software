@@ -12,6 +12,7 @@ import { requestReducer } from './requestReducer';
 import { attendanceReducer } from './attendanceReducer';
 import { notificationReducer } from './notificationReducer';
 import { noticeReducer } from './noticeReducer';
+import { documentReducer } from './documentReducer';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   attendance: attendanceReducer,
   notification: notificationReducer,
   notices: noticeReducer,
+  document: documentReducer,
 });
 
 export default rootReducer;

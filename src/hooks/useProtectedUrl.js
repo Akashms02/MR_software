@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axiosInstance';
 import { API_ROUTE } from '../data/env';
 
+import { getFullAssetUrl } from '../utils/getFullAssetUrl';
+
 /**
  * Custom hook to fetch protected files (images, PDFs) with the Bearer token
  * and return a local Blob URL for use in src/href attributes.
@@ -44,11 +46,10 @@ const useProtectedUrl = (relativePath) => {
         }
 
         // Construct the correct URL: 
-        // If it's a relative path, prefix with API_ROUTE/files
-        // If it's a full URL, use it directly (Axios will still inject the Token via interceptor)
+        // If it's a relative path, resolve it to the asset root URL via getFullAssetUrl
         const fetchUrl = cleanPath.startsWith('http') || cleanPath.startsWith('blob:') || cleanPath.startsWith('data:')
           ? cleanPath 
-          : `${import.meta.env.VITE_APP_API_URL || API_ROUTE}/files/${cleanPath}`;
+          : getFullAssetUrl(cleanPath);
 
         const response = await axios.get(fetchUrl, {
           responseType: 'blob'

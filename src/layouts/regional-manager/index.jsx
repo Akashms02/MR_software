@@ -2,7 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import RegionalManagerLayout from './RegionalManagerLayout'
 import RegionalManagerDashboard from '../../pages/regional-manager/RegionalManagerDashboard'
-import EmployeePayslip from '../../pages/employee/EmployeePayslip'
+import EmployeeDocument from '../../pages/employee/EmployeeDocument'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 
@@ -19,7 +19,7 @@ export default function RegionalManagerLayoutRouter() {
       <Routes>
         <Route path="/" element={<RegionalManagerDashboard />} />
         <Route path="dashboard" element={<RegionalManagerDashboard />} />
-        <Route path="finance" element={<EmployeePayslip />} />
+        <Route path="finance" element={<EmployeeDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="settings" element={<SettingsPlaceholder />} />

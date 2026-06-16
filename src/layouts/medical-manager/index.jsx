@@ -2,7 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import MedicalManagerLayout from './MedicalManagerLayout'
 import MedicalManagerDashboard from '../../pages/medical-manager/MedicalManagerDashboard'
-import EmployeePayslip from '../../pages/employee/EmployeePayslip'
+import EmployeeDocument from '../../pages/employee/EmployeeDocument'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import MMDoctorOnboarding from '../../pages/medical-manager/MMDoctorOnboarding'
@@ -20,7 +20,7 @@ export default function MedicalManagerLayoutRouter() {
       <Routes>
         <Route path="/" element={<MedicalManagerDashboard />} />
         <Route path="dashboard" element={<MedicalManagerDashboard />} />
-        <Route path="finance" element={<EmployeePayslip />} />
+        <Route path="finance" element={<EmployeeDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="onboard-doctor" element={<MMDoctorOnboarding />} />
