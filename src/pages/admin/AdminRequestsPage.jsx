@@ -118,7 +118,13 @@ const AdminRequestsPage = () => {
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] p-1">
       {/* Page Header actions (portal label and duplicate headings removed) */}
-      <div className="flex justify-end mb-7">
+      <div className="flex justify-end mb-7 gap-3.5">
+        <button
+          onClick={() => navigate('/admin/myteam/assign-doctor')}
+          className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-extrabold text-[13.5px] cursor-pointer shadow-sm hover:bg-[#F9FAFB] transition-all duration-150 outline-none"
+        >
+          <Plus size={15} strokeWidth={2.5} /> Assign to MR
+        </button>
         <button
           onClick={() => navigate('/admin/myteam/onboard-doctor')}
           className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:bg-[#b8e040] transition-all duration-150 outline-none"

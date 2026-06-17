@@ -173,6 +173,12 @@ const MSERequestsPage = () => {
             <RefreshCw size={14} /> Refresh
           </button>
           <button
+            onClick={() => navigate('/medical-sales-executive/assign-doctor')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-bold text-[12.5px] cursor-pointer shadow-sm hover:bg-[#F9FAFB] transition-all duration-150 outline-none"
+          >
+            <Plus size={14} strokeWidth={2.5} /> Assign to MR
+          </button>
+          <button
             onClick={() => navigate('/medical-sales-executive/onboard-doctor')}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#0D9488] text-white font-bold text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(13,148,136,0.25)] hover:bg-[#115E59] transition-all duration-150 outline-none"
           >

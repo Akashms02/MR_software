@@ -163,15 +163,220 @@ axios.interceptors.request.use(
                 expiresIn: 900
               }
             };
-          } else if (cfg.url.includes('/doctor') && cfg.method === 'get') {
+          } else if (cfg.url.includes('/doctor/unified-contacts') && cfg.method === 'get') {
+            const mrList = [
+              { id: 'EMP-MR-001', fullName: 'Marcus Rep', email: 'mr@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '2', fullName: 'Amit Verma', email: 'amit.verma@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '3', fullName: 'Rohan Deshmukh', email: 'rohan.deshmukh@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
+            ];
+
+            let onboardingReqs = [];
+            try {
+              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
+            } catch (e) {}
+
+            let assignments = [];
+            try {
+              assignments = JSON.parse(localStorage.getItem('mock_assignments') || '[]');
+            } catch (e) {}
+
+            const mergedList = [
+              { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
+              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
+              { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
+              { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
+            ];
+
+            onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
+              const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              mergedList.push({
+                id: req.doctorId || req.chemistId || req.id,
+                fullName: req.name,
+                speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
+                clinicName: req.address || req.city || '',
+                type: isChemist ? 'CHEMIST' : 'DOCTOR',
+                latitude: req.latitude,
+                longitude: req.longitude
+              });
+            });
+
+            mergedList.forEach(doc => {
+              const assignment = assignments.find(a => String(a.doctorId) === String(doc.id));
+              if (assignment) {
+                doc.assignedMrId = assignment.mrId;
+                const mr = mrList.find(m => String(m.id) === String(assignment.mrId));
+                doc.assignedMrName = mr ? mr.fullName : `MR #${assignment.mrId}`;
+              } else {
+                doc.assignedMrId = null;
+                doc.assignedMrName = null;
+              }
+            });
+
+            mockData = {
+              success: true,
+              status: true,
+              message: "Unified contacts fetched successfully",
+              data: {
+                doctors: mergedList.filter(d => d.type === 'DOCTOR'),
+                chemists: mergedList.filter(d => d.type === 'CHEMIST').map(c => ({
+                  ...c,
+                  name: c.fullName,
+                  contactPerson: c.speciality
+                }))
+              }
+            };
+          } else if (cfg.url.includes('/doctor/my-assigned') && cfg.method === 'get') {
+            const currentEmpId = token === 'mock-mr-token' ? 'EMP-MR-001' : 'EMP-ADM-001';
+            let filterMrId = currentEmpId;
+            try {
+              const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+              const urlObj = new URL(urlStr);
+              filterMrId = urlObj.searchParams.get('mrId') || currentEmpId;
+            } catch (e) {}
+
+            const mrList = [
+              { id: 'EMP-MR-001', fullName: 'Marcus Rep', email: 'mr@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '2', fullName: 'Amit Verma', email: 'amit.verma@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '3', fullName: 'Rohan Deshmukh', email: 'rohan.deshmukh@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
+            ];
+
+            let onboardingReqs = [];
+            try {
+              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
+            } catch (e) {}
+
+            let assignments = [];
+            try {
+              assignments = JSON.parse(localStorage.getItem('mock_assignments') || '[]');
+            } catch (e) {}
+
+            const mergedList = [
+              { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
+              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
+              { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
+              { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
+            ];
+
+            onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
+              const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              mergedList.push({
+                id: req.doctorId || req.chemistId || req.id,
+                fullName: req.name,
+                speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
+                clinicName: req.address || req.city || '',
+                type: isChemist ? 'CHEMIST' : 'DOCTOR',
+                latitude: req.latitude,
+                longitude: req.longitude
+              });
+            });
+
+            const myAssigned = [];
+            mergedList.forEach(doc => {
+              const assignment = assignments.find(a => String(a.doctorId) === String(doc.id));
+              if (assignment && String(assignment.mrId) === String(filterMrId)) {
+                doc.assignedMrId = assignment.mrId;
+                const mr = mrList.find(m => String(m.id) === String(assignment.mrId));
+                doc.assignedMrName = mr ? mr.fullName : `MR #${assignment.mrId}`;
+                myAssigned.push(doc);
+              }
+            });
+
+            mockData = {
+              success: true,
+              data: myAssigned
+            };
+          } else if (cfg.url.includes('/assign/') && cfg.method === 'put') {
+            const parts = cfg.url.split('?')[0].split('/');
+            const assignIdx = parts.indexOf('assign');
+            const doctorId = parts[assignIdx - 1];
+            const mrId = parts[assignIdx + 1];
+
+            let assignments = [];
+            try {
+              assignments = JSON.parse(localStorage.getItem('mock_assignments') || '[]');
+            } catch (e) {}
+
+            if (mrId === 'none' || mrId === 'null') {
+              assignments = assignments.filter(a => String(a.doctorId) !== String(doctorId));
+            } else {
+              const idx = assignments.findIndex(a => String(a.doctorId) === String(doctorId));
+              if (idx !== -1) {
+                assignments[idx].mrId = mrId;
+              } else {
+                assignments.push({ doctorId, mrId });
+              }
+            }
+            localStorage.setItem('mock_assignments', JSON.stringify(assignments));
+
+            mockData = {
+              success: true,
+              message: 'Assignment updated successfully.'
+            };
+          } else if ((cfg.url.endsWith('/mr') || cfg.url.includes('/mr?')) && cfg.method === 'get') {
             mockData = {
               success: true,
               data: [
-                { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic' },
-                { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital' },
-                { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care' },
-                { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic' },
+                { id: 'EMP-MR-001', fullName: 'Marcus Rep', email: 'mr@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+                { id: '2', fullName: 'Amit Verma', email: 'amit.verma@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+                { id: '3', fullName: 'Rohan Deshmukh', email: 'rohan.deshmukh@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+                { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
               ]
+            };
+          } else if (cfg.url.includes('/doctor') && cfg.method === 'get') {
+            const mrList = [
+              { id: 'EMP-MR-001', fullName: 'Marcus Rep', email: 'mr@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '2', fullName: 'Amit Verma', email: 'amit.verma@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '3', fullName: 'Rohan Deshmukh', email: 'rohan.deshmukh@mrmedical.com', role: 'MR', status: 'ACTIVE' },
+              { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
+            ];
+
+            let onboardingReqs = [];
+            try {
+              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
+            } catch (e) {}
+
+            let assignments = [];
+            try {
+              assignments = JSON.parse(localStorage.getItem('mock_assignments') || '[]');
+            } catch (e) {}
+
+            const mergedList = [
+              { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
+              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
+              { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
+              { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
+            ];
+
+            onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
+              const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              mergedList.push({
+                id: req.doctorId || req.chemistId || req.id,
+                fullName: req.name,
+                speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
+                clinicName: req.address || req.city || '',
+                type: isChemist ? 'CHEMIST' : 'DOCTOR',
+                latitude: req.latitude,
+                longitude: req.longitude
+              });
+            });
+
+            mergedList.forEach(doc => {
+              const assignment = assignments.find(a => String(a.doctorId) === String(doc.id));
+              if (assignment) {
+                doc.assignedMrId = assignment.mrId;
+                const mr = mrList.find(m => String(m.id) === String(assignment.mrId));
+                doc.assignedMrName = mr ? mr.fullName : `MR #${assignment.mrId}`;
+              } else {
+                doc.assignedMrId = null;
+                doc.assignedMrName = null;
+              }
+            });
+
+            mockData = {
+              success: true,
+              data: mergedList
             };
           } else if (cfg.url.includes('/dcr/me') && cfg.method === 'get') {
             let dcrs = [];
@@ -639,6 +844,37 @@ axios.interceptors.request.use(
                 localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
               }
               mockData = { success: true, status: 200, message: `Request status updated to ${status}.` };
+            } else if ((cfg.url.includes('/doctor/') || cfg.url.includes('/chemist/')) && cfg.url.includes('/location') && cfg.method === 'put') {
+              const urlWithoutParams = cfg.url.split('?')[0];
+              const parts = urlWithoutParams.split('/');
+              const locIdx = parts.indexOf('location');
+              const targetId = parseInt(parts[locIdx - 1]);
+
+              const body = JSON.parse(cfg.data || '{}');
+              const lat = parseFloat(body.latitude);
+              const lng = parseFloat(body.longitude);
+
+              let requests = [];
+              try {
+                const saved = localStorage.getItem('mock_onboarding_requests');
+                if (saved) requests = JSON.parse(saved);
+              } catch (e) {}
+
+              const req = requests.find(r => 
+                r.id === targetId || 
+                r.doctorId === targetId || 
+                r.chemistId === targetId || 
+                String(r.id) === String(targetId) || 
+                String(r.doctorId) === String(targetId) || 
+                String(r.chemistId) === String(targetId)
+              );
+              if (req) {
+                req.latitude = lat;
+                req.longitude = lng;
+                localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
+              }
+
+              mockData = { success: true, status: 200, message: "Location updated successfully." };
             } else if (cfg.url.includes('/requests') && cfg.method === 'post') {
               const body = JSON.parse(cfg.data || '{}');
               let requests = [];

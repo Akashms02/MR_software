@@ -8,6 +8,7 @@ import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import METourPlanPage from '../../pages/medical-executive/METourPlanPage'
 import MEDoctorOnboarding from '../../pages/medical-executive/MEDoctorOnboarding'
+import MEDoctorAssignment from '../../pages/medical-executive/MEDoctorAssignment'
 import MERequestsPage from '../../pages/medical-executive/MERequestsPage'
 import MEFieldTracking from '../../pages/medical-executive/MEFieldTracking'
 import MELeaveReviewPage from '../../pages/medical-executive/MELeaveReviewPage'
@@ -33,6 +34,7 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="fieldtracking" element={<MEFieldTracking />} />
         <Route path="leaves" element={<MELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MEDoctorOnboarding />} />
+        <Route path="assign-doctor" element={<MEDoctorAssignment />} />
         <Route path="finance" element={<MEDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />

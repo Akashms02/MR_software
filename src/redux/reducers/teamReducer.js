@@ -5,6 +5,9 @@ import {
   TEAM_ONBOARD_REQUEST,
   TEAM_ONBOARD_SUCCESS,
   TEAM_ONBOARD_FAILURE,
+  DOCTOR_EXCEL_UPLOAD_REQUEST,
+  DOCTOR_EXCEL_UPLOAD_SUCCESS,
+  DOCTOR_EXCEL_UPLOAD_FAILURE,
   CLEAR_ERRORS,
   CLEAR_SUCCESS
 } from '../actionType/teamActionType';
@@ -23,6 +26,7 @@ export const teamReducer = (state = initialState, action) => {
     case LOADING_START:
     case TEAM_LIST_REQUEST:
     case TEAM_ONBOARD_REQUEST:
+    case DOCTOR_EXCEL_UPLOAD_REQUEST:
       return {
         ...state,
         loading: true,
@@ -50,15 +54,17 @@ export const teamReducer = (state = initialState, action) => {
       };
 
     case TEAM_ONBOARD_SUCCESS:
+    case DOCTOR_EXCEL_UPLOAD_SUCCESS:
       return {
         ...state,
         loading: false,
         error: null,
         success: true,
-        message: action.payload?.message || 'Member onboarded successfully',
+        message: action.payload?.message || (action.type === DOCTOR_EXCEL_UPLOAD_SUCCESS ? 'Excel uploaded successfully' : 'Member onboarded successfully'),
       };
 
     case TEAM_ONBOARD_FAILURE:
+    case DOCTOR_EXCEL_UPLOAD_FAILURE:
       return {
         ...state,
         loading: false,

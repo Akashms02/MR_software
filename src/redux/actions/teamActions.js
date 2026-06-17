@@ -7,6 +7,9 @@ import {
   TEAM_ONBOARD_REQUEST,
   TEAM_ONBOARD_SUCCESS,
   TEAM_ONBOARD_FAILURE,
+  DOCTOR_EXCEL_UPLOAD_REQUEST,
+  DOCTOR_EXCEL_UPLOAD_SUCCESS,
+  DOCTOR_EXCEL_UPLOAD_FAILURE,
   CLEAR_ERRORS,
   CLEAR_SUCCESS
 } from "../actionType/teamActionType";
@@ -79,6 +82,53 @@ export const onboardMember = (payload) => async (dispatch) => {
       payload: message,
     });
     return { status: 'FAILURE', message };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   UPLOAD DOCTOR EXCEL (Bulk Onboard)
+   POST /api/v1/doctor/upload-excel
+   Content-Type: multipart/form-data
+   "multipart/form-data" means the request body carries binary file data
+   alongside other fields — required for file uploads over HTTP.
+ ======================= */
+export const uploadDoctorExcel = (file) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: DOCTOR_EXCEL_UPLOAD_REQUEST });
+  try {
+    // FormData encodes the file as multipart/form-data automatically
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // axiosInstance already injects the Bearer token via its interceptor
+    const response = await axios.post(
+      `${API_ROUTE}/doctor/upload-excel`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    const resData = response?.data ?? {};
+    const ok = resData?.status === true || resData?.status === 200 || resData?.status === 201
+      || response?.status === 200 || response?.status === 201;
+
+    if (ok) {
+      dispatch({
+        type: DOCTOR_EXCEL_UPLOAD_SUCCESS,
+        payload: resData,
+      });
+      return { success: true, data: resData };
+    }
+
+    const errMsg = resData?.message || 'Excel upload failed.';
+    dispatch({ type: DOCTOR_EXCEL_UPLOAD_FAILURE, payload: errMsg });
+    return { success: false, message: errMsg };
+  } catch (error) {
+    // Surface the exact backend message (e.g. "duplicate entry" / constraint errors)
+    const errMsg = error?.response?.data?.message || error?.message || 'Failed to upload Excel file.';
+    dispatch({ type: DOCTOR_EXCEL_UPLOAD_FAILURE, payload: errMsg });
+    return { success: false, message: errMsg };
   } finally {
     dispatch({ type: LOADING_END });
   }

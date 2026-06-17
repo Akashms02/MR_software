@@ -11,6 +11,9 @@ import {
   REVIEW_ONBOARDING_REQUEST_REQUEST,
   REVIEW_ONBOARDING_REQUEST_SUCCESS,
   REVIEW_ONBOARDING_REQUEST_FAILURE,
+  UPDATE_DOCTOR_LOCATION_REQUEST,
+  UPDATE_DOCTOR_LOCATION_SUCCESS,
+  UPDATE_DOCTOR_LOCATION_FAILURE,
 } from "../actionType/requestActionType";
 
 const initialState = {
@@ -26,6 +29,7 @@ export const requestReducer = (state = initialState, action) => {
     case FETCH_ME_REQUESTS_REQUEST:
     case SUBMIT_ONBOARDING_REQUEST_REQUEST:
     case REVIEW_ONBOARDING_REQUEST_REQUEST:
+    case UPDATE_DOCTOR_LOCATION_REQUEST:
       return {
         ...state,
         loading: true,
@@ -62,10 +66,24 @@ export const requestReducer = (state = initialState, action) => {
         error: null,
       };
 
+    case UPDATE_DOCTOR_LOCATION_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        success: "Doctor location updated successfully!",
+        requests: state.requests.map((r) =>
+          (r.id === action.payload.doctorId || r.doctorId === action.payload.doctorId)
+            ? { ...r, latitude: action.payload.latitude, longitude: action.payload.longitude }
+            : r
+        ),
+        error: null,
+      };
+
     case FETCH_PENDING_REQUESTS_FAILURE:
     case FETCH_ME_REQUESTS_FAILURE:
     case SUBMIT_ONBOARDING_REQUEST_FAILURE:
     case REVIEW_ONBOARDING_REQUEST_FAILURE:
+    case UPDATE_DOCTOR_LOCATION_FAILURE:
       return {
         ...state,
         loading: false,

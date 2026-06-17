@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { onboardMember, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
+import { onboardMember, uploadDoctorExcel, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
 import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart, FileSpreadsheet } from 'lucide-react';
 import L from 'leaflet';
-import * as XLSX from 'xlsx';
 
 // Free OSM geocoding helpers
 const extractCityPincode = (addressObj) => {
@@ -117,156 +116,32 @@ const MSEDoctorOnboarding = () => {
     navigate('/medical-sales-executive/dashboard');
   };
 
-  const handleExcelUpload = (e) => {
+  const handleExcelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const data = evt.target.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    setLocalError(null);
+    setLocalSuccess(null);
+    setIsSubmitting(true);
 
-        if (!jsonData || jsonData.length < 2) {
-          setLocalError('The uploaded Excel sheet is empty or lacks data rows.');
-          return;
-        }
-
-        // Parse header and row
-        const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
-        const row = jsonData[1];
-
-        const getVal = (possibleHeaders) => {
-          const idx = headers.findIndex(h => possibleHeaders.some(ph => h.includes(ph)));
-          if (idx !== -1) {
-            const val = row[idx];
-            return val !== undefined && val !== null ? String(val).trim() : '';
-          }
-          return '';
-        };
-
-        // Extracted fields
-        const rRole = getVal(['role', 'type', 'category']);
-        const rFullName = getVal(['full name', 'fullname', 'name']);
-        const rEmail = getVal(['email', 'mail']);
-        const rPhone = getVal(['phone', 'contact', 'mobile', 'telephone']);
-        const rCurrentAddress = getVal(['clinic address', 'current address', 'address', 'location', 'place']);
-        const rPermanentAddress = getVal(['home address', 'permanent address', 'homeaddress']);
-        
-        // Personal info
-        const rFirstName = getVal(['first name', 'firstname', 'personal first name']);
-        const rMiddleName = getVal(['middle name', 'middlename']);
-        const rSurname = getVal(['surname', 'last name', 'lastname']);
-        const rDOB = getVal(['dob', 'date of birth', 'birth date', 'birthdate']);
-        const rGender = getVal(['gender', 'sex']);
-        const rBloodGroup = getVal(['blood group', 'bloodgroup', 'blood']);
-        const rMaritalStatus = getVal(['marital status', 'maritalstatus', 'marital']);
-        const rFatherName = getVal(['father name', 'fathername', 'father']);
-        const rMotherName = getVal(['mother name', 'mothername', 'mother']);
-
-        // Coordinates
-        const rLat = getVal(['clinic latitude', 'latitude', 'lat']);
-        const rLng = getVal(['clinic longitude', 'longitude', 'lng', 'lon']);
-        const rHomeLat = getVal(['home latitude', 'personal latitude', 'homelat']);
-        const rHomeLng = getVal(['home longitude', 'personal longitude', 'homelng']);
-
-        const rCity = getVal(['city', 'town', 'district']);
-        const rPincode = getVal(['pincode', 'pincode', 'zip', 'postal']);
-
-        // Set states if found
-        if (rRole) {
-          const upperRole = rRole.toUpperCase();
-          if (upperRole.includes('DOC')) setRole('DOCTOR');
-          else if (upperRole.includes('PHARM') || upperRole.includes('CHEM')) setRole('PHARMACIST');
-        }
-        if (rFullName) setFullName(rFullName);
-        if (rEmail) setEmail(rEmail);
-        if (rPhone) setPhone(rPhone);
-        if (rCurrentAddress) setPersonalCurrentAddress(rCurrentAddress);
-        
-        if (rPermanentAddress) {
-          setPersonalPermanentAddress(rPermanentAddress);
-          setPersonalSameAsCurrentAddress(false);
-        } else {
-          setPersonalSameAsCurrentAddress(true);
-        }
-
-        if (rFirstName) setPersonalFirstName(rFirstName);
-        if (rMiddleName) setPersonalMiddleName(rMiddleName);
-        if (rSurname) setPersonalSurname(rSurname);
-        
-        // Format DOB to YYYY-MM-DD if excel serial date or string
-        if (rDOB) {
-          const serial = Number(rDOB);
-          if (!isNaN(serial) && serial > 20000) {
-            const dateObj = new Date((serial - 25569) * 86400 * 1000);
-            const y = dateObj.getFullYear();
-            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const d = String(dateObj.getDate()).padStart(2, '0');
-            setPersonalDateOfBirth(`${y}-${m}-${d}`);
-          } else {
-            try {
-              const parsedDate = new Date(rDOB);
-              if (!isNaN(parsedDate.getTime())) {
-                const y = parsedDate.getFullYear();
-                const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
-                const d = String(parsedDate.getDate()).padStart(2, '0');
-                setPersonalDateOfBirth(`${y}-${m}-${d}`);
-              } else {
-                setPersonalDateOfBirth(rDOB);
-              }
-            } catch (e) {
-              setPersonalDateOfBirth(rDOB);
-            }
-          }
-        }
-
-        if (rGender) {
-          const g = rGender.toLowerCase();
-          if (g.startsWith('f')) setPersonalGender('Female');
-          else if (g.startsWith('m')) setPersonalGender('Male');
-          else setPersonalGender('Other');
-        }
-
-        if (rBloodGroup) {
-          const bg = rBloodGroup.toUpperCase().replace(/\s+/g, '');
-          const validBgList = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
-          if (validBgList.includes(bg)) {
-            setPersonalBloodGroup(bg);
-          }
-        }
-
-        if (rMaritalStatus) {
-          const m = rMaritalStatus.toLowerCase();
-          if (m.startsWith('sing')) setPersonalMaritalStatus('Single');
-          else if (m.startsWith('marr')) setPersonalMaritalStatus('Married');
-          else if (m.startsWith('div')) setPersonalMaritalStatus('Divorced');
-          else if (m.startsWith('wid')) setPersonalMaritalStatus('Widowed');
-        }
-
-        if (rFatherName) setPersonalFatherName(rFatherName);
-        if (rMotherName) setPersonalMotherName(rMotherName);
-        
-        if (rLat) setLatitude(rLat);
-        if (rLng) setLongitude(rLng);
-        if (rHomeLat) setPersonalLatitude(rHomeLat);
-        if (rHomeLng) setPersonalLongitude(rHomeLng);
-        
-        if (rCity) setCity(rCity);
-        if (rPincode) setPincode(rPincode);
-
-        setLocalSuccess('Excel sheet details imported and filled into the form successfully! Feel free to review and manually modify any values.');
+    try {
+      const result = await dispatch(uploadDoctorExcel(file));
+      if (result && result.success) {
+        setLocalSuccess(result.data?.message || 'Excel sheet uploaded and processed successfully! Redirecting...');
         setLocalError(null);
-      } catch (err) {
-        console.error('Failed to parse Excel file:', err);
-        setLocalError('Failed to parse Excel file. Please ensure it is a valid format.');
+        setTimeout(() => {
+          navigate('/medical-sales-executive/dashboard');
+        }, 1500);
+      } else {
+        setLocalError(result?.message || 'Failed to upload Excel sheet.');
+        setIsSubmitting(false);
       }
-    };
-    reader.readAsBinaryString(file);
-    e.target.value = '';
+    } catch (err) {
+      setLocalError(err.message || 'An error occurred during file upload.');
+      setIsSubmitting(false);
+    } finally {
+      e.target.value = '';
+    }
   };
 
   // --- Clinic Map Initialization & Lifecycle ---
@@ -800,8 +675,8 @@ const MSEDoctorOnboarding = () => {
               <FileSpreadsheet size={20} />
             </div>
             <div>
-              <h4 className="text-[13.5px] font-extrabold text-[#111827] m-0">Import Details via Excel</h4>
-              <p className="text-[11.5px] text-[#6B7280] m-0 mt-0.5">Upload a sheet to auto-fill the profile form fields below.</p>
+              <h4 className="text-[13.5px] font-extrabold text-[#111827] m-0">Bulk Onboard via Excel</h4>
+              <p className="text-[11.5px] text-[#6B7280] m-0 mt-0.5">Directly upload an Excel file to onboard multiple doctors/pharmacists at once.</p>
             </div>
           </div>
           <label className="flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl border-none bg-[#7C3AED] hover:opacity-90 text-white font-extrabold text-[12px] cursor-pointer shadow-md transition-all">
