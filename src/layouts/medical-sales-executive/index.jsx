@@ -7,6 +7,7 @@ import MSEDocument from '../../pages/medical-sales-executive/MSEDocument'
 import AdminAttendance from '../../pages/admin/AdminAttendance'
 import MSETourPlanPage from '../../pages/medical-sales-executive/MSETourPlanPage'
 import MSEDoctorOnboarding from '../../pages/medical-sales-executive/MSEDoctorOnboarding'
+import MSEDoctorAssignment from '../../pages/medical-sales-executive/MSEDoctorAssignment'
 import MSERequestsPage from '../../pages/medical-sales-executive/MSERequestsPage'
 import MSEFieldTracking from '../../pages/medical-sales-executive/MSEFieldTracking'
 import MSELeaveReviewPage from '../../pages/medical-sales-executive/MSELeaveReviewPage'
@@ -32,6 +33,7 @@ export default function MedicalSalesExecutiveLayoutRouter() {
         <Route path="fieldtracking" element={<MSEFieldTracking />} />
         <Route path="leaves" element={<MSELeaveReviewPage />} />
         <Route path="onboard-doctor" element={<MSEDoctorOnboarding />} />
+        <Route path="assign-doctor" element={<MSEDoctorAssignment />} />
         <Route path="finance" element={<MSEDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="settings" element={<SettingsPlaceholder />} />

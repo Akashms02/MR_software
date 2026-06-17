@@ -13,6 +13,9 @@ import {
   REVIEW_ONBOARDING_REQUEST_REQUEST,
   REVIEW_ONBOARDING_REQUEST_SUCCESS,
   REVIEW_ONBOARDING_REQUEST_FAILURE,
+  UPDATE_DOCTOR_LOCATION_REQUEST,
+  UPDATE_DOCTOR_LOCATION_SUCCESS,
+  UPDATE_DOCTOR_LOCATION_FAILURE,
 } from "../actionType/requestActionType";
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
@@ -118,6 +121,32 @@ export const reviewOnboardingRequestAction = (request, reviewStatus, remarks) =>
   } catch (error) {
     const msg = error.response?.data?.message || error.message || commonError;
     dispatch({ type: REVIEW_ONBOARDING_REQUEST_FAILURE, payload: msg });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const updateTargetLocationAction = (type, targetId, latitude, longitude) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: UPDATE_DOCTOR_LOCATION_REQUEST });
+  try {
+    const resource = String(type).toLowerCase() === 'chemist' ? 'chemist' : 'doctor';
+    const response = await axios.put(
+      `${API_ROUTE}/${resource}/${targetId}/location`,
+      {
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+      }
+    );
+    dispatch({
+      type: UPDATE_DOCTOR_LOCATION_SUCCESS,
+      payload: { doctorId: targetId, latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+    });
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || "Failed to update location!";
+    dispatch({ type: UPDATE_DOCTOR_LOCATION_FAILURE, payload: msg });
     throw new Error(msg);
   } finally {
     dispatch({ type: LOADING_END });

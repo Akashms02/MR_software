@@ -327,7 +327,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
               ) : (
                 filtered.map(t => (
                   <div
-                    key={t.id}
+                    key={`${t.type}-${t.id}`}
                     onClick={() => { setSelectedId(String(t.id)); setSearch(t.name); }}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 border ${
                       String(selectedId) === String(t.id) ? 'bg-[#EFF6FF] border-[#3B82F6]' : 'bg-[#FAFAFA] border-transparent'
@@ -568,10 +568,39 @@ export default function MRDashboard() {
   const { team = [] } = useSelector(state => state.team || {});
   const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
   const { activeNotices = [] } = useSelector(state => state.notices || {});
-  const approvedVisitTargets = useMemo(
-    () => getApprovedVisitTargets(requests),
-    [requests]
-  );
+  const [assignedTargets, setAssignedTargets] = useState([]);
+  const [targetsLoading, setTargetsLoading] = useState(false);
+
+  const fetchAssignedTargets = async () => {
+    setTargetsLoading(true);
+    try {
+      const res = await axios.get(`${API_ROUTE}/doctor/my-assigned`);
+      if (res.data && (res.data.success || res.data.status === true) && Array.isArray(res.data.data)) {
+        const mapped = res.data.data.map(item => {
+          const isChemist = String(item.type).toUpperCase() === 'CHEMIST';
+          return {
+            id: item.id,
+            name: item.fullName || item.name || 'Unknown',
+            type: isChemist ? 'Pharmacy' : 'Doctor',
+            apiType: isChemist ? 'CHEMIST' : 'DOCTOR',
+            specialty: item.speciality || item.specialty || item.chemistContactPerson || (isChemist ? 'Chemist' : 'Doctor'),
+            clinic: item.clinicName || item.clinic || [item.address, item.city].filter(Boolean).join(', ') || '',
+            latitude: item.latitude,
+            longitude: item.longitude
+          };
+        });
+        setAssignedTargets(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to fetch assigned targets:', err);
+    } finally {
+      setTargetsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignedTargets();
+  }, [user]);
 
   const [toast,       setToast]       = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -814,8 +843,8 @@ export default function MRDashboard() {
   const allCompleted  = myVisits.filter(v => v.status === 'COMPLETED').map(mapVisitFromApi);
   const daysWorked    = myAttendance.length;
 
-  // Planned calls = approved onboarding targets not yet visited today
-  const upcomingCalls = approvedVisitTargets.filter(
+  // Planned calls = assigned targets not yet visited today
+  const upcomingCalls = assignedTargets.filter(
     (target) => !todayVisits.some((v) => v.name === target.name)
   );
   const mockTimes = ['10:30 AM', '12:00 PM', '02:30 PM', '04:00 PM', '05:30 PM'];
@@ -1029,10 +1058,10 @@ export default function MRDashboard() {
             <div className="text-[11px] font-extrabold text-white/60 tracking-wider uppercase mb-3.5">Onboarding & DCR Ledger</div>
             <div className="flex flex-col gap-2.5">
               {[
-                ['Total Target List', `${approvedVisitTargets.length} approved`],
-                ['Pending Approvals', `${requests.filter(r => r.status === 'PENDING').length} doctors/chemists`],
+                ['Total Assigned Targets', `${assignedTargets.length} assigned`],
+                ['Pending Approvals', `${requests.filter(r => r.status === 'PENDING').length} onboard requests`],
                 ['DCR Submissions', `${doneVisits.length} calls logged today`],
-                ['Onboarded Chemists', `${approvedVisitTargets.filter(t => (t.type || '').toLowerCase() === 'chemist' || (t.type || '').toLowerCase() === 'pharmacy').length} pharmacies`],
+                ['Assigned Chemists', `${assignedTargets.filter(t => (t.type || '').toLowerCase() === 'chemist' || (t.type || '').toLowerCase() === 'pharmacy').length} pharmacies`],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between text-[12.5px] border-b border-white/8 pb-1.5">
                   <span className="text-white/60">{k}</span>
@@ -1063,10 +1092,10 @@ export default function MRDashboard() {
             </button>
           </div>
 
-          {approvedVisitTargets.length === 0 ? (
+          {assignedTargets.length === 0 ? (
             <div className="text-center p-10 px-5 text-blue-800 bg-[#EFF6FF] rounded-xl border border-[#BFDBFE] flex-1 flex flex-col justify-center">
-              <div className="font-extrabold text-[14.5px] mt-1.5">No approved visit targets yet</div>
-              <div className="text-[12px] text-[#1D4ED8] mt-1">Submit a doctor or chemist onboarding request and wait for approval to plan field visits.</div>
+              <div className="font-extrabold text-[14.5px] mt-1.5">No assigned visit targets yet</div>
+              <div className="text-[12px] text-[#1D4ED8] mt-1">Please ask your administrator, ME, or MSE to assign doctor or chemist targets to you to plan field visits.</div>
               <button
                 type="button"
                 onClick={() => navigate('/mr/onboard-doctor')}
@@ -1087,7 +1116,7 @@ export default function MRDashboard() {
                 const targetTime = mockTimes[idx % mockTimes.length];
                 return (
                   <div 
-                    key={target.id} 
+                    key={`${target.type}-${target.id}`} 
                     className="flex gap-4 px-4.5 py-3.5 rounded-2xl items-center bg-[#FAFAFA] border border-gray-100 transition-all duration-200 hover:bg-[#F0FDF4] hover:border-[#BBF7D0]"
                   >
                     {/* Time indicator */}
@@ -1296,8 +1325,8 @@ export default function MRDashboard() {
         <VisitCheckInModal
           gpsLoading={gpsLoading}
           gpsMessage={gpsMessage}
-          visitTargets={approvedVisitTargets}
-          targetsLoading={requestsLoading}
+          visitTargets={upcomingCalls}
+          targetsLoading={targetsLoading}
           onRequestOnboarding={() => { setModal(null); navigate('/mr/onboard-doctor'); }}
           onSubmit={handleVisitCheckIn}
           onClose={() => setModal(null)}

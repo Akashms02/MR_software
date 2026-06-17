@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { onboardMember, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart } from 'lucide-react';
+import { onboardMember, uploadDoctorExcel, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart, FileSpreadsheet } from 'lucide-react';
 import L from 'leaflet';
 
 // Free OSM geocoding helpers
@@ -114,6 +114,34 @@ const MEDoctorOnboarding = () => {
 
   const handleCancel = () => {
     navigate('/medical-executive/dashboard');
+  };
+
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLocalError(null);
+    setLocalSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      const result = await dispatch(uploadDoctorExcel(file));
+      if (result && result.success) {
+        setLocalSuccess(result.data?.message || 'Excel sheet uploaded and processed successfully! Redirecting...');
+        setLocalError(null);
+        setTimeout(() => {
+          navigate('/medical-executive/dashboard');
+        }, 1500);
+      } else {
+        setLocalError(result?.message || 'Failed to upload Excel sheet.');
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      setLocalError(err.message || 'An error occurred during file upload.');
+      setIsSubmitting(false);
+    } finally {
+      e.target.value = '';
+    }
   };
 
   // --- Clinic Map Initialization & Lifecycle ---
@@ -638,6 +666,28 @@ const MEDoctorOnboarding = () => {
           <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
             Fill in the information below. Drag map pin to center coordinates, search by address, or capture live device GPS.
           </p>
+        </div>
+
+        {/* Excel Import Section */}
+        <div className="bg-gradient-to-br from-[#7C3AED]/5 to-[#7C3AED]/10 border border-dashed border-[#7C3AED]/35 rounded-[15px] p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/12 flex items-center justify-center text-[#7C3AED]">
+              <FileSpreadsheet size={20} />
+            </div>
+            <div>
+              <h4 className="text-[13.5px] font-extrabold text-[#111827] m-0">Bulk Onboard via Excel</h4>
+              <p className="text-[11.5px] text-[#6B7280] m-0 mt-0.5">Directly upload an Excel file to onboard multiple doctors/pharmacists at once.</p>
+            </div>
+          </div>
+          <label className="flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl border-none bg-[#7C3AED] hover:opacity-90 text-white font-extrabold text-[12px] cursor-pointer shadow-md transition-all">
+            Upload Excel File
+            <input 
+              type="file" 
+              accept=".xlsx, .xls, .csv" 
+              onChange={handleExcelUpload} 
+              className="hidden" 
+            />
+          </label>
         </div>
 
         {/* Notifications */}

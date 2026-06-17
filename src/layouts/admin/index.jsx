@@ -10,6 +10,7 @@ import AdminAttendance from '../../pages/admin/AdminAttendance'
 import TeamManagement from '../../pages/admin/TeamManagement'
 import OnboardingWizard from '../../pages/admin/OnboardingWizard'
 import DoctorOnboarding from '../../pages/admin/DoctorOnboarding'
+import DoctorAssignment from '../../pages/admin/DoctorAssignment'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminReports from '../../pages/admin/AdminReports'
 import AdminTourPlanReviewPage from '../../pages/admin/AdminTourPlanReviewPage'
@@ -42,6 +43,7 @@ export default function AdminLayoutRouter() {
         <Route path="myteam" element={<TeamManagement />} />
         <Route path="myteam/onboard" element={<OnboardingWizard />} />
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
+        <Route path="myteam/assign-doctor" element={<DoctorAssignment />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="hrdocuments" element={<Documents />} />
         <Route path="notices" element={<NoticeManagement />} />
