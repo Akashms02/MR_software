@@ -29,7 +29,7 @@ const MRAssignmentSection = () => {
       if (res.data && (res.data.success || res.data.status === true) && Array.isArray(res.data.data)) {
         setMrs(res.data.data);
         if (res.data.data.length > 0 && !selectedMrId) {
-          setSelectedMrId(res.data.data[0].id);
+          setSelectedMrId(res.data.data[0].userId); // use userId (User ID), not id (MR profile ID)
         }
       }
     } catch (err) {
@@ -82,10 +82,14 @@ const MRAssignmentSection = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleAssign = async (doctorId, mrId) => {
-    setSubmittingId(doctorId);
+  const handleAssign = async (doc, mrId) => {
+    const isChemist = doc.type === 'CHEMIST' || doc.speciality === 'CHEMIST';
+    const endpoint = isChemist
+      ? `${API_ROUTE}/chemist/${doc.id}/assign/${mrId}`
+      : `${API_ROUTE}/doctor/${doc.id}/assign/${mrId}`;
+    setSubmittingId(doc.id);
     try {
-      const res = await axios.put(`${API_ROUTE}/doctor/${doctorId}/assign/${mrId}`);
+      const res = await axios.put(endpoint);
       if (res.data && (res.data.success || res.data.status === true)) {
         showToast(res.data.message || 'Assignment updated successfully.', 'success');
         // Refresh doctor list to get updated assignment status
@@ -101,10 +105,14 @@ const MRAssignmentSection = () => {
     }
   };
 
-  const handleUnassign = async (doctorId) => {
-    setSubmittingId(doctorId);
+  const handleUnassign = async (doc) => {
+    const isChemist = doc.type === 'CHEMIST' || doc.speciality === 'CHEMIST';
+    const endpoint = isChemist
+      ? `${API_ROUTE}/chemist/${doc.id}/assign/none`
+      : `${API_ROUTE}/doctor/${doc.id}/assign/none`;
+    setSubmittingId(doc.id);
     try {
-      const res = await axios.put(`${API_ROUTE}/doctor/${doctorId}/assign/none`);
+      const res = await axios.put(endpoint);
       if (res.data && (res.data.success || res.data.status === true)) {
         showToast(res.data.message || 'Unassigned successfully.', 'success');
         await fetchDoctors();
@@ -125,7 +133,7 @@ const MRAssignmentSection = () => {
     m.email?.toLowerCase().includes(mrSearch.toLowerCase())
   );
 
-  const selectedMrName = mrs.find(m => String(m.id) === String(selectedMrId))?.fullName || 'Selected MR';
+  const selectedMrName = mrs.find(m => String(m.userId) === String(selectedMrId))?.fullName || 'Selected MR';
 
   const filteredDoctors = doctors.filter((doc) => {
     // 1. Search Query
@@ -201,11 +209,11 @@ const MRAssignmentSection = () => {
               </div>
             ) : (
               filteredMrs.map((m) => {
-                const isSelected = String(m.id) === String(selectedMrId);
+                const isSelected = String(m.userId) === String(selectedMrId); // compare by userId
                 return (
                   <div
                     key={m.id}
-                    onClick={() => setSelectedMrId(m.id)}
+                    onClick={() => setSelectedMrId(m.userId)} // store userId, not profile id
                     className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 ${
                       isSelected
                         ? 'bg-gradient-to-br from-[#7C3AED]/10 to-[#7C3AED]/5 border-[#7C3AED] shadow-sm'
@@ -338,7 +346,7 @@ const MRAssignmentSection = () => {
                         <button
                           type="button"
                           disabled={submittingId === doc.id || !selectedMrId}
-                          onClick={() => handleUnassign(doc.id)}
+                          onClick={() => handleUnassign(doc)}
                           className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-extrabold text-[11px] px-3.5 py-1.75 rounded-lg cursor-pointer transition-all disabled:opacity-50"
                         >
                           {submittingId === doc.id ? (
@@ -351,7 +359,7 @@ const MRAssignmentSection = () => {
                         <button
                           type="button"
                           disabled={submittingId === doc.id || !selectedMrId}
-                          onClick={() => handleAssign(doc.id, selectedMrId)}
+                          onClick={() => handleAssign(doc, selectedMrId)}
                           className="bg-[#7C3AED] hover:bg-[#6D28D9] border-0 text-white font-extrabold text-[11px] px-4 py-2 rounded-lg cursor-pointer transition-all shadow-[0_2px_6px_rgba(124,58,237,0.2)] disabled:opacity-50"
                         >
                           {submittingId === doc.id ? (
