@@ -23,7 +23,7 @@ import {
   localTodayKey,
   visitCheckInCoords,
 } from '../../utils/attendanceUtils';
-import { fetchMeRequestsAction } from '../../redux/actions/requestActions';
+import { fetchMeRequestsAction, updateTargetLocationAction } from '../../redux/actions/requestActions';
 import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
 import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
@@ -810,6 +810,17 @@ export default function MRDashboard() {
           longitude: coords.lng,
         })
       );
+      
+      // Auto-update target doctor/chemist location coordinates with live coordinates
+      try {
+        const type = target.apiType || (target.type === 'Pharmacy' ? 'CHEMIST' : 'DOCTOR');
+        await dispatch(
+          updateTargetLocationAction(type, Number(target.id), coords.lat, coords.lng)
+        );
+      } catch (locErr) {
+        console.error('Failed to update target location coordinates on check-in:', locErr);
+      }
+
       setModal(null);
       showToast(`Visit started at ${target.name} ✅`);
     } catch (err) {
