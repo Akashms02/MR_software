@@ -186,7 +186,6 @@ export default function MedicalExecutiveLayout({ children }) {
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-executive/reports' },
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/medical-executive/sales' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/medical-executive/finance' },
-    { id: 'me',           icon: User,            label: 'Me',            path: '/medical-executive/me' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-executive/settings' },
   ]
 
