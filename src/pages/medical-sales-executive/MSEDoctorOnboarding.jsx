@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { onboardMember, uploadDoctorExcel, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
+import { onboardMember, uploadDoctorExcel, uploadChemistExcel, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
 import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart, FileSpreadsheet } from 'lucide-react';
 import L from 'leaflet';
 
@@ -125,7 +125,9 @@ const MSEDoctorOnboarding = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await dispatch(uploadDoctorExcel(file));
+      const result = role === 'PHARMACIST'
+        ? await dispatch(uploadChemistExcel(file))
+        : await dispatch(uploadDoctorExcel(file));
       if (result && result.success) {
         setLocalSuccess(result.data?.message || 'Excel sheet uploaded and processed successfully! Redirecting...');
         setLocalError(null);
