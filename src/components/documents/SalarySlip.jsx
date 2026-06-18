@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import html2pdf from 'html2pdf.js'
-import { ArrowLeft, Printer, RefreshCw, CheckCircle2, X, Mail, FileText, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Printer, RefreshCw, CheckCircle2, X, Mail, FileText, ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { PrimaryBtn, OutlineBtn } from '../ui'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyPayslip } from '../../redux/actions/companyAction'
@@ -213,17 +213,76 @@ export default function SalarySlip({ onBack }) {
   if (employees.length > 0 && !employee) return <div>No employee records available.</div>
   if (!employee) return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading team data…</div>
 
-  // Salary breakdown
-  const sal = employee.salary || employee.salaryAmount || 25000
-  const basic = Math.round(sal * 0.50)
-  const hra = Math.round(sal * 0.20)
-  const da = Math.round(sal * 0.05)
-  const allowances = Math.round(sal * 0.05)
-  const gross = Math.round(sal * 0.80)
-  const pf = Math.round(sal * 0.12)
-  const esi = Math.round(sal * 0.0075)
-  const tds = Math.round(sal * 0.05)
-  const totalDeductions = pf + esi + tds
+  // Salary customizer state
+  const [earnings, setEarnings] = useState([])
+  const [deductions, setDeductions] = useState([])
+
+  const prevEmployeeIdRef = useRef('')
+  const prevSalaryRef = useRef(0)
+
+  useEffect(() => {
+    let sal = employee?.salary || employee?.salaryAmount || 25000
+    sal = Number(sal) || 0
+    
+    const empId = employee?.employeeId || employee?.id || selectedId
+
+    if (prevEmployeeIdRef.current !== empId || prevSalaryRef.current !== sal) {
+      prevEmployeeIdRef.current = empId
+      prevSalaryRef.current = sal
+
+      const basicVal = Math.round(sal * 0.50)
+      const hraVal = Math.round(sal * 0.20)
+      const daVal = Math.round(sal * 0.05)
+      const allowancesVal = Math.round(sal * 0.05)
+      const pfVal = Math.round(sal * 0.12)
+      const esiVal = Math.round(sal * 0.0075)
+      const tdsVal = Math.round(sal * 0.05)
+
+      setEarnings([
+        { id: '1', label: 'Basic Salary', amount: basicVal },
+        { id: '2', label: 'House Rent Allowance', amount: hraVal },
+        { id: '3', label: 'Dearness Allowance (DA)', amount: daVal },
+        { id: '4', label: 'Special & Conveyance Allowance', amount: allowancesVal }
+      ])
+      setDeductions([
+        { id: '1', label: 'Provident Fund (PF)', amount: pfVal },
+        { id: '2', label: 'ESI Contribution', amount: esiVal },
+        { id: '3', label: 'TDS (Tax Deducted)', amount: tdsVal }
+      ])
+    }
+  }, [employee, selectedId])
+
+  const handleAddEarning = () => {
+    setEarnings([...earnings, { id: Date.now().toString(), label: '', amount: 0 }])
+  }
+
+  const handleUpdateEarning = (index, field, value) => {
+    const updated = [...earnings]
+    updated[index][field] = field === 'amount' ? (value === '' ? '' : Number(value)) : value
+    setEarnings(updated)
+  }
+
+  const handleRemoveEarning = (index) => {
+    setEarnings(earnings.filter((_, i) => i !== index))
+  }
+
+  const handleAddDeduction = () => {
+    setDeductions([...deductions, { id: Date.now().toString(), label: '', amount: 0 }])
+  }
+
+  const handleUpdateDeduction = (index, field, value) => {
+    const updated = [...deductions]
+    updated[index][field] = field === 'amount' ? (value === '' ? '' : Number(value)) : value
+    setDeductions(updated)
+  }
+
+  const handleRemoveDeduction = (index) => {
+    setDeductions(deductions.filter((_, i) => i !== index))
+  }
+
+  // Calculated totals
+  const gross = earnings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+  const totalDeductions = deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
   const netPay = gross - totalDeductions
 
   const handlePrint = () => window.print()
@@ -494,11 +553,28 @@ export default function SalarySlip({ onBack }) {
         }
       }
 
+      const tdsItem = deductions.find(d => d.label.toLowerCase().includes('tds'))
+      const tdsValue = tdsItem ? (Number(tdsItem.amount) || 0) : 0
+
+      const otherDeductionsValue = deductions.reduce((sum, item) => {
+        const labelLower = item.label.toLowerCase()
+        if (labelLower.includes('pf') || labelLower.includes('provident') || labelLower.includes('esi') || labelLower.includes('tds')) {
+          return sum
+        }
+        return sum + (Number(item.amount) || 0)
+      }, 0)
+
       const formData = new FormData()
       formData.append('email', empEmail)
       formData.append('file', pdfBlob, fileName)
+      formData.append('lopDays', '0')
+      formData.append('bonus', '0')
+      formData.append('otherDeductions', otherDeductionsValue.toString())
+      formData.append('tds', tdsValue.toString())
 
-      const queryParams = monthName && yearStr ? `?month=${monthName}&year=${yearStr}` : ''
+      const queryParams = monthName && yearStr 
+        ? `?month=${monthName}&year=${yearStr}&lopDays=0&bonus=0&otherDeductions=${otherDeductionsValue}&tds=${tdsValue}` 
+        : ''
       const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData, queryParams))
 
       if (res?.data) {
@@ -600,6 +676,106 @@ export default function SalarySlip({ onBack }) {
         <Printer size={16} />
         Print Payslip
       </PrimaryBtn>
+    </div>
+  </div>
+
+  {/* Earnings & Deductions Customizer */}
+  <div className="no-print mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="mb-4 border-b border-gray-100 pb-3">
+      <h3 className="text-base font-bold text-gray-800">Salary Table Customizer</h3>
+      <p className="text-xs text-gray-400">Dynamically add, edit, or remove earnings and deductions details.</p>
+    </div>
+
+    <div className="grid gap-6 md:grid-cols-2">
+      {/* Earnings Column */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-150 pb-2">
+          <span className="text-sm font-bold text-gray-700">Earnings</span>
+          <button
+            type="button"
+            onClick={handleAddEarning}
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-colors"
+          >
+            <Plus size={14} /> Add Row
+          </button>
+        </div>
+        
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          {earnings.map((item, index) => (
+            <div key={item.id || index} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={item.label}
+                onChange={(e) => handleUpdateEarning(index, 'label', e.target.value)}
+                placeholder="Earning Label"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+              />
+              <input
+                type="number"
+                value={item.amount}
+                onChange={(e) => handleUpdateEarning(index, 'amount', e.target.value)}
+                placeholder="Amount"
+                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-right"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveEarning(index)}
+                className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          {earnings.length === 0 && (
+            <p className="text-xs text-gray-400 italic">No earnings added yet.</p>
+          )}
+        </div>
+      </div>
+      
+      {/* Deductions Column */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-150 pb-2">
+          <span className="text-sm font-bold text-gray-700">Deductions</span>
+          <button
+            type="button"
+            onClick={handleAddDeduction}
+            className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
+          >
+            <Plus size={14} /> Add Row
+          </button>
+        </div>
+        
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          {deductions.map((item, index) => (
+            <div key={item.id || index} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={item.label}
+                onChange={(e) => handleUpdateDeduction(index, 'label', e.target.value)}
+                placeholder="Deduction Label"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+              />
+              <input
+                type="number"
+                value={item.amount}
+                onChange={(e) => handleUpdateDeduction(index, 'amount', e.target.value)}
+                placeholder="Amount"
+                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-right"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveDeduction(index)}
+                className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          {deductions.length === 0 && (
+            <p className="text-xs text-gray-400 italic">No deductions added yet.</p>
+          )}
+        </div>
+      </div>
     </div>
   </div>
 
@@ -846,55 +1022,41 @@ export default function SalarySlip({ onBack }) {
         </thead>
 
         <tbody>
-          <tr className="border-b border-gray-200">
-            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-              Basic Salary
-            </td>
-
-            <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
-              {basic.toLocaleString("en-IN")}
-            </td>
-
-            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-              Provident Fund (PF)
-            </td>
-
-            <td className="px-4 py-3 text-right text-red-600">
-              {pf.toLocaleString("en-IN")}
-            </td>
-          </tr>
-
-          <tr className="border-b border-gray-200">
-            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-              House Rent Allowance
-            </td>
-
-            <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
-              {hra.toLocaleString("en-IN")}
-            </td>
-
-            <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-              ESI Contribution
-            </td>
-
-            <td className="px-4 py-3 text-right text-red-600">
-              {esi.toLocaleString("en-IN")}
-            </td>
-          </tr>
-
+          {(() => {
+            const maxLength = Math.max(earnings.length, deductions.length);
+            const rows = [];
+            for (let i = 0; i < maxLength; i++) {
+              const earningItem = earnings[i];
+              const deductionItem = deductions[i];
+              rows.push(
+                <tr key={i} className="border-b border-gray-200">
+                  <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+                    {earningItem ? earningItem.label : ''}
+                  </td>
+                  <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
+                    {earningItem && earningItem.amount !== '' ? Number(earningItem.amount).toLocaleString("en-IN") : ''}
+                  </td>
+                  <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
+                    {deductionItem ? deductionItem.label : ''}
+                  </td>
+                  <td className="px-4 py-3 text-right text-red-600 font-medium">
+                    {deductionItem && deductionItem.amount !== '' ? Number(deductionItem.amount).toLocaleString("en-IN") : ''}
+                  </td>
+                </tr>
+              );
+            }
+            return rows;
+          })()}
           <tr className="border-b border-gray-200 bg-gray-50 font-bold">
             <td className="border-r border-gray-200 px-4 py-3">
               Total Gross Earnings
             </td>
-
             <td className="border-r border-gray-200 px-4 py-3 text-right text-emerald-700">
               {gross.toLocaleString("en-IN")}
             </td>
-
             <td className="border-r border-gray-200 px-4 py-3">
               Total Deductions
             </td>
-
             <td className="px-4 py-3 text-right text-red-600">
               {totalDeductions.toLocaleString("en-IN")}
             </td>
