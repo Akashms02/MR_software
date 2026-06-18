@@ -95,7 +95,7 @@ const MRAssignmentSection = () => {
       }
     } catch (err) {
       console.error('Error during assignment:', err);
-      showToast(err.message || 'Error updating assignment.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Error updating assignment.', 'error');
     } finally {
       setSubmittingId(null);
     }
@@ -113,7 +113,7 @@ const MRAssignmentSection = () => {
       }
     } catch (err) {
       console.error('Error during unassignment:', err);
-      showToast(err.message || 'Error updating assignment.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Error updating assignment.', 'error');
     } finally {
       setSubmittingId(null);
     }

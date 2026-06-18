@@ -189,7 +189,6 @@ export default function MRLayout({ children }) {
     { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/mr/finance' },
-    { id: 'me',           icon: User,            label: 'Me',            path: '/mr/me' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
   ]
 

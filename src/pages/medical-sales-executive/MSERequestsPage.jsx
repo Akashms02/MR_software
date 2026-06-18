@@ -116,15 +116,31 @@ const MSERequestsPage = () => {
   };
 
   return (
-    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] p-1">
+      {/* Page Header actions (portal label and duplicate headings removed) */}
+      <div className="flex justify-end mb-7 gap-3.5">
+        <button
+          onClick={() => navigate('/medical-sales-executive/assign-doctor')}
+          className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-extrabold text-[13.5px] cursor-pointer shadow-sm hover:bg-[#F9FAFB] transition-all duration-150 outline-none"
+        >
+          <Plus size={15} strokeWidth={2.5} /> Assign to MR
+        </button>
+        <button
+          onClick={() => navigate('/medical-sales-executive/onboard-doctor')}
+          className="flex items-center gap-1.5 px-[22px] py-2.5 rounded-xl border-none bg-[#0D9488] text-white font-extrabold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(13,148,136,0.25)] hover:bg-[#115E59] transition-all duration-150 outline-none"
+        >
+          <Plus size={15} strokeWidth={2.5} /> Onboard Doctor / Pharmacist
+        </button>
+      </div>
+
       {/* Notifications */}
       {success && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5 shrink-0">
+        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
           <Check size={16} /> {success}
         </div>
       )}
       {error && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5 shrink-0">
+        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
           <AlertCircle size={16} /> {error}
           <button onClick={() => fetchRequests(activeTab)} className="ml-auto bg-transparent border-none text-[#B91C1C] font-bold underline cursor-pointer flex items-center gap-1">
             <RefreshCw size={12} /> Retry
@@ -132,80 +148,73 @@ const MSERequestsPage = () => {
         </div>
       )}
 
-      {/* Filters Bar */}
-      <div className="flex items-center gap-4 mb-5 flex-wrap shrink-0">
-        <div className="relative flex-1 min-w-[220px] max-w-[340px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, type, MR..."
-            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#E5E7EB] text-[13px] outline-none bg-white focus:border-[#0D9488] transition-colors duration-150 font-sans"
-          />
-        </div>
-        <div className="flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-1 gap-0.5">
-          {STATUS_TABS.map(tab => (
+      {/* Content wrapper */}
+      <div className="bg-white rounded-[18px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-6 flex flex-col h-[calc(100vh-150px)] min-h-[400px]">
+        {/* Card Header with Filters inside */}
+        <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
+          <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Onboarding Requests</h3>
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative w-60">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8.5 pr-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12px] outline-none bg-[#F9FAFB] focus:bg-white focus:border-[#0D9488] transition-colors duration-150 font-sans"
+              />
+            </div>
+            {/* Status Tabs */}
+            <div className="flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-0.5 gap-0.5">
+              {STATUS_TABS.map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-150 border-none cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === tab
+                      ? 'bg-white shadow-xs text-[#111827]'
+                      : 'bg-transparent text-[#9CA3AF] hover:text-[#374151]'
+                  }`}
+                >
+                  {tab}
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                    activeTab === tab ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-transparent text-[#D1D5DB]'
+                  }`}>
+                    {counts[tab]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {/* Refresh Button */}
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3.5 py-1.5 rounded-lg text-[12.5px] font-bold transition-all duration-150 border-none cursor-pointer flex items-center gap-1.5 ${
-                activeTab === tab
-                  ? 'bg-white shadow-sm text-[#111827]'
-                  : 'bg-transparent text-[#9CA3AF] hover:text-[#374151]'
-              }`}
+              onClick={() => fetchRequests(activeTab)}
+              className="p-1.5 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#0D9488] cursor-pointer transition-all duration-150 flex items-center justify-center shrink-0"
+              title="Refresh"
             >
-              {tab}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
-                activeTab === tab ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-transparent text-[#D1D5DB]'
-              }`}>
-                {counts[tab]}
-              </span>
+              <RefreshCw size={13} />
             </button>
-          ))}
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={() => fetchRequests(activeTab)}
-            className="p-2 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#0D9488] cursor-pointer transition-all duration-150 flex items-center gap-1.5 text-[12.5px] font-semibold"
-            title="Refresh"
-          >
-            <RefreshCw size={14} /> Refresh
-          </button>
-          <button
-            onClick={() => navigate('/medical-sales-executive/assign-doctor')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-bold text-[12.5px] cursor-pointer shadow-sm hover:bg-[#F9FAFB] transition-all duration-150 outline-none"
-          >
-            <Plus size={14} strokeWidth={2.5} /> Assign to MR
-          </button>
-          <button
-            onClick={() => navigate('/medical-sales-executive/onboard-doctor')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#0D9488] text-white font-bold text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(13,148,136,0.25)] hover:bg-[#115E59] transition-all duration-150 outline-none"
-          >
-            <Plus size={14} strokeWidth={2.5} /> Onboard Doctor / Pharmacist
-          </button>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center flex-1 p-[60px] gap-3">
+          <div className="flex flex-col items-center justify-center flex-1 gap-3">
             <Loader2 size={24} className="animate-spin text-[#0D9488]" />
             <span className="text-[13.5px] text-[#9CA3AF]">Loading requests...</span>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-[60px] text-center text-[#9CA3AF]">
+          <div className="flex flex-col items-center justify-center flex-1 text-center text-[#9CA3AF]">
             <FileText size={40} className="mx-auto mb-3 stroke-[1.5]" />
             <p className="m-0 text-[14px] font-medium">
               {searchQuery || activeTab !== 'All' ? 'No requests match your filters.' : 'No onboarding requests found.'}
             </p>
           </div>
         ) : (
-          <div className="overflow-auto flex-1 pr-1">
+          <div className="flex-1 overflow-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-10">
+                <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
                   {['S.No', 'MR Name', 'Type', 'Name', 'Email / Phone', 'Address', 'Details', 'Status', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider whitespace-nowrap bg-white">{h}</th>
                   ))}
@@ -244,7 +253,6 @@ const MSERequestsPage = () => {
                         </div>
                       )}
                     </td>
-                    {/* Status Column */}
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1">
                         <div>{getStatusBadge(req.status)}</div>
@@ -253,7 +261,6 @@ const MSERequestsPage = () => {
                         )}
                       </div>
                     </td>
-                    {/* Actions Column */}
                     <td className="px-4 py-4">
                       {req.status === 'PENDING' ? (
                         <div className="flex gap-2">
@@ -296,7 +303,7 @@ const MSERequestsPage = () => {
                 {reviewStatus === 'APPROVED' ? 'Approve' : 'Reject'} Onboarding Request
               </h3>
               <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
-                Submit review for <span className="font-semibold text-[#111827]">{selectedRequest.name}</span>.
+                Submit review for <span className="font-semibold text-[#111827]">{selectedRequest.name}</span>. You can optionally add review remarks.
               </p>
             </div>
             <div className="flex flex-col gap-1.5">
