@@ -221,7 +221,7 @@ export default function SalarySlip({ onBack }) {
   const prevSalaryRef = useRef(0)
 
   useEffect(() => {
-    let sal = employee?.salary || employee?.salaryAmount || 25000
+    let sal = employee?.salary || employee?.salaryAmount || employee?.salaryDetails || 25000
     sal = Number(sal) || 0
     
     const empId = employee?.employeeId || employee?.id || selectedId
@@ -968,14 +968,27 @@ export default function SalarySlip({ onBack }) {
             <tr>
               <td className="py-1 text-gray-500">Bank Account:</td>
               <td className="py-1 font-semibold text-gray-700">
-                HDFC Bank · *******4820
+                {employee.bankName
+                  ? `${employee.bankName}${employee.accountNumber ? ' · *****' + String(employee.accountNumber).slice(-4) : ''}`
+                  : employee.accountNumber
+                  ? `*****${String(employee.accountNumber).slice(-4)}`
+                  : 'N/A'}
               </td>
             </tr>
+
+            {employee.ifscCode && (
+              <tr>
+                <td className="py-1 text-gray-500">IFSC Code:</td>
+                <td className="py-1 text-gray-700">
+                  {employee.ifscCode}
+                </td>
+              </tr>
+            )}
 
             <tr>
               <td className="py-1 text-gray-500">PF Number:</td>
               <td className="py-1 text-gray-700">
-                10098273
+                {employee.pfNumber || 'N/A'}
               </td>
             </tr>
 
