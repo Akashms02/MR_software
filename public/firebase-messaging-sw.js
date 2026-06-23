@@ -28,3 +28,32 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+// Handle notification click and redirect/focus client tab
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close(); // Close the notification banner
+
+  const data = event.notification.data || {};
+  let targetUrl = '/'; // Defaults to root, which auto-redirects authenticated sessions to their dashboard
+
+  if (data.click_action || data.url) {
+    targetUrl = data.click_action || data.url;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a tab is already open, focus it and redirect
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // If no tab is open, open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
