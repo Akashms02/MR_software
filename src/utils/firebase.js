@@ -37,6 +37,7 @@ export const requestForToken = async () => {
       });
       if (currentToken) {
         console.log('[FCM] Token obtained successfully:', currentToken);
+        localStorage.setItem('fcmToken', currentToken); // Cache in localStorage for easy access/testing
         // Send token to backend using our custom axios instance (which has auth interceptors)
         const response = await axios.post(`${API_ROUTE}/push-tokens/register`, { token: currentToken });
         console.log('[FCM] Token registered on backend successfully:', response.data);
