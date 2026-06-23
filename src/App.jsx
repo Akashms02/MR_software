@@ -135,13 +135,26 @@ export default function App() {
   // 3. Register Firebase Cloud Messaging (FCM) Push Notifications
   useEffect(() => {
     if (isAuthenticated) {
+      let unsubscribe;
       import('./utils/firebase')
-        .then(({ requestForToken }) => {
+        .then(({ requestForToken, onMessageListener }) => {
           requestForToken();
+          
+          unsubscribe = onMessageListener((payload) => {
+            console.log('%c[FCM] Notification Received in Foreground:', 'color: #00ff00; font-weight: bold;', payload);
+            if (payload.notification) {
+              const { title, body } = payload.notification;
+              alert(`[Medistrax Alert]\nTitle: ${title}\nMessage: ${body}`);
+            }
+          });
         })
         .catch((err) => {
           console.error('[App] Failed to load firebase utilities:', err);
         });
+
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
     }
   }, [isAuthenticated]);
 
