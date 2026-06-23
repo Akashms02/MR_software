@@ -52,10 +52,9 @@ export const requestForToken = async () => {
 };
 
 // Listen for foreground messages
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    onMessage(messaging, (payload) => {
-      console.log('[FCM] Message received in foreground:', payload);
-      resolve(payload);
-    });
+export const onMessageListener = (callback) => {
+  return onMessage(messaging, (payload) => {
+    console.log('[FCM] Message received in foreground:', payload);
+    callback(payload);
   });
+};
