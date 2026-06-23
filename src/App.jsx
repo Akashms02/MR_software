@@ -120,8 +120,8 @@ export default function App() {
         dispatch(logout());
         return;
       }
-      // Schedule the next check in 5 minutes (300,000 ms)
-      refreshTimer = setTimeout(runRefresh, 300000);
+      // Schedule the next check in 29 minutes (1,740,000 ms)
+      refreshTimer = setTimeout(runRefresh, 1740000);
     };
 
     // Run 2 seconds after mount/login so they can see it instantly on load
