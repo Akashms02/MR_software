@@ -132,7 +132,20 @@ export default function App() {
     };
   }, [dispatch, isAuthenticated]);
 
-  // 3. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
+  // 3. Register Firebase Cloud Messaging (FCM) Push Notifications
+  useEffect(() => {
+    if (isAuthenticated) {
+      import('./utils/firebase')
+        .then(({ requestForToken }) => {
+          requestForToken();
+        })
+        .catch((err) => {
+          console.error('[App] Failed to load firebase utilities:', err);
+        });
+    }
+  }, [isAuthenticated]);
+
+  // 4. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
   /*
   useEffect(() => {
     if (!isAuthenticated) return;

@@ -606,6 +606,19 @@ export const firstLoginAction = (firstLoginData) => async (dispatch) => {
 export const logout = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   try {
+    // Unregister FCM push token if available
+    try {
+      const { messaging } = await import('../../utils/firebase');
+      const { getToken } = await import('firebase/messaging');
+      const currentToken = await getToken(messaging);
+      if (currentToken) {
+        await axios.post(`${API_ROUTE}/push-tokens/unregister`, { token: currentToken });
+        console.log('[FCM] Token unregistered on backend successfully.');
+      }
+    } catch (fcmErr) {
+      console.warn('[FCM] Clean up failed during logout:', fcmErr.message);
+    }
+
     await axios.post(`${API_ROUTE}/auth/logout`, {});
   } catch (error) {
     console.error("Logout API failed:", error);
