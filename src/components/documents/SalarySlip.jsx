@@ -7,97 +7,28 @@ import { fetchProfile } from '../../redux/actions/authActions'
 import { CompanyPayslip } from '../../redux/actions/companyAction'
 import { getMyTeam } from '../../redux/actions/teamActions'
 import { getFullAssetUrl, inlineDocumentImages, useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
+import { loadLetterheadSettings, LetterheadHeader, LetterheadFooter, applyLetterheadContactPdfFixes, getLetterheadTheme, resolveModernColors } from './shared/letterheadContact'
 
-const oklchToRgb = (l, c, h, a = 1) => {
-  const hRad = (h * Math.PI) / 180;
-  const L = l;
-  const a_ = c * Math.cos(hRad);
-  const b_ = c * Math.sin(hRad);
-  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-  const l3 = l_ * l_ * l_;
-  const m3 = m_ * m_ * m_;
-  const s3 = s_ * s_ * s_;
-  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-};
-
-const oklabToRgb = (l, a_, b_, a = 1) => {
-  const L = l;
-  const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-  const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-  const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-  const l3 = l_ * l_ * l_;
-  const m3 = m_ * m_ * m_;
-  const s3 = s_ * s_ * s_;
-  const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-  const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-  const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-  const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-  const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-  const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-  const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-  return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-};
-
-const resolveModernColors = (colorStr) => {
-  if (!colorStr || typeof colorStr !== 'string') return colorStr;
-  let resolved = colorStr;
-  
-  if (resolved.includes('oklch')) {
-    try {
-      resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-        const parts = p1.trim().split(/[\s/,]+/);
-        if (parts.length >= 3) {
-          let l = parseFloat(parts[0]);
-          if (parts[0].includes('%')) l /= 100;
-          const c = parseFloat(parts[1]);
-          const h = parseFloat(parts[2]);
-          let a = 1;
-          if (parts[3]) {
-            a = parseFloat(parts[3]);
-            if (parts[3].includes('%')) a /= 100;
-          }
-          if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
-            return oklchToRgb(l, c, h, a);
-          }
-        }
-        return match;
-      });
-    } catch (e) {}
-  }
-
-  if (resolved.includes('oklab')) {
-    try {
-      resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-        const parts = p1.trim().split(/[\s/,]+/);
-        if (parts.length >= 3) {
-          let l = parseFloat(parts[0]);
-          if (parts[0].includes('%')) l /= 100;
-          const a_coord = parseFloat(parts[1]);
-          const b_coord = parseFloat(parts[2]);
-          let a = 1;
-          if (parts[3]) {
-            a = parseFloat(parts[3]);
-            if (parts[3].includes('%')) a /= 100;
-          }
-          if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
-            return oklabToRgb(l, a_coord, b_coord, a);
-          }
-        }
-        return match;
-      });
-    } catch (e) {}
-  }
-
-  return resolved;
+const waitForImages = async (rootEl, { timeoutMs = 4000 } = {}) => {
+  if (!rootEl) return;
+  const imgs = Array.from(rootEl.querySelectorAll('img'));
+  if (imgs.length === 0) return;
+  const waitOne = (img) =>
+    new Promise((resolve) => {
+      if (img.complete && img.naturalWidth > 0) return resolve();
+      let settled = false;
+      const cleanup = () => {
+        if (settled) return; settled = true;
+        img.removeEventListener('load', onDone);
+        img.removeEventListener('error', onDone);
+        resolve();
+      };
+      const onDone = () => cleanup();
+      img.addEventListener('load', onDone, { once: true });
+      img.addEventListener('error', onDone, { once: true });
+      window.setTimeout(cleanup, timeoutMs);
+    });
+  await Promise.all(imgs.map(waitOne));
 };
 
 // Helper to convert number to Indian Rupees words
@@ -166,7 +97,44 @@ const getDaysInMonth = (monthStr) => {
   return 30;
 };
 
-export default function SalarySlip({ onBack }) {
+const paginateSalarySlip = (earnings, deductions) => {
+  const pages = [];
+  const maxLength = Math.max(earnings.length, deductions.length);
+  
+  // Safe limit of rows per page
+  // Page 1 can hold up to 12 rows safely with employee info and summary cards.
+  // Subsequent pages can hold up to 16 rows safely.
+  const page1Limit = 12;
+  const otherPageLimit = 16;
+  
+  let currentIndex = 0;
+  let isFirstPage = true;
+  
+  while (currentIndex < maxLength) {
+    const limit = isFirstPage ? page1Limit : otherPageLimit;
+    const chunkRows = [];
+    
+    for (let i = currentIndex; i < Math.min(currentIndex + limit, maxLength); i++) {
+      chunkRows.push({
+        earning: earnings[i] || null,
+        deduction: deductions[i] || null,
+      });
+    }
+    
+    pages.push({
+      rows: chunkRows,
+      isFirstPage,
+      isLastPage: currentIndex + limit >= maxLength,
+    });
+    
+    currentIndex += limit;
+    isFirstPage = false;
+  }
+  
+  return pages.length > 0 ? pages : [{ rows: [], isFirstPage: true, isLastPage: true }];
+};
+
+export default function SalarySlip({ letterheadSettings: propLetterheadSettings, onBack }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const { logoSrc } = useCompanyBrandAssets(user)
@@ -188,8 +156,8 @@ export default function SalarySlip({ onBack }) {
     }
   }, [employees])
 
-  // Company info from API (read-only)
-  const [companyName, setCompanyName] = useState('')
+  // Company details
+  const [companyName, setCompanyName] = useState('NOEL PHARMA (INDIA) PRIVATE LIMITED')
   const [companyAddress, setCompanyAddress] = useState('')
 
   // Modal / generation state
@@ -201,17 +169,19 @@ export default function SalarySlip({ onBack }) {
   // Ref to the printable document
   const printableRef = useRef(null)
 
-  // Sync company details from Redux profile
+  const [letterheadSettings, setLetterheadSettings] = useState(() => propLetterheadSettings || loadLetterheadSettings(user))
+
+  // Sync company details from custom settings, props or Redux when profile/props change
   useEffect(() => {
-    if (user) {
-      if (user.fullName) setCompanyName(user.fullName.toUpperCase())
-      if (user.address) setCompanyAddress(user.address)
+    const settings = propLetterheadSettings || loadLetterheadSettings(user)
+    setLetterheadSettings(settings)
+    if (settings.companyName) {
+      setCompanyName(settings.companyName.toUpperCase())
     }
-  }, [user])
+    if (settings.address) setCompanyAddress(settings.address)
+  }, [user, propLetterheadSettings])
 
   const employee = employees.find(e => (e.employeeId || e.id) === selectedId) || employees[0]
-  if (employees.length > 0 && !employee) return <div>No employee records available.</div>
-  if (!employee) return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading team data…</div>
 
   // Salary customizer state
   const [earnings, setEarnings] = useState([])
@@ -221,6 +191,8 @@ export default function SalarySlip({ onBack }) {
   const prevSalaryRef = useRef(0)
 
   useEffect(() => {
+    if (!employee) return
+
     let sal = employee?.salary || employee?.salaryAmount || employee?.salaryDetails || 25000
     sal = Number(sal) || 0
     
@@ -251,6 +223,9 @@ export default function SalarySlip({ onBack }) {
       ])
     }
   }, [employee, selectedId])
+
+  if (employees.length > 0 && !employee) return <div>No employee records available.</div>
+  if (!employee) return <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading team data…</div>
 
   const handleAddEarning = () => {
     setEarnings([...earnings, { id: Date.now().toString(), label: '', amount: 0 }])
@@ -290,7 +265,7 @@ export default function SalarySlip({ onBack }) {
   const handleGenerate = async () => {
     const empEmail = employee.email
     if (!empEmail || !empEmail.includes('@')) {
-      setModalError('No valid email found for this employee. Please update the employee\'s email in the system.')
+      setModalError("No valid email found for this employee. Please update the employee's email in the system.")
       setShowModal(true)
       return
     }
@@ -301,7 +276,6 @@ export default function SalarySlip({ onBack }) {
     let originalWindowGetComputedStyle = null;
 
     try {
-      // Temporarily override the main window's getComputedStyle to resolve OKLCH/OKLAB colors dynamically
       originalWindowGetComputedStyle = window.getComputedStyle;
       window.getComputedStyle = function (el, pseudoEl) {
         const style = originalWindowGetComputedStyle.call(window, el, pseudoEl);
@@ -345,9 +319,9 @@ export default function SalarySlip({ onBack }) {
 
       await document.fonts.ready
       await inlineDocumentImages(sheetElement)
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await waitForImages(sheetElement)
+      await new Promise((resolve) => setTimeout(resolve, 120))
 
-      // Configure html2pdf options
       const opt = {
         margin: [0, 0, 0, 0],
         filename: fileName,
@@ -358,100 +332,13 @@ export default function SalarySlip({ onBack }) {
           logging: false,
           letterRendering: true,
           onclone: (clonedDoc) => {
-            const elements = clonedDoc.getElementsByTagName('*');
-            const oklchToRgb = (l, c, h, a = 1) => {
-              const hRad = (h * Math.PI) / 180;
-              const L = l;
-              const a_ = c * Math.cos(hRad);
-              const b_ = c * Math.sin(hRad);
-              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-              const l3 = l_ * l_ * l_;
-              const m3 = m_ * m_ * m_;
-              const s3 = s_ * s_ * s_;
-              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-            };
-
-            const oklabToRgb = (l, a_, b_, a = 1) => {
-              const L = l;
-              const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
-              const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
-              const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
-              const l3 = l_ * l_ * l_;
-              const m3 = m_ * m_ * m_;
-              const s3 = s_ * s_ * s_;
-              const r_raw = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699294 * s3;
-              const g_raw = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-              const b_raw = -0.0041960863 * l3 - 0.7034186145 * m3 + 1.7076147010 * s3;
-              const f = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-              const r = Math.max(0, Math.min(255, Math.round(f(r_raw) * 255)));
-              const g = Math.max(0, Math.min(255, Math.round(f(g_raw) * 255)));
-              const b = Math.max(0, Math.min(255, Math.round(f(b_raw) * 255)));
-              return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
-            };
-
-            const resolveModernColors = (colorStr) => {
-              if (!colorStr || typeof colorStr !== 'string') return colorStr;
-              let resolved = colorStr;
-              
-              if (resolved.includes('oklch')) {
-                try {
-                  resolved = resolved.replace(/oklch\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/,]+/);
-                    if (parts.length >= 3) {
-                      let l = parseFloat(parts[0]);
-                      if (parts[0].includes('%')) l /= 100;
-                      const c = parseFloat(parts[1]);
-                      const h = parseFloat(parts[2]);
-                      let a = 1;
-                      if (parts[3]) {
-                        a = parseFloat(parts[3]);
-                        if (parts[3].includes('%')) a /= 100;
-                      }
-                      if (!isNaN(l) && !isNaN(c) && !isNaN(h)) {
-                        return oklchToRgb(l, c, h, a);
-                      }
-                    }
-                    return match;
-                  });
-                } catch (e) {}
+            applyLetterheadContactPdfFixes(clonedDoc);
+            clonedDoc.querySelectorAll('style').forEach(styleTag => {
+              if (styleTag.textContent) {
+                styleTag.textContent = resolveModernColors(styleTag.textContent);
               }
+            });
 
-              if (resolved.includes('oklab')) {
-                try {
-                  resolved = resolved.replace(/oklab\(([^)]+)\)/g, (match, p1) => {
-                    const parts = p1.trim().split(/[\s/,]+/);
-                    if (parts.length >= 3) {
-                      let l = parseFloat(parts[0]);
-                      if (parts[0].includes('%')) l /= 100;
-                      const a_coord = parseFloat(parts[1]);
-                      const b_coord = parseFloat(parts[2]);
-                      let a = 1;
-                      if (parts[3]) {
-                        a = parseFloat(parts[3]);
-                        if (parts[3].includes('%')) a /= 100;
-                      }
-                      if (!isNaN(l) && !isNaN(a_coord) && !isNaN(b_coord)) {
-                        return oklabToRgb(l, a_coord, b_coord, a);
-                      }
-                    }
-                    return match;
-                  });
-                } catch (e) {}
-              }
-
-              return resolved;
-            };
-
-            // Override getComputedStyle inside the iframe to dynamically convert all OKLCH/OKLAB colors on the fly!
             if (clonedDoc.defaultView) {
               const originalGetComputedStyle = clonedDoc.defaultView.getComputedStyle;
               clonedDoc.defaultView.getComputedStyle = function (el, pseudoEl) {
@@ -462,80 +349,61 @@ export default function SalarySlip({ onBack }) {
                       return function(key) {
                         const val = target.getPropertyValue(key);
                         if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                          try {
-                            return resolveModernColors(val);
-                          } catch (e) {
-                            return val;
-                          }
+                          try { return resolveModernColors(val); } catch (e) { return val; }
                         }
                         return val;
                       };
                     }
                     const val = target[prop];
                     if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                      try {
-                        return resolveModernColors(val);
-                      } catch (e) {
-                        return val;
-                      }
+                      try { return resolveModernColors(val); } catch (e) { return val; }
                     }
-                    if (typeof val === 'function') {
-                      return val.bind(target);
-                    }
+                    if (typeof val === 'function') return val.bind(target);
                     return val;
                   }
                 });
               };
             }
 
-            // Preprocess stylesheets inside the iframe to replace oklch references with fallback rgb
-            clonedDoc.querySelectorAll('style').forEach(styleTag => {
-              if (styleTag.textContent) {
-                styleTag.textContent = resolveModernColors(styleTag.textContent);
-              }
-            });
+            const clonedContainer = clonedDoc.querySelector('.printable-sheet-container');
+            if (clonedContainer) {
+              clonedContainer.classList.add('generating-pdf');
+              Object.assign(clonedContainer.style, { display: 'block', gap: '0', margin: '0', padding: '0', width: '210mm', maxWidth: '210mm' });
+            }
+            clonedDoc.querySelectorAll('.printable-sheet').forEach((sheet) => {
+              Object.assign(sheet.style, {
+                width: '210mm',
+                height: '296mm',
+                minHeight: '296mm',
+                maxHeight: '296mm',
+                boxSizing: 'border-box',
+                borderRadius: '0px',
+                border: 'none',
+                boxShadow: 'none',
+                overflow: 'hidden',
+                background: '#ffffff',
+                margin: '0',
+              });
 
-            const properties = [
-              'color', 'backgroundColor', 'borderColor', 
-              'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 
-              'fill', 'stroke', 'backgroundImage', 'boxShadow'
-            ];
-
-            for (let i = 0; i < elements.length; i++) {
-              const el = elements[i];
-              const computed = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
-              
-              properties.forEach(prop => {
-                const val = computed[prop];
-                if (val && typeof val === 'string' && (val.includes('oklch') || val.includes('oklab'))) {
-                  try {
-                    el.style[prop] = resolveModernColors(val);
-                  } catch (err) {}
+              const svgOrImgs = sheet.querySelectorAll('svg, img');
+              svgOrImgs.forEach((el) => {
+                const widthAttr = el.getAttribute('width');
+                const srcAttr = el.getAttribute('src') || '';
+                if (widthAttr === '100%' || el.style.width === '100%' || srcAttr.startsWith('data:image/svg+xml')) {
+                  if (el.style.width === '100%' || widthAttr === '100%') {
+                    el.setAttribute('width', '794');
+                    el.style.width = '794px';
+                  }
                 }
               });
-            }
-
-            // Force single page A4 layout constraints
-            const sheet = clonedDoc.querySelector('.printable-sheet');
-            if (sheet) {
-              sheet.style.width = '210mm';
-              sheet.style.height = '296mm';
-              sheet.style.minHeight = '296mm';
-              sheet.style.maxHeight = '296mm';
-              sheet.style.paddingTop = '24px';
-              sheet.style.paddingBottom = '24px';
-              sheet.style.boxSizing = 'border-box';
-              sheet.style.borderRadius = '0px';
-              sheet.style.border = 'none';
-              sheet.style.boxShadow = 'none';
-              sheet.style.overflow = 'hidden';
-            }
+            });
           }
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: 'avoid-all' }
       };
 
-      // Generate PDF as a blob
+      sheetElement.classList.add('generating-pdf');
       const pdfBlob = await html2pdf().set(opt).from(sheetElement).output('blob');
 
       let monthName = ''
@@ -553,28 +421,11 @@ export default function SalarySlip({ onBack }) {
         }
       }
 
-      const tdsItem = deductions.find(d => d.label.toLowerCase().includes('tds'))
-      const tdsValue = tdsItem ? (Number(tdsItem.amount) || 0) : 0
-
-      const otherDeductionsValue = deductions.reduce((sum, item) => {
-        const labelLower = item.label.toLowerCase()
-        if (labelLower.includes('pf') || labelLower.includes('provident') || labelLower.includes('esi') || labelLower.includes('tds')) {
-          return sum
-        }
-        return sum + (Number(item.amount) || 0)
-      }, 0)
-
       const formData = new FormData()
       formData.append('email', empEmail)
       formData.append('file', pdfBlob, fileName)
-      formData.append('lopDays', '0')
-      formData.append('bonus', '0')
-      formData.append('otherDeductions', otherDeductionsValue.toString())
-      formData.append('tds', tdsValue.toString())
 
-      const queryParams = monthName && yearStr 
-        ? `?month=${monthName}&year=${yearStr}&lopDays=0&bonus=0&otherDeductions=${otherDeductionsValue}&tds=${tdsValue}` 
-        : ''
+      const queryParams = monthName && yearStr ? `?month=${monthName}&year=${yearStr}` : ''
       const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData, queryParams))
 
       if (res?.data) {
@@ -593,6 +444,9 @@ export default function SalarySlip({ onBack }) {
       setModalError(err.response?.data?.message || err.message || 'An unexpected error occurred.')
       setShowModal(true)
     } finally {
+      if (printableRef.current) {
+        printableRef.current.classList.remove('generating-pdf')
+      }
       if (originalWindowGetComputedStyle) {
         window.getComputedStyle = originalWindowGetComputedStyle;
       }
@@ -600,519 +454,484 @@ export default function SalarySlip({ onBack }) {
     }
   }
 
+  const displaySalaryPages = paginateSalarySlip(earnings, deductions)
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 document-page-container">
-  {/* Control Panel */}
-  <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-    
-    <div className="flex flex-wrap items-center gap-4">
-      
-      <OutlineBtn
-        onClick={onBack}
-        className="flex items-center gap-2 px-4 py-2 text-sm"
-      >
-        <ArrowLeft size={16} />
-        Back to Hub
-      </OutlineBtn>
-
-      <div className="hidden h-6 w-px bg-gray-200 md:block"></div>
-
-      {/* Employee Select */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-semibold text-gray-500">
-          Employee:
-        </label>
-
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-        >
-          {employees.map((emp) => (
-            <option
-              key={emp.employeeId || emp.id}
-              value={emp.employeeId || emp.id}
+    <div className="animate-in fade-in duration-500">
+      {/* Control Panel */}
+      <div className="no-print mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm">
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Employee Select */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-slate-500">
+              Employee:
+            </label>
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
-              {emp.fullName || emp.name} ({emp.employeeId || emp.id})
-            </option>
-          ))}
-        </select>
-      </div>
+              {employees.map((emp) => (
+                <option
+                  key={emp.employeeId || emp.id}
+                  value={emp.employeeId || emp.id}
+                >
+                  {emp.fullName || emp.name} ({emp.employeeId || emp.id})
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Month Select */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-semibold text-gray-500">
-          Payslip Cycle:
-        </label>
-
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer"
-        />
-      </div>
-    </div>
-
-    {/* Actions */}
-    <div className="flex flex-wrap gap-3">
-      <OutlineBtn
-        onClick={handleGenerate}
-        disabled={isGenerating}
-        className="flex items-center gap-2 px-5 py-2 text-sm"
-      >
-        <RefreshCw
-          size={16}
-          className={isGenerating ? "animate-spin" : ""}
-        />
-
-        {isGenerating ? "Generating..." : "Generate & Send Payslip"}
-      </OutlineBtn>
-
-      <PrimaryBtn
-        onClick={handlePrint}
-        className="flex items-center gap-2 px-5 py-2 text-sm"
-      >
-        <Printer size={16} />
-        Print Payslip
-      </PrimaryBtn>
-    </div>
-  </div>
-
-  {/* Earnings & Deductions Customizer */}
-  <div className="no-print mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-    <div className="mb-4 border-b border-gray-100 pb-3">
-      <h3 className="text-base font-bold text-gray-800">Salary Table Customizer</h3>
-      <p className="text-xs text-gray-400">Dynamically add, edit, or remove earnings and deductions details.</p>
-    </div>
-
-    <div className="grid gap-6 md:grid-cols-2">
-      {/* Earnings Column */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-150 pb-2">
-          <span className="text-sm font-bold text-gray-700">Earnings</span>
-          <button
-            type="button"
-            onClick={handleAddEarning}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-colors"
-          >
-            <Plus size={14} /> Add Row
-          </button>
+          {/* Month Select */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-slate-500">
+              Payslip Cycle:
+            </label>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            />
+          </div>
         </div>
-        
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-          {earnings.map((item, index) => (
-            <div key={item.id || index} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={item.label}
-                onChange={(e) => handleUpdateEarning(index, 'label', e.target.value)}
-                placeholder="Earning Label"
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-              />
-              <input
-                type="number"
-                value={item.amount}
-                onChange={(e) => handleUpdateEarning(index, 'amount', e.target.value)}
-                placeholder="Amount"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-right"
-              />
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3">
+          <OutlineBtn
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="flex items-center gap-2 px-5 py-2 text-sm"
+          >
+            <RefreshCw
+              size={16}
+              className={isGenerating ? "animate-spin text-blue-600" : "text-blue-600"}
+            />
+            <span className="text-blue-600 font-bold">{isGenerating ? "Generating..." : "Generate & Send Payslip"}</span>
+          </OutlineBtn>
+
+          <PrimaryBtn
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-5 py-2 text-sm"
+          >
+            <Printer size={16} />
+            Print Payslip
+          </PrimaryBtn>
+        </div>
+      </div>
+
+      {/* Earnings & Deductions Customizer */}
+      <div className="no-print mb-8 rounded-xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-in fade-in duration-300">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-base font-extrabold text-slate-800">Salary Table Customizer</h3>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Earnings Column */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span className="text-sm font-bold text-slate-700">Earnings</span>
               <button
                 type="button"
-                onClick={() => handleRemoveEarning(index)}
-                className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                onClick={handleAddEarning}
+                className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition-colors"
               >
-                <Trash2 size={14} />
+                <Plus size={14} /> Add Row
               </button>
             </div>
-          ))}
-          {earnings.length === 0 && (
-            <p className="text-xs text-gray-400 italic">No earnings added yet.</p>
-          )}
-        </div>
-      </div>
-      
-      {/* Deductions Column */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-150 pb-2">
-          <span className="text-sm font-bold text-gray-700">Deductions</span>
-          <button
-            type="button"
-            onClick={handleAddDeduction}
-            className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
-          >
-            <Plus size={14} /> Add Row
-          </button>
-        </div>
-        
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-          {deductions.map((item, index) => (
-            <div key={item.id || index} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={item.label}
-                onChange={(e) => handleUpdateDeduction(index, 'label', e.target.value)}
-                placeholder="Deduction Label"
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-              />
-              <input
-                type="number"
-                value={item.amount}
-                onChange={(e) => handleUpdateDeduction(index, 'amount', e.target.value)}
-                placeholder="Amount"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-right"
-              />
+            
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              {earnings.map((item, index) => (
+                <div key={item.id || index} className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
+                  <input
+                    type="text"
+                    value={item.label}
+                    onChange={(e) => handleUpdateEarning(index, 'label', e.target.value)}
+                    placeholder="Earning Label"
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none"
+                  />
+                  <input
+                    type="number"
+                    value={item.amount}
+                    onChange={(e) => handleUpdateEarning(index, 'amount', e.target.value)}
+                    placeholder="Amount"
+                    className="w-28 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-right"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEarning(index)}
+                    className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              {earnings.length === 0 && (
+                <p className="text-xs text-slate-400 italic">No earnings added yet.</p>
+              )}
+            </div>
+          </div>
+          
+          {/* Deductions Column */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span className="text-sm font-bold text-slate-700">Deductions</span>
               <button
                 type="button"
-                onClick={() => handleRemoveDeduction(index)}
-                className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                onClick={handleAddDeduction}
+                className="flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors"
               >
-                <Trash2 size={14} />
+                <Plus size={14} /> Add Row
               </button>
             </div>
-          ))}
-          {deductions.length === 0 && (
-            <p className="text-xs text-gray-400 italic">No deductions added yet.</p>
-          )}
+            
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              {deductions.map((item, index) => (
+                <div key={item.id || index} className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
+                  <input
+                    type="text"
+                    value={item.label}
+                    onChange={(e) => handleUpdateDeduction(index, 'label', e.target.value)}
+                    placeholder="Deduction Label"
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none"
+                  />
+                  <input
+                    type="number"
+                    value={item.amount}
+                    onChange={(e) => handleUpdateDeduction(index, 'amount', e.target.value)}
+                    placeholder="Amount"
+                    className="w-28 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-right"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDeduction(index)}
+                    className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              {deductions.length === 0 && (
+                <p className="text-xs text-slate-400 italic">No deductions added yet.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  {/* Success / Error Modal */}
-  {showModal && (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl">
-        <button
-          onClick={() => setShowModal(false)}
-          className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
-        >
-          <X size={18} />
-        </button>
-
-        {modalError ? (
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-              <X size={24} className="text-red-500" />
-            </div>
-            <h3 className="text-base font-extrabold text-gray-900">Generation Failed</h3>
-            <p className="text-xs text-gray-500 leading-relaxed max-w-sm">{modalError}</p>
+      {/* Success / Error Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl">
             <button
               onClick={() => setShowModal(false)}
-              className="mt-2 w-full rounded-xl bg-gray-950 px-5 py-3 text-xs font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
+              className="absolute top-4 right-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition"
             >
-              Close
+              <X size={18} />
             </button>
+
+            {modalError ? (
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+                  <X size={24} className="text-rose-500" />
+                </div>
+                <h3 className="text-base font-extrabold text-slate-800">Generation Failed</h3>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-sm">{modalError}</p>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="mt-2 w-full rounded-xl bg-slate-900 px-5 py-3 text-xs font-extrabold text-white transition hover:bg-slate-800 shadow-sm cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col items-center gap-2 text-center mb-6">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                    <CheckCircle2 size={28} className="text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-800">Payslip Dispatched!</h3>
+                  <p className="text-xs text-slate-400">The payslip has been generated and emailed successfully to the employee.</p>
+                </div>
+
+                <div className="flex flex-col gap-3 mb-6">
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                      <Mail size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Email Sent To</p>
+                      <p className="text-sm font-bold text-slate-700">{modalData.emailSentTo}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Delivery Status</p>
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-2xs font-extrabold uppercase text-emerald-600 tracking-wider inline-block mt-0.5">
+                        {modalData.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {modalData.previewUrl && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                        <FileText size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Preview Document</p>
+                        <a
+                          href={getFullAssetUrl(modalData.previewUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition overflow-hidden text-overflow-ellipsis whitespace-nowrap"
+                        >
+                          Download / View PDF <ExternalLink size={12} className="shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="w-full rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-slate-800 shadow-sm cursor-pointer"
+                >
+                  Done
+                </button>
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="flex flex-col items-center gap-2 text-center mb-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                <CheckCircle2 size={28} className="text-emerald-600" />
-              </div>
-              <h3 className="text-lg font-black text-gray-900">Payslip Dispatched!</h3>
-              <p className="text-xs text-gray-500">The payslip has been emailed successfully to the employee.</p>
-            </div>
+        </div>
+      )}
 
-            <div className="flex flex-col gap-3 mb-6">
-              <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-                  <Mail size={16} />
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Email Sent To</p>
-                  <p className="text-sm font-bold text-gray-800">{modalData.emailSentTo}</p>
-                </div>
+      {/* Payslip Document Container */}
+      <div ref={printableRef} className="printable-sheet-container mx-auto flex flex-col gap-8 max-w-[800px] multipage-print">
+        {displaySalaryPages.map((page, pageIndex) => (
+          <div
+            key={pageIndex}
+            className="printable-sheet relative flex w-full min-h-[296mm] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl text-gray-800 box-border"
+            style={{ padding: 0 }}
+          >
+            {/* GP watermark — bottom right area, just above the footer */}
+            <img
+              src={logoSrc || "/GP.png"}
+              alt=""
+              crossOrigin="anonymous"
+              className="offer-theme-decor"
+              style={{
+                position: 'absolute',
+                right: '20px',
+                bottom: '125px',
+                width: '270px',
+                height: '209px',
+                opacity: 0.12,
+                pointerEvents: 'none',
+                userSelect: 'none',
+                zIndex: 1,
+                filter: 'grayscale(20%)',
+              }}
+            />
+
+            {/* FIXED HEADER */}
+            <LetterheadHeader logoSrc={logoSrc} settings={letterheadSettings} />
+
+            {/* BODY */}
+            <div className="relative z-10 flex flex-1 flex-col gap-2" style={{ padding: '32px 44px 130px 44px' }}>
+              {/* Title / Cycle Block */}
+              <div className="flex flex-row justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                <h3 className="text-[13.5px] font-extrabold uppercase tracking-wider text-gray-900">
+                  PAYSLIP CERTIFICATE
+                </h3>
+                <p className="text-[12px] font-bold text-pink-600">
+                  Cycle: {formatMonthValue(month)}
+                </p>
               </div>
 
-              <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <CheckCircle2 size={16} />
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Delivery Status</p>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-2xs font-extrabold uppercase text-emerald-600 tracking-wider inline-block mt-0.5">
-                    {modalData.status}
-                  </span>
-                </div>
-              </div>
-
-              {modalData.previewUrl && (
-                <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                    <FileText size={16} />
+              {/* Employee Info */}
+              {page.isFirstPage && (
+                <div className="mb-4 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs md:grid-cols-2">
+                  <div>
+                    <table className="w-full border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Employee Name:</td>
+                          <td className="py-1 font-bold text-slate-900">
+                            {employee.fullName || employee.name || '—'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Employee ID:</td>
+                          <td className="py-1 font-semibold text-slate-700">
+                            {employee.employeeId || employee.id || '—'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Designation:</td>
+                          <td className="py-1 text-slate-700">
+                            {employee.designation || '—'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Department:</td>
+                          <td className="py-1 text-slate-700">
+                            {employee.department || employee.dept || '—'}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Preview URL</p>
-                    <a
-                      href={getFullAssetUrl(modalData.previewUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition overflow-hidden text-overflow-ellipsis whitespace-nowrap"
-                    >
-                      Open Document <ExternalLink size={12} className="shrink-0" />
-                    </a>
+                  <div className="border-t border-slate-200 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+                    <table className="w-full border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Bank Account:</td>
+                          <td className="py-1 font-semibold text-slate-700">
+                            {employee.bankName
+                              ? `${employee.bankName}${employee.accountNumber ? ' · *****' + String(employee.accountNumber).slice(-4) : ''}`
+                              : employee.accountNumber
+                              ? `*****${String(employee.accountNumber).slice(-4)}`
+                              : 'N/A'}
+                          </td>
+                        </tr>
+                        {employee.ifscCode && (
+                          <tr>
+                            <td className="py-1 text-slate-500 font-medium">IFSC Code:</td>
+                            <td className="py-1 text-slate-700">{employee.ifscCode}</td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">PF Number:</td>
+                          <td className="py-1 text-slate-700">{employee.pfNumber || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Days in Month:</td>
+                          <td className="py-1 text-slate-700">
+                            {getDaysInMonth(month)} Days
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-slate-500 font-medium">Worked Days:</td>
+                          <td className="py-1 font-semibold text-emerald-600">
+                            {getDaysInMonth(month)} Days (0 LOP)
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              )}
+
+              {/* Salary Table */}
+              <div className="overflow-x-auto mb-4 p-[1px]">
+                <table className="w-full border border-slate-200 text-xs">
+                  <thead className="bg-slate-50">
+                    <tr className="border-b border-slate-200">
+                      <th className="border-r border-slate-200 px-3 py-2 text-left text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                        Earnings
+                      </th>
+                      <th className="border-r border-slate-200 px-3 py-2 text-right text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                        Amount (₹)
+                      </th>
+                      <th className="border-r border-slate-200 px-3 py-2 text-left text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                        Deductions
+                      </th>
+                      <th className="px-3 py-2 text-right text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                        Amount (₹)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {page.rows.map((row, rIndex) => {
+                      const earningItem = row.earning;
+                      const deductionItem = row.deduction;
+                      return (
+                        <tr key={rIndex} className="border-b border-slate-200">
+                          <td className="border-r border-slate-200 px-3 py-2 text-slate-600">
+                            {earningItem ? earningItem.label : ''}
+                          </td>
+                          <td className="border-r border-slate-200 px-3 py-2 text-right font-medium">
+                            {earningItem && earningItem.amount !== '' ? Number(earningItem.amount).toLocaleString("en-IN") : ''}
+                          </td>
+                          <td className="border-r border-slate-200 px-3 py-2 text-slate-600">
+                            {deductionItem ? deductionItem.label : ''}
+                          </td>
+                          <td className="px-3 py-2 text-right text-rose-600 font-medium">
+                            {deductionItem && deductionItem.amount !== '' ? Number(deductionItem.amount).toLocaleString("en-IN") : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {page.isLastPage && (
+                      <tr className="border-b border-slate-200 bg-slate-50 font-bold">
+                        <td className="border-r border-slate-200 px-3 py-2 text-slate-800">
+                          Total Gross Earnings
+                        </td>
+                        <td className="border-r border-slate-200 px-3 py-2 text-right text-pink-700">
+                          {gross.toLocaleString("en-IN")}
+                        </td>
+                        <td className="border-r border-slate-200 px-3 py-2 text-slate-800">
+                          Total Deductions
+                        </td>
+                        <td className="px-3 py-2 text-right text-rose-600">
+                          {totalDeductions.toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Net Salary */}
+              {page.isLastPage && (
+                <div className="mb-4 flex flex-col items-start justify-between gap-4 rounded-xl border border-pink-200 bg-pink-50/30 p-4 md:flex-row md:items-center">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-pink-700">
+                      Net Take-Home Salary
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      <span className="font-semibold text-slate-700">In Words:</span>{" "}
+                      {numberToRupeesWords(netPay)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <h2 className="text-2xl font-black tracking-tight text-pink-700">
+                      ₹{netPay.toLocaleString("en-IN")}
+                    </h2>
+                  </div>
+                </div>
+              )}
+
+              {/* Signature & Bottom Details */}
+              {page.isLastPage ? (
+                <div className="mt-auto flex flex-col print:flex-row justify-between gap-4 border-t border-dashed border-slate-200 pt-3 text-[10px] text-slate-500 md:flex-row md:items-center print:items-center">
+                  <div>
+                    📍 Mode of Payment: Direct Corporate Bank Transfer (NEFT)
+                    <br />
+                    ⚠️ Digitally approved computer-generated payslip.
+                  </div>
+                  <div className="rotate-[-4deg] rounded-md border border-emerald-250 px-3 py-1 font-bold uppercase tracking-wider text-emerald-700 text-[10px] bg-white w-fit self-end md:self-auto print:self-auto shrink-0 shadow-sm">
+                    PAID · {user?.adminReferenceCode || "GMPY"}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-auto text-[10px] text-slate-400 text-right">
+                  Continued on next page...
                 </div>
               )}
             </div>
 
-            <button
-              onClick={() => setShowModal(false)}
-              className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-gray-900 shadow-sm cursor-pointer"
-            >
-              Done
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  )}
-
-  {/* Payslip Document */}
-  <div
-    ref={printableRef}
-    className="printable-sheet mx-auto max-w-4xl rounded-lg border border-gray-200 bg-white p-6 shadow-lg md:p-12"
-  >
-    
-    {/* Header */}
-    <div className="mb-6 flex flex-col justify-between gap-4 border-b-2 border-gray-200 pb-4 md:flex-row">
-      
-      <div className="flex items-start gap-4">
-        
-        {logoSrc ? (
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden">
-            <img
-              crossOrigin="anonymous"
-              src={logoSrc}
-              alt="Logo"
-              className="max-h-full max-w-full object-contain"
-            />
+            {/* FIXED FOOTER */}
+            <LetterheadFooter settings={letterheadSettings} />
           </div>
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-600 text-2xl">
-            🔬
-          </div>
-        )}
-
-        <div>
-          <h1 className="text-lg font-extrabold uppercase tracking-wide text-emerald-800">
-            {companyName || "Company Name"}
-          </h1>
-
-          {companyAddress && (
-            <p className="mt-1 max-w-sm text-xs text-gray-500">
-              {companyAddress}
-            </p>
-          )}
-
-          {user?.adminReferenceCode && (
-            <p className="mt-1 text-[11px] font-semibold text-gray-400">
-              Code: {user.adminReferenceCode}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="text-right">
-        <h2 className="text-lg font-extrabold text-gray-900">
-          PAYSLIP CERTIFICATE
-        </h2>
-
-        <p className="mt-1 text-sm font-semibold text-emerald-600">
-          Cycle: {formatMonthValue(month)}
-        </p>
+        ))}
       </div>
     </div>
-
-    {/* Employee Info */}
-    <div className="mb-6 grid gap-6 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm md:grid-cols-2">
-      
-      <div>
-        <table className="w-full border-collapse">
-          <tbody>
-            <tr>
-              <td className="py-1 text-gray-500">Employee Name:</td>
-              <td className="py-1 font-bold text-gray-900">
-                {employee.fullName || employee.name}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="py-1 text-gray-500">Employee ID:</td>
-              <td className="py-1 font-semibold text-gray-700">
-                {employee.employeeId || employee.id}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="py-1 text-gray-500">Designation:</td>
-              <td className="py-1 text-gray-700">
-                {employee.designation}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="py-1 text-gray-500">Department:</td>
-              <td className="py-1 text-gray-700">
-                {employee.department || employee.dept}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="border-t border-gray-200 pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
-        <table className="w-full border-collapse">
-          <tbody>
-            <tr>
-              <td className="py-1 text-gray-500">Bank Account:</td>
-              <td className="py-1 font-semibold text-gray-700">
-                {employee.bankName
-                  ? `${employee.bankName}${employee.accountNumber ? ' · *****' + String(employee.accountNumber).slice(-4) : ''}`
-                  : employee.accountNumber
-                  ? `*****${String(employee.accountNumber).slice(-4)}`
-                  : 'N/A'}
-              </td>
-            </tr>
-
-            {employee.ifscCode && (
-              <tr>
-                <td className="py-1 text-gray-500">IFSC Code:</td>
-                <td className="py-1 text-gray-700">
-                  {employee.ifscCode}
-                </td>
-              </tr>
-            )}
-
-            <tr>
-              <td className="py-1 text-gray-500">PF Number:</td>
-              <td className="py-1 text-gray-700">
-                {employee.pfNumber || 'N/A'}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="py-1 text-gray-500">Days in Month:</td>
-              <td className="py-1 text-gray-700">
-                {getDaysInMonth(month)} Days
-              </td>
-            </tr>
-
-            <tr>
-              <td className="py-1 text-gray-500">Worked Days:</td>
-              <td className="py-1 font-semibold text-emerald-600">
-                {getDaysInMonth(month)} Days (0 LOP)
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    {/* Salary Table */}
-    <div className="overflow-x-auto">
-      <table className="mb-6 w-full border border-gray-200 text-sm">
-        
-        <thead className="bg-gray-100">
-          <tr className="border-b border-gray-200">
-            <th className="border-r border-gray-200 px-4 py-3 text-left">
-              Earnings
-            </th>
-
-            <th className="border-r border-gray-200 px-4 py-3 text-right">
-              Amount (₹)
-            </th>
-
-            <th className="border-r border-gray-200 px-4 py-3 text-left">
-              Deductions
-            </th>
-
-            <th className="px-4 py-3 text-right">
-              Amount (₹)
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {(() => {
-            const maxLength = Math.max(earnings.length, deductions.length);
-            const rows = [];
-            for (let i = 0; i < maxLength; i++) {
-              const earningItem = earnings[i];
-              const deductionItem = deductions[i];
-              rows.push(
-                <tr key={i} className="border-b border-gray-200">
-                  <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-                    {earningItem ? earningItem.label : ''}
-                  </td>
-                  <td className="border-r border-gray-200 px-4 py-3 text-right font-medium">
-                    {earningItem && earningItem.amount !== '' ? Number(earningItem.amount).toLocaleString("en-IN") : ''}
-                  </td>
-                  <td className="border-r border-gray-200 px-4 py-3 text-gray-600">
-                    {deductionItem ? deductionItem.label : ''}
-                  </td>
-                  <td className="px-4 py-3 text-right text-red-600 font-medium">
-                    {deductionItem && deductionItem.amount !== '' ? Number(deductionItem.amount).toLocaleString("en-IN") : ''}
-                  </td>
-                </tr>
-              );
-            }
-            return rows;
-          })()}
-          <tr className="border-b border-gray-200 bg-gray-50 font-bold">
-            <td className="border-r border-gray-200 px-4 py-3">
-              Total Gross Earnings
-            </td>
-            <td className="border-r border-gray-200 px-4 py-3 text-right text-emerald-700">
-              {gross.toLocaleString("en-IN")}
-            </td>
-            <td className="border-r border-gray-200 px-4 py-3">
-              Total Deductions
-            </td>
-            <td className="px-4 py-3 text-right text-red-600">
-              {totalDeductions.toLocaleString("en-IN")}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    {/* Net Salary */}
-    <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-xl border border-green-200 bg-green-50 p-5 md:flex-row md:items-center">
-      
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
-          Net Take-Home Salary
-        </p>
-
-        <p className="mt-2 text-sm text-gray-600">
-          <span className="font-semibold">In Words:</span>{" "}
-          {numberToRupeesWords(netPay)}
-        </p>
-      </div>
-
-      <div className="text-right">
-        <h2 className="text-3xl font-black tracking-tight text-emerald-700">
-          ₹{netPay.toLocaleString("en-IN")}
-        </h2>
-      </div>
-    </div>
-
-    {/* Footer */}
-    <div className="mt-4 flex flex-col justify-between gap-4 border-t border-dashed border-gray-300 pt-4 text-xs text-gray-400 md:flex-row md:items-center">
-      
-      <div>
-        📍 Mode of Payment: Direct Corporate Bank Transfer (NEFT)
-        <br />
-        ⚠️ Digitally approved computer-generated payslip.
-      </div>
-
-      <div className="rotate-[-4deg] rounded-md border border-emerald-200 px-3 py-1 font-bold uppercase tracking-wide text-emerald-600">
-        PAID · {user?.adminReferenceCode || "GPHR"}
-      </div>
-    </div>
-  </div>
-</div>
   )
 }
