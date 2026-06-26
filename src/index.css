@@ -724,8 +724,8 @@ body {
   main[style*="padding"],
   div[style*="padding-bottom"],
   div[style*="paddingBottom"],
-  div:has(> .document-page-container),
-  div:has(> .printable-sheet-container) {
+  div:has(.document-page-container),
+  div:has(.printable-sheet-container) {
     margin: 0 !important;
     margin-left: 0 !important;
     padding: 0 !important;
@@ -801,8 +801,8 @@ body {
   div[style*="marginLeft"]:has(.multipage-print),
   div[style*="padding-bottom"]:has(.multipage-print),
   div[style*="paddingBottom"]:has(.multipage-print),
-  div:has(> .document-page-container):has(.multipage-print),
-  div:has(> .printable-sheet-container):has(.multipage-print) {
+  div:has(.document-page-container):has(.multipage-print),
+  div:has(.printable-sheet-container):has(.multipage-print) {
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
@@ -822,9 +822,9 @@ body {
     top: auto !important;
     width: 100% !important;
     max-width: 100% !important; /* Prevent layout constraint gaps */
-    height: 297mm !important;
-    min-height: 297mm !important;
-    max-height: 297mm !important;
+    height: 295mm !important;
+    min-height: 295mm !important;
+    max-height: 295mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0px !important; /* Remove bottom/top border-radius */
@@ -863,10 +863,7 @@ body {
   min-height: 295mm !important;
   max-height: 295mm !important;
   margin: 0px !important;
-  padding-left: 50px !important;
-  padding-right: 50px !important;
-  padding-top: 24px !important;
-  padding-bottom: 24px !important;
+  padding: 0px !important;
   box-sizing: border-box !important;
   border-radius: 0px !important;
   border: none !important;
