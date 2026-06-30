@@ -189,6 +189,19 @@ export default function MedicalExecutiveLayout({ children }) {
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-executive/settings' },
   ]
 
+  const userAllowedModules = user?.allowedModules || "all";
+  const filteredNavItems = navItems.filter(item => {
+    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (userAllowedModules === 'all') return true;
+    const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
+    
+    let targetId = item.id.toLowerCase();
+    if (targetId === 'tourplan') targetId = 'tourplans';
+    if (targetId === 'finance') targetId = 'hrdocuments';
+    
+    return allowedList.includes(targetId);
+  });
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#F0F2F5] font-sans">
       <aside className="w-[220px] shrink-0 bg-white flex flex-col fixed top-0 left-0 bottom-0 z-[100] shadow-[2px_0_16px_rgba(0,0,0,0.04)]">
@@ -204,7 +217,7 @@ export default function MedicalExecutiveLayout({ children }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.map(item => {
+          {filteredNavItems.map(item => {
             const isActive = activePage === item.id
             const Icon = item.icon
             return (

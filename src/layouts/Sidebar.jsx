@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { logout } from '../redux/actions/authActions'
@@ -38,6 +38,7 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
+  const { user } = useSelector(state => state.auth)
 
   const pathParts = location.pathname.split('/')
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
@@ -45,6 +46,19 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
   let currentNav = EMPLOYEE_NAV;
   if (isSuperAdmin) currentNav = SUPER_ADMIN_NAV;
   else if (!isEmployee) currentNav = ADMIN_NAV;
+
+  const userAllowedModules = user?.allowedModules || "all";
+  const filteredNav = currentNav.filter(item => {
+    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (isSuperAdmin) return true;
+    if (userAllowedModules === 'all') return true;
+    const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
+    
+    let targetId = item.id.toLowerCase();
+    if (targetId === 'finance') targetId = 'hrdocuments';
+    
+    return allowedList.includes(targetId);
+  });
 
   return (
     <aside className="w-[220px] shrink-0 bg-white flex flex-col fixed top-0 left-0 bottom-0 z-[100] shadow-[2px_0_16px_rgba(0,0,0,0.04)]">
@@ -60,7 +74,7 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3">
-        {currentNav.map(item => {
+        {filteredNav.map(item => {
           const isActive = activePage === item.id
           const Icon = item.icon
           const prefix = isSuperAdmin ? '/superadmin' : (!isEmployee ? '/admin' : '/employee')

@@ -4,7 +4,7 @@ import { API_ROUTE } from '../../data/env';
 import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-export default function MRSalesPage() {
+const MRSalesPage = () => {
   const [distributors, setDistributors] = useState([]);
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -12,7 +12,7 @@ export default function MRSalesPage() {
   const dropdownRef = useRef(null);
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -440,3 +440,5 @@ export default function MRSalesPage() {
     </div>
   );
 }
+
+export default MRSalesPage;

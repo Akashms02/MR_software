@@ -53,7 +53,7 @@ function VisitHistoryModal({ target, onClose }) {
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1500] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in scale-in duration-200">
-        
+
         {/* Modal Header */}
         <div className="px-6 py-5 flex items-start justify-between border-b border-slate-100 bg-slate-50/50">
           <div>
@@ -94,7 +94,7 @@ function VisitHistoryModal({ target, onClose }) {
                       Checked in at {h.checkInTime ? new Date(h.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
                     <div>
                       <strong>📥 Visit In:</strong> {h.checkInTime ? new Date(h.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -157,7 +157,7 @@ const RED_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
   </svg>
 `);
 
-export default function MRAttendancePage() {
+const MRAttendancePage = () => {
   const navigate = useNavigate();
   const { user } = useSelector(state => state.auth);
   const mrId = user?.id ? String(user.id) : "mr-01";
@@ -283,12 +283,12 @@ export default function MRAttendancePage() {
     if (targetRecord.startLocation?.lat != null) {
       const p = targetRecord.startLocation;
       pathCoordinates.push([p.lat, p.lng]);
-      
+
       const startMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>Workday punch-in</strong><br/>Time: ${targetRecord.startTime}`)
-      .addTo(mapInstanceRef.current);
+        .bindPopup(`<strong>Workday punch-in</strong><br/>Time: ${targetRecord.startTime}`)
+        .addTo(mapInstanceRef.current);
 
       markersRef.current.push(startMarker);
     }
@@ -303,7 +303,7 @@ export default function MRAttendancePage() {
           if (isCompleted && v.checkOutCoords?.lat != null) {
             pathCoordinates.push([v.checkOutCoords.lat, v.checkOutCoords.lng]);
           }
-          
+
           let imageTag = '';
           if (v.checkInPhoto) {
             imageTag = `<br/><img src="${v.checkInPhoto}" style="width:120px;height:80px;object-fit:cover;border-radius:6px;margin-top:6px;border:1px solid #E5E7EB"/>`;
@@ -323,8 +323,8 @@ export default function MRAttendancePage() {
           const pinMarker = L.marker([v.checkInCoords.lat, v.checkInCoords.lng], {
             icon: getCustomIcon(isCompleted ? GREEN_PIN : RED_PIN, 32, 32)
           })
-          .bindPopup(popupContent)
-          .addTo(mapInstanceRef.current);
+            .bindPopup(popupContent)
+            .addTo(mapInstanceRef.current);
 
           markersRef.current.push(pinMarker);
 
@@ -332,8 +332,8 @@ export default function MRAttendancePage() {
             const outMarker = L.marker([v.checkOutCoords.lat, v.checkOutCoords.lng], {
               icon: getCustomIcon(GREEN_PIN, 28, 28)
             })
-            .bindPopup(`<strong>Visit out</strong><br/>${v.name}<br/>${v.checkOutTime}`)
-            .addTo(mapInstanceRef.current);
+              .bindPopup(`<strong>Visit out</strong><br/>${v.name}<br/>${v.checkOutTime}`)
+              .addTo(mapInstanceRef.current);
             markersRef.current.push(outMarker);
           }
         }
@@ -348,8 +348,8 @@ export default function MRAttendancePage() {
       const endMarker = L.marker([p.lat, p.lng], {
         icon: getCustomIcon(BLUE_PIN, 36, 36)
       })
-      .bindPopup(`<strong>Workday punch-out</strong><br/>Time: ${targetRecord.endTime}`)
-      .addTo(mapInstanceRef.current);
+        .bindPopup(`<strong>Workday punch-out</strong><br/>Time: ${targetRecord.endTime}`)
+        .addTo(mapInstanceRef.current);
 
       markersRef.current.push(endMarker);
     }
@@ -419,24 +419,24 @@ export default function MRAttendancePage() {
 
   const statusLabel = activeRecord
     ? (activeRecord.status === 'ACTIVE'
-        ? openVisit
-          ? `On duty · visit open at ${openVisit.name}`
-          : 'On duty · no open visit'
-        : activeRecord.status === 'ENDED'
-          ? 'Workday finished'
-          : 'Off duty')
+      ? openVisit
+        ? `On duty · visit open at ${openVisit.name}`
+        : 'On duty · no open visit'
+      : activeRecord.status === 'ENDED'
+        ? 'Workday finished'
+        : 'Off duty')
     : 'No workday on this date';
 
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
-      
+
       {/* Date Filter & Actions Bar */}
       <div className="flex justify-end items-center gap-3 mb-4 shrink-0">
         {/* Date Filter Calendar Picker */}
         <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.02)]">
           <Calendar size={15} className="text-gray-500" />
           <span className="text-[12px] font-bold text-gray-600 uppercase tracking-[0.5px]">Select Date:</span>
-          <input 
+          <input
             type="date"
             value={selectedDate}
             onChange={(e) => {
@@ -489,10 +489,9 @@ export default function MRAttendancePage() {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4 shrink-0">
         {/* Card 1: Status */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-          <div 
-            className={`w-[38px] h-[38px] rounded-xl flex items-center justify-center text-[18px] ${
-              activeRecord?.status === 'ACTIVE' ? 'bg-[#ECFDF5]' : activeRecord?.status === 'ENDED' ? 'bg-[#EFF6FF]' : 'bg-[#FEF2F2]'
-            }`}
+          <div
+            className={`w-[38px] h-[38px] rounded-xl flex items-center justify-center text-[18px] ${activeRecord?.status === 'ACTIVE' ? 'bg-[#ECFDF5]' : activeRecord?.status === 'ENDED' ? 'bg-[#EFF6FF]' : 'bg-[#FEF2F2]'
+              }`}
           >
             {activeRecord?.status === 'ACTIVE' ? '🟢' : activeRecord?.status === 'ENDED' ? '🏁' : '🛑'}
           </div>
@@ -542,7 +541,7 @@ export default function MRAttendancePage() {
 
       {/* Split Layout grid */}
       <div className="grid grid-cols-[1.2fr_1fr] gap-6 flex-1 min-h-0 overflow-hidden mb-1">
-        
+
         {/* LEFT COLUMN: Map container */}
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col min-h-0 h-full">
           {/* Map Title block */}
@@ -554,11 +553,11 @@ export default function MRAttendancePage() {
           </div>
 
           {/* Actual Leaflet Container */}
-          <div 
-            ref={mapContainerRef} 
+          <div
+            ref={mapContainerRef}
             className="w-full bg-[#FAFAFA] z-10 flex-1 min-h-0"
           />
-          
+
           {/* Map Legend */}
           <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-5 flex-wrap text-[11.5px] font-semibold text-gray-600 shrink-0">
             <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Workday punch</span>
@@ -583,11 +582,11 @@ export default function MRAttendancePage() {
               </div>
             ) : (
               <div className="relative border-l-2 border-dashed border-gray-200 ml-3 pl-6 py-2">
-                
+
                 {/* 1. START WORKDAY NODE */}
                 <div className="relative mb-6">
                   <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-[0_0_0_3px_rgba(59,130,246,0.15)]" />
-                  
+
                   <div className="bg-[#F8FAFC] rounded-xl border border-gray-200 p-3 px-4">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1E40AF]">PUNCH IN</span>
@@ -617,26 +616,23 @@ export default function MRAttendancePage() {
                     return (
                       <div key={v.id || idx} className="relative mb-6">
                         {/* Dot indicator */}
-                        <div 
-                          className={`absolute left-[-31px] top-1 w-3 h-3 rounded-full border-2 border-white ${
-                            isCompleted ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]' : 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
-                          }`}
+                        <div
+                          className={`absolute left-[-31px] top-1 w-3 h-3 rounded-full border-2 border-white ${isCompleted ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]' : 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
+                            }`}
                         />
-                        
+
                         {/* Single Unified Card */}
-                        <div 
-                          className={`rounded-xl px-[18px] py-3.5 shadow-[0_2px_6px_rgba(0,0,0,0.01)] border ${
-                            isCompleted ? 'bg-[#FCFDFD] border-[#E5E7EB]' : 'bg-[#FFFEFA] border-[#FCD34D]'
-                          }`}
+                        <div
+                          className={`rounded-xl px-[18px] py-3.5 shadow-[0_2px_6px_rgba(0,0,0,0.01)] border ${isCompleted ? 'bg-[#FCFDFD] border-[#E5E7EB]' : 'bg-[#FFFEFA] border-[#FCD34D]'
+                            }`}
                         >
                           {/* Visit Card Header */}
                           <div className="flex justify-between items-start border-b border-gray-100 pb-2 mb-2.5">
                             <div>
                               <div className="flex items-center gap-2">
-                                <span 
-                                  className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
-                                    isCompleted ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FFFBEB] text-[#92400E]'
-                                  }`}
+                                <span
+                                  className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${isCompleted ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FFFBEB] text-[#92400E]'
+                                    }`}
                                 >
                                   {v.type || 'Visit'}
                                 </span>
@@ -711,7 +707,7 @@ export default function MRAttendancePage() {
                 {activeRecord.status === 'ENDED' ? (
                   <div className="relative mb-2">
                     <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-white shadow-[0_0_0_3px_rgba(30,58,138,0.15)]" />
-                    
+
                     <div className="bg-[#F8FAFC] rounded-xl border border-gray-300 p-3 px-4">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#475569]">PUNCH OUT</span>
@@ -725,7 +721,7 @@ export default function MRAttendancePage() {
                   <div className="relative mb-2">
                     <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-ping" />
                     <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
-                    
+
                     <div className="bg-[#ECFDF5] rounded-xl border border-dashed border-[#A7F3D0] p-3 px-4 text-[#065F46]">
                       <div className="text-[12px] font-bold">🟢 Workday still active</div>
                       <div className="text-[11.5px] text-[#047857] mt-0.5">
@@ -757,3 +753,5 @@ export default function MRAttendancePage() {
     </div>
   );
 }
+
+export default MRAttendancePage;

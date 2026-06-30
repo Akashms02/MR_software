@@ -23,6 +23,8 @@ import {
   Edit,
 } from "lucide-react";
 import { updateCompanyAccess, editCompanyData } from "../../redux/actions/companyAction";
+import EditAdminModal from "./EditAdminModal";
+import ModuleAccessModal from "./ModuleAccessModal";
 
 const AdminManagement = () => {
   const dispatch = useDispatch();
@@ -33,6 +35,47 @@ const AdminManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
+  const AVAILABLE_MODULES = [
+    { id: 'requests',     label: 'Onboarding Requests' },
+    { id: 'employees',    label: 'Employees' },
+    { id: 'reports',      label: 'Reports & Analytics' },
+    { id: 'sales',        label: 'Distributor Sales' },
+    { id: 'tourplans',    label: 'Tour Plans' },
+    { id: 'fieldtracking', label: 'Field Tracking' },
+    { id: 'leaves',       label: 'Leave Approvals' },
+    { id: 'holidays',     label: 'Holidays' },
+    { id: 'myteam',       label: 'My Team' },
+    { id: 'hrdocuments',  label: 'HR Documents' },
+    { id: 'notices',      label: 'Notice Board' },
+  ];
+
+  const isModuleChecked = (moduleVal, allowedModulesStr) => {
+    if (!allowedModulesStr || allowedModulesStr === "all") return true;
+    return allowedModulesStr.split(",").map(s => s.trim().toLowerCase()).includes(moduleVal.toLowerCase());
+  };
+
+  const handleToggleModule = (moduleVal, allowedModulesStr, onChangeFn) => {
+    let currentList = [];
+    if (!allowedModulesStr || allowedModulesStr === "all") {
+      currentList = AVAILABLE_MODULES.map(m => m.id);
+    } else {
+      currentList = allowedModulesStr.split(",").map(s => s.trim().toLowerCase());
+    }
+
+    let newList = [];
+    if (currentList.includes(moduleVal.toLowerCase())) {
+      newList = currentList.filter(id => id !== moduleVal.toLowerCase());
+    } else {
+      newList = [...currentList, moduleVal.toLowerCase()];
+    }
+
+    if (newList.length === AVAILABLE_MODULES.length) {
+      onChangeFn("all");
+    } else {
+      onChangeFn(newList.join(","));
+    }
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     fullName: "",
@@ -40,19 +83,15 @@ const AdminManagement = () => {
     phone: "",
     role: "ADMIN",
     companyCode: "",
+    allowedModules: "all",
   });
 
   // Edit State
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    role: "ADMIN",
-    adminReferenceCode: "",
-    enabled: true,
-  });
+
+  // Access Modal State
+  const [showAccessModal, setShowAccessModal] = useState(false);
 
   useEffect(() => {
     dispatch(getAdmins());
@@ -68,18 +107,11 @@ const AdminManagement = () => {
           phone: "",
           role: "ADMIN",
           companyCode: "",
+          allowedModules: "all",
         });
         setShowModal(false);
-
-        setEditFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          role: "ADMIN",
-          adminReferenceCode: "",
-          enabled: true,
-        });
         setShowEditModal(false);
+        setShowAccessModal(false);
         setSelectedAdmin(null);
 
         dispatch(clearSuccess());
@@ -108,49 +140,54 @@ const AdminManagement = () => {
 
   const handleOpenEditModal = (admin) => {
     setSelectedAdmin(admin);
-    setEditFormData({
-      fullName: admin.fullName || "",
-      email: admin.email || "",
-      phone: admin.phone || "",
-      role: admin.role || "ADMIN",
-      adminReferenceCode: admin.adminReferenceCode || "",
-      enabled: admin.enabled !== false,
-    });
     setShowEditModal(true);
   };
 
-  const handleEditInputChange = (e) => {
-    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+  const handleOpenAccessModal = (admin) => {
+    setSelectedAdmin(admin);
+    setShowAccessModal(true);
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
+  const handleAccessSubmit = async (allowedModulesStr) => {
     if (selectedAdmin) {
       const payload = {
-        fullName: editFormData.fullName,
-        email: editFormData.email,
-        phone: editFormData.phone,
-        companyCode: editFormData.adminReferenceCode,
+        fullName: selectedAdmin.fullName,
+        email: selectedAdmin.email,
+        phone: selectedAdmin.phone,
+        companyCode: selectedAdmin.adminReferenceCode,
+        allowedModules: allowedModulesStr,
       };
       try {
-        // Check if the enabled status has changed and update it
+        const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
+        if (res) {
+          setShowAccessModal(false);
+          setSelectedAdmin(null);
+          dispatch(getAdmins());
+        }
+      } catch (err) {
+        console.error("Error updating module access:", err);
+      }
+    }
+  };
+
+  const handleEditSubmit = async (modalFormData) => {
+    if (selectedAdmin) {
+      const payload = {
+        fullName: modalFormData.fullName,
+        email: modalFormData.email,
+        phone: modalFormData.phone,
+        companyCode: modalFormData.adminReferenceCode,
+      };
+      try {
         const wasEnabled = selectedAdmin.enabled !== false;
-        if (editFormData.enabled !== wasEnabled) {
-          await dispatch(updateCompanyAccess(selectedAdmin.id, editFormData.enabled));
+        if (modalFormData.enabled !== wasEnabled) {
+          await dispatch(updateCompanyAccess(selectedAdmin.id, modalFormData.enabled));
         }
 
         const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
         if (res) {
           setShowEditModal(false);
           setSelectedAdmin(null);
-          setEditFormData({
-            fullName: "",
-            email: "",
-            phone: "",
-            role: "ADMIN",
-            adminReferenceCode: "",
-            enabled: true,
-          });
           dispatch(getAdmins());
         }
       } catch (err) {
@@ -336,6 +373,13 @@ const AdminManagement = () => {
                             <Edit size={14} />
                             Edit
                           </button>
+                          <button
+                            onClick={() => handleOpenAccessModal(admin)}
+                            className="flex items-center gap-1.5 bg-indigo-50 border-none text-indigo-700 px-3.5 py-2 rounded-lg text-[13px] font-semibold cursor-pointer transition-all duration-150 hover:bg-indigo-100 hover:-translate-y-0.5 hover:shadow-sm"
+                          >
+                            <Shield size={14} className="text-indigo-600" />
+                            Modules
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -349,8 +393,8 @@ const AdminManagement = () => {
 
       {/* Register Modal */}
       {showModal && createPortal(
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
-          <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-start justify-center z-[1000] p-5 overflow-y-auto">
+          <div className="bg-white w-full max-w-[500px] my-auto rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
               <div>
@@ -460,6 +504,28 @@ const AdminManagement = () => {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
+                    Module Access Control
+                  </label>
+                  <div className="grid grid-cols-2 gap-2.5 bg-gray-50 p-4 rounded-xl border border-gray-150 max-h-[170px] overflow-y-auto">
+                    {AVAILABLE_MODULES.map((m) => {
+                      const checked = isModuleChecked(m.id, formData.allowedModules);
+                      return (
+                        <label key={m.id} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer select-none transition-all">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => handleToggleModule(m.id, formData.allowedModules, (val) => setFormData({ ...formData, allowedModules: val }))}
+                            className="rounded text-indigo-650 focus:ring-indigo-500 w-4 h-4 cursor-pointer accent-indigo-600"
+                          />
+                          <span className="text-[12.5px] font-bold text-gray-700 ml-1.5">{m.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Footer Buttons */}
                 <div className="flex gap-3 mt-2.5">
                   <button
@@ -489,164 +555,32 @@ const AdminManagement = () => {
       )}
 
       {/* Edit Modal */}
-      {showEditModal && createPortal(
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
-          <div className="bg-white w-full max-w-[500px] rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-              <div>
-                <h3 className="text-xl font-extrabold text-gray-900 m-0">
-                  Edit Administrator
-                </h3>
-                <p className="text-[13px] text-gray-500 mt-1">
-                  Modify details for {selectedAdmin?.fullName || "Administrator"}.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setSelectedAdmin(null);
-                }}
-                className="bg-gray-100 border-none rounded-lg p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-150"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
+      <EditAdminModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedAdmin(null);
+        }}
+        selectedAdmin={selectedAdmin}
+        onSubmit={handleEditSubmit}
+        loading={loading || companyState.loading}
+        error={companyState.error || error}
+        success={companyState.success || success}
+      />
 
-            {/* Modal Body */}
-            <form onSubmit={handleEditSubmit} className="p-6">
-              <div className="flex flex-col gap-5">
-                {/* Status Messages */}
-                {(companyState.error || error) && (
-                  <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-2.5 text-rose-700 text-sm font-semibold">
-                    <AlertCircle size={18} /> {companyState.error || error}
-                  </div>
-                )}
-                {(companyState.success || success) && (
-                  <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center gap-2.5 text-emerald-700 text-sm font-semibold">
-                    <CheckCircle2 size={18} /> {companyState.message || success}
-                  </div>
-                )}
-
-                {/* Input Fields */}
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    name="fullName"
-                    value={editFormData.fullName}
-                    onChange={handleEditInputChange}
-                    required
-                    placeholder="e.g. John Doe"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={editFormData.email}
-                      onChange={handleEditInputChange}
-                      required
-                      placeholder="admin@example.com"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      name="phone"
-                      value={editFormData.phone}
-                      onChange={handleEditInputChange}
-                      required
-                      placeholder="9876543210"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      Admin Reference Code
-                    </label>
-                    <input
-                      name="adminReferenceCode"
-                      value={editFormData.adminReferenceCode}
-                      onChange={handleEditInputChange}
-                      required
-                      placeholder="e.g. GMPM"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      System Role
-                    </label>
-                    <select
-                      name="role"
-                      value="ADMIN"
-                      disabled
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-gray-100 cursor-not-allowed text-gray-500"
-                    >
-                      <option value="ADMIN">Administrator</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    Account Status
-                  </label>
-                  <select
-                    name="enabled"
-                    value={editFormData.enabled ? "true" : "false"}
-                    onChange={(e) => setEditFormData({ ...editFormData, enabled: e.target.value === "true" })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-white focus:border-indigo-500 transition-colors duration-200"
-                  >
-                    <option value="true">Active (Access Enabled)</option>
-                    <option value="false">Inactive (Access Suspended)</option>
-                  </select>
-                </div>
-
-                {/* Footer Buttons */}
-                <div className="flex gap-3 mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setSelectedAdmin(null);
-                    }}
-                    className="flex-1 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-[1.5] py-3.5 rounded-xl border-none bg-gray-900 text-white font-bold text-sm cursor-pointer hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                      "Update Account"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Module Access Modal */}
+      <ModuleAccessModal
+        show={showAccessModal}
+        onClose={() => {
+          setShowAccessModal(false);
+          setSelectedAdmin(null);
+        }}
+        selectedAdmin={selectedAdmin}
+        onSubmit={handleAccessSubmit}
+        loading={loading || companyState.loading}
+        error={companyState.error || error}
+        success={companyState.success || success}
+      />
 
       {/* Animations */}
       <style>{`
