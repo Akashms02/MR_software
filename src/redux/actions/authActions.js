@@ -658,6 +658,9 @@ export const initializeAuth = () => async (dispatch) => {
       payload: { user, token: savedToken },
     });
 
+    // Sync latest profile details in background (e.g. allowedModules changes)
+    dispatch(fetchProfile());
+
   } catch (err) {
     console.error("[Auth] Failed to restore session:", err.message);
     handleLogoutRedirect();
