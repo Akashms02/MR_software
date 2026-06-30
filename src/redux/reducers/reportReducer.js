@@ -18,6 +18,12 @@ import {
   GET_WEEKLY_CROSS_SUCCESS,
   GET_WEEKLY_CROSS_FAILURE,
   CLEAR_REPORT_ERRORS,
+  DISTRIBUTES_REPORT_REQUEST,
+  DISTRIBUTES_REPORT_FAILURE,
+  DISTRIBUTES_REPORT_SUCCESS,
+  GET_DISTRIBUTORS_REQUEST,
+  GET_DISTRIBUTORS_SUCCESS,
+  GET_DISTRIBUTORS_FAILURE,
 } from "../actionType/reportActionType";
 
 const initialState = {
@@ -29,6 +35,8 @@ const initialState = {
   dcrDay: null,
   dailyActivity: null,
   weeklyCross: null,
+  distributesReport: null,
+  distributorsList: [],
 };
 
 export const reportReducer = (state = initialState, action) => {
@@ -39,6 +47,8 @@ export const reportReducer = (state = initialState, action) => {
     case GET_DCR_DAY_REQUEST:
     case GET_DAILY_ACTIVITY_REQUEST:
     case GET_WEEKLY_CROSS_REQUEST:
+    case DISTRIBUTES_REPORT_REQUEST:
+    case GET_DISTRIBUTORS_REQUEST:
       return {
         ...state,
         loading: true,
@@ -78,7 +88,20 @@ export const reportReducer = (state = initialState, action) => {
         dcrDay: action.payload,
         error: null,
       };
-
+    case DISTRIBUTES_REPORT_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        distributesReport: action.payload,
+        error: null,
+      };
+    case GET_DISTRIBUTORS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        distributorsList: action.payload,
+        error: null,
+      };
     case GET_DAILY_ACTIVITY_SUCCESS:
       return {
         ...state,
@@ -101,6 +124,8 @@ export const reportReducer = (state = initialState, action) => {
     case GET_DCR_DAY_FAILURE:
     case GET_DAILY_ACTIVITY_FAILURE:
     case GET_WEEKLY_CROSS_FAILURE:
+    case DISTRIBUTES_REPORT_FAILURE:
+    case GET_DISTRIBUTORS_FAILURE:
       return {
         ...state,
         loading: false,

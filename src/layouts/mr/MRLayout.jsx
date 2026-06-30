@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp, FileSpreadsheet } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -50,6 +50,7 @@ function MRHeader({ onBellClick, unreadCount }) {
     if (activePage === 'reports') return 'Reports & Analytics'
     if (activePage === 'leaves') return 'Leave Management'
     if (activePage === 'sales') return 'Distributor Sales'
+    if (activePage === 'distributor-report') return 'Distributor Report'
     if (activePage === 'finance') return 'Documents'
     if (activePage === 'me') return 'Me'
     if (activePage === 'settings') return 'Settings'
@@ -188,9 +189,26 @@ export default function MRLayout({ children }) {
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/mr/reports' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Management', path: '/mr/leaves' },
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
+    { id: 'distributor-report', icon: FileSpreadsheet, label: 'Distributor Report', path: '/mr/distributor-report' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/mr/finance' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
   ]
+
+  const userAllowedModules = user?.allowedModules || "all";
+  const filteredNavItems = navItems.filter(item => {
+    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (userAllowedModules === 'all') return true;
+    const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
+    
+    let targetId = item.id.toLowerCase();
+    if (targetId === 'dcr') targetId = 'tourplans';
+    if (targetId === 'tourplan') targetId = 'tourplans';
+    if (targetId === 'attendance') targetId = 'fieldtracking';
+    if (targetId === 'distributor-report') targetId = 'sales';
+    if (targetId === 'finance') targetId = 'hrdocuments';
+    
+    return allowedList.includes(targetId);
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F0F2F5] font-sans">
@@ -207,7 +225,7 @@ export default function MRLayout({ children }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.map(item => {
+          {filteredNavItems.map(item => {
             const isActive = activePage === item.id
             const Icon = item.icon
             return (

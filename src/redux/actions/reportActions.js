@@ -20,6 +20,12 @@ import {
   GET_WEEKLY_CROSS_SUCCESS,
   GET_WEEKLY_CROSS_FAILURE,
   CLEAR_REPORT_ERRORS,
+  DISTRIBUTES_REPORT_REQUEST,
+  DISTRIBUTES_REPORT_FAILURE,
+  DISTRIBUTES_REPORT_SUCCESS,
+  GET_DISTRIBUTORS_REQUEST,
+  GET_DISTRIBUTORS_SUCCESS,
+  GET_DISTRIBUTORS_FAILURE,
 } from "../actionType/reportActionType";
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
@@ -43,7 +49,7 @@ export const getVisitSummary = (mrId, startDate, endDate) => async (dispatch) =>
       const totalWorkingDays = data?.data?.totalWorkingDays || 0;
       const totalVisits = data?.data?.totalVisits || 0;
       const uniqueDoctorsVisited = data?.data?.uniqueDoctorsVisited || 0;
-      
+
       const formatted = {
         totalWorkingDays,
         totalVisits,
@@ -53,7 +59,7 @@ export const getVisitSummary = (mrId, startDate, endDate) => async (dispatch) =>
         successRate: totalWorkingDays ? `${Math.round((totalVisits / totalWorkingDays) * 100)}%` : '0%',
         territories: [] // no territory breakdown in live API, empty to hide cleanly
       };
-      
+
       dispatch({
         type: GET_VISIT_SUMMARY_SUCCESS,
         payload: formatted,
@@ -266,6 +272,66 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
   } catch (error) {
     const errMsg = error.response?.data?.message || error.message || commonError;
     dispatch({ type: GET_WEEKLY_CROSS_FAILURE, payload: errMsg });
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+
+export const distributerActivityReport = (params) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: DISTRIBUTES_REPORT_REQUEST });
+  try {
+    const response = await axios.get(
+      `${API_ROUTE}/mr/distributors/sales`,
+      { params }
+    );
+    const { status, message, data } = response.data ?? {};
+    if (isSuccess(status) || response.status === 200) {
+      const payloadData = Array.isArray(data) ? data : (data?.data || response.data?.data || []);
+      dispatch({
+        type: DISTRIBUTES_REPORT_SUCCESS,
+        payload: payloadData,
+      });
+      return { success: true, data: payloadData };
+    }
+    dispatch({
+      type: DISTRIBUTES_REPORT_FAILURE,
+      payload: message || commonError,
+    });
+    return { success: false, error: message || commonError };
+  } catch (error) {
+    const errMsg = error.response?.data?.message || error.message || commonError;
+    dispatch({ type: DISTRIBUTES_REPORT_FAILURE, payload: errMsg });
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const getDistributorsList = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: GET_DISTRIBUTORS_REQUEST });
+  try {
+    const response = await axios.get(`${API_ROUTE}/mr/distributors`);
+    const { status, message, data } = response.data ?? {};
+    if (isSuccess(status) || response.status === 200) {
+      const payloadData = Array.isArray(data) ? data : (data?.data || response.data?.data || []);
+      dispatch({
+        type: GET_DISTRIBUTORS_SUCCESS,
+        payload: payloadData,
+      });
+      return { success: true, data: payloadData };
+    }
+    dispatch({
+      type: GET_DISTRIBUTORS_FAILURE,
+      payload: message || commonError,
+    });
+    return { success: false, error: message || commonError };
+  } catch (error) {
+    const errMsg = error.response?.data?.message || error.message || commonError;
+    dispatch({ type: GET_DISTRIBUTORS_FAILURE, payload: errMsg });
     return { success: false, error: errMsg };
   } finally {
     dispatch({ type: LOADING_END });
