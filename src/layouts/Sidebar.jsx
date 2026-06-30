@@ -49,7 +49,7 @@ export default function Sidebar({ isSuperAdmin, isEmployee, displayName, display
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNav = currentNav.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (item.id === 'dashboard' || item.id === 'settings' || item.id === 'me' || item.id === 'watercooler') return true;
     if (isSuperAdmin) return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());

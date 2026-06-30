@@ -52,7 +52,7 @@ export default function MedicalManagerLayout({ children }) {
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (item.id === 'dashboard' || item.id === 'settings' || item.id === 'me' || item.id === 'watercooler') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     
