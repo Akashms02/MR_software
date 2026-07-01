@@ -158,11 +158,17 @@ export default function MESalesPage() {
 
       const uploadDate = record.createdAt ? record.createdAt.split('T')[0] : '';
       
-      const groupKey = `${distId}-${uploadDate}`;
-      let group = groups.find(g => g.key === groupKey);
+      const recTime = record.createdAt ? new Date(record.createdAt).getTime() : 0;
+      let group = groups.find(g => {
+        if (g.distributorId !== distId || g.uploader !== uploader) return false;
+        const groupTime = g.createdAt ? new Date(g.createdAt).getTime() : 0;
+        return Math.abs(recTime - groupTime) < 5000;
+      });
+
       if (!group) {
         group = {
-          key: groupKey,
+          key: `${distId}-${record.createdAt}`,
+          distributorId: distId,
           distributorName: distName,
           createdAt: record.createdAt || null,
           uploadDate: uploadDate,
@@ -175,7 +181,11 @@ export default function MESalesPage() {
     });
 
     // Sort grouped uploads by upload date descending
-    return groups.sort((a, b) => b.uploadDate.localeCompare(a.uploadDate));
+    return groups.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
   };
 
   const handleOpenGroupPreview = (group) => {
