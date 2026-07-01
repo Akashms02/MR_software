@@ -2,7 +2,7 @@ import { Bell, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { ADMIN_NAV, SUPER_ADMIN_NAV, EMPLOYEE_NAV } from './navConfig'
 
-/* ── Page Title helper ───────────────────────────────────────────── */
+/* ── Page Title  ───────────────────────────────────────────── */
 function getPageTitle(activePage, role) {
   if (activePage === 'dashboard') {
     if (role === 'ADMIN') return 'Admin Dashboard'
