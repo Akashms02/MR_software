@@ -55,9 +55,11 @@ export const notificationReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         error: null,
-        notifications: action.payload || [],
+        notifications: Array.isArray(action.payload) ? action.payload : [],
         // Fallback calculation of unread count if API isn't updated yet
-        unreadCount: (action.payload || []).filter(n => n.read === false || n.isRead === false).length,
+        unreadCount: Array.isArray(action.payload) 
+          ? action.payload.filter(n => n.read === false || n.isRead === false).length 
+          : 0,
       };
 
     case FETCH_UNREAD_NOTIFICATIONS_SUCCESS:
@@ -65,8 +67,8 @@ export const notificationReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         error: null,
-        unreadNotifications: action.payload || [],
-        unreadCount: (action.payload || []).length,
+        unreadNotifications: Array.isArray(action.payload) ? action.payload : [],
+        unreadCount: Array.isArray(action.payload) ? action.payload.length : 0,
       };
 
     case FETCH_UNREAD_COUNT_SUCCESS:
