@@ -122,7 +122,7 @@ export default function MRLayout({ children }) {
     }, 30000) // Poll every 30 seconds
 
     return () => clearInterval(interval)
-  }, [dispatch, location.pathname, isNotificationsOpen])
+  }, [dispatch, isNotificationsOpen])
 
   const handleBellClick = () => {
     setIsNotificationsOpen(true)
