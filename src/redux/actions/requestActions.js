@@ -32,7 +32,9 @@ export const requestStatusFromTab = (tab) => {
 
 const extractRequestList = (response) => {
   const data = response.data?.data ?? response.data;
-  return Array.isArray(data) ? data : [];
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.content)) return data.content;
+  return [];
 };
 
 export const fetchPendingRequestsAction = (status = "ALL") => async (dispatch) => {
@@ -64,10 +66,13 @@ export const fetchMeRequestsAction = () => async (dispatch) => {
   dispatch({ type: FETCH_ME_REQUESTS_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/requests/me`);
-    const payloadData = response.data?.data || response.data || [];
+    const rawData = response.data?.data || response.data;
+    const list = Array.isArray(rawData) 
+      ? rawData 
+      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
     dispatch({
       type: FETCH_ME_REQUESTS_SUCCESS,
-      payload: Array.isArray(payloadData) ? payloadData : [],
+      payload: list,
     });
     return response.data;
   } catch (error) {

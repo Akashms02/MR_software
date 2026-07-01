@@ -138,16 +138,6 @@ export default function AdminLayout({ children }) {
     if (isNotificationsOpen) {
       dispatch(getNotifications())
     }
-
-    // Set up polling to check for new notifications in the background
-    const interval = setInterval(() => {
-      dispatch(getUnreadCount())
-      if (isNotificationsOpen) {
-        dispatch(getNotifications())
-      }
-    }, 30000) // Poll every 30 seconds
-
-    return () => clearInterval(interval)
   }, [dispatch, isNotificationsOpen])
 
   const handleBellClick = () => {
