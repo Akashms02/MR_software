@@ -43,9 +43,10 @@ export const getNotifications = () => async (dispatch) => {
     const { status, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
+      const payloadData = Array.isArray(data) ? data : (Array.isArray(response.data?.data) ? response.data.data : []);
       dispatch({
         type: FETCH_NOTIFICATIONS_SUCCESS,
-        payload: data || response.data.data || response.data || [],
+        payload: payloadData,
       });
       return response.data;
     }
@@ -75,9 +76,10 @@ export const getUnreadNotifications = () => async (dispatch) => {
     const { status, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
+      const payloadData = Array.isArray(data) ? data : (Array.isArray(response.data?.data) ? response.data.data : []);
       dispatch({
         type: FETCH_UNREAD_NOTIFICATIONS_SUCCESS,
-        payload: data || response.data.data || response.data || [],
+        payload: payloadData,
       });
       return response.data;
     }
