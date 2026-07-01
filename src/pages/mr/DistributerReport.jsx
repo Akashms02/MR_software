@@ -86,6 +86,7 @@ export default function DistributerReport() {
     const params = {
       startDate: startDate || '2000-01-01',
       endDate: endDate || '2099-12-31',
+      size: 100000
     };
     
     if (selectedDistributorId) {
