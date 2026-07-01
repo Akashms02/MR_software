@@ -46,7 +46,7 @@ export const teamReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         error: null,
-        team: action.payload || [],
+        team: Array.isArray(action.payload) ? action.payload : [],
       };
 
     case TEAM_LIST_FAILURE:

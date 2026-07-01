@@ -32,9 +32,14 @@ export const getMyTeam = () => async (dispatch) => {
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
+      const rawData = data || response.data.data;
+      const teamArray = Array.isArray(rawData) 
+        ? rawData 
+        : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+
       dispatch({
         type: TEAM_LIST_SUCCESS,
-        payload: data || response.data.data || [],
+        payload: teamArray,
       });
       return response.data;
     }
