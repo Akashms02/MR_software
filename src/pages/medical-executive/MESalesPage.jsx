@@ -80,8 +80,11 @@ export default function MESalesPage() {
       setDistributorsLoading(true);
       try {
         const response = await axios.get(`${API_ROUTE}/mr/distributors`);
-        const data = response.data?.data || response.data || [];
-        setDistributors(Array.isArray(data) ? data : []);
+        const rawData = response.data?.data || response.data;
+        const list = Array.isArray(rawData) 
+          ? rawData 
+          : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+        setDistributors(list);
       } catch (err) {
         console.error('Failed to fetch distributors:', err);
       } finally {
