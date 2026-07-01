@@ -289,7 +289,7 @@ export const distributerActivityReport = (params) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
-      const payloadData = Array.isArray(data) ? data : (data?.data || response.data?.data || []);
+      const payloadData = Array.isArray(data) ? data : (data?.content || data?.data || response.data?.data || []);
       dispatch({
         type: DISTRIBUTES_REPORT_SUCCESS,
         payload: payloadData,

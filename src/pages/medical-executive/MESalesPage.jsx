@@ -99,6 +99,7 @@ export default function MESalesPage() {
       const params = {
         startDate: '2000-01-01',
         endDate: '2099-12-31',
+        size: 100000
       };
       
       if (selectedDistributorId) {
@@ -114,7 +115,8 @@ export default function MESalesPage() {
 
       const response = await axios.get(`${API_ROUTE}/mr/distributors/sales`, { params });
       const data = response.data?.data || response.data || [];
-      setSalesRecords(Array.isArray(data) ? data : []);
+      const records = data && data.content ? data.content : (Array.isArray(data) ? data : []);
+      setSalesRecords(records);
     } catch (err) {
       console.error('Failed to fetch sales records:', err);
       setErrorMsg(err.response?.data?.message || err.message || 'Failed to retrieve sales logs.');

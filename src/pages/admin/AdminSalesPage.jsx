@@ -93,12 +93,12 @@ export default function AdminSalesPage() {
 
   const handleFetchRecords = async () => {
     setLoading(true);
-    setErrorMsg(null);
+    setErrorMsg('');
     try {
-      // Query a very wide range to fetch all records, since we filter client-side by createdAt (uploadDate)
       const params = {
         startDate: '2000-01-01',
         endDate: '2099-12-31',
+        size: 100000
       };
       
       if (selectedDistributorId) {
@@ -114,7 +114,8 @@ export default function AdminSalesPage() {
 
       const response = await axios.get(`${API_ROUTE}/mr/distributors/sales`, { params });
       const data = response.data?.data || response.data || [];
-      setSalesRecords(Array.isArray(data) ? data : []);
+      const records = data && data.content ? data.content : (Array.isArray(data) ? data : []);
+      setSalesRecords(records);
     } catch (err) {
       console.error('Failed to fetch sales records:', err);
       setErrorMsg(err.response?.data?.message || err.message || 'Failed to retrieve sales logs.');
