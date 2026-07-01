@@ -289,12 +289,24 @@ export const distributerActivityReport = (params) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
-      const payloadData = Array.isArray(data) ? data : (data?.content || data?.data || response.data?.data || []);
+      let list = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (data && Array.isArray(data.content)) {
+        list = data.content;
+      } else if (data && Array.isArray(data.data)) {
+        list = data.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        list = response.data.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+        list = response.data.data.content;
+      }
+
       dispatch({
         type: DISTRIBUTES_REPORT_SUCCESS,
-        payload: payloadData,
+        payload: list,
       });
-      return { success: true, data: payloadData };
+      return { success: true, data: list };
     }
     dispatch({
       type: DISTRIBUTES_REPORT_FAILURE,
@@ -317,12 +329,24 @@ export const getDistributorsList = () => async (dispatch) => {
     const response = await axios.get(`${API_ROUTE}/mr/distributors`);
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
-      const payloadData = Array.isArray(data) ? data : (data?.data || response.data?.data || []);
+      let list = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (data && Array.isArray(data.content)) {
+        list = data.content;
+      } else if (data && Array.isArray(data.data)) {
+        list = data.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        list = response.data.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+        list = response.data.data.content;
+      }
+
       dispatch({
         type: GET_DISTRIBUTORS_SUCCESS,
-        payload: payloadData,
+        payload: list,
       });
-      return { success: true, data: payloadData };
+      return { success: true, data: list };
     }
     dispatch({
       type: GET_DISTRIBUTORS_FAILURE,
