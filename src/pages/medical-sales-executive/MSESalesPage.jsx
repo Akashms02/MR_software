@@ -158,7 +158,7 @@ export default function MSESalesPage() {
 
       const uploadDate = record.createdAt ? record.createdAt.split('T')[0] : '';
       
-      const groupKey = `${distId}-${uploadDate}`;
+      const groupKey = `${distId}-${record.createdAt}`;
       let group = groups.find(g => g.key === groupKey);
       if (!group) {
         group = {
