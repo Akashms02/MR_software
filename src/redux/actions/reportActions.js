@@ -250,12 +250,14 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
         "SATURDAY": "Saturday",
         "SUNDAY": "Sunday"
       };
-      const formatted = Object.entries(data?.data?.weeklyMatrix || {}).map(([dayKey, visits]) => ({
+      const formatted = Object.entries(data?.data?.weeklyMatrix || {}).map(([dayKey, dayData]) => ({
         day: daysMap[dayKey] || dayKey,
+        date: dayData?.date || null,
         territory: 'N/A',
-        doctorVisits: visits || 0,
-        chemistCalls: 0,
-        dcrStatus: visits > 0 ? 'COMPLETED' : 'NO_ACTIVITY'
+        doctorVisits: dayData?.doctorVisitCount || 0,
+        chemistCalls: dayData?.chemistVisitCount || 0,
+        hasDcr: dayData?.hasDcr || false,
+        dcrStatus: dayData?.hasDcr ? (dayData?.doctorVisitCount > 0 ? 'COMPLETED' : 'NO_ACTIVITY') : 'NO_REPORT'
       }));
 
       dispatch({

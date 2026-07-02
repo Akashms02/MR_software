@@ -20,7 +20,8 @@ import {
   DELETE_NOTIFICATION_SUCCESS,
   DELETE_NOTIFICATION_FAILURE,
   CLEAR_ERRORS,
-  CLEAR_SUCCESS
+  CLEAR_SUCCESS,
+  RECEIVE_NOTIFICATION
 } from "../actionType/notificationActionType";
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
@@ -238,4 +239,12 @@ export const clearErrors = () => (dispatch) => {
 // Clear Success
 export const clearSuccess = () => (dispatch) => {
   dispatch({ type: CLEAR_SUCCESS });
+};
+
+// Receive Notification from WebSocket
+export const receiveNotification = (notification) => (dispatch) => {
+  dispatch({
+    type: RECEIVE_NOTIFICATION,
+    payload: notification,
+  });
 };

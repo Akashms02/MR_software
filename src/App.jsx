@@ -158,7 +158,81 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
-  // 4. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
+  // 4. WebSocket Notifications Connection
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let socket = null;
+    let reconnectTimer = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    let active = true;
+
+    import('./utils/websocket').then(({ getWebSocketUrl }) => {
+      import('./redux/actions/notificationActions').then(({ receiveNotification }) => {
+        if (!active) return;
+
+        const wsUrl = `${getWebSocketUrl()}?token=${token}`;
+
+        const connect = () => {
+          if (!active) return;
+          console.log('[WebSocket] Connecting to:', wsUrl);
+          socket = new WebSocket(wsUrl);
+
+          socket.onopen = () => {
+            console.log('%c[WebSocket] Connected to notification server', 'color: #00ff00; font-weight: bold;');
+            reconnectAttempts = 0;
+          };
+
+          socket.onmessage = (event) => {
+            try {
+              const notification = JSON.parse(event.data);
+              console.log('%c[WebSocket] Received notification:', 'color: #00ff00; font-weight: bold;', notification);
+              dispatch(receiveNotification(notification));
+              
+              if (notification.title || notification.message || notification.description) {
+                const title = notification.title || 'New Alert';
+                const msg = notification.message || notification.description || 'You have a new notification';
+                alert(`[Notification Alert]\nTitle: ${title}\nMessage: ${msg}`);
+              }
+            } catch (err) {
+              console.error('[WebSocket] Failed to parse message:', err);
+            }
+          };
+
+          socket.onclose = (event) => {
+            console.log('[WebSocket] Connection closed:', event.reason);
+            if (active && reconnectAttempts < maxReconnectAttempts) {
+              reconnectAttempts++;
+              console.log(`[WebSocket] Reconnecting in 5s... (Attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+              reconnectTimer = setTimeout(connect, 5000);
+            }
+          };
+
+          socket.onerror = (err) => {
+            console.error('[WebSocket] Connection error:', err);
+          };
+        };
+
+        connect();
+      });
+    });
+
+    return () => {
+      active = false;
+      if (socket) {
+        socket.close();
+      }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+    };
+  }, [dispatch, isAuthenticated]);
+
+  // 5. Proactive Session Heartbeat & Cross-Tab Sync (Commented out until /profile API is stable)
   /*
   useEffect(() => {
     if (!isAuthenticated) return;

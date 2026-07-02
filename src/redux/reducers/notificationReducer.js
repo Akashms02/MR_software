@@ -18,7 +18,8 @@ import {
   DELETE_NOTIFICATION_SUCCESS,
   DELETE_NOTIFICATION_FAILURE,
   CLEAR_ERRORS,
-  CLEAR_SUCCESS
+  CLEAR_SUCCESS,
+  RECEIVE_NOTIFICATION
 } from '../actionType/notificationActionType';
 import { LOADING_START, LOADING_END } from '../actionType/loadingActionType';
 
@@ -77,6 +78,18 @@ export const notificationReducer = (state = initialState, action) => {
         error: null,
         unreadCount: action.payload ?? 0,
       };
+
+    case RECEIVE_NOTIFICATION: {
+      const exists = state.notifications.some(
+        (n) => n.id === action.payload.id || n._id === action.payload._id
+      );
+      if (exists) return state;
+      return {
+        ...state,
+        notifications: [action.payload, ...state.notifications],
+        unreadCount: state.unreadCount + 1,
+      };
+    }
 
     case MARK_NOTIFICATION_READ_SUCCESS: {
       const updatedNotifications = state.notifications.map(n => 

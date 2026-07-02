@@ -87,6 +87,9 @@ export default function AdminAnalytics() {
           </ResponsiveContainer>
         </Card>
 
+
+        
+
         {/* Summary table */}
         <Card className="p-5">
           <div className="font-bold text-sm text-[#111827] mb-4">Department Summary</div>
