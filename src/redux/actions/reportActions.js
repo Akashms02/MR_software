@@ -90,20 +90,30 @@ export const getDatewiseDaily = (mrId, startDate, endDate) => async (dispatch) =
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
-      const datewiseVisits = data?.data?.datewiseVisits || {};
-      const formatted = Object.entries(datewiseVisits).map(([dateVal, visits]) => ({
-        date: dateVal,
-        visits: visits || 0,
-        chemistCalls: 0,
-        calls: visits || 0, // doctor calls fallback to visits
+      // API now returns paginated datewisePage.content (array of {date, doctorVisitCount, chemistVisitCount, dcrStatus})
+      const pageContent = data?.data?.datewisePage?.content || [];
+      const paginator  = data?.data?.datewisePage?.paginator || null;
+      const formatted = pageContent.map((entry) => ({
+        date: entry.date,
+        visits: entry.doctorVisitCount || 0,
+        chemistCalls: entry.chemistVisitCount || 0,
+        calls: entry.doctorVisitCount || 0,
+        dcrStatus: entry.dcrStatus || 'PENDING',
         travelKm: 0
-      })).sort((a, b) => b.date.localeCompare(a.date));
+      }));
+
+      const result = {
+        list: formatted,
+        totalWorkingDays: data?.data?.totalWorkingDays || 0,
+        grandTotalDoctorVisits: data?.data?.grandTotalDoctorVisits || 0,
+        paginator
+      };
 
       dispatch({
         type: GET_DATEWISE_DAILY_SUCCESS,
-        payload: formatted,
+        payload: result,
       });
-      return { success: true, data: formatted };
+      return { success: true, data: result };
     }
     dispatch({
       type: GET_DATEWISE_DAILY_FAILURE,
@@ -129,12 +139,32 @@ export const getCallVisit = (mrId, startDate, endDate) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
-      const formatted = data?.data?.calls || [];
+      // API now returns paginated callsPage.content
+      const pageContent = data?.data?.callsPage?.content || [];
+      const paginator  = data?.data?.callsPage?.paginator || null;
+      const formatted = pageContent.map((call) => ({
+        date: call.date,
+        doctorId: call.doctorId,
+        doctorName: call.doctorName,
+        speciality: call.speciality,
+        visitTime: call.visitTime,
+        productsDiscussed: call.productsDiscussed,
+        samplesGiven: call.samplesGiven || null,
+        feedback: call.feedback || '',
+        gpsVerified: call.gpsVerified || false
+      }));
+
+      const result = {
+        list: formatted,
+        totalCalls: data?.data?.totalCalls || 0,
+        paginator
+      };
+
       dispatch({
         type: GET_CALL_VISIT_SUCCESS,
-        payload: formatted,
+        payload: result,
       });
-      return { success: true, data: formatted };
+      return { success: true, data: result };
     }
     dispatch({
       type: GET_CALL_VISIT_FAILURE,
@@ -160,14 +190,17 @@ export const getDcrDay = (mrId, date) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const innerData = data?.data || {};
       const formatted = {
         date: data?.startDate || date,
-        status: data?.data?.status || 'NO_REPORT',
-        totalVisits: data?.data?.totalVisits || 0,
-        approvedBy: data?.data?.approvedBy || 'Pending',
-        comments: data?.data?.comments || '',
-        expenses: data?.data?.expenses || null,
-        doctorsMet: data?.data?.doctorsMet || []
+        dcrId: innerData.dcrId || null,
+        status: innerData.status || 'NO_REPORT',
+        managerRemarks: innerData.managerRemarks || '',
+        totalDoctorVisits: innerData.totalDoctorVisits || 0,
+        totalChemistVisits: innerData.totalChemistVisits || 0,
+        gpsVerifiedVisits: innerData.gpsVerifiedVisits || 0,
+        // legacy field aliases for backward compat with existing UI
+        totalVisits: innerData.totalDoctorVisits || 0
       };
       dispatch({
         type: GET_DCR_DAY_SUCCESS,
@@ -199,16 +232,20 @@ export const getDailyActivity = (mrId, date) => async (dispatch) => {
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
+      const innerData = data?.data || {};
       const formatted = {
         date: data?.startDate || date,
-        plannedTerritory: data?.data?.plannedTerritory || 'N/A',
-        tourPlanStatus: data?.data?.tourPlanStatus || 'N/A',
+        dcrId: innerData.dcrId || null,
+        dcrStatus: innerData.dcrStatus || innerData.status || 'NO_REPORT',
+        totalDoctorVisits: innerData.totalDoctorVisits || 0,
+        totalChemistVisits: innerData.totalChemistVisits || 0,
+        totalSamplesCount: innerData.totalSamplesCount || 0,
+        totalSamplesDistributed: innerData.totalSamplesDistributed || [],
         summary: {
-          workingStatus: data?.data?.totalVisits > 0 ? 'Present' : 'Absent/No Activity',
-          totalVisits: data?.data?.totalVisits || 0,
-          productiveVisits: data?.data?.totalVisits || 0,
-          nonProductiveVisits: 0,
-          remarks: data?.data?.remarks || ''
+          workingStatus: (innerData.totalDoctorVisits || 0) > 0 ? 'Present' : 'Absent/No Activity',
+          totalVisits: innerData.totalDoctorVisits || 0,
+          productiveVisits: innerData.totalDoctorVisits || 0,
+          nonProductiveVisits: 0
         }
       };
       dispatch({
@@ -250,12 +287,14 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
         "SATURDAY": "Saturday",
         "SUNDAY": "Sunday"
       };
-      const formatted = Object.entries(data?.data?.weeklyMatrix || {}).map(([dayKey, visits]) => ({
+      const formatted = Object.entries(data?.data?.weeklyMatrix || {}).map(([dayKey, dayData]) => ({
         day: daysMap[dayKey] || dayKey,
+        date: dayData?.date || null,
         territory: 'N/A',
-        doctorVisits: visits || 0,
-        chemistCalls: 0,
-        dcrStatus: visits > 0 ? 'COMPLETED' : 'NO_ACTIVITY'
+        doctorVisits: dayData?.doctorVisitCount || 0,
+        chemistCalls: dayData?.chemistVisitCount || 0,
+        hasDcr: dayData?.hasDcr || false,
+        dcrStatus: dayData?.hasDcr ? (dayData?.doctorVisitCount > 0 ? 'COMPLETED' : 'NO_ACTIVITY') : 'NO_REPORT'
       }));
 
       dispatch({

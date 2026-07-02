@@ -98,7 +98,10 @@ const TeamManagement = () => {
     { label: 'Total Members', value: team?.length || 0, textClass: 'text-[#6366F1]' },
     {
       label: 'Med. Reps',
-      value: team?.filter((m) => m.role === 'MR').length || 0,
+      value: team?.filter((m) => {
+        const r = (m.role || '').toUpperCase().trim();
+        return r === 'MR' || r === 'MEDICAL_REPRESENTATIVE' || r === 'ME' || r === 'MEDICAL_EXECUTIVE' || r === 'MSE' || r === 'MEDICAL_SALES_EXECUTIVE';
+      }).length || 0,
       textClass: 'text-[#10B981]',
     },
     {
