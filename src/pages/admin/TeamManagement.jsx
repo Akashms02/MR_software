@@ -16,6 +16,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import EditEmployeeModal from './EditEmployeeModal';
+import Pagination from '../../components/common/Pagination';
 
 const ROLE_COLORS = {
   MR: { bgClass: 'bg-[#ECFDF5]', textClass: 'text-[#059669]' },
@@ -38,6 +39,15 @@ const TeamManagement = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [resumeId, setResumeId] = useState('');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   // Edit / Delete states
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
@@ -66,7 +76,7 @@ const TeamManagement = () => {
   };
 
   useEffect(() => {
-    dispatch(getMyTeam());
+    dispatch(getMyTeam(0, 100000));
   }, [dispatch]);
 
   const filteredTeam = (team || []).filter(
@@ -205,7 +215,7 @@ const TeamManagement = () => {
                   </td>
                 </tr>
               ) : (
-                filteredTeam.map((member) => {
+                filteredTeam.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((member) => {
                   const roleColor = ROLE_COLORS[member.role] || {
                     bgClass: 'bg-[#F3F4F6]',
                     textClass: 'text-[#4B5563]',
@@ -300,6 +310,18 @@ const TeamManagement = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-6 pb-4 bg-white">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredTeam.length / pageSize)}
+            totalElements={filteredTeam.length}
+            pageSize={pageSize}
+            onPageChange={(page) => setCurrentPage(page)}
+            isLoading={loading}
+            activeBtnClass="bg-[#C8F04A] text-gray-900"
+          />
         </div>
       </div>
 

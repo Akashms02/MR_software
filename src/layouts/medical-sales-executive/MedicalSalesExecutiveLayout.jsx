@@ -51,7 +51,7 @@ function MSEHeader({ onBellClick, unreadCount }) {
     if (activePage === 'sales') return 'Distributor Sales'
     if (activePage === 'finance') return 'Documents'
     if (activePage === 'me') return 'Me'
-    if (activePage === 'settings') return 'Settings'
+
     return 'Dashboard'
   }
 
@@ -176,12 +176,11 @@ export default function MedicalSalesExecutiveLayout({ children }) {
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-sales-executive/reports' },
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/medical-sales-executive/sales' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/medical-sales-executive/finance' },
-    { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/medical-sales-executive/settings' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (item.id === 'dashboard') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

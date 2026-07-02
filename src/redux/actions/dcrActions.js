@@ -31,7 +31,12 @@ export const fetchMyDcrsAction = () => async (dispatch) => {
   dispatch({ type: FETCH_MY_DCRS_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/dcr/me`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_MY_DCRS_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],
@@ -115,7 +120,12 @@ export const fetchTeamDcrsAction = () => async (dispatch) => {
   dispatch({ type: FETCH_TEAM_DCRS_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/dcr/team`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_TEAM_DCRS_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],

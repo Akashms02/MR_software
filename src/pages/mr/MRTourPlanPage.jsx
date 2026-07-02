@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
@@ -12,6 +12,7 @@ import {
   clearTourPlanErrorsAction,
   clearTourPlanSuccessAction,
 } from '../../redux/actions/tourPlanActions';
+import Pagination from '../../components/common/Pagination';
 
 const MRTourPlanPage = () => {
   const dispatch = useDispatch();
@@ -20,6 +21,15 @@ const MRTourPlanPage = () => {
 
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
   const [doctors, setDoctors] = useState([]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when switching tabs
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [activeTab]);
   const [actionLoading, setActionLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -265,71 +275,81 @@ const MRTourPlanPage = () => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="overflow-y-auto flex-1 pr-1">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
-                    {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tourPlans.map((plan) => {
-                    return (
-                      <tr key={plan.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
-                        {/* Month */}
-                        <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
-                          <span className="flex items-center gap-2">
-                            <Calendar size={14} className="text-[#9CA3AF]" />
-                            {formatMonthLabel(plan.targetMonth)}
-                          </span>
-                        </td>
-                        {/* Total Days */}
-                        <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
-                          {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
-                        </td>
-                        {/* Status */}
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${getStatusBadgeClass(plan.status)}`}>
-                            {plan.status}
-                          </span>
-                        </td>
-                        {/* Remarks */}
-                        <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {plan.remarks || '—'}
-                        </td>
-                        {/* Actions */}
-                        <td className="px-4 py-4">
-                          <div className="flex gap-2 items-center">
-                            <button
-                              onClick={() => handleViewPlanDetails(plan.id)}
-                              title="View Details"
-                              className="flex items-center gap-1 bg-[#F3F4F6] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#374151] hover:bg-[#E5E7EB] transition-colors duration-150"
-                            >
-                              <Eye size={12} /> Details
-                            </button>
-                            {plan.status === 'DRAFT' && (
+              <div className="flex-1 overflow-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
+                      {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider bg-white sticky top-0">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tourPlans.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((plan) => {
+                      return (
+                        <tr key={plan.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
+                          {/* Month */}
+                          <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
+                            <span className="flex items-center gap-2">
+                              <Calendar size={14} className="text-[#9CA3AF]" />
+                              {formatMonthLabel(plan.targetMonth)}
+                            </span>
+                          </td>
+                          {/* Total Days */}
+                          <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
+                            {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
+                          </td>
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${getStatusBadgeClass(plan.status)}`}>
+                              {plan.status}
+                            </span>
+                          </td>
+                          {/* Remarks */}
+                          <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {plan.remarks || '—'}
+                          </td>
+                          {/* Actions */}
+                          <td className="px-4 py-4">
+                            <div className="flex gap-2 items-center">
                               <button
-                                onClick={() => handleSubmitExistingDraft(plan.id)}
-                                disabled={actionLoading}
-                                title="Submit tour plan for review"
-                                className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150"
+                                onClick={() => handleViewPlanDetails(plan.id)}
+                                title="View Details"
+                                className="flex items-center gap-1 bg-[#F3F4F6] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#374151] hover:bg-[#E5E7EB] transition-colors duration-150"
                               >
-                                <Send size={11} /> Submit
+                                <Eye size={12} /> Details
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                              {plan.status === 'DRAFT' && (
+                                <button
+                                  onClick={() => handleSubmitExistingDraft(plan.id)}
+                                  disabled={actionLoading}
+                                  title="Submit tour plan for review"
+                                  className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150"
+                                >
+                                  <Send size={11} /> Submit
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(tourPlans.length / pageSize)}
+                totalElements={tourPlans.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+                activeBtnClass="bg-[#C8F04A] text-[#111827]"
+              />
             </div>
-          </div>
           )
         )}
 
@@ -396,12 +416,15 @@ const MRTourPlanPage = () => {
                         required
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none box-border font-sans"
                       >
-                        <option value="FIELD_WORK">Field Work (Doctor Visits)</option>
-                        <option value="MEETING">Team Meeting</option>
-                        <option value="SEMINAR">Seminar / Conference</option>
-                        <option value="OFFICE_WORK">Office / Admin Work</option>
-                        <option value="TRAVEL">Transit / Travel</option>
-                        <option value="LEAVE">Leave Day</option>
+                        <option value="FIELD_WORK">Field Work</option>
+                        <option value="OFFICE_WORK">Office Work</option>
+                        <option value="MEETING">Meeting</option>
+                        <option value="SEMINAR">Seminar</option>
+                        <option value="TRAVEL">Travel</option>
+                        <option value="CONFERENCE">Conference</option>
+                        <option value="HOLIDAY">Holiday</option>
+                        <option value="LEAVE">Leave</option>
+                        <option value="TRAINING">Training</option>
                       </select>
                     </div>
 

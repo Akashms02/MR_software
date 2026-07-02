@@ -26,15 +26,38 @@ import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
 const commonError = "Something went wrong!";
 
-export const fetchMyTourPlansAction = () => async (dispatch) => {
+export const fetchMyTourPlansAction = (page = 0, size = 100000) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_MY_TOUR_PLANS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/tour-plan/me`);
-    const payloadData = response.data?.data || response.data || [];
+    const response = await axios.get(`${API_ROUTE}/tour-plan/me`, {
+      params: { page, size }
+    });
+    const data = response.data?.data ?? response.data;
+    const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
+    
+    const pagination = (data && typeof data === 'object') ? (
+      data.paginator ? {
+        totalElements: data.paginator.itemCount,
+        totalPages: data.paginator.pageCount,
+        number: data.paginator.currentPage - 1,
+        size: data.paginator.perPage,
+        first: data.paginator.currentPage === 1,
+        last: data.paginator.currentPage === data.paginator.pageCount
+      } : ('totalElements' in data ? {
+        totalElements: data.totalElements,
+        totalPages: data.totalPages,
+        number: data.number,
+        size: data.size,
+        first: data.first,
+        last: data.last
+      } : null)
+    ) : null;
+
     dispatch({
       type: FETCH_MY_TOUR_PLANS_SUCCESS,
-      payload: Array.isArray(payloadData) ? payloadData : [],
+      payload: list,
+      pagination: pagination,
     });
     return response.data;
   } catch (error) {
@@ -107,15 +130,38 @@ export const fetchTourPlanDetailsAction = (planId) => async (dispatch) => {
   }
 };
 
-export const fetchTeamTourPlansAction = () => async (dispatch) => {
+export const fetchTeamTourPlansAction = (page = 0, size = 100000) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_TOUR_PLANS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/tour-plan/team`);
-    const payloadData = response.data?.data || response.data || [];
+    const response = await axios.get(`${API_ROUTE}/tour-plan/team`, {
+      params: { page, size }
+    });
+    const data = response.data?.data ?? response.data;
+    const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
+    
+    const pagination = (data && typeof data === 'object') ? (
+      data.paginator ? {
+        totalElements: data.paginator.itemCount,
+        totalPages: data.paginator.pageCount,
+        number: data.paginator.currentPage - 1,
+        size: data.paginator.perPage,
+        first: data.paginator.currentPage === 1,
+        last: data.paginator.currentPage === data.paginator.pageCount
+      } : ('totalElements' in data ? {
+        totalElements: data.totalElements,
+        totalPages: data.totalPages,
+        number: data.number,
+        size: data.size,
+        first: data.first,
+        last: data.last
+      } : null)
+    ) : null;
+
     dispatch({
       type: FETCH_TEAM_TOUR_PLANS_SUCCESS,
-      payload: Array.isArray(payloadData) ? payloadData : [],
+      payload: list,
+      pagination: pagination,
     });
     return response.data;
   } catch (error) {

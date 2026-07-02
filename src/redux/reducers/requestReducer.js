@@ -21,6 +21,7 @@ const initialState = {
   error: null,
   success: null,
   requests: [],
+  pagination: null,
 };
 
 export const requestReducer = (state = initialState, action) => {
@@ -43,6 +44,7 @@ export const requestReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         requests: Array.isArray(action.payload) ? action.payload : [],
+        pagination: action.pagination || null,
         error: null,
       };
 

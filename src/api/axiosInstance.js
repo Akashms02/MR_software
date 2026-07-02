@@ -802,16 +802,40 @@ axios.interceptors.request.use(
                 }
               } catch (e) {}
               let statusFilter = 'PENDING';
+              let page = 0;
+              let size = 10;
               try {
                 const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
-                const raw = (new URL(urlStr).searchParams.get('status') || 'PENDING').toUpperCase();
+                const urlObj = new URL(urlStr);
+                const raw = (urlObj.searchParams.get('status') || 'PENDING').toUpperCase();
                 statusFilter = raw === 'ALL' ? 'ALL' : raw;
+                page = parseInt(urlObj.searchParams.get('page') || '0', 10);
+                size = parseInt(urlObj.searchParams.get('size') || '10', 10);
               } catch (e) {}
-              const list =
+              const filteredList =
                 statusFilter === 'ALL'
                   ? requests
                   : requests.filter((r) => String(r.status).toUpperCase() === statusFilter);
-              mockData = { success: true, status: 200, data: list };
+
+              const totalElements = filteredList.length;
+              const totalPages = Math.ceil(totalElements / size);
+              const content = filteredList.slice(page * size, (page + 1) * size);
+
+              mockData = {
+                success: true,
+                status: 200,
+                data: {
+                  content,
+                  empty: content.length === 0,
+                  first: page === 0,
+                  last: page >= totalPages - 1 || totalPages === 0,
+                  number: page,
+                  numberOfElements: content.length,
+                  size: size,
+                  totalElements,
+                  totalPages
+                }
+              };
             } else if (cfg.url.includes('/requests/') && cfg.url.includes('/review') && cfg.method === 'put') {
               const urlWithoutParams = cfg.url.split('?')[0];
               const parts = urlWithoutParams.split('/');

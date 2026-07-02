@@ -15,13 +15,6 @@ import MRRequestsPage from '../../pages/mr/MRRequestsPage'
 import MRSalesPage from '../../pages/mr/MRSalesPage'
 import DistributerReport from '../../pages/mr/DistributerReport'
 
-const SettingsPlaceholder = () => (
-  <div className="p-6 bg-white rounded-2xl border border-gray-200">
-    <h3 className="text-[18px] font-extrabold text-gray-900 mb-2">Settings</h3>
-    <p className="text-[13px] text-gray-500">Configure your personal preferences, notifications, and profile security here.</p>
-  </div>
-)
-
 export default function MRLayoutRouter() {
   return (
     <MRLayout>
@@ -40,7 +33,6 @@ export default function MRLayoutRouter() {
         <Route path="finance" element={<MRDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
-        <Route path="settings" element={<SettingsPlaceholder />} />
         <Route path="*" element={<Navigate to="/mr/dashboard" replace />} />
       </Routes>
     </MRLayout>

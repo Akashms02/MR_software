@@ -28,6 +28,7 @@ const initialState = {
   tourPlans: [],
   teamTourPlans: [],
   currentTourPlan: null,
+  pagination: null,
 };
 
 export const tourPlanReducer = (state = initialState, action) => {
@@ -49,6 +50,7 @@ export const tourPlanReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         tourPlans: Array.isArray(action.payload) ? action.payload : [],
+        pagination: action.pagination || null,
         error: null,
       };
 
@@ -57,6 +59,7 @@ export const tourPlanReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         teamTourPlans: Array.isArray(action.payload) ? action.payload : [],
+        pagination: action.pagination || null,
         error: null,
       };
 
