@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
@@ -11,6 +11,7 @@ import {
   clearTourPlanErrorsAction,
   clearTourPlanSuccessAction,
 } from '../../redux/actions/tourPlanActions';
+import Pagination from '../../components/common/Pagination';
 
 const MSETourPlanPage = () => {
   const dispatch = useDispatch();
@@ -18,6 +19,15 @@ const MSETourPlanPage = () => {
 
   const [activeTab, setActiveTab] = useState('list');
   const [doctors, setDoctors] = useState([]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when switching tabs
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [activeTab]);
   const [actionLoading, setActionLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -199,22 +209,27 @@ const MSETourPlanPage = () => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="overflow-auto flex-1 pr-1">
+              <div className="flex-1 overflow-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b-2 border-gray-100">
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
                       {['Target Month', 'Total Days', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                        <th key={h} className="py-3 px-4 text-[11.5px] font-extrabold text-gray-400 uppercase tracking-wide">{h}</th>
+                        <th key={h} className="py-3 px-4 text-[11.5px] font-extrabold text-gray-400 uppercase tracking-wide bg-white sticky top-0">
+                          {h}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {tourPlans.map((plan) => {
+                    {tourPlans.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((plan) => {
                       const statusStyle = getStatusBadgeStyle(plan.status);
                       return (
                         <tr key={plan.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
                           <td className="py-4 px-4 text-[13.5px] font-bold text-gray-800">
-                            <span className="flex items-center gap-2"><Calendar size={14} color="#9CA3AF" />{formatMonthLabel(plan.targetMonth)}</span>
+                            <span className="flex items-center gap-2">
+                              <Calendar size={14} color="#9CA3AF" />
+                              {formatMonthLabel(plan.targetMonth)}
+                            </span>
                           </td>
                           <td className="py-4 px-4 text-[13.5px] text-gray-600 font-semibold">
                             {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
@@ -253,6 +268,16 @@ const MSETourPlanPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(tourPlans.length / pageSize)}
+                totalElements={tourPlans.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+                activeBtnClass="bg-[#0D9488] text-white"
+              />
             </div>
           )
         )}
@@ -295,12 +320,15 @@ const MSETourPlanPage = () => {
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Activity Type <span className="text-red-500">*</span></label>
                       <select value={day.activityType} onChange={(e) => handleDayChange(idx, 'activityType', e.target.value)} required className="w-full py-2.5 px-3.5 rounded-[10px] border border-gray-200 text-[13.5px] bg-white outline-none box-border">
-                        <option value="FIELD_WORK">Field Work (Doctor Visits)</option>
-                        <option value="MEETING">Team Meeting</option>
-                        <option value="SEMINAR">Seminar / Conference</option>
-                        <option value="OFFICE_WORK">Office / Admin Work</option>
-                        <option value="TRAVEL">Transit / Travel</option>
-                        <option value="LEAVE">Leave Day</option>
+                        <option value="FIELD_WORK">Field Work</option>
+                        <option value="OFFICE_WORK">Office Work</option>
+                        <option value="MEETING">Meeting</option>
+                        <option value="SEMINAR">Seminar</option>
+                        <option value="TRAVEL">Travel</option>
+                        <option value="CONFERENCE">Conference</option>
+                        <option value="HOLIDAY">Holiday</option>
+                        <option value="LEAVE">Leave</option>
+                        <option value="TRAINING">Training</option>
                       </select>
                     </div>
                     <div>

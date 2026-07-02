@@ -37,19 +37,58 @@ const extractRequestList = (response) => {
   return [];
 };
 
-export const fetchPendingRequestsAction = (status = "ALL") => async (dispatch) => {
+const extractPagination = (data, page, size) => {
+  if (!data || typeof data !== 'object') return null;
+  if (data.paginator) {
+    return {
+      totalElements: data.paginator.itemCount,
+      totalPages: data.paginator.pageCount,
+      number: data.paginator.currentPage - 1,
+      size: data.paginator.perPage,
+      first: data.paginator.currentPage === 1,
+      last: data.paginator.currentPage === data.paginator.pageCount
+    };
+  }
+  if ('totalElements' in data) {
+    return {
+      totalElements: data.totalElements,
+      totalPages: data.totalPages,
+      number: data.number,
+      size: data.size,
+      first: data.first,
+      last: data.last
+    };
+  }
+  if ('total' in data) {
+    return {
+      totalElements: data.total,
+      totalPages: Math.ceil(data.total / size),
+      number: page,
+      size: size,
+      first: page === 0,
+      last: (page + 1) * size >= data.total
+    };
+  }
+  return null;
+};
+
+export const fetchPendingRequestsAction = (status = "ALL", page = 0, size = 10) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_PENDING_REQUESTS_REQUEST });
   try {
     const apiStatus = String(status || "ALL").toUpperCase();
     const response = await axios.get(`${API_ROUTE}/requests/pending`, {
-      params: { status: apiStatus },
+      params: { status: apiStatus, page, size },
     });
-    const list = extractRequestList(response);
+    
+    const data = response.data?.data ?? response.data;
+    const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
+    const pagination = extractPagination(data, page, size);
 
     dispatch({
       type: FETCH_PENDING_REQUESTS_SUCCESS,
       payload: list,
+      pagination: pagination,
     });
     return response.data;
   } catch (error) {
@@ -61,18 +100,28 @@ export const fetchPendingRequestsAction = (status = "ALL") => async (dispatch) =
   }
 };
 
-export const fetchMeRequestsAction = () => async (dispatch) => {
+export const fetchMeRequestsAction = (page = 0, size = 10) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ME_REQUESTS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/requests/me`);
+    const response = await axios.get(`${API_ROUTE}/requests/me`, {
+      params: { page, size }
+    });
     const rawData = response.data?.data || response.data;
-    const list = Array.isArray(rawData) 
-      ? rawData 
-      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+    
+    let list = [];
+    let pagination = extractPagination(rawData, page, size);
+    
+    if (Array.isArray(rawData)) {
+      list = rawData;
+    } else if (rawData && typeof rawData === 'object') {
+      list = Array.isArray(rawData.content) ? rawData.content : [];
+    }
+
     dispatch({
       type: FETCH_ME_REQUESTS_SUCCESS,
       payload: list,
+      pagination: pagination,
     });
     return response.data;
   } catch (error) {

@@ -53,7 +53,6 @@ function MRHeader({ onBellClick, unreadCount }) {
     if (activePage === 'distributor-report') return 'Distributor Report'
     if (activePage === 'finance') return 'Documents'
     if (activePage === 'me') return 'Me'
-    if (activePage === 'settings') return 'Settings'
     if (activePage === 'onboard-doctor') return 'Doctor Onboarding'
     return 'Dashboard'
   }
@@ -181,12 +180,11 @@ export default function MRLayout({ children }) {
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
     { id: 'distributor-report', icon: FileSpreadsheet, label: 'Distributor Report', path: '/mr/distributor-report' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/mr/finance' },
-    { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/mr/settings' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (item.id === 'dashboard') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

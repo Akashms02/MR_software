@@ -3,6 +3,7 @@ import { ChevronRight, Search, Loader2, Mail, Phone, Users, AlertCircle } from '
 import { useDispatch, useSelector } from 'react-redux'
 import { getMyTeam } from '../../redux/actions/teamActions'
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
+import Pagination from '../../components/common/Pagination'
 
 const STATUS_BADGE = {
   'Active':   'bg-[#ECFDF5] text-[#059669]',
@@ -115,12 +116,26 @@ const SkeletonCard = () => (
 
 export default function AdminEmployees() {
   const dispatch = useDispatch()
-  const { team, loading, error } = useSelector((state) => state.team)
+  const { team, totalElements, totalPages, loading, error } = useSelector((state) => state.team)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 12 // 12 cards per page (multiple of 4)
+
+  // Reset page when search query changes
   useEffect(() => {
-    dispatch(getMyTeam())
-  }, [dispatch])
+    setCurrentPage(0)
+  }, [searchQuery])
+
+  // Trigger data fetch when page or search changes
+  useEffect(() => {
+    if (searchQuery) {
+      dispatch(getMyTeam(0, 100000))
+    } else {
+      dispatch(getMyTeam(currentPage, pageSize))
+    }
+  }, [dispatch, currentPage, pageSize, searchQuery])
 
   // Filters based on the exact live API fields
   const filteredEmployees = (team || []).filter(
@@ -132,6 +147,14 @@ export default function AdminEmployees() {
       emp.employeeId?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // If search is active, do local slicing. If not, use backend paginated team list directly.
+  const displayedEmployees = searchQuery 
+    ? filteredEmployees.slice(currentPage * pageSize, (currentPage + 1) * pageSize) 
+    : (team || [])
+
+  const totalCount = searchQuery ? filteredEmployees.length : totalElements
+  const pageCount = searchQuery ? Math.ceil(totalCount / pageSize) : totalPages
+
   return (
     <div className="animate-fade font-sans">
 
@@ -139,7 +162,7 @@ export default function AdminEmployees() {
       <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
         <div>
           <span className="bg-white border border-[#E5E7EB] text-[#6B7280] text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm">
-            {filteredEmployees.length} Employees Total
+            {totalCount} Employees Total
           </span>
         </div>
 
@@ -178,8 +201,8 @@ export default function AdminEmployees() {
 
         {/* Employees List View */}
         {!loading && (
-          <>
-            {filteredEmployees.length === 0 ? (
+          <div className="flex flex-col gap-6">
+            {displayedEmployees.length === 0 ? (
               <div className="px-6 py-[50px] text-center bg-white rounded-2xl border-[1.5px] border-dashed border-[#E5E7EB] text-[#9CA3AF]">
                 <Users size={40} className="mb-3 text-[#CBD5E1] mx-auto" />
                 <h4 className="text-[15px] font-extrabold text-[#4B5563] mt-0 mb-1.5">No Employees Found</h4>
@@ -188,23 +211,36 @@ export default function AdminEmployees() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredEmployees.map((member) => (
-                  <EmployeeCard 
-                    key={member.id}
-                    name={member.fullName || 'Unknown'}
-                    role={formatRole(member.role)}
-                    status={member.enabled ? 'Active' : 'Inactive'}
-                    email={member.email || 'N/A'}
-                    phone={member.phone || 'N/A'}
-                    employeeId={member.employeeId || 'N/A'}
-                    photoUrl={member.photoUrl}
-                    joinedOn={formatDate(member.createdAt)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {displayedEmployees.map((member) => (
+                    <EmployeeCard 
+                      key={member.id}
+                      name={member.fullName || 'Unknown'}
+                      role={formatRole(member.role)}
+                      status={member.enabled ? 'Active' : 'Inactive'}
+                      email={member.email || 'N/A'}
+                      phone={member.phone || 'N/A'}
+                      employeeId={member.employeeId || 'N/A'}
+                      photoUrl={member.photoUrl}
+                      joinedOn={formatDate(member.createdAt)}
+                    />
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={pageCount}
+                  totalElements={totalCount}
+                  pageSize={pageSize}
+                  onPageChange={(page) => setCurrentPage(page)}
+                  isLoading={loading}
+                  activeBtnClass="bg-[#C8F04A] text-[#111827]"
+                  simple={true}
+                />
+              </>
             )}
-          </>
+          </div>
         )}
       </div>
 

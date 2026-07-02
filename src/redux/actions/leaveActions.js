@@ -56,7 +56,12 @@ export const fetchMyLeavesAction = () => async (dispatch) => {
   dispatch({ type: FETCH_MY_LEAVES_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/leaves/requests/my`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_MY_LEAVES_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],
@@ -102,7 +107,12 @@ export const fetchTeamLeavesAction = () => async (dispatch) => {
   dispatch({ type: FETCH_TEAM_LEAVES_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/leaves/requests/team`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_TEAM_LEAVES_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],
@@ -239,7 +249,12 @@ export const fetchMyBalancesAction = (year = 2026) => async (dispatch) => {
   dispatch({ type: FETCH_MY_BALANCES_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/leave/balances/my-balances?year=${year}`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_MY_BALANCES_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],
@@ -260,7 +275,12 @@ export const fetchEmployeeBalancesAction = (employeeId, year = 2026) => async (d
   dispatch({ type: FETCH_EMPLOYEE_BALANCES_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/leave/balances/employee/${employeeId}?year=${year}`);
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_EMPLOYEE_BALANCES_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],

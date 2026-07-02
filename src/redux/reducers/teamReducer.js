@@ -22,6 +22,8 @@ const initialState = {
   success: null,
   message: null,
   team: [],
+  totalElements: 0,
+  totalPages: 0,
 };
 
 export const teamReducer = (state = initialState, action) => {
@@ -47,6 +49,8 @@ export const teamReducer = (state = initialState, action) => {
         loading: false,
         error: null,
         team: Array.isArray(action.payload) ? action.payload : [],
+        totalElements: action.totalElements !== undefined ? action.totalElements : (Array.isArray(action.payload) ? action.payload.length : 0),
+        totalPages: action.totalPages !== undefined ? action.totalPages : 1,
       };
 
     case TEAM_LIST_FAILURE:

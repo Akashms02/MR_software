@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { Calendar, Plus, CheckCircle2, AlertCircle, Clock, FileText, Send, Loader2, Award, ShieldAlert, HeartHandshake } from 'lucide-react';
@@ -10,6 +10,7 @@ import {
   clearLeaveErrorsAction,
   clearLeaveSuccessAction
 } from '../../redux/actions/leaveActions';
+import Pagination from '../../components/common/Pagination';
 
 const MRLeavePage = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,15 @@ const MRLeavePage = () => {
   const { leaves, myBalances, leaveTypes, loading, error, success } = useSelector((state) => state.leave);
 
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when switching tabs
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [activeTab]);
   
   // Local notification triggers
   const [errorMsg, setErrorMsg] = useState(null);
@@ -270,58 +280,68 @@ const MRLeavePage = () => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="overflow-y-auto flex-1 pr-1">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
-                    {['Leave Type', 'Start Date', 'End Date', 'Duration', 'Reason', 'Status', 'Manager Feedback'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaves.map((leave) => {
-                    return (
-                      <tr key={leave.leaveId || leave.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
-                        {/* Type */}
-                        <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
-                          {formatLeaveType(leave.leaveName || leave.leaveCode || leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType)}
-                        </td>
-                        {/* Start Date */}
-                        <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
-                          {leave.startDate || leave.fromDate}
-                        </td>
-                        {/* End Date */}
-                        <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
-                          {leave.endDate || leave.toDate}
-                        </td>
-                        {/* Duration */}
-                        <td className="px-4 py-4 text-[13px] text-[#1F2937] font-bold">
-                          {calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate)} Day{calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
-                        </td>
-                        {/* Reason */}
-                        <td className="px-4 py-4 text-[13px] text-[#4B5563] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.reason}>
-                          {leave.reason}
-                        </td>
-                        {/* Status */}
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${getStatusBadgeClass(leave.status)}`}>
-                            {leave.status}
-                          </span>
-                        </td>
-                        {/* Feedback */}
-                        <td className="px-4 py-4 text-[12.5px] text-[#6B7280] italic max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.managerRemarks || leave.remarks || ''}>
-                          {leave.managerRemarks || leave.remarks || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="flex-1 overflow-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
+                      {['Leave Type', 'Start Date', 'End Date', 'Duration', 'Reason', 'Status', 'Manager Feedback'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider bg-white sticky top-0">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaves.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((leave) => {
+                      return (
+                        <tr key={leave.leaveId || leave.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
+                          {/* Type */}
+                          <td className="px-4 py-4 text-[13.5px] font-bold text-[#1F2937]">
+                            {formatLeaveType(leave.leaveName || leave.leaveCode || leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType)}
+                          </td>
+                          {/* Start Date */}
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
+                            {leave.startDate || leave.fromDate}
+                          </td>
+                          {/* End Date */}
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] font-semibold">
+                            {leave.endDate || leave.toDate}
+                          </td>
+                          {/* Duration */}
+                          <td className="px-4 py-4 text-[13px] text-[#1F2937] font-bold">
+                            {calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate)} Day{calculateDays(leave.startDate, leave.endDate, leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
+                          </td>
+                          {/* Reason */}
+                          <td className="px-4 py-4 text-[13px] text-[#4B5563] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.reason}>
+                            {leave.reason}
+                          </td>
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${getStatusBadgeClass(leave.status)}`}>
+                              {leave.status}
+                            </span>
+                          </td>
+                          {/* Feedback */}
+                          <td className="px-4 py-4 text-[12.5px] text-[#6B7280] italic max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={leave.managerRemarks || leave.remarks || ''}>
+                            {leave.managerRemarks || leave.remarks || '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(leaves.length / pageSize)}
+                totalElements={leaves.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+                activeBtnClass="bg-[#C8F04A] text-[#111827]"
+              />
             </div>
-          </div>
           )
         )}
 

@@ -14,12 +14,6 @@ import MEFieldTracking from '../../pages/medical-executive/MEFieldTracking'
 import MELeaveReviewPage from '../../pages/medical-executive/MELeaveReviewPage'
 import MESalesPage from '../../pages/medical-executive/MESalesPage'
 
-const SettingsPlaceholder = () => (
-  <div className="p-6 bg-white rounded-2xl border border-gray-200">
-    <h3 className="text-[18px] font-extrabold text-gray-900 mb-2 m-0">Settings</h3>
-    <p className="text-[13px] text-gray-500 m-0">Configure your personal preferences, notifications, and profile security here.</p>
-  </div>
-)
 
 export default function MedicalExecutiveLayoutRouter() {
   return (
@@ -38,7 +32,6 @@ export default function MedicalExecutiveLayoutRouter() {
         <Route path="finance" element={<MEDocument />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
-        <Route path="settings" element={<SettingsPlaceholder />} />
         <Route path="*" element={<Navigate to="/medical-executive/dashboard" replace />} />
       </Routes>
     </MedicalExecutiveLayout>

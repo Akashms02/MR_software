@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { Card, TableWrap, Th, Td, PrimaryBtn, OutlineBtn } from '../../components/ui';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { Loader2, Calendar, FileSpreadsheet, Eye, Download, AlertCircle, RefreshCw, X, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
+import Pagination from '../../components/common/Pagination';
 
 // Date Helpers
 const getTodayDateString = () => {
@@ -70,6 +71,15 @@ export default function AdminSalesPage() {
   const [loading, setLoading] = useState(false);
   const [distributorsLoading, setDistributorsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedDistributorId, startDate, endDate]);
 
   // Group Preview Modal state
   const [previewGroup, setPreviewGroup] = useState(null);
@@ -315,10 +325,10 @@ export default function AdminSalesPage() {
   };
 
   return (
-    <div className="animate-[fadeIn_0.35s_ease-out] font-sans flex flex-col gap-6">
+    <div className="animate-[fadeIn_0.35s_ease-out] font-sans flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden gap-6 p-1">
       
       {/* Search and Filters Panel */}
-      <Card className="p-5">
+      <Card className="p-5 shrink-0">
         <div className="flex items-center gap-2 mb-4">
           <Filter size={16} className="text-gray-500" />
           <h3 className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] m-0">
@@ -392,7 +402,7 @@ export default function AdminSalesPage() {
       </Card>
 
       {/* Uploads Data Log */}
-      <div className="relative flex flex-col min-h-[400px]">
+      <div className="relative flex-1 min-h-0 flex flex-col bg-white border border-gray-100 rounded-[18px] p-5 pb-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] overflow-hidden">
         {/* Loading Spinner overlay */}
         {loading && (
           <div className="bg-white/75 backdrop-blur-[1px] absolute inset-0 flex items-center justify-center z-10 rounded-2xl">
@@ -413,61 +423,72 @@ export default function AdminSalesPage() {
 
         {/* Records list table */}
         {getGroupedUploads().length === 0 ? (
-          <Card className="px-6 py-12 text-center bg-white border border-dashed border-[#E5E7EB] flex-1 flex flex-col justify-center items-center">
+          <div className="px-6 py-12 text-center bg-white border border-dashed border-[#E5E7EB] flex-1 flex flex-col justify-center items-center rounded-xl">
             <FileSpreadsheet size={40} className="text-gray-300 mb-3" />
             <h4 className="text-[14.5px] font-extrabold text-[#374151] m-0 mb-1">No Sales Records Found</h4>
             <p className="text-[12px] text-[#6B7280] m-0 max-w-[380px]">
               No sales records have been logged by MRs for the selected date range or distributor.
             </p>
-          </Card>
+          </div>
         ) : (
-          <TableWrap>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <Th>Upload Date</Th>
-                  <Th>Distributor Name</Th>
-                  <Th>Uploaded By</Th>
-                  <Th>Upload Timestamp</Th>
-                  <Th>Items Count</Th>
-                  <Th className="text-right">View</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {getGroupedUploads().map((group) => {
-                  return (
-                    <tr key={group.key} className="hover:bg-gray-50/40 transition-colors">
-                      <Td className="font-semibold text-gray-900">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar size={14} className="text-gray-400" />
-                          <span>{formatDate(group.uploadDate)}</span>
-                        </div>
-                      </Td>
-                      <Td className="font-bold text-[#1F2937]">{group.distributorName}</Td>
-                      <Td className="font-semibold">{group.uploader}</Td>
-                      <Td className="text-gray-500 text-[12.5px] font-medium">
-                        {formatDateTime(group.createdAt)}
-                      </Td>
-                      <Td className="font-medium text-gray-600">
-                        <span className="bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold px-2.5 py-1 rounded-full">
-                          {group.records.length} Items
-                        </span>
-                      </Td>
-                      <Td className="text-right">
-                        <button
-                          onClick={() => handleOpenGroupPreview(group)}
-                          className="h-8 px-3.5 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 ml-auto"
-                        >
-                          <Eye size={13} />
-                          View
-                        </button>
-                      </Td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableWrap>
+          <>
+            <div className="flex-1 overflow-auto pr-1">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-10">
+                    {['Upload Date', 'Distributor Name', 'Uploaded By', 'Upload Timestamp', 'Items Count', 'View'].map((h, i) => (
+                      <th key={h} className={`px-5 py-3.5 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white sticky top-0 border-b border-gray-100 ${i === 5 ? 'text-right' : 'text-left'}`}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {getGroupedUploads().slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((group) => {
+                    return (
+                      <tr key={group.key} className="hover:bg-gray-50/40 transition-colors">
+                        <Td className="font-semibold text-gray-900">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={14} className="text-gray-400" />
+                            <span>{formatDate(group.uploadDate)}</span>
+                          </div>
+                        </Td>
+                        <Td className="font-bold text-[#1F2937]">{group.distributorName}</Td>
+                        <Td className="font-semibold">{group.uploader}</Td>
+                        <Td className="text-gray-500 text-[12.5px] font-medium">
+                          {formatDateTime(group.createdAt)}
+                        </Td>
+                        <Td className="font-medium text-gray-600">
+                          <span className="bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold px-2.5 py-1 rounded-full">
+                            {group.records.length} Items
+                          </span>
+                        </Td>
+                        <Td className="text-right">
+                          <button
+                            onClick={() => handleOpenGroupPreview(group)}
+                            className="h-8 px-3.5 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 ml-auto"
+                          >
+                            <Eye size={13} />
+                            View
+                          </button>
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(getGroupedUploads().length / pageSize)}
+              totalElements={getGroupedUploads().length}
+              pageSize={pageSize}
+              onPageChange={(page) => setCurrentPage(page)}
+              isLoading={loading}
+              activeBtnClass="bg-[#C8F04A] text-[#111827]"
+            />
+          </>
         )}
       </div>
 
@@ -494,8 +515,8 @@ export default function AdminSalesPage() {
 
             {/* Content area */}
             <div className="p-6 overflow-y-auto flex-1 flex flex-col min-h-0 bg-gray-50/50">
-              <div className="border border-gray-250 rounded-xl overflow-auto bg-white flex-1 max-h-[450px]">
-                <table className="w-full border-collapse text-[12px] font-sans border border-gray-200">
+              <div className="border border-gray-250 rounded-xl overflow-auto bg-white flex-1 max-h-[450px] no-scrollbar">
+                <table className="w-full border-collapse text-[12px] font-sans">
                   <thead>
                     <tr className="bg-[#107C41] text-white border-b border-gray-300 sticky top-0 z-10">
                       <th className="w-[15%] min-w-[120px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-center border-r border-[#0e6c38] text-white">Sales Date</th>
@@ -557,6 +578,13 @@ export default function AdminSalesPage() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

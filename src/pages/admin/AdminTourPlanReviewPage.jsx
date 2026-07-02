@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
@@ -9,6 +9,7 @@ import {
   clearTourPlanErrorsAction,
   clearTourPlanSuccessAction
 } from '../../redux/actions/tourPlanActions';
+import Pagination from '../../components/common/Pagination';
 
 const AdminTourPlanReviewPage = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,15 @@ const AdminTourPlanReviewPage = () => {
   const [inspectPlan, setInspectPlan] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [filterStatus, setFilterStatus] = useState('ALL');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when filter status changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [filterStatus]);
 
   useEffect(() => {
     dispatch(fetchTeamTourPlansAction());
@@ -215,67 +225,79 @@ const AdminTourPlanReviewPage = () => {
               <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No tour plans found matching the filter.</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
-                    {['Staff Member', 'Target Month', 'Scheduled Days', 'Status', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPlans.map((plan) => {
-                    const displayName = plan.mrName || plan.employeeName || 'Field Employee';
-                    const displayInitial = displayName.charAt(0).toUpperCase();
-                    return (
-                      <tr key={plan.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
-                        {/* Staff member name */}
-                        <td className="p-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
-                              {displayInitial}
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
+                      {['Staff Member', 'Target Month', 'Scheduled Days', 'Status', 'Actions'].map((h) => (
+                        <th key={h} className="px-4 py-3 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] bg-white sticky top-0">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPlans.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((plan) => {
+                      const displayName = plan.mrName || plan.employeeName || 'Field Employee';
+                      const displayInitial = displayName.charAt(0).toUpperCase();
+                      return (
+                        <tr key={plan.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
+                          {/* Staff member name */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white text-[12.5px] font-bold flex items-center justify-center">
+                                {displayInitial}
+                              </div>
+                              <div>
+                                <div className="text-[13.5px] font-bold text-[#1F2937]">{displayName}</div>
+                                <div className="text-[11px] text-[#9CA3AF]">{plan.employeeRole || 'Medical Representative'}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="text-[13.5px] font-bold text-[#1F2937]">{displayName}</div>
-                              <div className="text-[11px] text-[#9CA3AF]">{plan.employeeRole || 'Medical Representative'}</div>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Month */}
-                        <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
-                          {formatMonthLabel(plan.targetMonth)}
-                        </td>
+                          {/* Month */}
+                          <td className="p-4 text-[13.5px] font-bold text-[#1F2937]">
+                            {formatMonthLabel(plan.targetMonth)}
+                          </td>
 
-                        {/* Scheduled Days */}
-                        <td className="p-4 text-[13px] text-[#4B5563] font-semibold">
-                          {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
-                        </td>
+                          {/* Scheduled Days */}
+                          <td className="p-4 text-[13px] text-[#4B5563] font-semibold">
+                            {plan.planDays?.length || 0} Day{plan.planDays?.length !== 1 ? 's' : ''} scheduled
+                          </td>
 
-                        {/* Status */}
-                        <td className="p-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold border ${plan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]' : plan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
-                            {plan.status}
-                          </span>
-                        </td>
+                          {/* Status */}
+                          <td className="p-4">
+                            <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold border ${plan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]' : plan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
+                              {plan.status}
+                            </span>
+                          </td>
 
-                        {/* Actions */}
-                        <td className="p-4">
-                          <button
-                            onClick={() => handleInspect(plan)}
-                            className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
-                          >
-                            <Eye size={12} /> Inspect Plan
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          {/* Actions */}
+                          <td className="p-4">
+                            <button
+                              onClick={() => handleInspect(plan)}
+                              className="flex items-center gap-1 bg-[#111827] text-white border-0 px-3.5 py-2 rounded-lg cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#374151]"
+                            >
+                              <Eye size={12} /> Inspect Plan
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredPlans.length / pageSize)}
+                totalElements={filteredPlans.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+                activeBtnClass="bg-[#111827] text-white"
+              />
             </div>
           )}
         </div>

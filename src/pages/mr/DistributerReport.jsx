@@ -4,6 +4,7 @@ import { Card, TableWrap, Th, Td, PrimaryBtn, OutlineBtn } from '../../component
 import { Loader2, Calendar, FileSpreadsheet, Eye, Download, AlertCircle, RefreshCw, X, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import { distributerActivityReport, getDistributorsList } from '../../redux/actions/reportActions';
+import Pagination from '../../components/common/Pagination';
 
 // Date Helpers
 const getTodayDateString = () => {
@@ -65,6 +66,15 @@ export default function DistributerReport() {
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [startDate, setStartDate] = useState(getFirstOfMonthString());
   const [endDate, setEndDate] = useState(getTodayDateString());
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedDistributorId, startDate, endDate]);
   
   // Select state from redux reports store
   const { loading, error, distributesReport, distributorsList } = useSelector(state => state.reports || {});
@@ -288,160 +298,179 @@ export default function DistributerReport() {
   const renderError = error || errorMsg;
 
   return (
-    <div className="animate-[fadeIn_0.35s_ease-out] font-sans flex flex-col gap-6">
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden p-1">
       
-      {/* Search and Filters Panel */}
-      <Card className="p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter size={16} className="text-gray-500" />
-          <h3 className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px] m-0">
-            Filter Distributor Sales Sheet uploads
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-          {/* Distributor Dropdown */}
-          <div className="flex flex-col gap-1.5">
-            <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
-              Distributor
-            </label>
-            {loading && distributors.length === 0 ? (
-              <div className="h-[38px] px-3.5 bg-gray-50 border border-gray-100 rounded-lg flex items-center gap-2 text-xs text-gray-400 font-semibold">
-                <Loader2 size={12} className="animate-spin" />
-                Loading...
-              </div>
-            ) : (
-              <select
-                value={selectedDistributorId}
-                onChange={(e) => setSelectedDistributorId(e.target.value)}
-                className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[13px] font-sans outline-none text-[#1F2937] bg-white font-semibold hover:border-gray-300"
-              >
-                <option value="">All Distributors</option>
-                {distributors.map((d) => (
-                  <option key={d.id || d._id} value={d.id || d._id}>
-                    {getDistributorName(d)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* Start Date */}
-          <div className="flex flex-col gap-1.5">
-            <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937] hover:border-gray-300"
-            />
-          </div>
-
-          {/* End Date */}
-          <div className="flex flex-col gap-1.5">
-            <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937] hover:border-gray-300"
-            />
-          </div>
-
-          {/* Reset Action */}
-          <div className="flex">
-            <OutlineBtn
-              onClick={handleResetFilters}
-              className="w-full justify-center h-[38px] text-xs py-0 font-bold border-gray-200 hover:bg-gray-50 text-gray-700"
-            >
-              Reset Filters
-            </OutlineBtn>
-          </div>
-        </div>
-      </Card>
-
-      {/* Uploads Data Log */}
-      <div className="relative flex flex-col min-h-[400px]">
-        {/* Loading Spinner overlay */}
-        {loading && (
-          <div className="bg-white/75 backdrop-blur-[1px] absolute inset-0 flex items-center justify-center z-10 rounded-2xl">
-            <div className="flex flex-col items-center gap-2">
-              <RefreshCw className="animate-spin text-gray-700" size={28} />
-              <span className="text-[13px] font-bold text-[#1E2937]">Retrieving sales upload history...</span>
+      {/* Unified Main Card containing Filters and Table */}
+      <div className="bg-white rounded-[20px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+        
+        {/* Filters Header Section */}
+        <div className="flex flex-col gap-4 border-b border-[#F3F4F6] pb-5 mb-5 shrink-0">
+          <div className="flex items-center justify-between">
+            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Distributor Sales Reports</h3>
+            <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[11px] uppercase tracking-wide">
+              <Filter size={13} />
+              <span>Filters</span>
             </div>
           </div>
-        )}
 
-        {/* Error notification banner */}
-        {renderError && (
-          <div className="mb-4 flex items-center gap-2.5 px-4 py-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-[#B91C1C] text-[13px] font-medium shrink-0">
-            <AlertCircle size={16} />
-            <span>{renderError}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+            {/* Distributor Dropdown */}
+            <div className="flex flex-col gap-1.5">
+              <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
+                Distributor
+              </label>
+              {loading && distributors.length === 0 ? (
+                <div className="h-[38px] px-3.5 bg-gray-50 border border-gray-100 rounded-lg flex items-center gap-2 text-xs text-gray-400 font-semibold">
+                  <Loader2 size={12} className="animate-spin" />
+                  Loading...
+                </div>
+              ) : (
+                <select
+                  value={selectedDistributorId}
+                  onChange={(e) => setSelectedDistributorId(e.target.value)}
+                  className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[13px] font-sans outline-none text-[#1F2937] bg-white font-semibold hover:border-gray-300"
+                >
+                  <option value="">All Distributors</option>
+                  {distributors.map((d) => (
+                    <option key={d.id || d._id} value={d.id || d._id}>
+                      {getDistributorName(d)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Start Date */}
+            <div className="flex flex-col gap-1.5">
+              <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937] hover:border-gray-300"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="flex flex-col gap-1.5">
+              <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-wide">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full h-[38px] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-[12.5px] font-sans outline-none text-[#1F2937] hover:border-gray-300"
+              />
+            </div>
+
+            {/* Reset Action */}
+            <div className="flex">
+              <OutlineBtn
+                onClick={handleResetFilters}
+                className="w-full justify-center h-[38px] text-xs py-0 font-bold border-gray-200 hover:bg-gray-50 text-gray-700"
+              >
+                Reset Filters
+              </OutlineBtn>
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* Records list table */}
-        {currentLogs.length === 0 ? (
-          <Card className="px-6 py-12 text-center bg-white border border-dashed border-[#E5E7EB] flex-1 flex flex-col justify-center items-center">
-            <FileSpreadsheet size={40} className="text-gray-300 mb-3" />
-            <h4 className="text-[14.5px] font-extrabold text-[#374151] m-0 mb-1">No Sales Records Found</h4>
-            <p className="text-[12px] text-[#6B7280] m-0 max-w-[380px]">
-              No sales records have been logged for the selected date range or distributor.
-            </p>
-          </Card>
-        ) : (
-          <TableWrap>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <Th>Upload Date</Th>
-                  <Th>Distributor Name</Th>
-                  <Th>Uploaded By</Th>
-                  <Th>Upload Timestamp</Th>
-                  <Th>Items Count</Th>
-                  <Th className="text-right">View</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentLogs.map((group) => {
-                  return (
-                    <tr key={group.key} className="hover:bg-gray-50/40 transition-colors">
-                      <Td className="font-semibold text-gray-900">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar size={14} className="text-gray-400" />
-                          <span>{formatDate(group.uploadDate)}</span>
-                        </div>
-                      </Td>
-                      <Td className="font-bold text-[#1F2937]">{group.distributorName}</Td>
-                      <Td className="font-semibold">{group.uploader}</Td>
-                      <Td className="text-gray-500 text-[12.5px] font-medium">
-                        {formatDateTime(group.createdAt)}
-                      </Td>
-                      <Td className="font-medium text-gray-600">
-                        <span className="bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold px-2.5 py-1 rounded-full">
-                          {group.records.length} Items
-                        </span>
-                      </Td>
-                      <Td className="text-right">
-                        <button
-                          onClick={() => handleOpenGroupPreview(group)}
-                          className="h-8 px-3.5 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 ml-auto"
-                        >
-                          <Eye size={13} />
-                          View
-                        </button>
-                      </Td>
+        {/* Data Log and Table Area */}
+        <div className="relative flex-1 flex flex-col min-h-0">
+          {/* Loading Spinner overlay */}
+          {loading && (
+            <div className="bg-white/75 backdrop-blur-[1px] absolute inset-0 flex items-center justify-center z-10 rounded-2xl">
+              <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="animate-spin text-gray-700" size={28} />
+                <span className="text-[13px] font-bold text-[#1E2937]">Retrieving sales upload history...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error notification banner */}
+          {renderError && (
+            <div className="mb-4 flex items-center gap-2.5 px-4 py-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-[#B91C1C] text-[13px] font-medium shrink-0">
+              <AlertCircle size={16} />
+              <span>{renderError}</span>
+            </div>
+          )}
+
+          {/* Records list table */}
+          {currentLogs.length === 0 ? (
+            <div className="px-6 py-12 text-center bg-white border border-dashed border-[#E5E7EB] rounded-2xl flex-1 flex flex-col justify-center items-center">
+              <FileSpreadsheet size={40} className="text-gray-300 mb-3" />
+              <h4 className="text-[14.5px] font-extrabold text-[#374151] m-0 mb-1">No Sales Records Found</h4>
+              <p className="text-[12px] text-[#6B7280] m-0 max-w-[380px]">
+                No sales records have been logged for the selected date range or distributor.
+              </p>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Scrollable table area */}
+              <div className="flex-1 overflow-auto min-h-0 rounded-xl border border-[#F3F4F6]">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="sticky top-0 bg-white z-[10] border-b border-[#F3F4F6]">
+                      <Th className="sticky top-0 bg-white">Upload Date</Th>
+                      <Th className="sticky top-0 bg-white">Distributor Name</Th>
+                      <Th className="sticky top-0 bg-white">Uploaded By</Th>
+                      <Th className="sticky top-0 bg-white">Upload Timestamp</Th>
+                      <Th className="sticky top-0 bg-white">Items Count</Th>
+                      <Th className="text-right sticky top-0 bg-white">View</Th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableWrap>
-        )}
+                  </thead>
+                  <tbody>
+                    {currentLogs.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((group) => {
+                      return (
+                        <tr key={group.key} className="hover:bg-gray-50/40 transition-colors border-b border-[#FAFAFA]">
+                          <Td className="font-semibold text-gray-900">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar size={14} className="text-gray-400" />
+                              <span>{formatDate(group.uploadDate)}</span>
+                            </div>
+                          </Td>
+                          <Td className="font-bold text-[#1F2937]">{group.distributorName}</Td>
+                          <Td className="font-semibold">{group.uploader}</Td>
+                          <Td className="text-gray-500 text-[12.5px] font-medium">
+                            {formatDateTime(group.createdAt)}
+                          </Td>
+                          <Td className="font-medium text-gray-600">
+                            <span className="bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold px-2.5 py-1 rounded-full">
+                              {group.records.length} Items
+                            </span>
+                          </Td>
+                          <Td className="text-right">
+                            <button
+                              onClick={() => handleOpenGroupPreview(group)}
+                              className="h-8 px-3.5 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 border border-gray-200 text-gray-500 font-bold text-[12px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 ml-auto"
+                            >
+                              <Eye size={13} />
+                              View
+                            </button>
+                          </Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination pinned at bottom */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(currentLogs.length / pageSize)}
+                totalElements={currentLogs.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+                activeBtnClass="bg-[#C8F04A] text-[#111827]"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Spreadsheet Modal Preview */}
@@ -516,7 +545,7 @@ export default function DistributerReport() {
       )}
 
       <style>{`
-        @keyframes fadeIn {
+        @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }

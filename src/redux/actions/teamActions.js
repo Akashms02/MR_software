@@ -24,11 +24,11 @@ const isSuccess = (status) => status === 200 || status === 201 || status === "SU
 /* =======================
    GET MY TEAM
  ======================= */
-export const getMyTeam = () => async (dispatch) => {
+export const getMyTeam = (page = 0, size = 100000) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: TEAM_LIST_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/admin/my-team`);
+    const response = await axios.get(`${API_ROUTE}/admin/my-team?page=${page}&size=${size}`);
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
@@ -37,9 +37,14 @@ export const getMyTeam = () => async (dispatch) => {
         ? rawData 
         : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
 
+      const totalElements = (rawData && rawData.totalElements !== undefined) ? rawData.totalElements : teamArray.length;
+      const totalPages = (rawData && rawData.totalPages !== undefined) ? rawData.totalPages : 1;
+
       dispatch({
         type: TEAM_LIST_SUCCESS,
         payload: teamArray,
+        totalElements,
+        totalPages,
       });
       return response.data;
     }

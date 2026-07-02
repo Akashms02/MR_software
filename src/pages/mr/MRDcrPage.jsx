@@ -12,6 +12,7 @@ import {
   clearDcrErrorsAction,
   clearDcrSuccessAction,
 } from '../../redux/actions/dcrActions';
+import Pagination from '../../components/common/Pagination';
 
 const MRDcrPage = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,16 @@ const MRDcrPage = () => {
   const { dcrs, loading: dcrLoading, error: dcrError, success: dcrSuccess, currentDcr } = useSelector((state) => state.dcr);
 
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when tab changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [activeTab]);
+
   const [doctors, setDoctors] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   
@@ -274,19 +285,19 @@ const MRDcrPage = () => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="overflow-y-auto flex-1 pr-1">
+              <div className="flex-1 overflow-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                    <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
                       {['Report Date', 'Total Visits', 'Status', 'Manager Remarks', 'Actions'].map((h) => (
-                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">
+                        <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider bg-white sticky top-0">
                           {h}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {dcrs.map((dcr) => {
+                    {dcrs.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((dcr) => {
                       return (
                         <tr key={dcr.id} className="border-b border-[#FAFAFA] hover:bg-gray-50/50 transition-colors duration-150">
                           {/* Date */}
@@ -338,6 +349,16 @@ const MRDcrPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(dcrs.length / pageSize)}
+                totalElements={dcrs.length}
+                pageSize={pageSize}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={dcrLoading}
+                activeBtnClass="bg-[#C8F04A] text-[#111827]"
+              />
             </div>
           )
         )}
