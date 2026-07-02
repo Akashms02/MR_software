@@ -246,7 +246,12 @@ export default function AdminDashboard() {
 
   const mrEmployees = team.filter(member => {
     const role = (member.role || '').toUpperCase().trim()
-    return role === 'MR' || role === 'MEDICAL_REPRESENTATIVE'
+    return role === 'MR' ||
+           role === 'MEDICAL_REPRESENTATIVE' ||
+           role === 'ME' ||
+           role === 'MEDICAL_EXECUTIVE' ||
+           role === 'MSE' ||
+           role === 'MEDICAL_SALES_EXECUTIVE';
   })
 
   // Attendance Punch-in mapping helper

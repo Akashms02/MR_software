@@ -93,10 +93,16 @@ export default function AdminReports() {
   // Team state from Redux
   const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
 
-  // Derived MR List from team list
-  const mrList = (team || []).filter(
-    (member) => (member.role || '').toUpperCase().trim() === 'MR'
-  );
+  // Derived MR List from team list (MR, ME, MSE, etc.)
+  const mrList = (team || []).filter((member) => {
+    const role = (member.role || '').toUpperCase().trim();
+    return role === 'MR' ||
+           role === 'MEDICAL_REPRESENTATIVE' ||
+           role === 'ME' ||
+           role === 'MEDICAL_EXECUTIVE' ||
+           role === 'MSE' ||
+           role === 'MEDICAL_SALES_EXECUTIVE';
+  });
   const mrLoading = teamLoading;
 
   const [selectedMrId, setSelectedMrId] = useState('');
