@@ -34,7 +34,12 @@ const EditAdminModal = ({
   }, [selectedAdmin]);
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    let val = value;
+    if (name === "phone") {
+      val = value.replace(/\D/g, "").slice(0, 10);
+    }
+    setFormData({ ...formData, [name]: val });
   };
 
   const handleSubmit = (e) => {

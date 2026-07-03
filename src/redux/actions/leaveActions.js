@@ -165,7 +165,7 @@ export const fetchLeaveTypesAction = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_LEAVE_TYPES_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/types`);
+    const response = await axios.get(`${API_ROUTE}/leaves/leave-types`);
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_LEAVE_TYPES_SUCCESS,
@@ -186,7 +186,12 @@ export const createLeaveTypeAction = (payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: CREATE_LEAVE_TYPE_REQUEST });
   try {
-    const response = await axios.post(`${API_ROUTE}/leaves/types`, payload);
+    const response = await axios.post(`${API_ROUTE}/leaves/leave-types`, payload);
+    if (response.data && response.data.status === false) {
+      const msg = response.data.message || commonError;
+      dispatch({ type: CREATE_LEAVE_TYPE_FAILURE, payload: msg });
+      throw new Error(msg);
+    }
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: CREATE_LEAVE_TYPE_SUCCESS,
@@ -207,7 +212,12 @@ export const updateLeaveTypeAction = (id, payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: UPDATE_LEAVE_TYPE_REQUEST });
   try {
-    const response = await axios.put(`${API_ROUTE}/leaves/types/${id}`, payload);
+    const response = await axios.put(`${API_ROUTE}/leaves/leave-types/${id}`, payload);
+    if (response.data && response.data.status === false) {
+      const msg = response.data.message || commonError;
+      dispatch({ type: UPDATE_LEAVE_TYPE_FAILURE, payload: msg });
+      throw new Error(msg);
+    }
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: UPDATE_LEAVE_TYPE_SUCCESS,
@@ -228,7 +238,7 @@ export const deleteLeaveTypeAction = (id) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: DELETE_LEAVE_TYPE_REQUEST });
   try {
-    const response = await axios.delete(`${API_ROUTE}/leaves/types/${id}`);
+    const response = await axios.delete(`${API_ROUTE}/leaves/leave-types/${id}`);
     dispatch({
       type: DELETE_LEAVE_TYPE_SUCCESS,
       payload: id,
@@ -300,7 +310,7 @@ export const fetchAdminBalanceSummaryAction = (employeeId, year = 2026) => async
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_BALANCE_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/summary?employeeId=${employeeId}&year=${year}`);
+    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/leave-balances-summary?employeeId=${employeeId}&year=${year}`);
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_BALANCE_SUMMARY_SUCCESS,
@@ -321,7 +331,7 @@ export const fetchAdminThisMonthSummaryAction = (year = 2026, month = 6) => asyn
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_THIS_MONTH_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/this-month?year=${year}&month=${month}`);
+    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/leave-balances-this-month?year=${year}&month=${month}`);
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_THIS_MONTH_SUMMARY_SUCCESS,
@@ -342,7 +352,7 @@ export const fetchAdminLeaveTableAction = (year = 2026) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_LEAVES_TABLE_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/table?year=${year}`);
+    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/leave-requests?year=${year}`);
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_ADMIN_LEAVES_TABLE_SUCCESS,
@@ -367,7 +377,7 @@ export const fetchAdminLeaveSummaryAction = (year = 2026) => async (dispatch) =>
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_LEAVES_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/summary?year=${year}`);
+    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/leave-requests-summary?year=${year}`);
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_LEAVES_SUMMARY_SUCCESS,

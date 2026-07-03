@@ -308,7 +308,22 @@ const OnboardingWizard = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const val = type === 'checkbox' ? checked : value;
+    let val = type === 'checkbox' ? checked : value;
+
+    if (name === 'phone' || name === 'emergencyContactNumber' || name === 'alternateContactNumber') {
+      val = value.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'aadharNumber' || name === 'uanNumber') {
+      val = value.replace(/\D/g, '').slice(0, 12);
+    } else if (name === 'esiNumber') {
+      val = value.replace(/\D/g, '').slice(0, 17);
+    } else if (name === 'accountNumber') {
+      val = value.replace(/\D/g, '').slice(0, 18);
+    } else if (name === 'panNumber') {
+      val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+    } else if (name === 'ifscCode') {
+      val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+    }
+
     if (name === 'sameAsCurrentAddress' && checked) {
       setFormData((prev) => ({
         ...prev,
@@ -358,6 +373,49 @@ const OnboardingWizard = () => {
         navigate('/admin/myteam');
       }
       return;
+    }
+
+    // ── Validation Checks ───────────────────────────────────────────
+    if (activeStep === 1) {
+      if (formData.phone && formData.phone.length !== 10) {
+        setFormError("Phone number must be exactly 10 digits.");
+        return;
+      }
+    } else if (activeStep === 5) {
+      if (formData.ifscCode && formData.ifscCode.length !== 11) {
+        setFormError("IFSC Code must be exactly 11 characters.");
+        return;
+      }
+      if (formData.accountNumber && (formData.accountNumber.length < 9 || formData.accountNumber.length > 18)) {
+        setFormError("Bank Account Number must be between 9 and 18 digits.");
+        return;
+      }
+    } else if (activeStep === 6) {
+      if (formData.panNumber && formData.panNumber.length !== 10) {
+        setFormError("PAN Number must be exactly 10 characters.");
+        return;
+      }
+      if (formData.aadharNumber && formData.aadharNumber.length !== 12) {
+        setFormError("Aadhaar Number must be exactly 12 digits.");
+        return;
+      }
+      if (formData.uanNumber && formData.uanNumber.length !== 12) {
+        setFormError("UAN Number must be exactly 12 digits.");
+        return;
+      }
+      if (formData.esiNumber && formData.esiNumber.length !== 17) {
+        setFormError("ESIC Number must be exactly 17 digits.");
+        return;
+      }
+    } else if (activeStep === 7) {
+      if (formData.emergencyContactNumber && formData.emergencyContactNumber.length !== 10) {
+        setFormError("Emergency contact number must be exactly 10 digits.");
+        return;
+      }
+      if (formData.alternateContactNumber && formData.alternateContactNumber.length !== 10) {
+        setFormError("Alternate contact number must be exactly 10 digits.");
+        return;
+      }
     }
 
     try {
