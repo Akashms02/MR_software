@@ -37,7 +37,7 @@ export const fetchHolidaysAction = (country = "India") => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_HOLIDAYS_REQUEST });
   try {
-    const response = await axios.post(`${API_ROUTE}/holidays`, { country });
+    const response = await axios.post(`${API_ROUTE}/holidays/list`, { country });
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_HOLIDAYS_SUCCESS,
