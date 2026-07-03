@@ -37,25 +37,33 @@ export const clearReportErrors = () => (dispatch) => {
 };
 
 // 1. Visit Summary
-export const getVisitSummary = (mrId, startDate, endDate) => async (dispatch) => {
+export const getVisitSummary = (mrId, startDate, endDate, page = 1, size = 10) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_VISIT_SUMMARY_REQUEST });
   try {
     const response = await axios.get(
-      `${API_ROUTE}/reports/visit-summary/${mrId}?startDate=${startDate}&endDate=${endDate}`
+      `${API_ROUTE}/reports/visit-summary/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
       const totalWorkingDays = data?.data?.totalWorkingDays || 0;
       const totalVisits = data?.data?.totalVisits || 0;
+      const totalChemistVisits = data?.data?.totalChemistVisits || 0;
       const uniqueDoctorsVisited = data?.data?.uniqueDoctorsVisited || 0;
+      const dcrs = data?.data?.dcrsPage?.content || [];
+      const paginator = data?.data?.dcrsPage?.paginator || null;
+      const totalDcrs = data?.data?.dcrsPage?.total || 0;
 
       const formatted = {
         totalWorkingDays,
         totalVisits,
+        totalChemistVisits,
         uniqueDoctorsVisited,
-        totalPlanned: totalWorkingDays, // map to planned card
-        totalCompleted: totalVisits,    // map to completed card
+        dcrs,
+        paginator,
+        totalDcrs,
+        totalPlanned: totalWorkingDays, // legacy map to planned card
+        totalCompleted: totalVisits,    // legacy map to completed card
         successRate: totalWorkingDays ? `${Math.round((totalVisits / totalWorkingDays) * 100)}%` : '0%',
         territories: [] // no territory breakdown in live API, empty to hide cleanly
       };
@@ -81,18 +89,19 @@ export const getVisitSummary = (mrId, startDate, endDate) => async (dispatch) =>
 };
 
 // 2. Datewise Daily Report
-export const getDatewiseDaily = (mrId, startDate, endDate) => async (dispatch) => {
+export const getDatewiseDaily = (mrId, startDate, endDate, page = 1, size = 10) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_DATEWISE_DAILY_REQUEST });
   try {
     const response = await axios.get(
-      `${API_ROUTE}/reports/datewise-daily/${mrId}?startDate=${startDate}&endDate=${endDate}`
+      `${API_ROUTE}/reports/datewise-daily/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
       // API now returns paginated datewisePage.content (array of {date, doctorVisitCount, chemistVisitCount, dcrStatus})
       const pageContent = data?.data?.datewisePage?.content || [];
       const paginator  = data?.data?.datewisePage?.paginator || null;
+      const total = data?.data?.datewisePage?.total || 0;
       const formatted = pageContent.map((entry) => ({
         date: entry.date,
         visits: entry.doctorVisitCount || 0,
@@ -106,7 +115,8 @@ export const getDatewiseDaily = (mrId, startDate, endDate) => async (dispatch) =
         list: formatted,
         totalWorkingDays: data?.data?.totalWorkingDays || 0,
         grandTotalDoctorVisits: data?.data?.grandTotalDoctorVisits || 0,
-        paginator
+        paginator,
+        total
       };
 
       dispatch({
@@ -130,25 +140,28 @@ export const getDatewiseDaily = (mrId, startDate, endDate) => async (dispatch) =
 };
 
 // 3. Call Visit Report
-export const getCallVisit = (mrId, startDate, endDate) => async (dispatch) => {
+export const getCallVisit = (mrId, startDate, endDate, page = 1, size = 10) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_CALL_VISIT_REQUEST });
   try {
     const response = await axios.get(
-      `${API_ROUTE}/reports/call-visit/${mrId}?startDate=${startDate}&endDate=${endDate}`
+      `${API_ROUTE}/reports/call-visit/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
       // API now returns paginated callsPage.content
       const pageContent = data?.data?.callsPage?.content || [];
       const paginator  = data?.data?.callsPage?.paginator || null;
+      const total = data?.data?.callsPage?.total || 0;
       const formatted = pageContent.map((call) => ({
         date: call.date,
         doctorId: call.doctorId,
         doctorName: call.doctorName,
         speciality: call.speciality,
         visitTime: call.visitTime,
+        time: call.visitTime || call.time || '', // fallback
         productsDiscussed: call.productsDiscussed,
+        products: call.productsDiscussed || call.products || '', // fallback
         samplesGiven: call.samplesGiven || null,
         feedback: call.feedback || '',
         gpsVerified: call.gpsVerified || false
@@ -157,7 +170,8 @@ export const getCallVisit = (mrId, startDate, endDate) => async (dispatch) => {
       const result = {
         list: formatted,
         totalCalls: data?.data?.totalCalls || 0,
-        paginator
+        paginator,
+        total
       };
 
       dispatch({
@@ -241,6 +255,7 @@ export const getDailyActivity = (mrId, date) => async (dispatch) => {
         totalChemistVisits: innerData.totalChemistVisits || 0,
         totalSamplesCount: innerData.totalSamplesCount || 0,
         totalSamplesDistributed: innerData.totalSamplesDistributed || [],
+        status: innerData.status || 'NO_REPORT',
         summary: {
           workingStatus: (innerData.totalDoctorVisits || 0) > 0 ? 'Present' : 'Absent/No Activity',
           totalVisits: innerData.totalDoctorVisits || 0,
@@ -297,11 +312,19 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
         dcrStatus: dayData?.hasDcr ? (dayData?.doctorVisitCount > 0 ? 'COMPLETED' : 'NO_ACTIVITY') : 'NO_REPORT'
       }));
 
+      const result = {
+        list: formatted,
+        weekTotalDoctorVisits: data?.data?.weekTotalDoctorVisits || 0,
+        weekTotalChemistVisits: data?.data?.weekTotalChemistVisits || 0,
+        weekStartDate: data?.data?.weekStartDate || '',
+        weekEndDate: data?.data?.weekEndDate || '',
+      };
+
       dispatch({
         type: GET_WEEKLY_CROSS_SUCCESS,
-        payload: formatted,
+        payload: result,
       });
-      return { success: true, data: formatted };
+      return { success: true, data: result };
     }
     dispatch({
       type: GET_WEEKLY_CROSS_FAILURE,
