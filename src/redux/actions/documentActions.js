@@ -23,7 +23,7 @@ export const fetchPayslipAction = (monthName, year) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_PAYSLIP_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/payslips/my?month=${monthName}&year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/payslips/my`, { month: monthName, year });
     const data = response.data?.data || response.data;
     if (data && (Array.isArray(data) ? data.length > 0 : data)) {
       const payslip = Array.isArray(data) ? data[0] : data;

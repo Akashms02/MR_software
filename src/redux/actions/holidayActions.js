@@ -37,7 +37,7 @@ export const fetchHolidaysAction = (country = "India") => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_HOLIDAYS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/holidays?country=${country}`);
+    const response = await axios.post(`${API_ROUTE}/holidays`, { country });
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_HOLIDAYS_SUCCESS,
@@ -58,7 +58,7 @@ export const fetchUpcomingHolidaysAction = (country = "India") => async (dispatc
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_UPCOMING_HOLIDAYS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/holidays/upcoming?country=${country}`);
+    const response = await axios.post(`${API_ROUTE}/holidays/upcoming`, { country });
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_UPCOMING_HOLIDAYS_SUCCESS,
@@ -79,7 +79,7 @@ export const fetchActiveUpcomingHolidaysAction = (country = "India") => async (d
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ACTIVE_UPCOMING_HOLIDAYS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/holidays/upcoming/active?country=${country}`);
+    const response = await axios.post(`${API_ROUTE}/holidays/upcoming/active`, { country });
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_ACTIVE_UPCOMING_HOLIDAYS_SUCCESS,

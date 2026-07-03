@@ -30,9 +30,7 @@ export const fetchMyTourPlansAction = (page = 0, size = 100000) => async (dispat
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_MY_TOUR_PLANS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/tour-plan/me`, {
-      params: { page, size }
-    });
+    const response = await axios.post(`${API_ROUTE}/tour-plan/me`, { page, size });
     const data = response.data?.data ?? response.data;
     const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
     
@@ -134,9 +132,7 @@ export const fetchTeamTourPlansAction = (page = 0, size = 100000) => async (disp
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_TOUR_PLANS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/tour-plan/team`, {
-      params: { page, size }
-    });
+    const response = await axios.post(`${API_ROUTE}/tour-plan/team`, { page, size });
     const data = response.data?.data ?? response.data;
     const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
     
