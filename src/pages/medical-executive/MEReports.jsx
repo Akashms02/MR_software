@@ -9,6 +9,7 @@ import {
   getWeeklyCross,
   clearReportErrors
 } from '../../redux/actions/reportActions';
+import { getMyTeam } from '../../redux/actions/teamActions';
 import { Card, TableWrap, Th, Td } from '../../components/ui';
 import { 
   Calendar, MapPin, CheckCircle2, AlertCircle, ChevronRight, 
@@ -79,6 +80,7 @@ const REPORT_TYPES = [
 
 export default function MEReports() {
   const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth || {});
 
   // Reports state from Redux
   const { 
@@ -92,9 +94,10 @@ export default function MEReports() {
     weeklyCross 
   } = useSelector(state => state.reports || {});
 
-  const { user } = useSelector(state => state.auth || {});
+  // Team state from Redux
+  const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
 
-  const selectedMrId = String(user?.id || '');
+  const [selectedMrId, setSelectedMrId] = useState(String(user?.id || ''));
   const [activeReport, setActiveReport] = useState('visit-summary');
 
   // Filters State
@@ -102,21 +105,56 @@ export default function MEReports() {
   const [endDate, setEndDate] = useState(getTodayDateString());
   const [date, setDate] = useState(getTodayDateString()); 
   const [dateInWeek, setDateInWeek] = useState(getTodayDateString());
+  const [page, setPage] = useState(1);
+
+  // Fetch team on mount
+  useEffect(() => {
+    dispatch(getMyTeam());
+  }, [dispatch]);
+
+  // Sync selectedMrId with user id initially when user loaded
+  useEffect(() => {
+    if (user?.id && !selectedMrId) {
+      setSelectedMrId(String(user.id));
+    }
+  }, [user, selectedMrId]);
+
+  // Derived MR List from team list (MR, ME, MSE, etc.)
+  const mrList = [];
+  if (user) {
+    mrList.push({
+      id: user.id,
+      fullName: `${user.fullName || user.name || 'Self'} (Self)`
+    });
+  }
+  (team || []).forEach((member) => {
+    if (String(member.id) !== String(user?.id)) {
+      const role = (member.role || '').toUpperCase().trim();
+      if (role === 'MR' ||
+          role === 'MEDICAL_REPRESENTATIVE' ||
+          role === 'ME' ||
+          role === 'MEDICAL_EXECUTIVE' ||
+          role === 'MSE' ||
+          role === 'MEDICAL_SALES_EXECUTIVE') {
+        mrList.push(member);
+      }
+    }
+  });
 
   // Trigger Action Dispatch
-  const handleFetchReport = () => {
+  const handleFetchReport = (targetPage = page) => {
     dispatch(clearReportErrors());
     if (!selectedMrId) return;
 
     switch (activeReport) {
       case 'visit-summary':
-        dispatch(getVisitSummary(selectedMrId, startDate, endDate));
+        dispatch(getVisitSummary(selectedMrId, startDate, endDate, targetPage, 10));
         break;
       case 'datewise-daily':
-        dispatch(getDatewiseDaily(selectedMrId, startDate, endDate));
+        dispatch(getDatewiseDaily(selectedMrId, startDate, endDate, targetPage, 10));
         break;
       case 'call-visit':
-        dispatch(getCallVisit(selectedMrId, startDate, endDate));
+        dispatch(getCallVisit(selectedMrId, startDate, endDate, targetPage, 10));
         break;
       case 'dcr-day':
         dispatch(getDcrDay(selectedMrId, date));
@@ -132,12 +170,20 @@ export default function MEReports() {
     }
   };
 
-  // Re-fetch report when category, selected MR, or date filters change
+  // Re-fetch report when category, selected MR, or date filters change (reset page to 1)
   useEffect(() => {
     if (selectedMrId) {
-      handleFetchReport();
+      setPage(1);
+      handleFetchReport(1);
     }
   }, [activeReport, selectedMrId, startDate, endDate, date, dateInWeek]);
+
+  // Re-fetch report when page changes
+  useEffect(() => {
+    if (selectedMrId && page > 1) {
+      handleFetchReport(page);
+    }
+  }, [page]);
 
   // Resolve Active Redux Data
   const getActiveData = () => {
@@ -158,251 +204,331 @@ export default function MEReports() {
   const hasData = () => {
     if (!currentData) return false;
     if (activeReport === 'datewise-daily' || activeReport === 'call-visit' || activeReport === 'weekly-cross') {
-      return Array.isArray(currentData) && currentData.length > 0;
+      return Array.isArray(currentData.list) && currentData.list.length > 0;
     }
     return typeof currentData === 'object' && !Array.isArray(currentData) && Object.keys(currentData).length > 0;
   };
 
+  // Reusable Pagination component
+  const renderPagination = (paginator) => {
+    if (!paginator || paginator.pageCount <= 1) return null;
+    return (
+      <div className="flex items-center justify-between px-5 py-3.5 bg-white border-t border-gray-150 rounded-b-2xl">
+        <div className="text-[12px] text-gray-500 font-semibold">
+          Showing Page <span className="font-bold text-gray-850">{paginator.currentPage}</span> of <span className="font-bold text-gray-850">{paginator.pageCount}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={paginator.currentPage <= 1}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-bold border border-gray-200 bg-white text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all duration-150"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage(p => Math.min(paginator.pageCount, p + 1))}
+            disabled={paginator.currentPage >= paginator.pageCount}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-bold border border-gray-200 bg-white text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all duration-150"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="animate-[fadeIn_0.35s_ease-out] font-[Inter,sans-serif]">
+    <div className="animate-[fadeIn_0.35s_ease-out] font-[Inter,sans-serif] flex flex-col gap-6">
 
-
-      {/* Grid: Selectors on Left, Charts on Right */}
-      <div className="grid gap-6 items-start min-h-[600px]" style={{ gridTemplateColumns: '1fr 3fr' }}>
+      {/* Top Filter Panel */}
+      <Card style={{ padding: '20px' }} className="flex flex-col gap-5">
         
-        {/* Left Side: Report Selector & Date configurations */}
-        <div className="flex flex-col gap-5">
-          {/* selectors */}
-          <Card style={{ padding: '16px' }}>
-            <h3 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-wide ml-1.5 mb-3 mt-0">
-              Report Category
-            </h3>
-            <div className="flex flex-col gap-1">
-              {REPORT_TYPES.map((t) => {
-                const isActive = activeReport === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveReport(t.id)}
-                    className={`flex items-center gap-3 py-3 px-3.5 rounded-[10px] border-none cursor-pointer text-left w-full transition-all duration-150 font-[inherit] ${isActive ? 'bg-indigo-500 text-white' : 'bg-transparent text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    <span className="text-lg">{t.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold'}`}>{t.label}</div>
-                      <div className={`text-[10.5px] whitespace-nowrap overflow-hidden text-ellipsis ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>{t.sub}</div>
-                    </div>
-                    <ChevronRight size={14} color={isActive ? '#FFFFFF' : '#9CA3AF'} />
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* Date Parameters & Representative Selector */}
-          <Card style={{ padding: '18px' }}>
-            <h3 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-wide mb-3.5 mt-0">
-              Query Filters
-            </h3>
-
-
-
-            {/* Range Pickers */}
-            {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 mb-1.5">START DATE</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 mb-1.5">END DATE</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
-                </div>
-              </div>
-            )}
-
-            {/* Single Date Picker */}
-            {(activeReport === 'dcr-day' || activeReport === 'daily-activity') && (
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1.5">SELECT DATE</label>
-                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
-              </div>
-            )}
-
-            {/* Week Picker */}
-            {activeReport === 'weekly-cross' && (
-              <div>
-                <label className="block text-[11px] font-bold text-gray-600 mb-1.5">DATE IN WEEK</label>
-                <input type="date" value={dateInWeek} onChange={(e) => setDateInWeek(e.target.value)} className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" />
-              </div>
-            )}
-          </Card>
+        {/* Category horizontal tabs */}
+        <div>
+          <h3 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-wide ml-1.5 mb-3 mt-0">
+            Report Category
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {REPORT_TYPES.map((t) => {
+              const isActive = activeReport === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveReport(t.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-transparent cursor-pointer font-sans transition-all duration-150 text-[13px] ${
+                    isActive 
+                      ? 'bg-indigo-500 text-white font-bold shadow-[0_4px_12px_rgba(99,102,241,0.2)]' 
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 font-semibold'
+                  }`}
+                >
+                  <span className="text-[16px]">{t.icon}</span>
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Right Side: Visual Reports Screen */}
-        <div className="flex flex-col gap-6 relative">
-          
-          {/* Loading Indicator */}
-          {loading && (
-            <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] flex items-center justify-center z-50 rounded-2xl">
-              <div className="flex flex-col items-center gap-2">
-                <RefreshCw className="animate-spin" size={30} color="#6366F1" />
-                <span className="text-[13px] font-bold text-gray-800">Retrieving log metrics...</span>
-              </div>
-            </div>
-          )}
+        {/* Query parameters fields horizontally */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end border-t border-gray-100 pt-4.5">
 
-          {/* Error Notice */}
-          {error && (
-            <div className="flex items-center gap-2.5 py-3.5 px-[18px] bg-red-50 border border-red-300 rounded-xl text-red-700 text-[13px] font-medium">
-              <AlertCircle size={18} />
-              <span><strong>API Fetch Failed:</strong> {error}</span>
-            </div>
-          )}
+          {/* Representative Selector */}
+          <div className="flex flex-col gap-1.5">
+            <label className="block text-[11px] font-bold text-gray-650 uppercase tracking-wide">Field Representative</label>
+            {teamLoading ? (
+              <div className="py-2.5 text-xs text-gray-500">Loading representatives...</div>
+            ) : (
+              <select 
+                value={selectedMrId}
+                onChange={(e) => setSelectedMrId(e.target.value)}
+                className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800 font-semibold bg-white cursor-pointer"
+              >
+                {mrList.map(mr => (
+                  <option key={mr.id} value={String(mr.id)}>
+                    {mr.fullName || mr.name || `MR #${mr.id}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
-          {/* Condition: Visit Summary */}
-          {activeReport === 'visit-summary' && hasData() && (
+          {/* Date range pickers */}
+          {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
             <>
-              {/* Stat summary cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Planned Visits</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalPlanned || 0}</div>
-                </Card>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #10B981' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Completed Visits</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalCompleted || 0}</div>
-                </Card>
-                <Card style={{ padding: '20px', borderLeft: '5px solid #6366F1' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Success Rate</div>
-                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>
-                    {currentData.successRate || (currentData.totalPlanned ? `${Math.round((currentData.totalCompleted / currentData.totalPlanned) * 100)}%` : '0%')}
-                  </div>
-                </Card>
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[11px] font-bold text-gray-650 uppercase tracking-wide">Start Date</label>
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={(e) => setStartDate(e.target.value)} 
+                  className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" 
+                />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[11px] font-bold text-gray-650 uppercase tracking-wide">End Date</label>
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                  className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" 
+                />
+              </div>
+            </>
+          )}
 
-              {/* Chart: planned vs completed per territory */}
-              {currentData.territories && currentData.territories.length > 0 && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Territory Performance Breakdown</h3>
-                  <div style={{ width: '100%', height: 300 }}>
-                    <ResponsiveContainer>
-                      <BarChart data={currentData.territories}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                        <XAxis dataKey="name" fontSize={11} stroke="#9CA3AF" />
-                        <YAxis fontSize={11} stroke="#9CA3AF" />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
-                        <Bar name="Planned Visits" dataKey="planned" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={24} />
-                        <Bar name="Completed Visits" dataKey="completed" fill="#10B981" radius={[4, 4, 0, 0]} barSize={24} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
+          {/* Single Date Picker */}
+          {(activeReport === 'dcr-day' || activeReport === 'daily-activity') && (
+            <div className="flex flex-col gap-1.5">
+              <label className="block text-[11px] font-bold text-gray-650 uppercase tracking-wide">Select Date</label>
+              <input 
+                type="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)} 
+                className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" 
+              />
+            </div>
+          )}
 
-              {/* Detailed territory list */}
-              {currentData.territories && currentData.territories.length > 0 && (
+          {/* Week Picker */}
+          {activeReport === 'weekly-cross' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="block text-[11px] font-bold text-gray-650 uppercase tracking-wide">Date In Week</label>
+              <input 
+                type="date" 
+                value={dateInWeek} 
+                onChange={(e) => setDateInWeek(e.target.value)} 
+                className="w-full py-2 px-3 rounded-lg border border-gray-200 text-[12.5px] outline-none text-gray-800" 
+              />
+            </div>
+          )}
+
+        </div>
+      </Card>
+
+      {/* Reports Display Section */}
+      <div className="flex flex-col gap-6 relative min-h-[300px]">
+        
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] flex items-center justify-center z-50 rounded-2xl">
+            <div className="flex flex-col items-center gap-2">
+              <RefreshCw className="animate-spin" size={30} color="#6366F1" />
+              <span className="text-[13px] font-bold text-gray-800">Retrieving log metrics...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error Notice */}
+        {error && (
+          <div className="flex items-center gap-2.5 py-3.5 px-[18px] bg-red-50 border border-red-300 rounded-xl text-red-700 text-[13px] font-medium">
+            <AlertCircle size={18} />
+            <span><strong>API Fetch Failed:</strong> {error}</span>
+          </div>
+        )}
+
+        {/* Condition: Visit Summary */}
+        {activeReport === 'visit-summary' && hasData() && (
+          <>
+            {/* Stat summary cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6', display: 'flex', flexDirection: 'column', justify: 'space-between' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Working Days</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalWorkingDays || 0}</div>
+              </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #10B981', display: 'flex', flexDirection: 'column', justify: 'space-between' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Doctor Visits</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalVisits || 0}</div>
+              </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #8B5CF6', display: 'flex', flexDirection: 'column', justify: 'space-between' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Chemist Visits</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalChemistVisits || 0}</div>
+              </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #6366F1', display: 'flex', flexDirection: 'column', justify: 'space-between' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Unique Doctors Met</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.uniqueDoctorsVisited || 0}</div>
+              </Card>
+            </div>
+
+            {/* DCR log table */}
+            {currentData.dcrs && currentData.dcrs.length > 0 && (
+              <div className="flex flex-col">
+                <h3 style={{ marginTop: '8px', marginBottom: '12px', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Daily Call Reports (DCR) Logs</h3>
                 <TableWrap>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
-                        <Th>Territory Name</Th>
-                        <Th>Planned visits</Th>
-                        <Th>Completed visits</Th>
-                        <Th>Success Rate</Th>
+                        <Th>DCR Date</Th>
+                        <Th>Doctor Visit Count</Th>
+                        <Th>Chemist Visit Count</Th>
+                        <Th>DCR Verification Status</Th>
                       </tr>
                     </thead>
                     <tbody>
-                      {currentData.territories.map((t, idx) => {
-                        const pct = t.planned ? `${Math.round((t.completed / t.planned) * 100)}%` : '0%';
-                        return (
-                          <tr key={idx}>
-                            <Td style={{ fontWeight: 700, color: '#1F2937' }}>{t.name}</Td>
-                            <Td>{t.planned}</Td>
-                            <Td>{t.completed}</Td>
-                            <Td>
-                              <span style={{
-                                fontWeight: 700,
-                                color: (t.completed/t.planned >= 0.8) ? '#059669' : '#D97706',
-                                background: (t.completed/t.planned >= 0.8) ? '#ECFDF5' : '#FFFBEB',
-                                padding: '3px 8px',
-                                borderRadius: '12px',
-                                fontSize: '11.5px'
-                              }}>
-                                {pct}
-                              </span>
-                            </Td>
-                          </tr>
-                        );
-                      })}
+                      {currentData.dcrs.map((dcr, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <Td style={{ fontWeight: 700, color: '#1F2937' }}>{dcr.date}</Td>
+                          <Td>{dcr.doctorVisitCount || 0} visits</Td>
+                          <Td>{dcr.chemistVisitCount || 0} visits</Td>
+                          <Td>
+                            <span style={{
+                              fontWeight: 700,
+                              color: dcr.status === 'APPROVED' ? '#059669' : '#B45309',
+                              background: dcr.status === 'APPROVED' ? '#ECFDF5' : '#FFFBEB',
+                              padding: '3px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11.5px',
+                              textTransform: 'uppercase'
+                            }}>
+                              {dcr.status || 'SUBMITTED'}
+                            </span>
+                          </Td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
+                  {renderPagination(currentData.paginator)}
                 </TableWrap>
-              )}
-            </>
-          )}
+              </div>
+            )}
+          </>
+        )}
 
-          {/* Condition: Datewise Daily Report */}
-          {activeReport === 'datewise-daily' && hasData() && (
-            <>
-              {/* Chart: Activity Over Time */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Daily Visit & Call Frequency Logs</h3>
-                <div style={{ width: '100%', height: 280 }}>
-                  <ResponsiveContainer>
-                    <AreaChart data={currentData}>
-                      <defs>
-                        <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                      <XAxis dataKey="date" fontSize={11} stroke="#9CA3AF" />
-                      <YAxis fontSize={11} stroke="#9CA3AF" />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
-                      <Area name="Completed Visits" type="monotone" dataKey="visits" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVisits)" />
-                      <Area name="Doctor Calls" type="monotone" dataKey="calls" stroke="#3B82F6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCalls)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+        {/* Condition: Datewise Daily Report */}
+        {activeReport === 'datewise-daily' && hasData() && (
+          <>
+            {/* Stat summary cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Total Working Days</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalWorkingDays || 0}</div>
               </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #10B981' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Grand Total Doctor Visits</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.grandTotalDoctorVisits || 0}</div>
+              </Card>
+            </div>
 
-              {/* Detailed logs table */}
-              <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <Th>Date</Th>
-                      <Th>Visits Completed</Th>
-                      <Th>Chemist Calls</Th>
-                      <Th>Total Doctor Calls</Th>
-                      <Th>Travel (km)</Th>
+            {/* Chart: Activity Over Time */}
+            <Card style={{ padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Daily Visit & Call Frequency Logs</h3>
+              <div style={{ width: '100%', height: 280 }}>
+                <ResponsiveContainer>
+                  <AreaChart data={currentData.list}>
+                    <defs>
+                      <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                    <XAxis dataKey="date" fontSize={11} stroke="#9CA3AF" />
+                    <YAxis fontSize={11} stroke="#9CA3AF" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
+                    <Area name="Completed Visits" type="monotone" dataKey="visits" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVisits)" />
+                    <Area name="Chemist Calls" type="monotone" dataKey="chemistCalls" stroke="#3B82F6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCalls)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Detailed logs table */}
+            <TableWrap>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <Th>Date</Th>
+                    <Th>Visits Completed</Th>
+                    <Th>Chemist Calls</Th>
+                    <Th>Total Doctor Calls</Th>
+                    <Th>DCR Verification Status</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.list.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.date}</Td>
+                      <Td>{row.visits} visits</Td>
+                      <Td>{row.chemistCalls || 0} calls</Td>
+                      <Td>{row.calls} calls</Td>
+                      <Td>
+                        <span style={{
+                          fontWeight: 700,
+                          color: row.dcrStatus === 'APPROVED' ? '#059669' : '#B45309',
+                          background: row.dcrStatus === 'APPROVED' ? '#ECFDF5' : '#FFFBEB',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11.5px',
+                          textTransform: 'uppercase'
+                        }}>
+                          {row.dcrStatus}
+                        </span>
+                      </Td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.map((row, idx) => (
-                      <tr key={idx}>
-                        <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.date}</Td>
-                        <Td>{row.visits} visits</Td>
-                        <Td>{row.chemistCalls || 0} calls</Td>
-                        <Td>{row.calls} calls</Td>
-                        <Td>{row.travelKm || 0} km</Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </TableWrap>
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+              {renderPagination(currentData.paginator)}
+            </TableWrap>
+          </>
+        )}
 
-          {/* Condition: Call Visit Report */}
-          {activeReport === 'call-visit' && hasData() && (
+        {/* Condition: Call Visit Report */}
+        {activeReport === 'call-visit' && hasData() && (
+          <>
+            {/* Stat Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Total Doctor Calls</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.totalCalls || 0}</div>
+              </Card>
+            </div>
+
+            {/* Table */}
             <TableWrap>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -410,247 +536,297 @@ export default function MEReports() {
                     <Th>Date</Th>
                     <Th>Time</Th>
                     <Th>Doctor Name</Th>
+                    <Th>Speciality</Th>
                     <Th>Products Discussed</Th>
+                    <Th>Feedback</Th>
+                    <Th>GPS Status</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentData.map((row, idx) => (
-                    <tr key={idx}>
+                  {currentData.list.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
                       <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.date}</Td>
-                      <Td>{row.time}</Td>
+                      <Td>{row.time || '—'}</Td>
                       <Td className="font-semibold" style={{ color: '#1F2937' }}>{row.doctorName}</Td>
+                      <Td>{row.speciality || '—'}</Td>
                       <Td>{row.products || '—'}</Td>
+                      <Td style={{ fontStyle: 'italic' }}>{row.feedback || '—'}</Td>
+                      <Td>
+                        <span style={{
+                          fontWeight: 750,
+                          color: row.gpsVerified ? '#059669' : '#B91C1C',
+                          background: row.gpsVerified ? '#ECFDF5' : '#FEF2F2',
+                          padding: '2px 6px',
+                          borderRadius: '10px',
+                          fontSize: '10px'
+                        }}>
+                          {row.gpsVerified ? 'GPS VERIFIED' : 'UNVERIFIED'}
+                        </span>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {renderPagination(currentData.paginator)}
+            </TableWrap>
+          </>
+        )}
+
+        {/* Condition: DCR Day Report */}
+        {activeReport === 'dcr-day' && hasData() && (
+          <>
+            {/* DCR Verification Sheet */}
+            <Card style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px', marginBottom: '18px' }}>
+                <div>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    background: currentData.status === 'APPROVED' ? '#ECFDF5' : '#FFFBEB',
+                    color: currentData.status === 'APPROVED' ? '#047857' : '#B45309'
+                  }}>
+                    DCR SHEET: {currentData.status || 'NO_REPORT'}
+                  </span>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '8px 0 2px 0' }}>Daily Call Report Sheet</h3>
+                  <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>Date: <strong>{currentData.date}</strong></p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '12px', color: '#6B7280' }}>Verified Status</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', marginTop: '2px' }}>{currentData.status || 'Pending'}</div>
+                </div>
+              </div>
+
+              {/* Manager Comments */}
+              {currentData.managerRemarks && (
+                <div style={{
+                  background: '#F9FAFB',
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  borderLeft: '4px solid #10B981',
+                  fontSize: '13px',
+                  color: '#4B5563',
+                  marginBottom: '20px',
+                  fontStyle: 'italic'
+                }}>
+                  "{currentData.managerRemarks}"
+                </div>
+              )}
+
+              {/* Stat grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>DOCTOR VISITS</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
+                    {currentData.totalDoctorVisits || 0} Met
+                  </div>
+                </div>
+                <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>CHEMIST VISITS</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
+                    {currentData.totalChemistVisits || 0} Met
+                  </div>
+                </div>
+                <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>GPS VERIFIED VISITS</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
+                    {currentData.gpsVerifiedVisits || 0} Verified
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Doctors detailed logs fallback - hidden dynamically if empty */}
+            {currentData.doctorsMet && currentData.doctorsMet.length > 0 && (
+              <Card style={{ padding: '24px' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Visited Doctor Records</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {currentData.doctorsMet.map((doc, idx) => (
+                    <div key={idx} style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #F3F4F6',
+                      background: '#FAFAFA',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 800, color: '#1F2937', fontSize: '14px' }}>{doc.name}</div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{doc.clinic} · <span style={{ fontWeight: 600 }}>{doc.time}</span></div>
+                        <div style={{ fontSize: '12px', color: '#6366F1', marginTop: '6px', background: '#EEF2FF', color: '#4F46E5', display: 'inline-block', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                          Samples: {doc.samples}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', maxWidth: '250px' }}>
+                        <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>VISIT DETAIL FEEDBACK</div>
+                        <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '4px', fontStyle: 'italic' }}>{doc.feedback}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Condition: Daily Activity Summary */}
+        {activeReport === 'daily-activity' && hasData() && (
+          <>
+            {/* Daily Checklist card */}
+            <Card style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: '0 0 16px 0' }}>Daily Activity Verification Checklist</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <CheckCircle2 color="#10B981" size={18} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Daily Attendance Status</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Checked-In Status: <strong>{currentData.summary?.workingStatus || 'Present'}</strong></div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <CheckCircle2 color="#10B981" size={18} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>DCR Visits Logged</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Doctor Visits: <strong>{currentData.totalDoctorVisits}</strong> | Chemist Visits: <strong>{currentData.totalChemistVisits}</strong></div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
+                  <CheckCircle2 color="#10B981" size={18} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Samples Distributed</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Total Samples Distributed Count: <strong>{currentData.totalSamplesCount || 0}</strong></div>
+                  </div>
+                </div>
+
+              </div>
+            </Card>
+
+            {/* Distributed Samples Section */}
+            {currentData.totalSamplesDistributed && currentData.totalSamplesDistributed.length > 0 && (
+              <Card style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', margin: '0 0 12px 0' }}>Distributed Samples</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  {currentData.totalSamplesDistributed.map((sample, idx) => (
+                    <div key={idx} style={{ padding: '12px', background: '#FAFAFA', borderRadius: '10px', border: '1px solid #E5E7EB', fontSize: '13px', fontWeight: 600, color: '#374151', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{typeof sample === 'object' ? (sample.name || sample.productName || 'Sample') : String(sample)}</span>
+                      {typeof sample === 'object' && sample.quantity !== undefined && (
+                        <span style={{ background: '#E0F2FE', color: '#0369A1', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>{sample.quantity}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Condition: Weekly Cross Report */}
+        {activeReport === 'weekly-cross' && hasData() && (
+          <>
+            {/* Stat summary cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #3B82F6' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Week Doctor Visits</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.weekTotalDoctorVisits || 0}</div>
+              </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #10B981' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Week Chemist Visits</div>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: '#1F2937', marginTop: '6px' }}>{currentData.weekTotalChemistVisits || 0}</div>
+              </Card>
+              <Card style={{ padding: '20px', borderLeft: '5px solid #6366F1' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Date range</div>
+                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1F2937', marginTop: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {currentData.weekStartDate} to {currentData.weekEndDate}
+                </div>
+              </Card>
+            </div>
+
+            {/* Stacked Chart (visits & calls) */}
+            <Card style={{ padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Weekly Cross Metrics Frequency</h3>
+              <div style={{ width: '100%', height: 260 }}>
+                <ResponsiveContainer>
+                  <BarChart data={currentData.list}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                    <XAxis dataKey="day" fontSize={11} stroke="#9CA3AF" />
+                    <YAxis fontSize={11} stroke="#9CA3AF" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
+                    <Bar name="Doctor Visits" dataKey="doctorVisits" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} barSize={24} />
+                    <Bar name="Chemist Calls" dataKey="chemistCalls" stackId="a" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Cross-tab Weekly Table */}
+            <TableWrap>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <Th>Day</Th>
+                    <Th>Date</Th>
+                    <Th>Doctor Visits</Th>
+                    <Th>Chemist Calls</Th>
+                    <Th>DCR Verification Status</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.list.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.day}</Td>
+                      <Td style={{ fontWeight: 600 }}>{row.date || '—'}</Td>
+                      <Td>{row.doctorVisits} visits</Td>
+                      <Td>{row.chemistCalls} calls</Td>
+                      <Td>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          background: row.dcrStatus === 'APPROVED' ? '#ECFDF5' : row.dcrStatus === 'SUBMITTED' ? '#EFF6FF' : '#F3F4F6',
+                          color: row.dcrStatus === 'APPROVED' ? '#047857' : row.dcrStatus === 'SUBMITTED' ? '#1E40AF' : '#4B5563'
+                        }}>
+                          {row.dcrStatus}
+                        </span>
+                      </Td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </TableWrap>
-          )}
+          </>
+        )}
 
-          {/* Condition: DCR Day Report */}
-          {activeReport === 'dcr-day' && hasData() && (
-            <>
-              {/* DCR Verification Sheet */}
-              <Card style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #F3F4F6', paddingBottom: '18px', marginBottom: '18px' }}>
-                  <div>
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      background: currentData.status === 'APPROVED' ? '#ECFDF5' : '#FFFBEB',
-                      color: currentData.status === 'APPROVED' ? '#047857' : '#B45309'
-                    }}>
-                      DCR SHEET: {currentData.status || 'SUBMITTED'}
-                    </span>
-                    <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: '8px 0 2px 0' }}>Daily Call Report Sheet</h3>
-                    <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>Date: <strong>{currentData.date}</strong></p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '12px', color: '#6B7280' }}>Verified By</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', marginTop: '2px' }}>{currentData.approvedBy || 'Pending'}</div>
-                  </div>
-                </div>
+        {/* Fallback state when there's no data */}
+        {!hasData() && !loading && (
+          <Card style={{ padding: '40px 24px', textAlign: 'center', background: '#FFFFFF', border: '1.5px dashed #E5E7EB' }}>
+            <ShieldAlert size={48} className="mx-auto mb-4 text-gray-400" />
+            <h4 className="text-[15px] font-extrabold text-gray-700 mb-1.5 mt-0">No Database Records Found</h4>
+            <p className="text-[12.5px] text-gray-500 m-0 max-w-[420px] mx-auto">
+              There are no logs matching the active selection. This is a live query; configure different dates or represent another representative.
+            </p>
+          </Card>
+        )}
 
-                {/* Manager Comments */}
-                {currentData.comments && (
-                  <div style={{
-                    background: '#F9FAFB',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    borderLeft: '4px solid #10B981',
-                    fontSize: '13px',
-                    color: '#4B5563',
-                    marginBottom: '20px',
-                    fontStyle: 'italic'
-                  }}>
-                    "{currentData.comments}"
-                  </div>
-                )}
-
-                {/* Stat grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>DOCTORS VISITED</div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
-                      {currentData.doctorsMet?.length || 0} Met
-                    </div>
-                  </div>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>DAILY EXPENSES</div>
-                    <div style={{ fontSize: '20px', fontWeight: 800, color: '#1F2937', marginTop: '4px' }}>
-                      ₹{currentData.expenses ? Object.values(currentData.expenses).reduce((acc, v) => typeof v === 'number' ? acc + v : acc, 0) : 0}
-                    </div>
-                  </div>
-                  <div style={{ background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>EXPENSE STATUS</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#10B981', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <CheckCircle2 size={14} /> {currentData.expenses?.status || 'APPROVED'}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Doctors detailed logs */}
-              {currentData.doctorsMet && currentData.doctorsMet.length > 0 && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Visited Doctor Records</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {currentData.doctorsMet.map((doc, idx) => (
-                      <div key={idx} style={{
-                        padding: '16px',
-                        borderRadius: '12px',
-                        border: '1.5px solid #F3F4F6',
-                        background: '#FAFAFA',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <div>
-                          <div style={{ fontWeight: 800, color: '#1F2937', fontSize: '14px' }}>{doc.name}</div>
-                          <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{doc.clinic} · <span style={{ fontWeight: 600 }}>{doc.time}</span></div>
-                          <div style={{ fontSize: '12px', color: '#6366F1', marginTop: '6px', background: '#EEF2FF', color: '#4F46E5', display: 'inline-block', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                            Samples: {doc.samples}
-                          </div>
-                        </div>
-                        <div style={{ textAlign: 'right', maxWidth: '250px' }}>
-                          <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>VISIT DETAIL FEEDBACK</div>
-                          <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '4px', fontStyle: 'italic' }}>{doc.feedback}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </>
-          )}
-
-          {/* Condition: Daily Activity Summary */}
-          {activeReport === 'daily-activity' && hasData() && (
-            <>
-              {/* Daily Checklist card */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: '0 0 16px 0' }}>Daily Activity Verification Checklist</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
-                    <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Daily Attendance Status</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Checked-In Status: <strong>{currentData.summary?.workingStatus || 'Present'}</strong></div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
-                    <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>Tour Plan Coverage</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Target Territory: <strong>{currentData.plannedTerritory}</strong> (Status: <strong>{currentData.tourPlanStatus}</strong>)</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: '#FAFAFA' }}>
-                    <CheckCircle2 color="#10B981" size={18} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1F2937' }}>DCR Visit Verification</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>Productive: <strong>{currentData.summary?.productiveVisits}</strong> / Non-Productive: <strong>{currentData.summary?.nonProductiveVisits}</strong> (Total: <strong>{currentData.summary?.totalVisits}</strong>)</div>
-                    </div>
-                  </div>
-
-                </div>
-              </Card>
-
-              {/* Tour Plan Remarks Card */}
-              {currentData.summary?.remarks && (
-                <Card style={{ padding: '24px' }}>
-                  <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#1F2937', margin: '0 0 12px 0' }}>Field Representative Remarks</h3>
-                  <p style={{ fontSize: '13.5px', color: '#4B5563', margin: 0, lineHeight: 1.5, background: '#FAFAFA', padding: '16px', borderRadius: '12px', border: '1px solid #F3F4F6' }}>
-                    {currentData.summary.remarks}
-                  </p>
-                </Card>
-              )}
-            </>
-          )}
-
-          {/* Condition: Weekly Cross Report */}
-          {activeReport === 'weekly-cross' && hasData() && (
-            <>
-              {/* Stacked Chart (visits & calls) */}
-              <Card style={{ padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Weekly Cross Metrics Frequency</h3>
-                <div style={{ width: '100%', height: 260 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={currentData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                      <XAxis dataKey="day" fontSize={11} stroke="#9CA3AF" />
-                      <YAxis fontSize={11} stroke="#9CA3AF" />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
-                      <Bar name="Doctor Visits" dataKey="doctorVisits" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} barSize={24} />
-                      <Bar name="Chemist Calls" dataKey="chemistCalls" stackId="a" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={24} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-
-              {/* Cross-tab Weekly Table */}
-              <TableWrap>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <Th>Day</Th>
-                      <Th>Target Territory Covered</Th>
-                      <Th>Doctor Visits</Th>
-                      <Th>Chemist Calls</Th>
-                      <Th>DCR Verification Status</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.map((row, idx) => (
-                      <tr key={idx}>
-                        <Td style={{ fontWeight: 700, color: '#1F2937' }}>{row.day}</Td>
-                        <Td style={{ fontWeight: 600 }}>{row.territory}</Td>
-                        <Td>{row.doctorVisits} visits</Td>
-                        <Td>{row.chemistCalls} calls</Td>
-                        <Td>
-                          <span style={{
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            padding: '3px 8px',
-                            borderRadius: '12px',
-                            background: row.dcrStatus === 'APPROVED' ? '#ECFDF5' : row.dcrStatus === 'SUBMITTED' ? '#EFF6FF' : '#F3F4F6',
-                            color: row.dcrStatus === 'APPROVED' ? '#047857' : row.dcrStatus === 'SUBMITTED' ? '#1E40AF' : '#4B5563'
-                          }}>
-                            {row.dcrStatus}
-                          </span>
-                        </Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </TableWrap>
-            </>
-          )}
-
-          {/* Fallback state when there's no data */}
-          {!hasData() && !loading && (
-            <Card style={{ padding: '40px 24px', textAlign: 'center', background: '#FFFFFF', border: '1.5px dashed #E5E7EB' }}>
-              <ShieldAlert size={48} className="mx-auto mb-4 text-gray-400" />
-              <h4 className="text-[15px] font-extrabold text-gray-700 mb-1.5 mt-0">No Database Records Found</h4>
-              <p className="text-[12.5px] text-gray-500 m-0 max-w-[420px] mx-auto">
-                There are no logs matching the active selection. This is a live query; configure different dates or represent another representative.
-              </p>
-            </Card>
-          )}
-
-        </div>
       </div>
 
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
