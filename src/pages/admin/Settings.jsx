@@ -176,9 +176,13 @@ const Settings = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let val = value;
+    if (name === "phone") {
+      val = value.replace(/\D/g, "").slice(0, 10);
+    }
     setFormState((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: val,
     }));
   };
 
@@ -214,6 +218,15 @@ const Settings = () => {
     e.preventDefault();
     setIsSaving(true);
     setSaveStatus(null);
+
+    if (formState.phone && formState.phone.length !== 10) {
+      setSaveStatus({
+        type: "error",
+        message: "Phone number must be exactly 10 digits.",
+      });
+      setIsSaving(false);
+      return;
+    }
 
     // Build FormData payload to support MultiPartFile uploads expected by Spring Boot
     const formDataPayload = new FormData();

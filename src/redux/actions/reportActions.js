@@ -41,8 +41,9 @@ export const getVisitSummary = (mrId, startDate, endDate, page = 1, size = 10) =
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_VISIT_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/visit-summary/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/visit-summary`,
+      { mrId, startDate, endDate, page: page - 1, size }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
@@ -93,8 +94,9 @@ export const getDatewiseDaily = (mrId, startDate, endDate, page = 1, size = 10) 
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_DATEWISE_DAILY_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/datewise-daily/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/datewise-daily`,
+      { mrId, startDate, endDate, page: page - 1, size }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
@@ -144,8 +146,9 @@ export const getCallVisit = (mrId, startDate, endDate, page = 1, size = 10) => a
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_CALL_VISIT_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/call-visit/${mrId}?startDate=${startDate}&endDate=${endDate}&page=${page - 1}&size=${size}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/call-visit`,
+      { mrId, startDate, endDate, page: page - 1, size }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
@@ -199,8 +202,9 @@ export const getDcrDay = (mrId, date) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_DCR_DAY_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/dcr-day/${mrId}?date=${date}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/dcr-day`,
+      { mrId, date }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
@@ -241,8 +245,9 @@ export const getDailyActivity = (mrId, date) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_DAILY_ACTIVITY_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/daily-activity/${mrId}?date=${date}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/daily-activity`,
+      { mrId, date }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
@@ -288,8 +293,9 @@ export const getWeeklyCross = (mrId, dateInWeek) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: GET_WEEKLY_CROSS_REQUEST });
   try {
-    const response = await axios.get(
-      `${API_ROUTE}/reports/weekly-cross/${mrId}?dateInWeek=${dateInWeek}`
+    const response = await axios.post(
+      `${API_ROUTE}/reports/weekly-cross`,
+      { mrId, dateInWeek }
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {
