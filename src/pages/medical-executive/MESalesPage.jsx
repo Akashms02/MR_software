@@ -126,7 +126,7 @@ export default function MESalesPage() {
         }
       }
 
-      const response = await axios.get(`${API_ROUTE}/mr/distributors/sales`, { params });
+      const response = await axios.post(`${API_ROUTE}/mr/distributors/sales`, params);
       const data = response.data?.data || response.data || [];
       const records = data && data.content ? data.content : (Array.isArray(data) ? data : []);
       setSalesRecords(records);

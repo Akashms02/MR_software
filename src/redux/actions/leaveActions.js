@@ -258,7 +258,7 @@ export const fetchMyBalancesAction = (year = 2026) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_MY_BALANCES_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/my-balances?year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/leave/balances/my-balances`, { year });
     let payloadData = response.data?.data || response.data || [];
     if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
       if (Array.isArray(payloadData.content)) {
@@ -284,7 +284,7 @@ export const fetchEmployeeBalancesAction = (employeeId, year = 2026) => async (d
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_EMPLOYEE_BALANCES_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/employee/${employeeId}?year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/leave/balances/employee/${employeeId}`, { year });
     let payloadData = response.data?.data || response.data || [];
     if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
       if (Array.isArray(payloadData.content)) {
@@ -310,7 +310,7 @@ export const fetchAdminBalanceSummaryAction = (employeeId, year = 2026) => async
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_BALANCE_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/leave-balances-summary?employeeId=${employeeId}&year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/leave/balances/admin/leave-balances-summary`, { employeeId, year });
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_BALANCE_SUMMARY_SUCCESS,
@@ -331,7 +331,7 @@ export const fetchAdminThisMonthSummaryAction = (year = 2026, month = 6) => asyn
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_THIS_MONTH_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leave/balances/admin/leave-balances-this-month?year=${year}&month=${month}`);
+    const response = await axios.post(`${API_ROUTE}/leave/balances/admin/leave-balances-this-month`, { year, month });
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_THIS_MONTH_SUMMARY_SUCCESS,
@@ -352,7 +352,7 @@ export const fetchAdminLeaveTableAction = (year = 2026) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_LEAVES_TABLE_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/leave-requests?year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/leaves/requests/admin/leave-requests`, { year });
     const payloadData = response.data?.data || response.data || [];
     dispatch({
       type: FETCH_ADMIN_LEAVES_TABLE_SUCCESS,
@@ -377,7 +377,7 @@ export const fetchAdminLeaveSummaryAction = (year = 2026) => async (dispatch) =>
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ADMIN_LEAVES_SUMMARY_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/requests/admin/leave-requests-summary?year=${year}`);
+    const response = await axios.post(`${API_ROUTE}/leaves/requests/admin/leave-requests-summary`, { year });
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: FETCH_ADMIN_LEAVES_SUMMARY_SUCCESS,

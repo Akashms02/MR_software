@@ -30,9 +30,7 @@ export const getAdmins = (page = 0, size = 100000, search = "") => async (dispat
   dispatch({ type: LOADING_START });
   dispatch({ type: ADMIN_LIST_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/admin/all-admins`, {
-      params: { page, size, search }
-    });
+    const response = await axios.post(`${API_ROUTE}/admin/all-admins`, { page, size, search });
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {

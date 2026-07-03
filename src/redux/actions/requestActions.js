@@ -77,9 +77,7 @@ export const fetchPendingRequestsAction = (status = "ALL", page = 0, size = 10) 
   dispatch({ type: FETCH_PENDING_REQUESTS_REQUEST });
   try {
     const apiStatus = String(status || "ALL").toUpperCase();
-    const response = await axios.get(`${API_ROUTE}/requests/pending`, {
-      params: { status: apiStatus, page, size },
-    });
+    const response = await axios.post(`${API_ROUTE}/requests/pending`, { status: apiStatus, page, size });
     
     const data = response.data?.data ?? response.data;
     const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
@@ -104,9 +102,7 @@ export const fetchMeRequestsAction = (page = 0, size = 10) => async (dispatch) =
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_ME_REQUESTS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/requests/me`, {
-      params: { page, size }
-    });
+    const response = await axios.post(`${API_ROUTE}/requests/me`, { page, size });
     const rawData = response.data?.data || response.data;
     
     let list = [];

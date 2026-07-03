@@ -567,7 +567,7 @@ axios.interceptors.request.use(
 
             const dcr = dcrs.find(d => d.id === dcrId);
             mockData = { success: true, status: 200, data: dcr || null };
-          } else if (cfg.url.includes('/admin/my-team') && cfg.method === 'get') {
+          } else if (cfg.url.includes('/admin/my-team') && cfg.method === 'post') {
             mockData = {
               success: true,
               data: [

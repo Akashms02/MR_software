@@ -351,9 +351,9 @@ export const distributerActivityReport = (params) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: DISTRIBUTES_REPORT_REQUEST });
   try {
-    const response = await axios.get(
+    const response = await axios.post(
       `${API_ROUTE}/mr/distributors/sales`,
-      { params }
+      params
     );
     const { status, message, data } = response.data ?? {};
     if (isSuccess(status) || response.status === 200) {

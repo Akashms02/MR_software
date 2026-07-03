@@ -28,7 +28,7 @@ export const getMyTeam = (page = 0, size = 100000) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: TEAM_LIST_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/admin/my-team?page=${page}&size=${size}`);
+    const response = await axios.post(`${API_ROUTE}/admin/my-team`, { page, size });
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
