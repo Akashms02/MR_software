@@ -25,6 +25,7 @@ import {
 import { updateCompanyAccess, editCompanyData } from "../../redux/actions/companyAction";
 import EditAdminModal from "./EditAdminModal";
 import ModuleAccessModal from "./ModuleAccessModal";
+import Pagination from "../../components/common/Pagination";
 
 const AdminManagement = () => {
   const dispatch = useDispatch();
@@ -35,6 +36,13 @@ const AdminManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   const filteredAdmins = (admins || []).filter(
     (admin) =>
@@ -243,33 +251,8 @@ const AdminManagement = () => {
         </button>
       </div>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Total Admins", value: admins.length },
-          {
-            label: "Active Sessions",
-            value: admins.filter(a => a.enabled !== false).length,
-          },
-          { label: "System Access", value: "100%" },
-          { label: "Pending Invitations", value: "0" },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white px-5 py-4 rounded-2xl border border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
-          >
-            <div className="text-xs font-semibold text-gray-400 uppercase tracking-[0.5px]">
-              {stat.label}
-            </div>
-            <div className="text-2xl font-extrabold text-gray-900 mt-1">
-              {stat.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Table Section */}
-      <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col h-[calc(100vh-270px)]">
+      <div className="bg-white rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col h-[calc(100vh-190px)]">
         <div className="p-5 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4 shrink-0">
           <div className="relative">
             <Search
@@ -319,7 +302,7 @@ const AdminManagement = () => {
                   </td>
                 </tr>
               ) : (
-                filteredAdmins.map((admin) => {
+                filteredAdmins.slice(currentPage * pageSize, (currentPage + 1) * pageSize).map((admin) => {
                   const isEnabled = admin.enabled !== false;
                   return (
                     <tr
@@ -400,6 +383,17 @@ const AdminManagement = () => {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="px-6 pb-4 bg-white">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredAdmins.length / pageSize)}
+            totalElements={filteredAdmins.length}
+            pageSize={pageSize}
+            onPageChange={(page) => setCurrentPage(page)}
+            isLoading={loading}
+            activeBtnClass="bg-[#C8F04A] text-gray-900"
+          />
         </div>
       </div>
 
