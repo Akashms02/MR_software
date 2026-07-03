@@ -34,6 +34,16 @@ const AdminManagement = () => {
   const companyState = useSelector((state) => state.company || {});
   const [showModal, setShowModal] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredAdmins = (admins || []).filter(
+    (admin) =>
+      !searchQuery ||
+      admin.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      admin.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      admin.adminReferenceCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      admin.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const AVAILABLE_MODULES = [
     { id: 'requests',     label: 'Onboarding Requests' },
@@ -268,6 +278,8 @@ const AdminManagement = () => {
             />
             <input
               placeholder="Search by name, email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-3.5 py-2.5 rounded-lg border border-gray-200 w-[300px] text-sm outline-none focus:border-indigo-500"
             />
           </div>
@@ -300,14 +312,14 @@ const AdminManagement = () => {
                     </p>
                   </td>
                 </tr>
-              ) : admins.length === 0 ? (
+              ) : filteredAdmins.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-10 text-center text-gray-500">
                     No administrators found.
                   </td>
                 </tr>
               ) : (
-                admins.map((admin) => {
+                filteredAdmins.map((admin) => {
                   const isEnabled = admin.enabled !== false;
                   return (
                     <tr
