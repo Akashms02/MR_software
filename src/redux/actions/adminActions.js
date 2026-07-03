@@ -26,17 +26,24 @@ const isSuccess = (status) =>
 /* =======================
    LIST ADMINS
  ======================= */
-export const getAdmins = () => async (dispatch) => {
+export const getAdmins = (page = 0, size = 100000, search = "") => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: ADMIN_LIST_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/admin/all-admins`);
+    const response = await axios.get(`${API_ROUTE}/admin/all-admins`, {
+      params: { page, size, search }
+    });
     const { status, message, data } = response.data ?? {};
 
     if (isSuccess(status) || response.status === 200) {
+      const rawData = data || response.data.data;
+      const adminsArray = Array.isArray(rawData)
+        ? rawData
+        : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+
       dispatch({
         type: ADMIN_LIST_SUCCESS,
-        payload: data || response.data.data || [],
+        payload: adminsArray,
       });
       return response.data;
     }
