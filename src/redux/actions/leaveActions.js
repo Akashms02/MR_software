@@ -187,6 +187,11 @@ export const createLeaveTypeAction = (payload) => async (dispatch) => {
   dispatch({ type: CREATE_LEAVE_TYPE_REQUEST });
   try {
     const response = await axios.post(`${API_ROUTE}/leaves/types`, payload);
+    if (response.data && response.data.status === false) {
+      const msg = response.data.message || commonError;
+      dispatch({ type: CREATE_LEAVE_TYPE_FAILURE, payload: msg });
+      throw new Error(msg);
+    }
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: CREATE_LEAVE_TYPE_SUCCESS,
@@ -208,6 +213,11 @@ export const updateLeaveTypeAction = (id, payload) => async (dispatch) => {
   dispatch({ type: UPDATE_LEAVE_TYPE_REQUEST });
   try {
     const response = await axios.put(`${API_ROUTE}/leaves/types/${id}`, payload);
+    if (response.data && response.data.status === false) {
+      const msg = response.data.message || commonError;
+      dispatch({ type: UPDATE_LEAVE_TYPE_FAILURE, payload: msg });
+      throw new Error(msg);
+    }
     const payloadData = response.data?.data || response.data;
     dispatch({
       type: UPDATE_LEAVE_TYPE_SUCCESS,

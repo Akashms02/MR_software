@@ -185,6 +185,10 @@ const AdminLeaveReviewPage = () => {
       } else {
         await dispatch(createLeaveTypeAction(payload));
       }
+      dispatch(fetchLeaveTypesAction());
+    } catch (err) {
+      // Handled by Redux
+    } finally {
       setAddModalOpen(false);
       setEditingTypeObj(null);
       setFormData({
@@ -195,9 +199,6 @@ const AdminLeaveReviewPage = () => {
         carryForward: false,
         maxAllowedDays: ''
       });
-      dispatch(fetchLeaveTypesAction());
-    } catch (err) {
-      // Handled by Redux
     }
   };
 
