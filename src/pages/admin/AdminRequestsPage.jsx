@@ -46,8 +46,10 @@ const AdminRequestsPage = () => {
       const statuses = ['All', 'Pending', 'Approved', 'Rejected'];
       const requestsPromises = statuses.map(async (tab) => {
         const statusVal = requestStatusFromTab(tab);
-        const response = await axios.get(`${API_ROUTE}/requests/pending`, {
-          params: { status: statusVal, page: 0, size: 1 },
+        const response = await axios.post(`${API_ROUTE}/requests/pending`, {
+          status: statusVal,
+          page: 0,
+          size: 1,
         });
         const data = response.data?.data ?? response.data;
         return { tab, count: data?.totalElements || 0 };

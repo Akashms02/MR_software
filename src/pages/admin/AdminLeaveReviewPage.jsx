@@ -33,6 +33,7 @@ const AdminLeaveReviewPage = () => {
   const [remarksMap, setRemarksMap] = useState({});
   const [localSuccess, setLocalSuccess] = useState(null);
   const [localError, setLocalError] = useState(null);
+  const [modalError, setModalError] = useState(null);
 
   // Inspector Modal State
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
@@ -87,6 +88,9 @@ const AdminLeaveReviewPage = () => {
 
   useEffect(() => {
     if (error) {
+      if (addModalOpen) {
+        return;
+      }
       setLocalError(error);
       const t = setTimeout(() => {
         dispatch(clearLeaveErrorsAction());
@@ -94,7 +98,7 @@ const AdminLeaveReviewPage = () => {
       }, 4000);
       return () => clearTimeout(t);
     }
-  }, [error, dispatch]);
+  }, [error, addModalOpen, dispatch]);
 
   const handleReview = async (leaveId, status) => {
     const remarks = remarksMap[leaveId] || (status === 'APPROVED' ? 'Approved. Enjoy your time off!' : 'Rejected. Due to team availability.');
@@ -119,6 +123,7 @@ const AdminLeaveReviewPage = () => {
 
   const handleEditAllocation = (alloc) => {
     setEditingTypeObj(alloc);
+    setModalError(null);
     setFormData({
       code: alloc.code || '',
       name: alloc.name || '',
@@ -151,21 +156,20 @@ const AdminLeaveReviewPage = () => {
 
   const handleSaveAllocation = async (e) => {
     e.preventDefault();
+    setModalError(null);
+
     if (!formData.maxAllowedDays || isNaN(formData.maxAllowedDays) || parseFloat(formData.maxAllowedDays) < 0) {
-      setLocalError('Please enter a valid number of days.');
-      setTimeout(() => setLocalError(null), 4000);
+      setModalError('Please enter a valid number of days.');
       return;
     }
 
-    if (!formData.code || formData.code === 'OTHER') {
-      setLocalError('Please specify a valid code.');
-      setTimeout(() => setLocalError(null), 4000);
+    if (!formData.code) {
+      setModalError('Please specify a valid code.');
       return;
     }
 
     if (!formData.name) {
-      setLocalError('Please specify the leave type name.');
-      setTimeout(() => setLocalError(null), 4000);
+      setModalError('Please specify the leave type name.');
       return;
     }
 
@@ -175,8 +179,7 @@ const AdminLeaveReviewPage = () => {
       description: formData.description,
       applicableGender: formData.applicableGender,
       carryForward: formData.carryForward,
-      maxAllowedDays: parseFloat(formData.maxAllowedDays),
-      limit: parseInt(formData.maxAllowedDays)
+      maxAllowedDays: parseFloat(formData.maxAllowedDays)
     };
 
     try {
@@ -186,9 +189,8 @@ const AdminLeaveReviewPage = () => {
         await dispatch(createLeaveTypeAction(payload));
       }
       dispatch(fetchLeaveTypesAction());
-    } catch (err) {
-      // Handled by Redux
-    } finally {
+
+      // Only close and clear state on success
       setAddModalOpen(false);
       setEditingTypeObj(null);
       setFormData({
@@ -199,6 +201,9 @@ const AdminLeaveReviewPage = () => {
         carryForward: false,
         maxAllowedDays: ''
       });
+    } catch (err) {
+      setModalError(err.message || 'Failed to save leave policy.');
+      dispatch(clearLeaveErrorsAction()); // Prevent page-level global error toast from showing
     }
   };
 
@@ -300,6 +305,7 @@ const AdminLeaveReviewPage = () => {
               <button
                 onClick={() => {
                   setEditingTypeObj(null);
+                  setModalError(null);
                   setFormData({
                     code: '',
                     name: '',
@@ -552,6 +558,12 @@ const AdminLeaveReviewPage = () => {
 
             <form onSubmit={handleSaveAllocation}>
               <div className="p-6 flex flex-col gap-4">
+                {modalError && (
+                  <div className="bg-[#FEF2F2] border border-[#FECACA] px-4 py-2.5 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[12.5px] font-semibold mb-1">
+                    <AlertCircle size={14} />
+                    {modalError}
+                  </div>
+                )}
                 <div className="grid grid-cols-[1fr_2fr] gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-2">
@@ -559,15 +571,11 @@ const AdminLeaveReviewPage = () => {
                     </label>
                     <select
                       required
-                      value={Object.keys(STANDARD_LEAVES).includes(formData.code) ? formData.code : (formData.code ? 'OTHER' : '')}
+                      value={formData.code}
                       onChange={(e) => {
                         const val = e.target.value;
-                        if (val === 'OTHER') {
-                          setFormData({ ...formData, code: 'OTHER', name: '' });
-                        } else {
-                          const autoName = STANDARD_LEAVES[val] || '';
-                          setFormData({ ...formData, code: val, name: autoName });
-                        }
+                        const autoName = STANDARD_LEAVES[val] || '';
+                        setFormData({ ...formData, code: val, name: autoName });
                       }}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none font-sans"
                     >
@@ -575,7 +583,6 @@ const AdminLeaveReviewPage = () => {
                       {Object.keys(STANDARD_LEAVES).map(code => (
                         <option key={code} value={code}>{code}</option>
                       ))}
-                      <option value="OTHER">OTHER</option>
                     </select>
                   </div>
                   <div>
@@ -592,22 +599,6 @@ const AdminLeaveReviewPage = () => {
                     />
                   </div>
                 </div>
-
-                {(!Object.keys(STANDARD_LEAVES).includes(formData.code) || formData.code === 'OTHER') && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2">
-                      Custom Code
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      placeholder="e.g. UL"
-                      value={formData.code === 'OTHER' ? '' : formData.code}
-                      onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans box-border"
-                    />
-                  </div>
-                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
