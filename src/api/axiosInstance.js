@@ -656,7 +656,7 @@ axios.interceptors.request.use(
                 ]
               };
             }
-          } else if (cfg.url.includes('/requests/me') && cfg.method === 'get') {
+          } else if (cfg.url.includes('/requests/me') && cfg.method === 'post') {
               let requests = [];
               try {
                 const saved = localStorage.getItem('mock_onboarding_requests');
@@ -746,14 +746,14 @@ axios.interceptors.request.use(
               } catch (e) {}
               let statusFilter = '';
               try {
-                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
-                statusFilter = new URL(urlStr).searchParams.get('status') || '';
+                const body = JSON.parse(cfg.data || '{}');
+                statusFilter = body.status || '';
               } catch (e) {}
               const list = statusFilter
                 ? requests.filter((r) => String(r.status).toUpperCase() === statusFilter.toUpperCase())
                 : requests;
               mockData = { success: true, status: 200, data: list };
-            } else if (cfg.url.includes('/requests/pending') && cfg.method === 'get') {
+            } else if (cfg.url.includes('/requests/pending') && cfg.method === 'post') {
               let requests = [];
               try {
                 const saved = localStorage.getItem('mock_onboarding_requests');
@@ -805,12 +805,11 @@ axios.interceptors.request.use(
               let page = 0;
               let size = 10;
               try {
-                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
-                const urlObj = new URL(urlStr);
-                const raw = (urlObj.searchParams.get('status') || 'PENDING').toUpperCase();
+                const body = JSON.parse(cfg.data || '{}');
+                const raw = (body.status || 'PENDING').toUpperCase();
                 statusFilter = raw === 'ALL' ? 'ALL' : raw;
-                page = parseInt(urlObj.searchParams.get('page') || '0', 10);
-                size = parseInt(urlObj.searchParams.get('size') || '10', 10);
+                page = parseInt(body.page || '0', 10);
+                size = parseInt(body.size || '10', 10);
               } catch (e) {}
               const filteredList =
                 statusFilter === 'ALL'
@@ -899,7 +898,7 @@ axios.interceptors.request.use(
               }
 
               mockData = { success: true, status: 200, message: "Location updated successfully." };
-            } else if (cfg.url.includes('/requests') && cfg.method === 'post') {
+            } else if (cfg.url.includes('/requests') && !cfg.url.includes('/requests/pending') && !cfg.url.includes('/requests/me') && cfg.method === 'post') {
               const body = JSON.parse(cfg.data || '{}');
               let requests = [];
               try {

@@ -353,7 +353,12 @@ export const fetchAdminLeaveTableAction = (year = 2026) => async (dispatch) => {
   dispatch({ type: FETCH_ADMIN_LEAVES_TABLE_REQUEST });
   try {
     const response = await axios.post(`${API_ROUTE}/leaves/requests/admin/leave-requests`, { year });
-    const payloadData = response.data?.data || response.data || [];
+    let payloadData = response.data?.data || response.data || [];
+    if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
+      if (Array.isArray(payloadData.content)) {
+        payloadData = payloadData.content;
+      }
+    }
     dispatch({
       type: FETCH_ADMIN_LEAVES_TABLE_SUCCESS,
       payload: Array.isArray(payloadData) ? payloadData : [],
