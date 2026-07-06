@@ -26,7 +26,6 @@ import {
 } from '../../utils/attendanceUtils';
 import { fetchMeRequestsAction, updateTargetLocationAction } from '../../redux/actions/requestActions';
 import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
-import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
@@ -566,7 +565,6 @@ export default function MRDashboard() {
   const dispatch = useDispatch();
   const { myAttendance = [], myVisits = [], loading } = useSelector(state => state.attendance || {});
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
-  const { team = [] } = useSelector(state => state.team || {});
   const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
   const { activeNotices = [] } = useSelector(state => state.notices || {});
   const [assignedTargets, setAssignedTargets] = useState([]);
@@ -684,7 +682,6 @@ export default function MRDashboard() {
     dispatch(fetchMyAttendanceAction());
     dispatch(fetchMyVisitsAction());
     dispatch(fetchMeRequestsAction());
-    dispatch(getMyTeam());
     dispatch(fetchActiveUpcomingHolidaysAction());
     dispatch(getActiveNotices());
   }, [dispatch]);
