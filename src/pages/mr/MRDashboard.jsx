@@ -7,6 +7,7 @@ import { API_ROUTE } from '../../data/env';
 import { Loader2, Gift, ExternalLink, Bell, AlertCircle, Calendar, Coffee, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getActiveNotices } from '../../redux/actions/noticeActions';
+import { getMyTeam } from '../../redux/actions/teamActions';
 import {
   punchInAction,
   punchOutAction,
@@ -542,6 +543,7 @@ export default function MRDashboard() {
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
   const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
   const { activeNotices = [] } = useSelector(state => state.notices || {});
+  const { team = [] } = useSelector(state => state.team || {});
   const [assignedTargets, setAssignedTargets] = useState([]);
   const [targetsLoading, setTargetsLoading] = useState(false);
 
@@ -659,6 +661,7 @@ export default function MRDashboard() {
     dispatch(fetchMeRequestsAction());
     dispatch(fetchActiveUpcomingHolidaysAction());
     dispatch(getActiveNotices());
+    dispatch(getMyTeam());
   }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
