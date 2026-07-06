@@ -1,4 +1,5 @@
 import React from 'react';
+import DailyQuote from '../../components/DailyQuote';
 
 const RegionalManagerDashboard = () => {
   const stats = [
@@ -28,6 +29,7 @@ const RegionalManagerDashboard = () => {
           <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Evaluate regional KPIs, coordinate with Area Managers, re-allocate sales targets, and track doctor prescription trends.
           </p>
+          <DailyQuote userRole="REGIONAL_MANAGER" variant="welcome" />
         </div>
         <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           🌍

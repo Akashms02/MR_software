@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import DailyQuote from '../../components/DailyQuote'
 import { ExternalLink, ChevronRight, ShieldCheck, Network, Users, Server, Key, Database, Globe } from 'lucide-react'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { getAdmins } from '../../redux/actions/adminActions'
@@ -143,6 +144,7 @@ export default function SuperAdminDashboard() {
                 <span>{displayRefCode}</span>
               </span>
             </div>
+            <DailyQuote userRole="SUPER_ADMIN" variant="welcome" />
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import DailyQuote from '../../components/DailyQuote';
 
 const DistributorDashboard = () => {
   const stats = [
@@ -28,6 +29,7 @@ const DistributorDashboard = () => {
           <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Manage warehouse batches, review pharmacy purchase requests, dispatch logistics cargo, and track payment receipts.
           </p>
+          <DailyQuote userRole="DISTRIBUTOR" variant="welcome" />
         </div>
         <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           📦

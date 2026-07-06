@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import DailyQuote from '../../components/DailyQuote';
 
 const MedicalManagerDashboard = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const MedicalManagerDashboard = () => {
           <p className="text-sm text-white/85 max-w-[500px] m-0">
             Monitor active clinical trials, track compliance to safety guidelines, manage medical representative query escalations, and audit doctor engagement quality.
           </p>
+          <DailyQuote userRole="MEDICAL_MANAGER" variant="welcome" />
         </div>
         <div className="absolute -right-10 -bottom-[50px] text-[180px] opacity-10 select-none pointer-events-none">
           🧬

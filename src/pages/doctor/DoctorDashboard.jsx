@@ -1,4 +1,5 @@
 import React from 'react';
+import DailyQuote from '../../components/DailyQuote';
 
 const DoctorDashboard = () => {
   const stats = [
@@ -28,6 +29,7 @@ const DoctorDashboard = () => {
           <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Access your patient queues, write e-prescriptions directly linked with chemist inventory, and review diagnostic charts.
           </p>
+          <DailyQuote userRole="DOCTOR" variant="welcome" />
         </div>
         <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           🩺
