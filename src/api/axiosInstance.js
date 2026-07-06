@@ -1517,7 +1517,28 @@ axios.interceptors.request.use(
               notices = notices.filter(n => n.id !== noticeId);
               localStorage.setItem('mock_notices', JSON.stringify(notices));
               mockData = { success: true, status: 200, data: noticeId };
+            } else if (cfg.url.includes('/quotes/today') && cfg.method === 'get') {
+              let todayStr = new Date().toISOString().split('T')[0];
+              mockData = {
+                success: true,
+                status: 200,
+                message: "Daily quote fetched successfully",
+                data: {
+                  id: 4,
+                  quote: "Production admin quote",
+                  author: "Admin",
+                  date: todayStr
+                }
+              };
+            } else if (cfg.url.includes('/quotes/refresh') && cfg.method === 'post') {
+              mockData = {
+                success: true,
+                status: 200,
+                message: "Quote refreshed successfully",
+                data: "Quote refreshed successfully"
+              };
             }
+
 
           return {
             data: mockData,
