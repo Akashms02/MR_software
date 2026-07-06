@@ -45,6 +45,7 @@ function MEHeader({ onBellClick, unreadCount }) {
     if (activePage === 'dashboard') return 'Dashboard'
     if (activePage === 'requests') return 'Onboarding Requests'
     if (activePage === 'leaves') return 'Leaves & Approvals'
+    if (activePage === 'dcr-approvals') return 'DCR Approvals'
     if (activePage === 'tourplan') return 'Tour Plans'
     if (activePage === 'fieldtracking') return 'Field Tracking'
     if (activePage === 'reports') return 'Reports & Analytics'
@@ -171,6 +172,7 @@ export default function MedicalExecutiveLayout({ children }) {
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/medical-executive/dashboard' },
     { id: 'requests',     icon: UserPlus,        label: 'Onboarding Requests', path: '/medical-executive/requests' },
     { id: 'leaves',       icon: Calendar,        label: 'Leaves & Approvals', path: '/medical-executive/leaves' },
+    { id: 'dcr-approvals', icon: FileText,        label: 'DCR Approvals', path: '/medical-executive/dcr-approvals' },
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/medical-executive/tourplan' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/medical-executive/fieldtracking' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-executive/reports' },
