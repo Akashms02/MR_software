@@ -1,4 +1,5 @@
 import React from 'react';
+import DailyQuote from '../../components/DailyQuote';
 
 const PharmacistDashboard = () => {
   const stats = [
@@ -28,6 +29,7 @@ const PharmacistDashboard = () => {
           <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Verify digital doctor prescriptions, manage medicine inventory controls, check drug batch expiry codes, and dispense supplies.
           </p>
+          <DailyQuote userRole="PHARMACIST" variant="welcome" />
         </div>
         <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           💊

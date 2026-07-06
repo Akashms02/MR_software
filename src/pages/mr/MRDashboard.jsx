@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import DailyQuote from '../../components/DailyQuote';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { Loader2, Gift, ExternalLink, Bell, AlertCircle, Calendar, Coffee, X } from 'lucide-react';
@@ -927,11 +928,11 @@ export default function MRDashboard() {
           className="absolute inset-0 w-full h-full object-cover z-0" 
         />
 
-        <div className="flex items-center gap-5 z-[3]">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C8F04A] to-[#10B981] flex items-center justify-center text-[24px] font-extrabold text-[#064E3B] shadow-[0_4px_14px_rgba(200,240,74,0.4)] border-2 border-white/20">
+        <div className="flex items-center gap-5 z-[3] w-full">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C8F04A] to-[#10B981] flex items-center justify-center text-[24px] font-extrabold text-[#064E3B] shadow-[0_4px_14px_rgba(200,240,74,0.4)] border-2 border-white/20 shrink-0">
             {mrName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-base font-black text-white/90 mb-1">
               {(() => {
                 const hour = new Date().getHours();
@@ -943,6 +944,7 @@ export default function MRDashboard() {
             <h1 className="text-[26px] font-extrabold text-white m-0 tracking-tight leading-none">
               {mrName}
             </h1>
+            <DailyQuote userRole="MR" variant="welcome" />
           </div>
         </div>
       </div>

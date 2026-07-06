@@ -1,4 +1,5 @@
 import React from 'react';
+import DailyQuote from '../../components/DailyQuote';
 
 const AreaManagerDashboard = () => {
   const stats = [
@@ -28,6 +29,7 @@ const AreaManagerDashboard = () => {
           <p className="m-0 text-[14px] text-white/85 max-w-[500px]">
             Supervise field agents, review MR daily reporting, track doctor interactions, and boost pharmaceutical product sales in your area.
           </p>
+          <DailyQuote userRole="AREA_MANAGER" variant="welcome" />
         </div>
         <div className="absolute right-[-50px] bottom-[-50px] text-[180px] opacity-10 select-none pointer-events-none">
           🗺️

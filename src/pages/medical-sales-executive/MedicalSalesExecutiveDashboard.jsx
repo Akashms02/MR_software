@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import DailyQuote from '../../components/DailyQuote';
 import {
   Users, Calendar, FileText, Search, UserPlus, Navigation, BarChart2, Gift, Map as MapIcon,
   Loader2, Check, X, AlertCircle, CheckCircle2, ExternalLink, HelpCircle, Bell, Coffee
@@ -374,7 +375,7 @@ const MedicalSalesExecutiveDashboard = () => {
 
   return (
     <div className="animate-[fadeIn_0.35s_ease-out]">
-      {/* â”€â”€ Welcome Header Card â”€â”€ */}
+      {/* ── Welcome Header Card ── */}
       <div className="rounded-[20px] px-[30px] py-7 mb-5 text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.15)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/10">
         <img
           src="/banner.jfif"
@@ -382,17 +383,18 @@ const MedicalSalesExecutiveDashboard = () => {
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
-        <div className="flex items-center gap-5 z-[3]">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#5EEAD4] to-[#0D9488] flex items-center justify-center text-[24px] font-extrabold text-white shadow-[0_4px_14px_rgba(13,148,136,0.5)] border-2 border-white/20">
+        <div className="flex items-center gap-5 z-[3] w-full">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#5EEAD4] to-[#0D9488] flex items-center justify-center text-[24px] font-extrabold text-white shadow-[0_4px_14px_rgba(13,148,136,0.5)] border-2 border-white/20 shrink-0">
             {displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-base font-black text-white/90 mb-1">
               {getGreeting()}
             </div>
             <h1 className="text-[26px] font-extrabold text-white m-0 tracking-tight leading-none">
               {displayName}
             </h1>
+            <DailyQuote userRole="MEDICAL_SALES_EXECUTIVE" variant="welcome" />
             <span className="inline-block mt-2 bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
               Portal: Medical Sales Executive
             </span>

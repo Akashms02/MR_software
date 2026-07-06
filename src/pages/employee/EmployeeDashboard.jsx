@@ -3,6 +3,7 @@ import { Card, SectionHeader, StatCard } from '../../components/ui'
 import { LEAVE_BALANCE, RECENT_ACTIVITY, UPCOMING_EVENTS } from '../../data/hrmsData'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchProfile } from '../../redux/actions/authActions'
+import DailyQuote from '../../components/DailyQuote'
 
 export default function EmployeeDashboard() {
   const dispatch = useDispatch()
@@ -19,10 +20,11 @@ export default function EmployeeDashboard() {
     <div>
       {/* Welcome banner */}
       <div className="bg-gradient-to-r from-green-600 to-cyan-600 rounded-2xl p-6 px-7 mb-6 flex items-center justify-between flex-wrap gap-4">
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="text-[13px] text-white/75 mb-1 font-medium">Welcome back 👋</div>
           <div className="text-[22px] font-extrabold text-white mb-1">{displayName}</div>
           <div className="text-[13px] text-white/80">{displayRole} · {displayDept}</div>
+          <DailyQuote userRole="EMPLOYEE" variant="welcome" />
         </div>
         <div className="text-right">
           <div className="text-[12px] text-white/70 mb-1">Today</div>
