@@ -12,6 +12,7 @@ import MSERequestsPage from '../../pages/medical-sales-executive/MSERequestsPage
 import MSEFieldTracking from '../../pages/medical-sales-executive/MSEFieldTracking'
 import MSELeaveReviewPage from '../../pages/medical-sales-executive/MSELeaveReviewPage'
 import MSESalesPage from '../../pages/medical-sales-executive/MSESalesPage'
+import DcrReviewPage from '../../pages/admin/DcrReviewPage'
 
 
 export default function MedicalSalesExecutiveLayoutRouter() {
@@ -22,6 +23,7 @@ export default function MedicalSalesExecutiveLayoutRouter() {
         <Route path="dashboard" element={<MedicalSalesExecutiveDashboard />} />
         <Route path="tourplan" element={<MSETourPlanPage />} />
         <Route path="requests" element={<MSERequestsPage />} />
+        <Route path="dcr-approvals" element={<DcrReviewPage />} />
         <Route path="reports" element={<MSEReports />} />
         <Route path="sales" element={<MSESalesPage />} />
         <Route path="fieldtracking" element={<MSEFieldTracking />} />

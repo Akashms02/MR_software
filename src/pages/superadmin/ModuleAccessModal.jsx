@@ -21,6 +21,7 @@ const ModuleAccessModal = ({
     { id: 'leaves',       label: 'Leave Approvals' },
     { id: 'holidays',     label: 'Holidays' },
     { id: 'myteam',       label: 'My Team' },
+    { id: 'dcr-approvals', label: 'DCR Approvals' },
     { id: 'hrdocuments',  label: 'HR Documents' },
     { id: 'notices',      label: 'Notice Board' },
   ];

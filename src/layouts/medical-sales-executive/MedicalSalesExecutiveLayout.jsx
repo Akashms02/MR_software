@@ -45,6 +45,7 @@ function MSEHeader({ onBellClick, unreadCount }) {
     if (activePage === 'dashboard') return 'Dashboard'
     if (activePage === 'requests') return 'Onboarding Requests'
     if (activePage === 'leaves') return 'Leaves & Approvals'
+    if (activePage === 'dcr-approvals') return 'DCR Approvals'
     if (activePage === 'tourplan') return 'Tour Plans'
     if (activePage === 'fieldtracking') return 'Field Tracking'
     if (activePage === 'reports') return 'Reports & Analytics'
@@ -171,6 +172,7 @@ export default function MedicalSalesExecutiveLayout({ children }) {
     { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/medical-sales-executive/dashboard' },
     { id: 'requests',     icon: UserPlus,        label: 'Onboarding Requests', path: '/medical-sales-executive/requests' },
     { id: 'leaves',       icon: Calendar,        label: 'Leaves & Approvals', path: '/medical-sales-executive/leaves' },
+    { id: 'dcr-approvals', icon: FileText,        label: 'DCR Approvals', path: '/medical-sales-executive/dcr-approvals' },
     { id: 'tourplan',     icon: MapPin,          label: 'Tour Plans',    path: '/medical-sales-executive/tourplan' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/medical-sales-executive/fieldtracking' },
     { id: 'reports',      icon: BarChart3,       label: 'Reports & Analytics', path: '/medical-sales-executive/reports' },

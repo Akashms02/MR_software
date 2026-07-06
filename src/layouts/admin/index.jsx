@@ -22,6 +22,7 @@ import Settings from '../../pages/admin/Settings'
 import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 import NoticeManagement from '../../pages/admin/NoticeManagement'
 import AdminSalesPage from '../../pages/admin/AdminSalesPage'
+import DcrReviewPage from '../../pages/admin/DcrReviewPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -33,6 +34,7 @@ export default function AdminLayoutRouter() {
         <Route path="finance" element={<AdminPayroll />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="requests" element={<AdminRequestsPage />} />
+        <Route path="dcr-approvals" element={<DcrReviewPage />} />
         <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
         <Route path="fieldtracking" element={<AdminFieldTracking />} />
         <Route path="leaves" element={<AdminLeaveReviewPage />} />

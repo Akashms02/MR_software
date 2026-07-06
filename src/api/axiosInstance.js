@@ -1537,7 +1537,108 @@ axios.interceptors.request.use(
                 message: "Quote refreshed successfully",
                 data: "Quote refreshed successfully"
               };
+            } else if (cfg.url.includes('/dcr/team') && cfg.method === 'get') {
+              let saved = localStorage.getItem('mock_team_dcrs');
+              let dcrs = [];
+              if (saved) {
+                try { dcrs = JSON.parse(saved); } catch (e) {}
+              } else {
+                let todayStr = new Date().toISOString().split('T')[0];
+                let yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                dcrs = [
+                  {
+                    id: 101,
+                    mrId: 10,
+                    mrName: "Marcus Rep",
+                    reportDate: todayStr,
+                    status: "SUBMITTED",
+                    managerRemarks: "",
+                    approvedById: null,
+                    approvedByName: null,
+                    visits: [
+                      { id: 1, doctorId: 1, doctorName: "Dr. Ramesh Sharma", speciality: "CARDIOLOGY", visitTime: "10:30:00", productsDiscussed: "Cardiace-M", samplesGiven: "2 strips", feedback: "Doctor showed positive response", isGpsVerified: true },
+                      { id: 2, doctorId: 2, doctorName: "Dr. Sunita Patel", speciality: "PEDIATRICS", visitTime: "11:45:00", productsDiscussed: "Pediatone", samplesGiven: "1 bottle", feedback: "Wants a follow-up next week", isGpsVerified: true }
+                    ],
+                    chemistVisits: [
+                      { id: 1, chemistId: 1, chemistName: "Apollo Pharmacy", address: "Sector 15, Dwarka", visitTime: "14:15:00", productsDiscussed: "Cardiace-M, Pediatone", feedback: "Ordered 10 boxes", isGpsVerified: true }
+                    ],
+                    createdAt: todayStr + "T17:00:00Z"
+                  },
+                  {
+                    id: 102,
+                    mrId: 11,
+                    mrName: "Sarah Connor",
+                    reportDate: todayStr,
+                    status: "SUBMITTED",
+                    managerRemarks: "",
+                    approvedById: null,
+                    approvedByName: null,
+                    visits: [
+                      { id: 3, doctorId: 3, doctorName: "Dr. Vivek Verma", speciality: "ORTHOPEDICS", visitTime: "12:15:00", productsDiscussed: "Osteoshield", samplesGiven: "5 boxes", feedback: "Requested medical brochure", isGpsVerified: false }
+                    ],
+                    chemistVisits: [],
+                    createdAt: todayStr + "T16:30:00Z"
+                  },
+                  {
+                    id: 103,
+                    mrId: 10,
+                    mrName: "Marcus Rep",
+                    reportDate: yesterdayStr,
+                    status: "APPROVED",
+                    managerRemarks: "Well done!",
+                    approvedById: 1,
+                    approvedByName: "Admin User",
+                    visits: [
+                      { id: 4, doctorId: 1, doctorName: "Dr. Ramesh Sharma", speciality: "CARDIOLOGY", visitTime: "10:00:00", productsDiscussed: "Cardiace-M", samplesGiven: "1 strip", feedback: "Discussed renewal", isGpsVerified: true }
+                    ],
+                    chemistVisits: [],
+                    createdAt: yesterdayStr + "T16:00:00Z"
+                  }
+                ];
+                localStorage.setItem('mock_team_dcrs', JSON.stringify(dcrs));
+              }
+              mockData = {
+                success: true,
+                status: 200,
+                message: "Fetched team DCRs successfully",
+                data: dcrs
+              };
+            } else if (cfg.url.includes('/dcr/') && cfg.url.includes('/review') && cfg.method === 'put') {
+              const parts = cfg.url.split('?')[0].split('/');
+              const reviewIdx = parts.indexOf('review');
+              const dcrId = parseInt(parts[reviewIdx - 1]);
+              
+              let status = 'APPROVED';
+              let remarks = '';
+              try {
+                const urlStr = cfg.url.startsWith('http') ? cfg.url : 'http://localhost' + cfg.url;
+                const urlObj = new URL(urlStr);
+                status = urlObj.searchParams.get('status') || 'APPROVED';
+                remarks = urlObj.searchParams.get('remarks') || '';
+              } catch (e) {}
+
+              let dcrs = [];
+              try {
+                dcrs = JSON.parse(localStorage.getItem('mock_team_dcrs') || '[]');
+              } catch (e) {}
+
+              const idx = dcrs.findIndex(d => d.id === dcrId);
+              let updated = null;
+              if (idx !== -1) {
+                dcrs[idx].status = status;
+                dcrs[idx].managerRemarks = remarks;
+                dcrs[idx].approvedByName = "Admin User";
+                updated = dcrs[idx];
+                localStorage.setItem('mock_team_dcrs', JSON.stringify(dcrs));
+              }
+              mockData = {
+                success: true,
+                status: 200,
+                message: `DCR successfully ${status.toLowerCase()}`,
+                data: updated
+              };
             }
+
 
 
           return {

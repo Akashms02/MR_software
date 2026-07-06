@@ -26,6 +26,7 @@ export const ADMIN_NAV = [
   { id: 'orgstructure', icon: Network,          label: 'Org Structure' },
   { id: 'me',           icon: User,             label: 'Me'            },
   { id: 'myteam',       icon: UsersRound,       label: 'My Team'       },
+  { id: 'dcr-approvals', icon: FileText,         label: 'DCR Approvals' },
   { id: 'watercooler',  icon: Coffee,           label: 'Water Cooler'  },
   { id: 'hrdocuments',  icon: FileText,         label: 'HR Documents'  },
   { id: 'settings',     icon: Settings,         label: 'Settings'      },
