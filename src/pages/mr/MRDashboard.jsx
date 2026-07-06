@@ -25,38 +25,13 @@ import {
   visitCheckInCoords,
 } from '../../utils/attendanceUtils';
 import { fetchMeRequestsAction, updateTargetLocationAction } from '../../redux/actions/requestActions';
-import { getApprovedVisitTargets } from '../../utils/onboardingTargets';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
-
-// ─── Constants ─────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'mr_field_attendance_db';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const todayStr  = () => new Date().toISOString().split('T')[0];
-const nowTime   = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-function readDb()      { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
-function saveDb(arr)   { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
-
 function secsToHMS(secs) {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-function parseTimeToDate(timeStr) {
-  if (!timeStr) return null;
-  const today = new Date();
-  const [time, meridiem] = timeStr.split(' ');
-  let [h, m] = time.split(':').map(Number);
-  if (meridiem === 'PM' && h !== 12) h += 12;
-  if (meridiem === 'AM' && h === 12) h = 0;
-  return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m, 0);
-}
-
-function typeIcon(type) {
-  return `[${type.toUpperCase()}]`;
 }
 
 function LocationStatusBar({ loading, message }) {
