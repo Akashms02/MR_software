@@ -309,7 +309,10 @@ const MRDcrPage = () => {
                           </td>
                           {/* Visit count */}
                           <td className="px-4 py-4 text-[13.5px] text-[#4B5563] font-semibold">
-                            {dcr.visits?.length || 0} Doctor{dcr.visits?.length !== 1 ? 's' : ''} visited
+                            <div className="flex flex-col gap-0.5">
+                              <div>{dcr.visits?.length || 0} Doctor{dcr.visits?.length !== 1 ? 's' : ''} visited</div>
+                              <div className="text-[11.5px] text-[#9CA3AF] font-medium">{dcr.chemistVisits?.length || 0} Chemist{dcr.chemistVisits?.length !== 1 ? 's' : ''} visited</div>
+                            </div>
                           </td>
                           {/* Status */}
                           <td className="px-4 py-4">
@@ -547,22 +550,22 @@ const MRDcrPage = () => {
 
               {/* Visits list */}
               <div className="flex flex-col gap-3.5">
-                <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Visit Logs ({currentDcr.visits?.length || 0})</div>
+                <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Doctor Visit Logs ({currentDcr.visits?.length || 0})</div>
                 {currentDcr.visits?.map((visit, index) => {
                   const doc = doctorListOptions.find(d => d.id === visit.doctorId) || { fullName: `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
                   return (
                     <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
                       <div className="flex justify-between items-center mb-2.5">
-                        <span className="text-[14px] font-bold text-[#1F2937]">{doc.fullName}</span>
+                        <span className="text-[14px] font-bold text-[#1F2937]">{visit.doctorName || doc.fullName}</span>
                         <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
                           <Clock size={12} className="text-[#9CA3AF]" />
                           {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
                         </span>
                       </div>
                       
-                      {doc.speciality && (
+                      {(visit.speciality || doc.speciality) && (
                         <div className="text-[11px] text-[#9CA3AF] mb-2">
-                          Specialty: <span className="text-[#4B5563] font-semibold">{doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
+                          Specialty: <span className="text-[#4B5563] font-semibold">{visit.speciality || doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
                         </div>
                       )}
 
@@ -593,6 +596,50 @@ const MRDcrPage = () => {
                   );
                 })}
               </div>
+
+              {/* Chemist Visits list */}
+              {currentDcr.chemistVisits && currentDcr.chemistVisits.length > 0 && (
+                <div className="flex flex-col gap-3.5 mt-4 border-t border-[#F3F4F6] pt-4">
+                  <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Chemist Visit Logs ({currentDcr.chemistVisits.length})</div>
+                  {currentDcr.chemistVisits.map((visit, index) => (
+                    <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
+                      <div className="flex justify-between items-center mb-2.5">
+                        <span className="text-[14px] font-bold text-[#1F2937]">{visit.chemistName || `Chemist ID: ${visit.chemistId}`}</span>
+                        <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
+                          <Clock size={12} className="text-[#9CA3AF]" />
+                          {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                        </span>
+                      </div>
+                      
+                      {visit.address && (
+                        <div className="text-[11px] text-[#9CA3AF] mb-2">
+                          Address: <span className="text-[#4B5563] font-semibold">{visit.address}</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+                        <div className="col-span-2">
+                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
+                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-[#F3F4F6] pt-2">
+                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
+                        <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
+                          {visit.feedback || 'No feedback details logged.'}
+                        </div>
+                      </div>
+
+                      {visit.isGpsVerified && (
+                        <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
+                          <MapPin size={10} /> GPS COORDINATES RECORDED
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
