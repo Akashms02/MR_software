@@ -334,16 +334,6 @@ const MRDcrPage = () => {
                               >
                                 <Eye size={12} /> View
                               </button>
-                              {dcr.status === 'DRAFT' && (
-                                <button
-                                  onClick={() => handleSubmitDcr(dcr.id)}
-                                  disabled={actionLoading}
-                                  title="Submit report to manager"
-                                  className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#111827] hover:opacity-90 transition-opacity duration-150"
-                                >
-                                  <Send size={11} /> Submit
-                                </button>
-                              )}
                             </div>
                           </td>
                         </tr>
