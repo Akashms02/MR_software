@@ -61,19 +61,13 @@ export default function FAQ() {
                     onClick={() => toggleAccordion(idx)}
                     className="w-full flex items-center justify-between text-left focus:outline-none group cursor-pointer"
                   >
-                    <div className="space-y-2 pr-6">
+                    <div className="pr-6">
                       <span
                         className="text-[17px] sm:text-[19px] font-extrabold text-[#0D2411] transition-colors duration-150 group-hover:text-green-700"
                         style={{ fontFamily: '"Adelle Cyrillic", "Adelle", Georgia, Cambria, "Times New Roman", Times, serif' }}
                       >
                         {item.question}
                       </span>
-                      {/* Short answer preview / teaser when closed, expands to full on open */}
-                      {!isOpen && (
-                        <p className="text-[14px] sm:text-[15px] text-[#5C715E] font-medium leading-relaxed">
-                          We Deliver Simple, Efficient, Secure Solutions Backed By Expert Support
-                        </p>
-                      )}
                     </div>
                     <motion.div
                       animate={{ rotate: isOpen ? 180 : 0 }}

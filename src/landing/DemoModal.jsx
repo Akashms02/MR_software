@@ -1,19 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import axios from 'axios'
-import { CONTACT_API_ROUTE } from '../data/env'
+import axios from '../api/axiosInstance'
+import { API_ROUTE } from '../data/env'
 
 export default function DemoModal({ isOpen, onClose }) {
+  const autoCloseTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimeoutRef.current) {
+        clearTimeout(autoCloseTimeoutRef.current)
+      }
+    }
+  }, [])
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     company: '',
-    teamSize: ''
+    teamSize: '',
+    preferredDate: ''
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   const [submitError, setSubmitError] = useState(null)
 
   const validate = () => {
@@ -33,6 +44,9 @@ export default function DemoModal({ isOpen, onClose }) {
     }
     if (!formData.company.trim()) {
       newErrors.company = 'Company name is required'
+    }
+    if (!formData.preferredDate) {
+      newErrors.preferredDate = 'Please select your preferred date'
     }
     if (!formData.teamSize) {
       newErrors.teamSize = 'Please select your team size'
@@ -58,26 +72,24 @@ export default function DemoModal({ isOpen, onClose }) {
     setSubmitError(null)
 
     try {
-      const response = await axios.post(CONTACT_API_ROUTE, formData)
+      const response = await axios.post(`${API_ROUTE}/demo/book`, formData)
 
-      // Handle Ethereal mail dev preview url if present
-      if (response.data?.isTest && response.data?.previewUrl) {
-        console.log(`[Demo Booking Modal] Test Email sent! Preview: ${response.data.previewUrl}`)
-      }
+      setSuccessMessage(response.data?.message || 'Demo request successfully submitted!')
+      setIsSuccess(true)
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        teamSize: '',
+        preferredDate: ''
+      })
 
-      if (response.data?.success) {
-        setIsSuccess(true)
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          company: '',
-          teamSize: ''
-        })
-      } else {
-        throw new Error(response.data?.message || 'Failed to submit request.')
-      }
+      // Auto-close modal after 5 seconds
+      autoCloseTimeoutRef.current = setTimeout(() => {
+        handleClose()
+      }, 5000)
     } catch (err) {
       console.error('Error submitting demo booking:', err)
       setSubmitError(err.response?.data?.message || err.message || 'Something went wrong. Please try again.')
@@ -87,10 +99,14 @@ export default function DemoModal({ isOpen, onClose }) {
   }
 
   const handleClose = () => {
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current)
+    }
     onClose()
     // Reset success state after transition ends
     setTimeout(() => {
       setIsSuccess(false)
+      setSuccessMessage('')
     }, 300)
   }
 
@@ -254,27 +270,51 @@ export default function DemoModal({ isOpen, onClose }) {
                         </div>
                       </div>
 
-                      {/* Company Name */}
-                      <div>
-                        <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
-                          Company Name
-                        </label>
-                        <input
-                          type="text"
-                          name="company"
-                          value={formData.company}
-                          onChange={handleChange}
-                          placeholder="Pharma Corp"
-                          className={`w-full px-4 py-3 rounded-xl border bg-gray-50/50 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 ${
-                            errors.company ? 'border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]'
-                          }`}
-                        />
-                        {errors.company && (
-                          <p className="text-xs text-red-500 font-semibold mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 rounded-full bg-red-500" />
-                            {errors.company}
-                          </p>
-                        )}
+                      {/* Two column company name & preferred date */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
+                            Company Name
+                          </label>
+                          <input
+                            type="text"
+                            name="company"
+                            value={formData.company}
+                            onChange={handleChange}
+                            placeholder="Pharma Corp"
+                            className={`w-full px-4 py-3 rounded-xl border bg-gray-50/50 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 ${
+                              errors.company ? 'border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]'
+                            }`}
+                          />
+                          {errors.company && (
+                            <p className="text-xs text-red-500 font-semibold mt-1 flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-red-500" />
+                              {errors.company}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
+                            Preferred Date
+                          </label>
+                          <input
+                            type="date"
+                            name="preferredDate"
+                            value={formData.preferredDate}
+                            onChange={handleChange}
+                            min={new Date().toISOString().split('T')[0]}
+                            className={`w-full px-4 py-3 rounded-xl border bg-gray-50/50 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 ${
+                              errors.preferredDate ? 'border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]'
+                            }`}
+                          />
+                          {errors.preferredDate && (
+                            <p className="text-xs text-red-500 font-semibold mt-1 flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-red-500" />
+                              {errors.preferredDate}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Team Size */}
@@ -357,8 +397,8 @@ export default function DemoModal({ isOpen, onClose }) {
                     <h3 className="text-2xl font-extrabold text-[#0D2411] mb-3" style={{ fontFamily: '"Adelle Cyrillic", Georgia, serif' }}>
                       Demo Request Received!
                     </h3>
-                    <p className="text-sm text-[#5C715E] font-medium max-w-sm mx-auto leading-relaxed mb-8">
-                      Thank you for your interest in GmaxepayHR. One of our product specialists will reach out to you within the next 24 hours to schedule a custom walkthrough.
+                    <p className="text-sm text-[#28823A] bg-[#E5F7E3] border border-[#28823A]/10 rounded-2xl p-4 font-bold max-w-sm mx-auto leading-relaxed mb-8">
+                      {successMessage}
                     </p>
 
                     <button

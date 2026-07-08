@@ -17,14 +17,14 @@ app.get('/health', (req, res) => {
 });
 
 // Post route to send contact details
-app.post('/api/contact', async (req, res) => {
-  const { name, email, phone, company, teamSize } = req.body;
+const handleDemoBooking = async (req, res) => {
+  const { name, email, phone, company, teamSize, preferredDate } = req.body;
 
   // Server-side validation
-  if (!name || !email || !phone || !company || !teamSize) {
+  if (!name || !email || !phone || !company || !teamSize || !preferredDate) {
     return res.status(400).json({
       success: false,
-      message: 'All fields (name, email, phone, company, teamSize) are required.',
+      message: 'All fields (name, email, phone, company, teamSize, preferredDate) are required.',
     });
   }
 
@@ -254,6 +254,10 @@ app.post('/api/contact', async (req, res) => {
                   <td>${company}</td>
                 </tr>
                 <tr>
+                  <th>Pref. Demo Date</th>
+                  <td>${preferredDate}</td>
+                </tr>
+                <tr>
                   <th>Est. Team Size</th>
                   <td><span class="badge">${teamSize} Representatives</span></td>
                 </tr>
@@ -280,7 +284,7 @@ app.post('/api/contact', async (req, res) => {
       from: hasSmtpConfig ? `"Medistrax Forms" <${process.env.SMTP_USER}>` : '"Medistrax Forms" <no-reply@medistrax.com>',
       to: recipientEmail,
       subject: `📢 Live Demo Request: ${name} from ${company}`,
-      text: `New Live Demo Booking Request\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nCompany: ${company}\nTeam Size: ${teamSize}`,
+      text: `New Live Demo Booking Request\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nCompany: ${company}\nPreferred Date: ${preferredDate}\nTeam Size: ${teamSize}`,
       html: htmlContent,
       replyTo: email
     };
@@ -313,7 +317,10 @@ app.post('/api/contact', async (req, res) => {
       error: error.message
     });
   }
-});
+};
+
+app.post('/api/contact', handleDemoBooking);
+app.post('/api/v1/demo/book', handleDemoBooking);
 
 app.listen(PORT, () => {
   console.log(`[Email Server] Server is running on port ${PORT}`);

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import emailjs from '@emailjs/browser'
+import axios from '../api/axiosInstance'
+import { API_ROUTE } from '../data/env'
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -8,9 +9,11 @@ export default function ContactSection() {
     email: '',
     phone: '',
     company: '',
-    teamSize: ''
+    teamSize: '',
+    preferredDate: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
 
@@ -20,43 +23,26 @@ export default function ContactSection() {
     setSubmitError(null)
 
     try {
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      const response = await axios.post(`${API_ROUTE}/demo/book`, formData)
 
-      if (!serviceId || !templateId || !publicKey || serviceId === 'your_emailjs_service_id') {
-        throw new Error('EmailJS is not fully configured. Please configure your VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, and VITE_EMAILJS_PUBLIC_KEY environment variables.')
-      }
-
-      const templateParams = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.company,
-        team_size: formData.teamSize,
-      }
-
-      const response = await emailjs.send(serviceId, templateId, templateParams, publicKey)
-
-      if (response.status === 200) {
-        setSubmitted(true)
-        // Reset success state after a delay
-        setTimeout(() => {
-          setSubmitted(false)
-          setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            company: '',
-            teamSize: ''
-          })
-        }, 5000)
-      } else {
-        throw new Error('Failed to send email via EmailJS. Please try again.')
-      }
+      setSuccessMessage(response.data?.message || 'Demo request successfully submitted!')
+      setSubmitted(true)
+      // Reset success state after a delay
+      setTimeout(() => {
+        setSubmitted(false)
+        setSuccessMessage('')
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          company: '',
+          teamSize: '',
+          preferredDate: ''
+        })
+      }, 5000)
     } catch (err) {
       console.error('Error submitting demo booking:', err)
-      setSubmitError(err.message || 'Something went wrong. Please try again.')
+      setSubmitError(err.response?.data?.message || err.message || 'Something went wrong. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -108,7 +94,7 @@ export default function ContactSection() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-[#E5F7E3] text-[#28823A] border border-[#28823A]/10 rounded-2xl p-6 text-center font-bold text-[15px]"
                 >
-                  Thank you! Your demo request has been received. Our team will contact you shortly.
+                  {successMessage}
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -161,19 +147,35 @@ export default function ContactSection() {
                     </div>
                   </div>
 
-                  {/* Company Name */}
-                  <div>
-                    <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Pharma Corp"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/55 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]"
-                    />
+                  {/* Two column company name & preferred date */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Pharma Corp"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/55 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#0D2411] uppercase tracking-wider mb-1.5">
+                        Preferred Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.preferredDate}
+                        onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/55 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A] cursor-pointer"
+                      />
+                    </div>
                   </div>
 
                   {/* Team Size */}
