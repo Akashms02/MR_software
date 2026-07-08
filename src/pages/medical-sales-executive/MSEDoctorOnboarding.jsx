@@ -790,13 +790,13 @@ const MSEDoctorOnboarding = () => {
           <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <MapPin size={16} color="#7C3AED" />
-              {role === 'DOCTOR' ? 'Location 1: Clinic / Hospital Details' : 'Location 1: Chemist Shop Details'}
+              Location 1: {role === 'DOCTOR' ? 'Clinic / Hospital' : 'Pharmacy / Store'} Details
             </div>
             <div className="flex flex-col gap-4 mt-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Address' : 'Chemist Shop Address'} <span className="text-[#EF4444]">*</span></label>
+                <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Address <span className="text-[#EF4444]">*</span></label>
                 <textarea
-                  placeholder={role === 'DOCTOR' ? "Type clinic/hospital address... (Geocodes coordinates on blur)" : "Type chemist shop address... (Geocodes coordinates on blur)"}
+                  placeholder={`Type ${role === 'DOCTOR' ? 'clinic/hospital' : 'pharmacy/store'} address... (Geocodes coordinates on blur)`}
                   value={personalCurrentAddress}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   onBlur={() => handleGeocodeClinicAddress(personalCurrentAddress)}
@@ -892,7 +892,7 @@ const MSEDoctorOnboarding = () => {
 
               <div className="grid grid-cols-2 gap-4.5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Latitude' : 'Shop Latitude'}</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Latitude</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -913,7 +913,7 @@ const MSEDoctorOnboarding = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Longitude' : 'Shop Longitude'}</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Longitude</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -957,13 +957,13 @@ const MSEDoctorOnboarding = () => {
             <div>
               <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <Heart size={16} color="#7C3AED" />
-                Location 2: Doctor Home Details
+                Location 2: {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Home Details
               </div>
               <div className="flex flex-col gap-4 mt-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Doctor Home Address <span className="text-[#EF4444]">*</span></label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Home Address <span className="text-[#EF4444]">*</span></label>
                   <textarea
-                    placeholder="Type doctor's permanent home address... (Geocodes coordinates on blur)"
+                    placeholder={`Type ${role === 'DOCTOR' ? "doctor's" : "pharmacist's"} permanent home address... (Geocodes coordinates on blur)`}
                     value={personalPermanentAddress}
                     onChange={(e) => {
                       setPersonalPermanentAddress(e.target.value);
@@ -1075,6 +1075,46 @@ const MSEDoctorOnboarding = () => {
               <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <User size={16} color="#7C3AED" />
                 Doctor Personal Details
+              </div>
+              <div className="flex flex-col gap-4 mt-3">
+                <div className="grid grid-cols-3 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">First Name <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Sarah"
+                      value={personalFirstName}
+                      onChange={(e) => setPersonalFirstName(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Middle Name</label>
+                    <input
+                      type="text"
+                      placeholder="Middle Name"
+                      value={personalMiddleName}
+                      onChange={(e) => setPersonalMiddleName(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Surname <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Connor"
+                      value={personalSurname}
+                      onChange={(e) => setPersonalSurname(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
               </div>
               <div className="flex flex-col gap-4 mt-3">
                 <div className="grid grid-cols-3 gap-4.5">

@@ -738,13 +738,13 @@ const MMDoctorOnboarding = () => {
           <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <MapPin size={16} color="#7C3AED" />
-              {role === 'DOCTOR' ? 'Location 1: Clinic / Hospital Details' : 'Location 1: Chemist Shop Details'}
+              Location 1: {role === 'DOCTOR' ? 'Clinic / Hospital' : 'Pharmacy / Store'} Details
             </div>
             <div className="flex flex-col gap-4 mt-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Address' : 'Chemist Shop Address'} <span className="text-[#EF4444]">*</span></label>
+                <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Address <span className="text-[#EF4444]">*</span></label>
                 <textarea
-                  placeholder={role === 'DOCTOR' ? "Type clinic/hospital address... (Geocodes coordinates on blur)" : "Type chemist shop address... (Geocodes coordinates on blur)"}
+                  placeholder={`Type ${role === 'DOCTOR' ? 'clinic/hospital' : 'pharmacy/store'} address... (Geocodes coordinates on blur)`}
                   value={personalCurrentAddress}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   onBlur={() => handleGeocodeClinicAddress(personalCurrentAddress)}
@@ -840,7 +840,7 @@ const MMDoctorOnboarding = () => {
 
               <div className="grid grid-cols-2 gap-4.5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Latitude' : 'Shop Latitude'}</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Latitude</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -861,7 +861,7 @@ const MMDoctorOnboarding = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Longitude' : 'Shop Longitude'}</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Longitude</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -905,13 +905,13 @@ const MMDoctorOnboarding = () => {
             <div>
               <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <Heart size={16} color="#7C3AED" />
-                Location 2: Doctor Home Details
+                Location 2: {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Home Details
               </div>
               <div className="flex flex-col gap-4 mt-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Doctor Home Address <span className="text-[#EF4444]">*</span></label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Home Address <span className="text-[#EF4444]">*</span></label>
                   <textarea
-                    placeholder="Type doctor's permanent home address... (Geocodes coordinates on blur)"
+                    placeholder={`Type ${role === 'DOCTOR' ? "doctor's" : "pharmacist's"} permanent home address... (Geocodes coordinates on blur)`}
                     value={personalPermanentAddress}
                     onChange={(e) => {
                       setPersonalPermanentAddress(e.target.value);
@@ -1022,7 +1022,7 @@ const MMDoctorOnboarding = () => {
             <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <User size={16} color="#7C3AED" />
-              Doctor Personal Details
+              {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Personal Details
             </div>
             <div className="flex flex-col gap-4 mt-3">
               <div className="grid grid-cols-3 gap-4.5">
