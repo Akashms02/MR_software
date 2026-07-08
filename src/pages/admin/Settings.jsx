@@ -494,6 +494,8 @@ const Settings = () => {
                       value={formState.phone}
                       onChange={handleInputChange}
                       placeholder="e.g. 9876543210"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       className="w-full pl-10 pr-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 bg-gray-50 text-gray-800 hover:bg-gray-50/50 focus:bg-white focus:border-[#C8F04A] focus:ring-[3.5px] focus:ring-[#C8F04A]/15 outline-none transition-all duration-180 box-border"
                     />
                   </div>

@@ -212,7 +212,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
 
   const selectedTarget = visitTargets.find(t => String(t.id) === String(selectedId));
 
-  const canSubmit = !!selectedId && !!selectedTarget;
+  const canSubmit = !!selectedId && !!selectedTarget && !!notes.trim();
 
   const [lastVisit, setLastVisit] = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -360,10 +360,11 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
 
           {/* Notes */}
           <div>
-            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Visit Purpose / Notes <span className="text-gray-400 font-medium">(optional)</span></label>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Visit Purpose / Notes <span className="text-red-500">*</span></label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="e.g. Discuss Cardace 5mg samples, follow-up on last prescription..."
-              rows={2} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border resize-y" />
+              rows={2} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border resize-y"
+              required />
           </div>
 
           {/* Photo */}
