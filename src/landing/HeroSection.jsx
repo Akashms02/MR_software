@@ -60,7 +60,12 @@ export default function HeroSection({ onBookDemoClick }) {
               Login
             </button>
             <button
-              onClick={onBookDemoClick}
+              onClick={() => {
+                const el = document.getElementById('booking')
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' })
+                }
+              }}
               className="bg-white hover:bg-[#28823A]/5 text-[#28823A] border-[1.5px] border-[#28823A]/30 font-extrabold text-[15px] sm:text-[16px] px-10 py-3.5 rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] transition duration-200 transform hover:scale-[1.02] cursor-pointer"
             >
               Book A Demo
