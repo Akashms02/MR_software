@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Sparkles, RotateCcw, Eye, UploadCloud, Check, X, ArrowLeft, ChevronRight } from 'lucide-react'
 import { fetchProfile } from '../../redux/actions/authActions'
+import { useToast } from '../../context/ToastContext'
 import { useCompanyBrandAssets } from '../../utils/getFullAssetUrl'
 import {
   loadLetterheadSettings,
@@ -20,11 +21,11 @@ export default function Documents() {
   const { user } = useSelector((state) => state.auth)
   const { logoSrc: brandLogoSrc } = useCompanyBrandAssets(user)
 
+  const { showToast } = useToast()
   const [activeView, setActiveView] = useState('hub')
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [letterheadSettings, setLetterheadSettings] = useState(() => loadLetterheadSettings(user))
-  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     dispatch(fetchProfile())
@@ -35,11 +36,6 @@ export default function Documents() {
       setLetterheadSettings(loadLetterheadSettings(user))
     }
   }, [user])
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 4000)
-  }
 
   const handleSaveLetterhead = () => {
     localStorage.setItem('custom_letterhead_settings', JSON.stringify(letterheadSettings))
@@ -142,12 +138,7 @@ export default function Documents() {
 
   return (
     <div className="pb-8 animate-[fadeIn_0.35s_ease-out] relative">
-      {/* Toast Alert */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[10000] bg-slate-900 text-white rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <span className="text-xs font-bold">{toast.message}</span>
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {activeView === 'hub' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2 h-[calc(100vh-140px)] min-h-[480px]">

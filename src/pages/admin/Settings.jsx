@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProfile, updateAdminSettings } from "../../redux/actions/authActions";
+import { useToast } from "../../context/ToastContext";
 import { API_ROUTE } from "../../data/env";
 import {
   User,
@@ -150,7 +151,15 @@ const Settings = () => {
   const [stampPreview, setStampPreview] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null);
+  const { showToast } = useToast();
+  const [saveStatus, _setSaveStatus] = useState(null);
+
+  const setSaveStatus = (statusObj) => {
+    _setSaveStatus(statusObj);
+    if (statusObj) {
+      showToast(statusObj.message, statusObj.type);
+    }
+  };
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -218,6 +227,7 @@ const Settings = () => {
     e.preventDefault();
     setIsSaving(true);
     setSaveStatus(null);
+    showToast("Saving settings and uploading branding assets...", "loading");
 
     if (formState.phone && formState.phone.length !== 10) {
       setSaveStatus({
@@ -421,19 +431,7 @@ const Settings = () => {
           <form onSubmit={handleSave} className="flex flex-col gap-6 m-0 w-full box-border">
             
             {/* Status Feedback Notification */}
-            {saveStatus && (
-              <div className={`p-4 rounded-2xl border flex items-start gap-3 box-border animate-fade ${
-                saveStatus.type === "success" 
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                  : "bg-rose-50 border-rose-200 text-rose-800"
-              }`}>
-                {saveStatus.type === "success" ? <Check size={18} className="mt-0.5 shrink-0" /> : <AlertCircle size={18} className="mt-0.5 shrink-0" />}
-                <div>
-                  <h4 className="m-0 text-sm font-extrabold">{saveStatus.type === "success" ? "Changes Applied Successfully" : "Validation Error"}</h4>
-                  <p className="m-0 mt-0.5 text-xs font-semibold opacity-90">{saveStatus.message}</p>
-                </div>
-              </div>
-            )}
+            {/* Alerts handled by global toast system */}
 
             {/* General Profile Info Section */}
             <div className="bg-white rounded-3xl border border-gray-200 p-7 shadow-sm flex flex-col gap-5 box-border">

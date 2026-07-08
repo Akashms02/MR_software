@@ -5,13 +5,17 @@ import { Provider } from 'react-redux'
 import store from './redux/store'
 import './index.css'
 import App from './App.jsx'
+import { ToastProvider } from './context/ToastContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </BrowserRouter>
     </Provider>
   </StrictMode>,
 )
+

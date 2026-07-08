@@ -3,6 +3,7 @@ import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useToast } from '../../context/ToastContext';
 
 const MRSalesPage = () => {
   const [distributors, setDistributors] = useState([]);
@@ -15,8 +16,18 @@ const MRSalesPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  const { showToast } = useToast();
+  const [errorMsg, _setErrorMsg] = useState(null);
+  const [successMsg, _setSuccessMsg] = useState(null);
+
+  const setSuccessMsg = (msg) => {
+    _setSuccessMsg(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setErrorMsg = (msg) => {
+    _setErrorMsg(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // Fetch Distributors list on mount
   useEffect(() => {
@@ -190,19 +201,7 @@ const MRSalesPage = () => {
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col gap-6 min-h-0">
       
-      {/* Toast Notifications */}
-      {successMsg && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-5 py-3.5 rounded-2xl flex items-center gap-2.5 text-[#047857] text-[13.5px] font-bold shadow-sm shrink-0">
-          <CheckCircle2 size={18} />
-          <span>{successMsg}</span>
-        </div>
-      )}
-      {errorMsg && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-5 py-3.5 rounded-2xl flex items-center gap-2.5 text-[#B91C1C] text-[13.5px] font-bold shadow-sm shrink-0">
-          <AlertCircle size={18} />
-          <span>{errorMsg}</span>
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Upload and Form Config Card */}
       <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">

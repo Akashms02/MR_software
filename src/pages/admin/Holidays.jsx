@@ -33,6 +33,7 @@ import { twMerge } from 'tailwind-merge';
 import { clsx } from 'clsx';
 import DeleteModal from '../../components/common/DeleteModal';
 import ProtectedImage from '../../components/common/ProtectedImage';
+import { useToast } from '../../context/ToastContext';
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
@@ -414,6 +415,7 @@ const HolidayModal = ({ isOpen, onClose, onSubmit, holiday = null, mode = 'ADD' 
 
 const Holidays = () => {
     const dispatch = useDispatch();
+    const { showToast } = useToast();
     const { holidays, upcomingHolidays, loading, success, error } = useSelector((state) => state.holiday);
     const [syncing, setSyncing] = useState(false);
 
@@ -438,33 +440,42 @@ const Holidays = () => {
 
     const handleSync = async () => {
         setSyncing(true);
+        showToast("Syncing holidays with calendar API...", "loading");
         try {
-            await dispatch(syncHolidaysAction());
+            const res = await dispatch(syncHolidaysAction());
+            showToast(res?.message, "success");
             await fetchAllData();
         } catch (error) {
             console.error("Sync failed:", error);
+            showToast(error.message, "error");
         } finally {
             setTimeout(() => setSyncing(false), 1000);
         }
     };
 
     const handleToggleVisibility = async (id) => {
+        showToast("Updating holiday visibility...", "loading");
         try {
-            await dispatch(toggleHolidayVisibilityAction(id));
+            const res = await dispatch(toggleHolidayVisibilityAction(id));
+            showToast(res?.message, "success");
             await fetchAllData();
         } catch (error) {
             console.error("Failed to toggle visibility:", error);
+            showToast(error.message, "error");
         }
     };
 
     const confirmDelete = async () => {
         if (!deleteModalConfig.item) return;
+        showToast("Deleting holiday...", "loading");
         try {
-            await dispatch(deleteHolidayAction(deleteModalConfig.item.id));
+            const res = await dispatch(deleteHolidayAction(deleteModalConfig.item.id));
+            showToast(res?.message, "success");
             setDeleteModalConfig({ isOpen: false, item: null });
             await fetchAllData();
         } catch (error) {
             console.error("Deletion failed:", error);
+            showToast(error.message, "error");
         }
     };
 
@@ -473,16 +484,21 @@ const Holidays = () => {
     };
 
     const handleModalSubmit = async (formData, photo) => {
+        const isEdit = modalConfig.mode === 'EDIT';
+        showToast(`${isEdit ? 'Updating' : 'Creating'} holiday...`, "loading");
         try {
-            if (modalConfig.mode === 'EDIT') {
-                await dispatch(updateHolidayAction(modalConfig.holiday.id, formData, photo));
+            let res;
+            if (isEdit) {
+                res = await dispatch(updateHolidayAction(modalConfig.holiday.id, formData, photo));
             } else {
-                await dispatch(createHolidayAction(formData, photo));
+                res = await dispatch(createHolidayAction(formData, photo));
             }
+            showToast(res?.message, "success");
             setModalConfig({ ...modalConfig, isOpen: false });
             await fetchAllData();
         } catch (error) {
             console.error("Operation failed:", error);
+            showToast(error.message, "error");
         }
     };
 

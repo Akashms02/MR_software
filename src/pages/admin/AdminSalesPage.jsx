@@ -6,6 +6,7 @@ import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { Loader2, Calendar, FileSpreadsheet, Eye, Download, AlertCircle, RefreshCw, X, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 // Date Helpers
 const getTodayDateString = () => {
@@ -62,6 +63,7 @@ const formatDateTime = (isoString) => {
 };
 
 export default function AdminSalesPage() {
+  const { showToast } = useToast();
   const [distributors, setDistributors] = useState([]);
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [startDate, setStartDate] = useState(getFirstOfMonthString());
@@ -313,8 +315,10 @@ export default function AdminSalesPage() {
       const fileName = `${safeDistName}_sales_${group.uploadDate}.xlsx`;
 
       XLSX.writeFile(workbook, fileName);
+      showToast("Distributor sales exported successfully!", "success");
     } catch (err) {
       console.error('Failed to export to Excel:', err);
+      showToast(err.message || 'Failed to export to Excel', 'error');
     }
   };
 

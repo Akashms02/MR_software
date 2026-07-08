@@ -13,6 +13,7 @@ import {
 } from '../../redux/actions/leaveActions';
 import DeleteModal from '../../components/common/DeleteModal';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 const STANDARD_LEAVES = {
   'CL': "Casual Leave",
@@ -31,9 +32,23 @@ const AdminLeaveReviewPage = () => {
 
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
-  const [localSuccess, setLocalSuccess] = useState(null);
-  const [localError, setLocalError] = useState(null);
-  const [modalError, setModalError] = useState(null);
+  const { showToast } = useToast();
+  const [localSuccess, _setLocalSuccess] = useState(null);
+  const [localError, _setLocalError] = useState(null);
+  const [modalError, _setModalError] = useState(null);
+
+  const setLocalSuccess = (msg) => {
+    _setLocalSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setLocalError = (msg) => {
+    _setLocalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
+  const setModalError = (msg) => {
+    _setModalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // Inspector Modal State
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
@@ -253,19 +268,7 @@ const AdminLeaveReviewPage = () => {
 
   return (
     <div className="animate-[fadeIn_0.4s_ease-out] p-1 flex flex-col gap-6 h-[calc(100vh-104px)] min-h-0 overflow-hidden">
-      {/* Notifications */}
-      {localSuccess && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-1 shrink-0">
-          <CheckCircle2 size={16} />
-          {localSuccess}
-        </div>
-      )}
-      {localError && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-1 shrink-0">
-          <AlertCircle size={16} />
-          {localError}
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Tab controls */}
       <div className="flex gap-2.5 mb-4 shrink-0">

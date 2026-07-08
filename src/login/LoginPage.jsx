@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
-import { login } from '../redux/actions/authActions'
+import { login, clearErrors } from '../redux/actions/authActions'
+import { useToast } from '../context/ToastContext'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,6 +21,7 @@ const EyeOff = () => (
 export default function LoginPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { showToast } = useToast()
   const { loading, error: authError, user, requiresPasswordChange } = useSelector((state) => state.auth)
 
   const [email, setEmail] = useState('')
@@ -28,6 +30,15 @@ export default function LoginPage() {
   const [localError, setLocalError] = useState('')
 
   const error = localError || authError;
+
+  // Show Toast for authentication errors
+  useEffect(() => {
+    if (authError) {
+      showToast(authError, 'error');
+      // Clear errors after displaying them
+      dispatch(clearErrors());
+    }
+  }, [authError, dispatch, showToast]);
 
   useEffect(() => {
     if (user) {
@@ -79,11 +90,23 @@ export default function LoginPage() {
     e.preventDefault()
     setLocalError('')
 
-    if (!email.trim()) { setLocalError('Please enter your email.'); return }
-    if (!password.trim()) { setLocalError('Please enter your password.'); return }
+    if (!email.trim()) { 
+      setLocalError('Please enter your email.');
+      showToast('Please enter your email.', 'error');
+      return;
+    }
+    if (!password.trim()) { 
+      setLocalError('Please enter your password.');
+      showToast('Please enter your password.', 'error');
+      return;
+    }
 
+    showToast('Signing in...', 'loading');
     const result = await dispatch(login({ email: email.trim(), password }));
-    if (result === 'CHANGE_PASSWORD_REQUIRED') {
+    if (result && result.success) {
+      showToast(result.message, 'success');
+    } else if (result === 'CHANGE_PASSWORD_REQUIRED') {
+      showToast('Password change required on first login.', 'warning');
       navigate('/create-password', {
         state: { mode: 'FIRST_LOGIN', email: email.trim(), tempPassword: password },
       });

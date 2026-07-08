@@ -10,6 +10,7 @@ import {
   clearTourPlanSuccessAction
 } from '../../redux/actions/tourPlanActions';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 const AdminTourPlanReviewPage = () => {
   const dispatch = useDispatch();
@@ -17,8 +18,18 @@ const AdminTourPlanReviewPage = () => {
 
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
-  const [localSuccess, setLocalSuccess] = useState(null);
-  const [localError, setLocalError] = useState(null);
+  const { showToast } = useToast();
+  const [localSuccess, _setLocalSuccess] = useState(null);
+  const [localError, _setLocalError] = useState(null);
+
+  const setLocalSuccess = (msg) => {
+    _setLocalSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setLocalError = (msg) => {
+    _setLocalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // Inspector Modal State
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
@@ -132,19 +143,7 @@ const AdminTourPlanReviewPage = () => {
 
   return (
     <div className="animate-[fadeIn_0.4s_ease-out] p-1">
-      {/* Notifications */}
-      {localSuccess && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
-          <CheckCircle2 size={16} />
-          {localSuccess}
-        </div>
-      )}
-      {localError && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
-          <AlertCircle size={16} />
-          {localError}
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[28px]">

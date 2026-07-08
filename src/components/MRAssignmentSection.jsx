@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axiosInstance';
 import { API_ROUTE } from '../data/env';
 import { Search, Loader2, CheckCircle2, User, UserCheck, AlertCircle, RefreshCw, Layers } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 const MRAssignmentSection = () => {
   const [mrs, setMrs] = useState([]);
@@ -19,8 +20,7 @@ const MRAssignmentSection = () => {
   const [typeFilter, setTypeFilter] = useState('ALL'); // ALL, DOCTOR, CHEMIST
   const [assignFilter, setAssignFilter] = useState('ALL'); // ALL, UNASSIGNED, ASSIGNED_TO_SELECTED, ASSIGNED_TO_OTHERS
   
-  // Feedback Messages
-  const [toast, setToast] = useState(null);
+  const { showToast } = useToast();
 
   const fetchMrs = async () => {
     setLoadingMrs(true);
@@ -77,10 +77,7 @@ const MRAssignmentSection = () => {
     fetchDoctors();
   }, []);
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+  // Local toast helper removed to use global useToast hook
 
   const handleAssign = async (doc, mrId) => {
     const isChemist = doc.type === 'CHEMIST' || doc.speciality === 'CHEMIST';
@@ -164,17 +161,7 @@ const MRAssignmentSection = () => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-slate-800">
-      {toast && (
-        <div 
-          className={`fixed bottom-7 right-7 z-[9999] text-white rounded-2xl px-5 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] flex items-center gap-2.5 max-w-[380px] animate-bounce ${
-            toast.type === 'error' ? 'bg-[#7F1D1D]' : 'bg-[#064E3B]'
-          }`}
-        >
-          <span className="text-[20px]">{toast.type === 'error' ? '⚠️' : '✅'}</span>
-          <span className="text-[13px] font-semibold flex-1">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="bg-white/15 border-none text-white rounded-lg px-2 py-0.5 cursor-pointer">✕</button>
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Main Splitscreen Layout */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">

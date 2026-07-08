@@ -15,9 +15,11 @@ import {
 } from '../../redux/actions/noticeActions';
 import { cn } from '../../utils/cn';
 import DeleteModal from '../../components/common/DeleteModal';
+import { useToast } from '../../context/ToastContext';
 
 const NoticeManagement = () => {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   const { adminNotices = [], loading, error, success } = useSelector((state) => state.notices || {});
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,16 +68,21 @@ const NoticeManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const isEdit = !!formData.id;
+    showToast(isEdit ? "Updating notice..." : "Posting notice...", "loading");
     try {
-      if (formData.id) {
-        await dispatch(updateNotice(formData.id, formData));
+      let res;
+      if (isEdit) {
+        res = await dispatch(updateNotice(formData.id, formData));
       } else {
-        await dispatch(createNotice(formData));
+        res = await dispatch(createNotice(formData));
       }
+      showToast(res?.message || (isEdit ? "Notice updated successfully" : "Notice posted successfully"), "success");
       setIsModalOpen(false);
       resetForm();
     } catch (err) {
       console.error(err);
+      showToast(err.message || "Failed to save notice", "error");
     }
   };
 
@@ -100,21 +107,27 @@ const NoticeManagement = () => {
 
   const confirmDelete = async () => {
     if (deleteModalConfig.item) {
+      showToast("Deleting notice...", "loading");
       try {
-        await dispatch(deleteNotice(deleteModalConfig.item.id));
+        const res = await dispatch(deleteNotice(deleteModalConfig.item.id));
+        showToast(res?.message || "Notice deleted successfully", "success");
         setDeleteModalConfig({ isOpen: false, item: null });
       } catch (err) {
         console.error(err);
+        showToast(err.message || "Failed to delete notice", "error");
       }
     }
   };
 
   const handleToggleActive = async (e, notice) => {
     e.stopPropagation();
+    showToast("Toggling notice active state...", "loading");
     try {
-      await dispatch(toggleActiveNotice(notice.id));
+      const res = await dispatch(toggleActiveNotice(notice.id));
+      showToast(res?.message || "Notice status toggled successfully", "success");
     } catch (err) {
       console.error("Failed to toggle status", err);
+      showToast(err.message || "Failed to toggle status", "error");
     }
   };
 

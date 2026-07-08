@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPi
 import L from 'leaflet';
 import { useDispatch } from 'react-redux';
 import { submitOnboardingRequestAction } from '../../redux/actions/requestActions';
+import { useToast } from '../../context/ToastContext';
 
 // Free OSM geocoding helpers
 const extractCityPincode = (addressObj) => {
@@ -98,8 +99,18 @@ const MRDoctorOnboarding = () => {
   const [homeGeocodeStatus, setHomeGeocodeStatus] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localSuccess, setLocalSuccess] = useState(null);
-  const [localError, setLocalError] = useState(null);
+  const { showToast } = useToast();
+  const [localSuccess, _setLocalSuccess] = useState(null);
+  const [localError, _setLocalError] = useState(null);
+
+  const setLocalSuccess = (msg) => {
+    _setLocalSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setLocalError = (msg) => {
+    _setLocalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // GPS watching states matching ShiftManagement.jsx
   const [isWatchingClinic, setIsWatchingClinic] = useState(false);
@@ -629,18 +640,7 @@ const MRDoctorOnboarding = () => {
         </div>
 
         {/* Notifications */}
-        {localSuccess && (
-          <div className="bg-[#ECFDF5] border border-[#A7F3D0] p-3.5 rounded-xl flex items-center gap-2 text-[#047857] text-[13.5px] font-semibold">
-            <CheckCircle2 size={16} />
-            {localSuccess}
-          </div>
-        )}
-        {localError && (
-          <div className="bg-[#FEF2F2] border border-[#FECACA] p-3.5 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13.5px] font-semibold">
-            <AlertCircle size={16} />
-            {localError}
-          </div>
-        )}
+        {/* Alerts handled by global toast system */}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-7">
           {/* Section 1: Account Info */}

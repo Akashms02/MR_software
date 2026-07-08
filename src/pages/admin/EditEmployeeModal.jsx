@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Upload,
 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const STEP_LABELS = [
   'Basic Setup',
@@ -215,8 +216,18 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
   const [activeTab, setActiveTab] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(null);
+  const { showToast } = useToast();
+  const [formError, _setFormError] = useState(null);
+  const [formSuccess, _setFormSuccess] = useState(null);
+
+  const setFormError = (msg) => {
+    _setFormError(msg);
+    if (msg) showToast(msg, 'error');
+  };
+  const setFormSuccess = (msg) => {
+    _setFormSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
   const [reportingManagers, setReportingManagers] = useState([]);
   
   // Track existing document paths from API
@@ -727,19 +738,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
                 {/* Right Pane Scrollable Content */}
                 <div className="flex-1 overflow-y-auto p-8 box-border">
-                  {/* Alerts */}
-                  {formError && (
-                    <div className="bg-red-50 border-[1.5px] border-red-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-red-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
-                      <AlertCircle size={18} />
-                      {formError}
-                    </div>
-                  )}
-                  {formSuccess && (
-                    <div className="bg-emerald-50 border-[1.5px] border-emerald-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
-                      <CheckCircle2 size={18} />
-                      {formSuccess}
-                    </div>
-                  )}
+                  {/* Alerts handled by global toast system */}
 
                   {/* Render content based on activeTab */}
                   
