@@ -19,7 +19,7 @@ export default function Navbar({ onBookDemoClick }) {
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 250 // Offset for active section detection
-      
+
       let currentSection = 'home'
       if (window.scrollY < 100) {
         currentSection = 'home'
@@ -58,9 +58,9 @@ export default function Navbar({ onBookDemoClick }) {
       return
     }
     setActiveSection(targetId)
-    // Update URL hash quietly on click
+
     window.history.pushState(null, null, targetId === 'home' ? ' ' : `#${targetId}`)
-    
+
     if (targetId === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
@@ -83,8 +83,8 @@ export default function Navbar({ onBookDemoClick }) {
           >
             <div className="w-10 h-10 rounded-xl bg-[#28823A] flex items-center justify-center shadow-md">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round"/>
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
+                <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
@@ -103,11 +103,10 @@ export default function Navbar({ onBookDemoClick }) {
               <button
                 key={link.target}
                 onClick={() => handleNavClick(link.target)}
-                className={`px-3.5 py-1.5 bg-transparent border-none font-bold text-[14px] cursor-pointer rounded-lg transition-all duration-200 ${
-                  activeSection === link.target 
-                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5' 
+                className={`px-3.5 py-1.5 bg-transparent border-none font-bold text-[14px] cursor-pointer rounded-lg transition-all duration-200 ${activeSection === link.target
+                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5'
                     : 'text-[#5C715E] hover:text-[#28823A] hover:bg-[#28823A]/5'
-                }`}
+                  }`}
               >
                 {link.name}
               </button>
@@ -148,11 +147,10 @@ export default function Navbar({ onBookDemoClick }) {
               <button
                 key={link.target}
                 onClick={() => { handleNavClick(link.target); setMenuOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 bg-transparent border-none font-bold text-[15px] cursor-pointer rounded-xl transition-all duration-200 ${
-                  activeSection === link.target 
-                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5' 
+                className={`w-full text-left px-4 py-2.5 bg-transparent border-none font-bold text-[15px] cursor-pointer rounded-xl transition-all duration-200 ${activeSection === link.target
+                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5'
                     : 'text-[#5C715E] hover:text-[#28823A] hover:bg-[#28823A]/5'
-                }`}
+                  }`}
               >
                 {link.name}
               </button>
