@@ -29,18 +29,15 @@ export const requestForToken = async () => {
     if (permission === 'granted') {
       // Explicitly register the service worker from the root public directory
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('[FCM] Service Worker registered with scope:', registration.scope);
 
       const currentToken = await getToken(messaging, {
         vapidKey: 'BKrleol3WW_on23A3bEH2zsXGQ9iW-sup_8Sg6cIx6NSJLmgvvQiTc4orasn4RWl5DMBxq0jqgoxRoO18hhQAaE',
         serviceWorkerRegistration: registration
       });
       if (currentToken) {
-        console.log('[FCM] Token obtained successfully:', currentToken);
         localStorage.setItem('fcmToken', currentToken); // Cache in localStorage for easy access/testing
         // Send token to backend using our custom axios instance (which has auth interceptors)
         const response = await axios.post(`${API_ROUTE}/push-tokens/register`, { token: currentToken });
-        console.log('[FCM] Token registered on backend successfully:', response.data);
       } else {
         console.log('[FCM] No registration token available.');
       }

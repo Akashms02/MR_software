@@ -104,11 +104,8 @@ export default function App() {
     let refreshTimer;
 
     const runRefresh = async () => {
-      const rToken = localStorage.getItem("refreshToken");
-      console.log("[Auth Scheduler] Checking refresh token...", { rToken });
-      
+      const rToken = localStorage.getItem("refreshToken");      
       if (rToken) {
-        console.log("%c[Auth Scheduler] Hitting refresh token API...", "color: #00ff00; font-weight: bold;");
         const success = await dispatch(refreshToken({ refreshToken: rToken }));
         if (!success) {
           console.warn("[Auth Scheduler] Refresh token failed or was rejected. Logging out...");
