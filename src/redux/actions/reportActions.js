@@ -51,7 +51,13 @@ export const getVisitSummary = (mrId, startDate, endDate, page = 1, size = 10) =
       const totalVisits = data?.data?.totalVisits || 0;
       const totalChemistVisits = data?.data?.totalChemistVisits || 0;
       const uniqueDoctorsVisited = data?.data?.uniqueDoctorsVisited || 0;
-      const dcrs = data?.data?.dcrsPage?.content || [];
+      const rawDcrs = data?.data?.dcrsPage?.content || [];
+      const dcrs = rawDcrs.map((dcr) => ({
+        ...dcr,
+        date: dcr.reportDate,
+        doctorVisitCount: dcr.visits?.length || 0,
+        chemistVisitCount: dcr.chemistVisits?.length || 0
+      }));
       const paginator = data?.data?.dcrsPage?.paginator || null;
       const totalDcrs = data?.data?.dcrsPage?.total || 0;
 

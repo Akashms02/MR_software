@@ -540,20 +540,23 @@ const MRDoctorOnboarding = () => {
     if (!fullName.trim()) return setLocalError('Full Name is required.');
     if (!email.trim()) return setLocalError('Email is required.');
     if (!phone.trim()) return setLocalError('Phone number is required.');
+    if (!personalCurrentAddress.trim()) {
+      return setLocalError(role === 'DOCTOR' ? 'Clinic Address is required.' : 'Chemist Shop Address is required.');
+    }
+
     if (role === 'DOCTOR') {
       if (!doctorQualification.trim()) return setLocalError('Doctor Qualification is required.');
       if (!doctorLicenseNumber.trim()) return setLocalError('Doctor License Number is required.');
+      if (!personalFirstName.trim()) return setLocalError('First Name is required.');
+      if (!personalSurname.trim()) return setLocalError('Surname is required.');
+      if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
+      if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
+      if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
+      if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
+        return setLocalError('Permanent Address is required.');
+      }
     } else if (role === 'PHARMACIST') {
       if (!chemistContactPerson.trim()) return setLocalError('Chemist Contact Person is required.');
-    }
-    if (!personalFirstName.trim()) return setLocalError('First Name is required.');
-    if (!personalSurname.trim()) return setLocalError('Surname is required.');
-    if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
-    if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
-    if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
-    if (!personalCurrentAddress.trim()) return setLocalError('Current Address is required.');
-    if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
-      return setLocalError('Permanent Address is required.');
     }
 
     setIsSubmitting(true);
@@ -776,17 +779,17 @@ const MRDoctorOnboarding = () => {
             </div>
           </div>
 
-          {/* Section 2: Clinic Location & Address */}
+          {/* Section 2: Clinic/Chemist Shop Location & Address */}
           <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <MapPin size={16} color="#7C3AED" />
-              Location 1: Clinic / Hospital Details
+              {role === 'DOCTOR' ? 'Location 1: Clinic / Hospital Details' : 'Location 1: Chemist Shop Details'}
             </div>
             <div className="flex flex-col gap-4 mt-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#4B5563]">Clinic Address <span className="text-[#EF4444]">*</span></label>
+                <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Address' : 'Chemist Shop Address'} <span className="text-[#EF4444]">*</span></label>
                 <textarea
-                  placeholder="Type clinic/hospital address... (Geocodes coordinates on blur)"
+                  placeholder={role === 'DOCTOR' ? "Type clinic/hospital address... (Geocodes coordinates on blur)" : "Type chemist shop address... (Geocodes coordinates on blur)"}
                   value={personalCurrentAddress}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   onBlur={() => handleGeocodeClinicAddress(personalCurrentAddress)}
@@ -882,7 +885,7 @@ const MRDoctorOnboarding = () => {
 
               <div className="grid grid-cols-2 gap-4.5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Clinic Latitude</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Latitude' : 'Shop Latitude'}</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -903,7 +906,7 @@ const MRDoctorOnboarding = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Clinic Longitude</label>
+                  <label className="text-xs font-bold text-[#4B5563]">{role === 'DOCTOR' ? 'Clinic Longitude' : 'Shop Longitude'}</label>
                   <div className="relative flex items-center">
                     <MapPin size={15} className="absolute left-3.5 text-[#9CA3AF]" />
                     <input
@@ -924,24 +927,26 @@ const MRDoctorOnboarding = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 my-1">
-                <input
-                  type="checkbox"
-                  id="sameAsCurrentAddress"
-                  checked={personalSameAsCurrentAddress}
-                  onChange={(e) => setPersonalSameAsCurrentAddress(e.target.checked)}
-                  disabled={isSubmitting}
-                  className="cursor-pointer"
-                />
-                <label htmlFor="sameAsCurrentAddress" className="text-xs font-bold text-[#4B5563] cursor-pointer">
-                  Doctor Home Address is same as Clinic Address
-                </label>
-              </div>
+              {role === 'DOCTOR' && (
+                <div className="flex items-center gap-2 my-1">
+                  <input
+                    type="checkbox"
+                    id="sameAsCurrentAddress"
+                    checked={personalSameAsCurrentAddress}
+                    onChange={(e) => setPersonalSameAsCurrentAddress(e.target.checked)}
+                    disabled={isSubmitting}
+                    className="cursor-pointer"
+                  />
+                  <label htmlFor="sameAsCurrentAddress" className="text-xs font-bold text-[#4B5563] cursor-pointer">
+                    Doctor Home Address is same as Clinic Address
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Section 3: Doctor Home Location & Address */}
-          {!personalSameAsCurrentAddress && (
+          {role === 'DOCTOR' && !personalSameAsCurrentAddress && (
             <div>
               <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <Heart size={16} color="#7C3AED" />
@@ -1058,146 +1063,148 @@ const MRDoctorOnboarding = () => {
           )}
 
           {/* Section 4: Personal Profile Details */}
-          <div>
-            <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
-              <User size={16} color="#7C3AED" />
-              Doctor Personal Details
-            </div>
-            <div className="flex flex-col gap-4 mt-3">
-              <div className="grid grid-cols-3 gap-4.5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">First Name <span className="text-[#EF4444]">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="Sarah"
-                    value={personalFirstName}
-                    onChange={(e) => setPersonalFirstName(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Middle Name</label>
-                  <input
-                    type="text"
-                    placeholder="Middle Name"
-                    value={personalMiddleName}
-                    onChange={(e) => setPersonalMiddleName(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Surname <span className="text-[#EF4444]">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="Connor"
-                    value={personalSurname}
-                    onChange={(e) => setPersonalSurname(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  />
-                </div>
+          {role === 'DOCTOR' && (
+            <div>
+              <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
+                <User size={16} color="#7C3AED" />
+                Doctor Personal Details
               </div>
-
-              <div className="grid grid-cols-3 gap-4.5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Date of Birth <span className="text-[#EF4444]">*</span></label>
-                  <div className="relative flex items-center">
-                    <Calendar size={15} className="absolute left-3.5 text-[#9CA3AF]" />
+              <div className="flex flex-col gap-4 mt-3">
+                <div className="grid grid-cols-3 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">First Name <span className="text-[#EF4444]">*</span></label>
                     <input
-                      type="date"
-                      value={personalDateOfBirth}
-                      onChange={(e) => setPersonalDateOfBirth(e.target.value)}
+                      type="text"
+                      placeholder="Sarah"
+                      value={personalFirstName}
+                      onChange={(e) => setPersonalFirstName(e.target.value)}
                       required
                       disabled={isSubmitting}
-                      className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Middle Name</label>
+                    <input
+                      type="text"
+                      placeholder="Middle Name"
+                      value={personalMiddleName}
+                      onChange={(e) => setPersonalMiddleName(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Surname <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Connor"
+                      value={personalSurname}
+                      onChange={(e) => setPersonalSurname(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Gender</label>
-                  <select
-                    value={personalGender}
-                    onChange={(e) => setPersonalGender(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  >
-                    <option value="Female">Female</option>
-                    <option value="Male">Male</option>
-                    <option value="Other">Other</option>
-                  </select>
+                <div className="grid grid-cols-3 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Date of Birth <span className="text-[#EF4444]">*</span></label>
+                    <div className="relative flex items-center">
+                      <Calendar size={15} className="absolute left-3.5 text-[#9CA3AF]" />
+                      <input
+                        type="date"
+                        value={personalDateOfBirth}
+                        onChange={(e) => setPersonalDateOfBirth(e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                        className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Gender</label>
+                    <select
+                      value={personalGender}
+                      onChange={(e) => setPersonalGender(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    >
+                      <option value="Female">Female</option>
+                      <option value="Male">Male</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Blood Group</label>
+                    <select
+                      value={personalBloodGroup}
+                      onChange={(e) => setPersonalBloodGroup(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    >
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Blood Group</label>
-                  <select
-                    value={personalBloodGroup}
-                    onChange={(e) => setPersonalBloodGroup(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  >
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-              </div>
+                <div className="grid grid-cols-3 gap-4.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Marital Status</label>
+                    <select
+                      value={personalMaritalStatus}
+                      onChange={(e) => setPersonalMaritalStatus(e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    >
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widowed">Widowed</option>
+                    </select>
+                  </div>
 
-              <div className="grid grid-cols-3 gap-4.5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Marital Status</label>
-                  <select
-                    value={personalMaritalStatus}
-                    onChange={(e) => setPersonalMaritalStatus(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] cursor-pointer transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  >
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
-                    <option value="Widowed">Widowed</option>
-                  </select>
-                </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Father's Name <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="John Connor Sr."
+                      value={personalFatherName}
+                      onChange={(e) => setPersonalFatherName(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Father's Name <span className="text-[#EF4444]">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="John Connor Sr."
-                    value={personalFatherName}
-                    onChange={(e) => setPersonalFatherName(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[#4B5563]">Mother's Name <span className="text-[#EF4444]">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="Jane Connor"
-                    value={personalMotherName}
-                    onChange={(e) => setPersonalMotherName(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#4B5563]">Mother's Name <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Jane Connor"
+                      value={personalMotherName}
+                      onChange={(e) => setPersonalMotherName(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex gap-3 justify-end mt-3 border-t border-[#F3F4F6] pt-6">
