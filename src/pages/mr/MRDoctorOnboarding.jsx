@@ -1109,46 +1109,6 @@ const MRDoctorOnboarding = () => {
                     />
                   </div>
               </div>
-              <div className="flex flex-col gap-4 mt-3">
-                <div className="grid grid-cols-3 gap-4.5">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#4B5563]">First Name <span className="text-[#EF4444]">*</span></label>
-                    <input
-                      type="text"
-                      placeholder="Sarah"
-                      value={personalFirstName}
-                      onChange={(e) => setPersonalFirstName(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#4B5563]">Middle Name</label>
-                    <input
-                      type="text"
-                      placeholder="Middle Name"
-                      value={personalMiddleName}
-                      onChange={(e) => setPersonalMiddleName(e.target.value)}
-                      disabled={isSubmitting}
-                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#4B5563]">Surname <span className="text-[#EF4444]">*</span></label>
-                    <input
-                      type="text"
-                      placeholder="Connor"
-                      value={personalSurname}
-                      onChange={(e) => setPersonalSurname(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                      className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
-                    />
-                  </div>
-                </div>
 
                 <div className="grid grid-cols-3 gap-4.5">
                   <div className="flex flex-col gap-1.5">
