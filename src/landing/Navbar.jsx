@@ -14,10 +14,14 @@ export default function Navbar({ onBookDemoClick }) {
   const navigate = useNavigate()
   const [activeSection, setActiveSection] = useState('home')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   // Scroll spy to highlight active section and update URL hash
   useEffect(() => {
     const handleScroll = () => {
+      const scrolled = window.scrollY > 20
+      setIsScrolled(prev => prev !== scrolled ? scrolled : prev)
+
       const scrollPosition = window.scrollY + 250 // Offset for active section detection
 
       let currentSection = 'home'
@@ -39,10 +43,10 @@ export default function Navbar({ onBookDemoClick }) {
 
       if (currentSection !== activeSection) {
         setActiveSection(currentSection)
-        // Update URL hash without jumping/reloading page
-        const hash = currentSection === 'home' ? ' ' : `#${currentSection}`
-        if (window.location.hash !== hash && !(currentSection === 'home' && !window.location.hash)) {
-          window.history.replaceState(null, null, hash)
+        // Update URL path without jumping/reloading page
+        const path = currentSection === 'home' ? '/' : `/${currentSection}`
+        if (window.location.pathname !== path) {
+          window.history.replaceState(null, null, path)
         }
       }
     }
@@ -53,13 +57,9 @@ export default function Navbar({ onBookDemoClick }) {
   }, [activeSection])
 
   const handleNavClick = (targetId) => {
-    if (targetId === 'booking' && onBookDemoClick) {
-      onBookDemoClick()
-      return
-    }
     setActiveSection(targetId)
 
-    window.history.pushState(null, null, targetId === 'home' ? ' ' : `#${targetId}`)
+    window.history.pushState(null, null, targetId === 'home' ? '/' : `/${targetId}`)
 
     if (targetId === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -71,8 +71,14 @@ export default function Navbar({ onBookDemoClick }) {
     }
   }
 
+  const showSolidNavbar = isScrolled || menuOpen
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-md py-3 shadow-sm font-sans select-none">
+    <nav className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-300 py-3 font-sans select-none ${
+      showSolidNavbar
+        ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100'
+        : 'bg-transparent shadow-none border-b border-transparent'
+    }`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
 
