@@ -54,19 +54,14 @@ export default function Footer() {
 
           {/* Left Column: Brand Logo, Copywriting, Social Icons */}
           <div className="md:col-span-6 space-y-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-[#28823A] flex items-center justify-center shadow-md">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
-                  <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div>
-                <div className="font-extrabold text-[18px] text-[#0D2411] leading-none">
-                  Gmaxepay<span className="text-[#28823A]">HR</span>
-                </div>
-                <div className="text-[9px] text-[#5C715E] font-bold tracking-[1.5px] leading-none mt-1.5 uppercase">PHARMA HRMS</div>
-              </div>
+            <div
+              className="flex items-center cursor-pointer select-none"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.history.pushState(null, null, '/');
+              }}
+            >
+              <img src="/landing/logo.png" alt="Gmaxepay HR Logo" className="h-12 w-auto" />
             </div>
 
             <p className="text-[14px] text-gray-500 leading-relaxed max-w-md font-normal">

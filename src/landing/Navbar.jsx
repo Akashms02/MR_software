@@ -84,23 +84,10 @@ export default function Navbar({ onBookDemoClick }) {
 
           {/* Logo */}
           <div
-            className="flex items-center gap-2.5 cursor-pointer select-none"
+            className="flex items-center cursor-pointer select-none"
             onClick={() => handleNavClick('home')}
           >
-            <div className="w-10 h-10 rounded-xl bg-[#28823A] flex items-center justify-center shadow-md">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <span className="font-extrabold text-[18px] text-[#0D2411] tracking-tight leading-none">
-                Gmaxepay<span className="text-[#28823A]">HR</span>
-              </span>
-              <div className="text-[9px] text-[#5C715E] font-bold tracking-[1.5px] leading-none mt-1.5 uppercase">
-                PHARMA HRMS
-              </div>
-            </div>
+            <img src="/landing/logo.png" alt="Gmaxepay HR Logo" className="h-12 w-auto" />
           </div>
 
           {/* Nav links (Desktop) */}
