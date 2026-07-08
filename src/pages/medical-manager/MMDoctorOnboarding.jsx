@@ -555,7 +555,7 @@ const MMDoctorOnboarding = () => {
     if (personalCurrentAddress.trim() && latitude === '13.082680' && longitude === '80.270720') {
       await handleGeocodeClinicAddress(personalCurrentAddress);
     }
-    if (!personalSameAsCurrentAddress && personalPermanentAddress.trim() && personalLatitude === '13.082680' && personalLongitude === '80.270720') {
+    if (role === 'DOCTOR' && !personalSameAsCurrentAddress && personalPermanentAddress.trim() && personalLatitude === '13.082680' && personalLongitude === '80.270720') {
       await handleGeocodeHomeAddress(personalPermanentAddress);
     }
 
@@ -563,14 +563,19 @@ const MMDoctorOnboarding = () => {
     if (!fullName.trim()) return setLocalError('Full Name is required.');
     if (!email.trim()) return setLocalError('Email is required.');
     if (!phone.trim()) return setLocalError('Phone number is required.');
-    if (!personalFirstName.trim()) return setLocalError('First Name is required.');
-    if (!personalSurname.trim()) return setLocalError('Surname is required.');
-    if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
-    if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
-    if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
-    if (!personalCurrentAddress.trim()) return setLocalError('Current Address is required.');
-    if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
-      return setLocalError('Permanent Address is required.');
+    if (!personalCurrentAddress.trim()) {
+      return setLocalError(role === 'DOCTOR' ? 'Clinic Address is required.' : 'Chemist Shop Address is required.');
+    }
+
+    if (role === 'DOCTOR') {
+      if (!personalFirstName.trim()) return setLocalError('First Name is required.');
+      if (!personalSurname.trim()) return setLocalError('Surname is required.');
+      if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
+      if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
+      if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
+      if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
+        return setLocalError('Permanent Address is required.');
+      }
     }
 
     setIsSubmitting(true);
@@ -585,20 +590,20 @@ const MMDoctorOnboarding = () => {
         latitude: parseFloat(latitude) || 13.082680,
         longitude: parseFloat(longitude) || 80.270720,
         personal: {
-          firstName: personalFirstName.trim(),
-          middleName: personalMiddleName.trim(),
-          surname: personalSurname.trim(),
-          dateOfBirth: personalDateOfBirth,
-          gender: personalGender,
-          bloodGroup: personalBloodGroup,
-          maritalStatus: personalMaritalStatus,
-          fatherName: personalFatherName.trim(),
-          motherName: personalMotherName.trim(),
+          firstName: role === 'DOCTOR' ? personalFirstName.trim() : null,
+          middleName: role === 'DOCTOR' ? personalMiddleName.trim() : null,
+          surname: role === 'DOCTOR' ? personalSurname.trim() : null,
+          dateOfBirth: role === 'DOCTOR' ? personalDateOfBirth : null,
+          gender: role === 'DOCTOR' ? personalGender : null,
+          bloodGroup: role === 'DOCTOR' ? personalBloodGroup : null,
+          maritalStatus: role === 'DOCTOR' ? personalMaritalStatus : null,
+          fatherName: role === 'DOCTOR' ? personalFatherName.trim() : null,
+          motherName: role === 'DOCTOR' ? personalMotherName.trim() : null,
           currentAddress: personalCurrentAddress.trim(),
-          permanentAddress: personalSameAsCurrentAddress ? personalCurrentAddress.trim() : personalPermanentAddress.trim(),
-          sameAsCurrentAddress: personalSameAsCurrentAddress,
-          latitude: parseFloat(personalLatitude) || 13.082680,
-          longitude: parseFloat(personalLongitude) || 80.270720
+          permanentAddress: (role === 'DOCTOR' && !personalSameAsCurrentAddress) ? personalPermanentAddress.trim() : personalCurrentAddress.trim(),
+          sameAsCurrentAddress: role === 'DOCTOR' ? personalSameAsCurrentAddress : true,
+          latitude: parseFloat(role === 'DOCTOR' ? personalLatitude : latitude) || 13.082680,
+          longitude: parseFloat(role === 'DOCTOR' ? personalLongitude : longitude) || 80.270720
         }
       };
 
@@ -729,7 +734,7 @@ const MMDoctorOnboarding = () => {
             </div>
           </div>
 
-          {/* Section 2: Clinic Location & Address */}
+          {/* Section 2: Clinic/Chemist Shop Location & Address */}
           <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <MapPin size={16} color="#7C3AED" />
@@ -877,24 +882,26 @@ const MMDoctorOnboarding = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 my-1">
-                <input
-                  type="checkbox"
-                  id="sameAsCurrentAddress"
-                  checked={personalSameAsCurrentAddress}
-                  onChange={(e) => setPersonalSameAsCurrentAddress(e.target.checked)}
-                  disabled={isSubmitting}
-                  className="cursor-pointer"
-                />
-                <label htmlFor="sameAsCurrentAddress" className="text-xs font-bold text-[#4B5563] cursor-pointer">
-                  {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Home Address is same as {role === 'DOCTOR' ? 'Clinic' : 'Pharmacy/Store'} Address
-                </label>
-              </div>
+              {role === 'DOCTOR' && (
+                <div className="flex items-center gap-2 my-1">
+                  <input
+                    type="checkbox"
+                    id="sameAsCurrentAddress"
+                    checked={personalSameAsCurrentAddress}
+                    onChange={(e) => setPersonalSameAsCurrentAddress(e.target.checked)}
+                    disabled={isSubmitting}
+                    className="cursor-pointer"
+                  />
+                  <label htmlFor="sameAsCurrentAddress" className="text-xs font-bold text-[#4B5563] cursor-pointer">
+                    Doctor Home Address is same as Clinic Address
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Section 3: Doctor Home Location & Address */}
-          {!personalSameAsCurrentAddress && (
+          {role === 'DOCTOR' && !personalSameAsCurrentAddress && (
             <div>
               <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
                 <Heart size={16} color="#7C3AED" />
@@ -1011,7 +1018,8 @@ const MMDoctorOnboarding = () => {
           )}
 
           {/* Section 4: Personal Profile Details */}
-          <div>
+          {role === 'DOCTOR' && (
+            <div>
             <div className="text-[15px] font-extrabold text-[#111827] border-b border-[#F3F4F6] pb-2 mb-1 flex items-center gap-2">
               <User size={16} color="#7C3AED" />
               {role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} Personal Details
@@ -1151,6 +1159,7 @@ const MMDoctorOnboarding = () => {
               </div>
             </div>
           </div>
+        )}
 
           {/* Form Actions */}
           <div className="flex gap-3 justify-end mt-3 border-t border-[#F3F4F6] pt-6">
