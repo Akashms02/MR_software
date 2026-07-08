@@ -141,7 +141,7 @@ export default function ContactSection() {
                         title="Please enter a valid 10-digit phone number"
                         placeholder="9876543210"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/55 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]"
                       />
                     </div>

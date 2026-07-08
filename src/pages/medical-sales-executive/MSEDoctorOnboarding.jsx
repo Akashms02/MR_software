@@ -593,6 +593,7 @@ const MSEDoctorOnboarding = () => {
     if (!fullName.trim()) return setLocalError('Full Name is required.');
     if (!email.trim()) return setLocalError('Email is required.');
     if (!phone.trim()) return setLocalError('Phone number is required.');
+    if (phone.trim().length !== 10) return setLocalError('Phone number must be exactly 10 digits.');
     if (!personalCurrentAddress.trim()) {
       return setLocalError(role === 'DOCTOR' ? 'Clinic Address is required.' : 'Chemist Shop Address is required.');
     }
@@ -775,7 +776,13 @@ const MSEDoctorOnboarding = () => {
                       type="tel"
                       placeholder="e.g. 9876543000"
                       value={phone}
-                      onChange={(e) => { setPhone(e.target.value); setLocalError(null); }}
+                      onChange={(e) => {
+                        const cleanVal = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhone(cleanVal);
+                        setLocalError(null);
+                      }}
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       required
                       disabled={isSubmitting}
                       className="w-full pl-9.5 pr-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"

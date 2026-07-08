@@ -163,6 +163,8 @@ export default function AdminLayout({ children }) {
       navigate('/admin/hrdocuments');
     } else if (typeLower.includes('tour') || titleLower.includes('tour') || descLower.includes('tour') || titleLower.includes('plan') || descLower.includes('plan')) {
       navigate('/admin/tourplans');
+    } else if (typeLower.includes('dcr') || titleLower.includes('dcr') || descLower.includes('dcr') || descLower.includes('daily call')) {
+      navigate('/admin/dcr-approvals');
     } else if (typeLower.includes('onboard') || titleLower.includes('onboard') || descLower.includes('onboard') || typeLower.includes('request') || titleLower.includes('request')) {
       navigate('/admin/requests');
     } else if (typeLower.includes('track') || titleLower.includes('track') || descLower.includes('track')) {
@@ -210,6 +212,7 @@ export default function AdminLayout({ children }) {
     { id: 'tourplans',    icon: Map,             label: 'Tour Plans',    path: '/admin/tourplans' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking', path: '/admin/fieldtracking' },
     { id: 'leaves',       icon: Calendar,        label: 'Leave Approvals', path: '/admin/leaves' },
+    { id: 'dcr-approvals', icon: FileText,        label: 'DCR Approvals', path: '/admin/dcr-approvals' },
     { id: 'holidays',     icon: Calendar,        label: 'Holidays',      path: '/admin/holidays' },
     // { id: 'recruitment',  icon: Briefcase,       label: 'Recruitment',   path: '/admin/recruitment' },
     // { id: 'orgstructure', icon: Network,         label: 'Org Structure', path: '/admin/orgstructure' },

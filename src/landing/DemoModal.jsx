@@ -57,7 +57,11 @@ export default function DemoModal({ isOpen, onClose }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    let val = value
+    if (name === 'phone') {
+      val = value.replace(/\D/g, '').slice(0, 10)
+    }
+    setFormData(prev => ({ ...prev, [name]: val }))
     // Clear validation error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
@@ -251,12 +255,13 @@ export default function DemoModal({ isOpen, onClose }) {
                             Phone Number
                           </label>
                           <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            maxLength="10"
-                            placeholder="9876543210"
+                             type="tel"
+                             name="phone"
+                             value={formData.phone}
+                             onChange={handleChange}
+                             maxLength="10"
+                             pattern="[0-9]{10}"
+                             placeholder="9876543210"
                             className={`w-full px-4 py-3 rounded-xl border bg-gray-50/50 text-[#0D2411] text-[14px] font-medium placeholder-gray-400 focus:outline-none focus:bg-white transition-all duration-200 ${
                               errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:ring-2 focus:ring-[#28823A]/10 focus:border-[#28823A]'
                             }`}
