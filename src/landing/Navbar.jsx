@@ -1,60 +1,114 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const NAV_LINKS = ['Features', 'Workflow', 'Why Us', 'Contact']
+const NAV_LINKS = [
+  { name: 'Home', target: 'home' },
+  { name: 'Features', target: 'features' },
+  { name: 'FAQ', target: 'faq' },
+  { name: 'Demo Portal', target: 'demo' },
+  { name: 'Testimonials', target: 'testimonials' },
+  { name: 'Book Demo', target: 'booking' }
+]
 
-export default function Navbar() {
+export default function Navbar({ onBookDemoClick }) {
   const navigate = useNavigate()
-  const [scrolled, setScrolled] = useState(false)
+  const [activeSection, setActiveSection] = useState('home')
   const [menuOpen, setMenuOpen] = useState(false)
 
+  // Scroll spy to highlight active section and update URL hash
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 250 // Offset for active section detection
 
-  const scrollTo = (id) => {
-    const map = { 'Features': 'features', 'Workflow': 'workflow', 'Why Us': 'whyus', 'Contact': 'contact' }
-    const el = document.getElementById(map[id])
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+      let currentSection = 'home'
+      if (window.scrollY < 100) {
+        currentSection = 'home'
+      } else {
+        for (const link of NAV_LINKS) {
+          const el = document.getElementById(link.target)
+          if (el) {
+            const top = el.offsetTop
+            const height = el.offsetHeight
+            if (scrollPosition >= top && scrollPosition < top + height) {
+              currentSection = link.target
+              break
+            }
+          }
+        }
+      }
+
+      if (currentSection !== activeSection) {
+        setActiveSection(currentSection)
+        // Update URL hash without jumping/reloading page
+        const hash = currentSection === 'home' ? ' ' : `#${currentSection}`
+        if (window.location.hash !== hash && !(currentSection === 'home' && !window.location.hash)) {
+          window.history.replaceState(null, null, hash)
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Initial run
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [activeSection])
+
+  const handleNavClick = (targetId) => {
+    if (targetId === 'booking' && onBookDemoClick) {
+      onBookDemoClick()
+      return
+    }
+    setActiveSection(targetId)
+
+    window.history.pushState(null, null, targetId === 'home' ? ' ' : `#${targetId}`)
+
+    if (targetId === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      const el = document.getElementById(targetId)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-150 py-2.5 shadow-sm' : 'bg-transparent py-4'}`}>
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
+    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-md py-3 shadow-sm font-sans select-none">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
 
           {/* Logo */}
           <div
             className="flex items-center gap-2.5 cursor-pointer select-none"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={() => handleNavClick('home')}
           >
-            <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-[#28823A] flex items-center justify-center shadow-md">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#C8F04A" strokeWidth="2.5" strokeLinejoin="round"/>
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="#C8F04A" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
+                <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
-              <span className="font-extrabold text-[17px] text-gray-900 tracking-tight leading-none">
-                Gmaxepay<span className="text-green-600">HR</span>
+              <span className="font-extrabold text-[18px] text-[#0D2411] tracking-tight leading-none">
+                Gmaxepay<span className="text-[#28823A]">HR</span>
               </span>
-              <div className="text-[9px] text-gray-400 font-bold tracking-[1px] leading-none mt-0.5 uppercase">
+              <div className="text-[9px] text-[#5C715E] font-bold tracking-[1.5px] leading-none mt-1.5 uppercase">
                 PHARMA HRMS
               </div>
             </div>
           </div>
 
           {/* Nav links (Desktop) */}
-          <div className="hidden md:flex items-center gap-2.5">
+          <div className="hidden md:flex items-center gap-2">
             {NAV_LINKS.map(link => (
               <button
-                key={link}
-                onClick={() => scrollTo(link)}
-                className="px-3.5 py-1.5 bg-transparent border-none text-gray-500 font-bold text-[14px] cursor-pointer rounded-lg hover:text-green-600 hover:bg-green-50/55 transition-all duration-200"
+                key={link.target}
+                onClick={() => handleNavClick(link.target)}
+                className={`px-3.5 py-1.5 bg-transparent border-none font-bold text-[14px] cursor-pointer rounded-lg transition-all duration-200 ${activeSection === link.target
+                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5'
+                    : 'text-[#5C715E] hover:text-[#28823A] hover:bg-[#28823A]/5'
+                  }`}
               >
-                {link}
+                {link.name}
               </button>
             ))}
           </div>
@@ -62,7 +116,7 @@ export default function Navbar() {
           {/* Login (Desktop) */}
           <div className="hidden md:block">
             <button
-              className="btn-lime text-[13px] py-2 px-5"
+              className="bg-[#28823A] hover:bg-[#1f662c] text-white font-extrabold rounded-xl py-2.5 px-6 text-[13px] shadow-[0_4px_12px_rgba(40,130,58,0.15)] transition-all duration-200 cursor-pointer"
               onClick={() => navigate('/login')}
             >
               Login
@@ -70,7 +124,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Toggle Button */}
-          <button className="md:hidden text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer p-1" onClick={() => setMenuOpen(!menuOpen)}>
+          <button className="md:hidden text-[#0D2411] hover:text-[#28823A] bg-transparent border-none cursor-pointer p-1" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -91,15 +145,18 @@ export default function Navbar() {
           <div className="md:hidden mt-2.5 bg-white border border-gray-150 rounded-2xl p-3 shadow-lg flex flex-col gap-1.5">
             {NAV_LINKS.map(link => (
               <button
-                key={link}
-                onClick={() => { scrollTo(link); setMenuOpen(false); }}
-                className="w-full text-left px-4 py-2.5 bg-transparent border-none text-gray-500 font-bold text-[15px] cursor-pointer rounded-xl hover:text-green-600 hover:bg-green-50/55 transition-all duration-200"
+                key={link.target}
+                onClick={() => { handleNavClick(link.target); setMenuOpen(false); }}
+                className={`w-full text-left px-4 py-2.5 bg-transparent border-none font-bold text-[15px] cursor-pointer rounded-xl transition-all duration-200 ${activeSection === link.target
+                    ? 'text-[#28823A] font-extrabold bg-[#28823A]/5'
+                    : 'text-[#5C715E] hover:text-[#28823A] hover:bg-[#28823A]/5'
+                  }`}
               >
-                {link}
+                {link.name}
               </button>
             ))}
             <button
-              className="btn-lime w-full text-center py-3 text-[14px] mt-2"
+              className="bg-[#28823A] hover:bg-[#1f662c] text-white font-extrabold w-full text-center py-3 text-[14px] mt-2 rounded-xl shadow-[0_4px_12px_rgba(40,130,58,0.15)] transition-all duration-200 cursor-pointer"
               onClick={() => { navigate('/login'); setMenuOpen(false); }}
             >
               Login

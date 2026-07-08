@@ -3,52 +3,63 @@
 
 /* ─── Design Tokens ─────────────────────────────────────── */
 :root {
-  --primary:        #C8F04A;
-  --primary-dark:   #A7D800;
-  --primary-light:  #F7FEE7;
-  
-  --lime:           #C8F04A;
-  --lime-dark:      #8BB800;
-  --bg:             #F8FAFC;
-  --sidebar-bg:     #FFFFFF;
-  --card-bg:        #FFFFFF;
-  
-  --green:          #C8F04A; /* Redirecting standard green to Lime for theme sync */
-  --green-dark:     #A7D800;
-  --green-light:    #F7FEE7;
+  --primary: #C8F04A;
+  --primary-dark: #A7D800;
+  --primary-light: #F7FEE7;
+
+  --lime: #C8F04A;
+  --lime-dark: #8BB800;
+  --bg: #F8FAFC;
+  --sidebar-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
+
+  --green: #C8F04A;
+  /* Redirecting standard green to Lime for theme sync */
+  --green-dark: #A7D800;
+  --green-light: #F7FEE7;
 
   /* Stat Card Gradients — matched to reference exactly */
-  --teal:    #7DD9D0;
-  --orange:  #FFAB6E;
-  --coral:   #FF8F8F;
-  --purple:  #B4A0FA;
+  --teal: #7DD9D0;
+  --orange: #FFAB6E;
+  --coral: #FF8F8F;
+  --purple: #B4A0FA;
 
   /* Text */
-  --text-primary:   #111827;
+  --text-primary: #111827;
   --text-secondary: #374151;
-  --text-muted:     #9CA3AF;
-  --text-light:     #D1D5DB;
+  --text-muted: #9CA3AF;
+  --text-light: #D1D5DB;
 
   /* Borders */
-  --border:         #E5E7EB;
-  --border-light:   #F3F4F6;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, sans-serif;
 
   /* Shadows */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-nav:  2px 0 20px rgba(0,0,0,0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-nav: 2px 0 20px rgba(0, 0, 0, 0.05);
 
   /* Landing Specific */
-  --bg-section:    #F9FAFB;
-  --green-border:  #bbf7d0;
+  --bg-section: #F9FAFB;
+  --green-border: #bbf7d0;
 }
 
 /* ─── Reset & Base ─────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html { 
+  scroll-behavior: smooth; 
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
 
 body {
   font-family: var(--font-sans);
@@ -56,20 +67,49 @@ body {
   color: var(--text-secondary);
   -webkit-font-smoothing: antialiased;
   font-size: 14px;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
-#root { width: 100%; min-height: 100vh; }
+#root { 
+  width: 100%; 
+  min-height: 100vh;
+  overflow-x: hidden;
+  max-width: 100%;
+  position: relative;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
 
 /* ─── Scrollbar ─────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 10px;
+}
 
 /* ─── Card ──────────────────────────────────────────────── */
 .card {
   background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   padding: 20px;
 }
 
@@ -83,11 +123,31 @@ body {
   font-weight: 700;
   letter-spacing: 0.3px;
 }
-.badge-processing { background: #EFF6FF; color: #3B82F6; }
-.badge-selected   { background: #F0FDF4; color: #22C55E; }
-.badge-rejected   { background: #FFF1F2; color: #F43F5E; }
-.badge-pending    { background: #FFFBEB; color: #F59E0B; }
-.badge-approved   { background: #F0FDF4; color: #22C55E; }
+
+.badge-processing {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.badge-selected {
+  background: #F0FDF4;
+  color: #22C55E;
+}
+
+.badge-rejected {
+  background: #FFF1F2;
+  color: #F43F5E;
+}
+
+.badge-pending {
+  background: #FFFBEB;
+  color: #F59E0B;
+}
+
+.badge-approved {
+  background: #F0FDF4;
+  color: #22C55E;
+}
 
 /* ─── Layout Utilities ──────────────────────────────────── */
 .section-container {
@@ -142,6 +202,7 @@ body {
   border: 1px solid var(--border);
   transition: all 0.2s;
 }
+
 .pillar-card:hover {
   border-color: var(--green);
   box-shadow: var(--shadow-card);
@@ -162,6 +223,7 @@ body {
   align-items: center;
   gap: 8px;
 }
+
 .tab-btn.active {
   background: #fff;
   color: var(--green);
@@ -178,6 +240,7 @@ body {
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
+
 .demo-table td {
   padding: 14px 20px;
   font-size: 13.5px;
@@ -192,7 +255,7 @@ body {
   border-radius: 36px;
   border: 10px solid #111827;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
   position: relative;
 }
 
@@ -217,6 +280,7 @@ body {
   box-shadow: 0 8px 24px rgba(34, 197, 94, 0.12);
   transition: all 0.3s;
 }
+
 .workflow-circle:hover {
   transform: scale(1.1);
   background: var(--green-light);
@@ -230,6 +294,7 @@ body {
   border: 1px solid var(--border);
   transition: all 0.2s;
 }
+
 .feature-card:hover {
   transform: translateY(-4px);
   border-color: var(--green);
@@ -264,6 +329,7 @@ body {
   transition: all 0.2s;
   font-family: var(--font-sans);
 }
+
 .btn-primary:hover {
   background: var(--green-dark);
   transform: translateY(-1px);
@@ -284,6 +350,7 @@ body {
   transition: all 0.2s;
   font-family: var(--font-sans);
 }
+
 .btn-outline:hover {
   background: #f9fafb;
   border-color: var(--text-muted);
@@ -304,6 +371,7 @@ body {
   transition: all 0.18s;
   font-family: var(--font-sans);
 }
+
 .btn-lime:hover {
   background: #B8E040;
   transform: translateY(-1px);
@@ -354,6 +422,7 @@ body {
   transition: all 0.18s;
   font-family: var(--font-sans);
 }
+
 .search-pill:focus {
   background: #fff;
   border-color: var(--lime);
@@ -367,6 +436,7 @@ body {
   letter-spacing: -0.3px;
   line-height: 1.2;
 }
+
 .page-subtitle {
   font-size: 12px;
   color: var(--text-muted);
@@ -375,10 +445,20 @@ body {
 
 /* ─── Animations ────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.animate-fade { animation: fadeIn 0.3s ease forwards; }
+
+.animate-fade {
+  animation: fadeIn 0.3s ease forwards;
+}
 
 /* ─── Responsiveness Updates ────────────────────────────── */
 
@@ -387,9 +467,11 @@ body {
   .section-container {
     padding: 0 20px;
   }
+
   .section-spacing {
     padding: 48px 0;
   }
+
   .section-title {
     font-size: 28px;
   }
@@ -407,6 +489,7 @@ body {
   overflow: hidden;
   padding: 40px;
 }
+
 .login-page-grid {
   width: 100%;
   max-width: 1200px;
@@ -417,17 +500,19 @@ body {
   z-index: 10;
   align-items: center;
 }
+
 .login-brand-section {
   display: flex;
   flex-direction: column;
   gap: 32px;
 }
+
 .login-card-container {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 48px 40px;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
   max-width: 440px;
   margin: 0 auto;
   width: 100%;
@@ -439,20 +524,24 @@ body {
     align-items: flex-start;
     overflow-y: auto;
   }
+
   .login-page-grid {
     grid-template-columns: 1fr;
     gap: 40px;
     margin: 40px auto;
   }
+
   .login-brand-section {
     text-align: center;
     align-items: center;
     gap: 20px;
   }
+
   .login-brand-section p {
     margin: 0 auto;
   }
-  .login-brand-section > div {
+
+  .login-brand-section>div {
     align-self: center !important;
   }
 }
@@ -461,10 +550,12 @@ body {
   .login-page-container {
     padding: 16px;
   }
+
   .login-page-grid {
     margin: 20px auto;
     gap: 24px;
   }
+
   .login-card-container {
     padding: 32px 20px !important;
   }
@@ -475,11 +566,13 @@ body {
   width: 100%;
   padding: 0 40px;
 }
+
 .nav-links-desktop {
   display: flex;
   align-items: center;
   gap: 2px;
 }
+
 .nav-mobile-toggle {
   display: none;
   background: none;
@@ -488,6 +581,7 @@ body {
   padding: 4px;
   color: var(--text-primary);
 }
+
 .nav-mobile-menu {
   display: none;
 }
@@ -496,12 +590,15 @@ body {
   .navbar-wrapper {
     padding: 0 20px;
   }
+
   .nav-links-desktop {
     display: none;
   }
+
   .nav-mobile-toggle {
     display: block;
   }
+
   .nav-mobile-menu {
     display: flex;
     flex-direction: column;
@@ -525,24 +622,29 @@ body {
   gap: 80px;
   align-items: center;
 }
+
 @media (max-width: 900px) {
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 48px;
   }
+
   .hero-left-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
+
   .hero-left-content h1 br {
     display: none;
   }
+
   .hero-left-content p {
     margin: 0 auto 32px !important;
   }
-  .hero-left-content > div {
+
+  .hero-left-content>div {
     justify-content: center !important;
   }
 }
@@ -553,36 +655,44 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
 }
+
 .stats-item {
   text-align: center;
   padding: 12px 16px;
   border-right: 1px solid var(--border);
 }
+
 .stats-item:last-child {
   border-right: none;
 }
+
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px 0;
   }
+
   .stats-item {
     border-right: 1px solid var(--border);
   }
+
   .stats-item:nth-child(2n) {
     border-right: none;
   }
 }
+
 @media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 20px;
   }
+
   .stats-item {
     border-right: none;
     border-bottom: 1px solid var(--border-light);
     padding-bottom: 16px;
   }
+
   .stats-item:last-child {
     border-bottom: none;
     padding-bottom: 0;
@@ -596,27 +706,32 @@ body {
   padding-top: 16px;
   margin-top: -16px;
 }
+
 .workflow-flex-container {
   display: flex;
   align-items: flex-start;
   gap: 0;
   min-width: 700px;
 }
+
 .workflow-step-wrapper {
   display: flex;
   align-items: center;
   flex: 1;
 }
+
 .workflow-node-element {
   flex: none;
   width: 80px;
 }
+
 .workflow-connector {
   flex: 1;
   height: 2px;
   margin-bottom: 34px;
   position: relative;
 }
+
 .workflow-connector-line {
   position: absolute;
   top: 0;
@@ -626,10 +741,12 @@ body {
   opacity: 0.5;
   width: 100%;
 }
+
 @media (max-width: 768px) {
   .workflow-scroll-wrapper {
     overflow-x: visible !important;
   }
+
   .workflow-flex-container {
     flex-direction: column;
     min-width: 0 !important;
@@ -637,11 +754,13 @@ body {
     align-items: center;
     width: 100%;
   }
+
   .workflow-step-wrapper {
     flex-direction: column;
     align-items: center;
     width: 100%;
   }
+
   .workflow-node-element {
     width: 100% !important;
     max-width: 280px;
@@ -650,18 +769,22 @@ body {
     gap: 16px !important;
     align-items: center;
   }
+
   .workflow-node-label {
     text-align: left !important;
     margin-top: 0 !important;
     max-width: none !important;
   }
+
   .workflow-connector {
     width: 2px;
     height: 24px;
     margin-bottom: 0;
-    margin-left: 32px; /* centered relative to the 64px circle */
+    margin-left: 32px;
+    /* centered relative to the 64px circle */
     align-self: flex-start;
   }
+
   .workflow-connector-line {
     border-top: none !important;
     border-left: 2px dashed var(--lime);
@@ -686,6 +809,7 @@ body {
   justify-content: space-between;
   background: var(--bg-section);
 }
+
 @media (max-width: 600px) {
   .browser-mockup-footer {
     flex-direction: column;
@@ -698,7 +822,8 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0; /* Force zero browser margins - !important is invalid in @page and causes browser to ignore it */
+    margin: 0;
+    /* Force zero browser margins - !important is invalid in @page and causes browser to ignore it */
   }
 
   /* Hide the sidebar layout, header navigation, control panels, buttons, and other non-document elements */
@@ -718,7 +843,15 @@ body {
   }
 
   /* Reset all outer layout wrappers to occupy exactly the printable viewport */
-  html, body, #root, #root > div, aside ~ div, main, .document-container, .document-page-container, .printable-sheet-container,
+  html,
+  body,
+  #root,
+  #root>div,
+  aside~div,
+  main,
+  .document-container,
+  .document-page-container,
+  .printable-sheet-container,
   div[style*="margin-left"],
   div[style*="marginLeft"],
   main[style*="padding"],
@@ -736,7 +869,8 @@ body {
     min-height: 100% !important;
     background: #ffffff !important;
     box-shadow: none !important;
-    overflow: hidden !important; /* Force browser to clip any minor rendering overflow */
+    overflow: hidden !important;
+    /* Force browser to clip any minor rendering overflow */
     display: block !important;
     position: static !important;
     -webkit-print-color-adjust: exact !important;
@@ -749,20 +883,23 @@ body {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    max-width: 100% !important; /* Prevent layout constraint gaps */
+    max-width: 100% !important;
+    /* Prevent layout constraint gaps */
     height: 100% !important;
     min-height: 100% !important;
     max-height: 100% !important;
     box-shadow: none !important;
     border: none !important;
-    border-radius: 0px !important; /* Remove bottom/top border-radius */
+    border-radius: 0px !important;
+    /* Remove bottom/top border-radius */
     margin: 0 !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    overflow: hidden !important; /* Disallow secondary overflow pages */
+    overflow: hidden !important;
+    /* Disallow secondary overflow pages */
     page-break-after: avoid !important;
     page-break-before: avoid !important;
   }
@@ -780,6 +917,7 @@ body {
     display: block !important;
     visibility: visible !important;
   }
+
   .printable-sheet svg[width="100%"],
   .printable-sheet svg[style*="width: 100%"],
   .printable-sheet svg[style*="width:100%"] {
@@ -790,8 +928,8 @@ body {
   body:has(.multipage-print),
   html:has(.multipage-print),
   #root:has(.multipage-print),
-  #root > div:has(.multipage-print),
-  aside ~ div:has(.multipage-print),
+  #root>div:has(.multipage-print),
+  aside~div:has(.multipage-print),
   main:has(.multipage-print),
   .document-container:has(.multipage-print),
   .document-page-container:has(.multipage-print),
@@ -812,7 +950,8 @@ body {
   .multipage-print {
     display: block !important;
     width: 100% !important;
-    max-width: 100% !important; /* Prevent layout constraint gaps */
+    max-width: 100% !important;
+    /* Prevent layout constraint gaps */
     height: auto !important;
   }
 
@@ -821,13 +960,15 @@ body {
     left: auto !important;
     top: auto !important;
     width: 100% !important;
-    max-width: 100% !important; /* Prevent layout constraint gaps */
+    max-width: 100% !important;
+    /* Prevent layout constraint gaps */
     height: 295mm !important;
     min-height: 295mm !important;
     max-height: 295mm !important;
     box-shadow: none !important;
     border: none !important;
-    border-radius: 0px !important; /* Remove bottom/top border-radius */
+    border-radius: 0px !important;
+    /* Remove bottom/top border-radius */
     margin: 0 !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
@@ -857,6 +998,7 @@ body {
   width: 210mm !important;
   height: auto !important;
 }
+
 .printable-sheet-container.generating-pdf .printable-sheet {
   width: 210mm !important;
   height: 295mm !important;
@@ -874,6 +1016,7 @@ body {
   break-before: avoid !important;
   break-after: avoid !important;
 }
+
 .html2pdf__page-break {
   display: block !important;
   height: 0px !important;
@@ -884,4 +1027,19 @@ body {
   border: none !important;
 }
 
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Adelle Cyrillic font utility */
+.font-adelle {
+  font-family: "Adelle Cyrillic", "Adelle", Georgia, Cambria, "Times New Roman", Times, serif;
+}
