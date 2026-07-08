@@ -1,91 +1,166 @@
 const NAV_GROUPS = [
-  { title: 'Product',  links: ['Features', 'Workflow', 'Pricing', 'Security', 'Integrations'] },
-  { title: 'Company',  links: ['About Us', 'Blog', 'Careers', 'Press Kit', 'Partners'] },
-  { title: 'Support',  links: ['Documentation', 'API Reference', 'Status Page', 'Help Center', 'Contact Us'] },
+  {
+    title: 'Product',
+    links: ['Features', 'FAQ', 'Demo Portal', 'Testimonials', 'Book Demo']
+  },
+  {
+    title: 'Company',
+    links: ['Privacy Policy', 'Terms & Conditions']
+  }
 ]
+
+const TARGET_MAP = {
+  'Features': 'features',
+  'FAQ': 'faq',
+  'Demo Portal': 'demo',
+  'Testimonials': 'testimonials',
+  'Book Demo': 'booking'
+}
+
+const FacebookIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+)
+
+const InstagramIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+)
+
+const LinkedinIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+    <rect x="2" y="9" width="4" height="12"></rect>
+    <circle cx="4" cy="4" r="2"></circle>
+  </svg>
+)
+
+const WhatsappIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21l1.6-4.9C3.6 14.7 3 13.1 3 11.5 3 6.8 6.8 3 11.5 3S20 6.8 20 11.5 16.2 20 11.5 20c-1.6 0-3.2-.6-4.6-1.6L3 21z" />
+    <path d="M9 9c.2-.4.6-.4.8-.2.5.5.9.9 1.4 1.4.2.2.2.6 0 .8l-.3.3c-.2.2-.2.5 0 .7.5.5 1.1 1.1 1.6 1.6.2.2.5.2.7 0l.3-.3c.2-.2.6-.2.8 0 .5.5.9.9 1.4 1.4.2.2.2.6-.2.8-.2.2-.5.3-.8.3-1.6 0-3.3-.7-4.5-1.9S8.2 10.6 8.2 9c0-.3.4-.6.8-.8z" />
+  </svg>
+)
 
 export default function Footer() {
   return (
-    <footer id="contact" className="bg-slate-50 border-t border-gray-200">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-12 pb-12">
+    <div className="bg-[#E5F7E3]/60 py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
+      <footer id="contact" className="max-w-7xl mx-auto bg-white rounded-[32px] border border-gray-200/50 p-8 sm:p-12 md:p-16 shadow-[0_8px_30px_rgba(0,0,0,0.015)] font-sans select-none">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16">
 
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-green-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
-                  <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
+          {/* Left Column: Brand Logo, Copywriting, Social Icons */}
+          <div className="md:col-span-6 space-y-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-[#28823A] flex items-center justify-center shadow-md">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
+                  <path d="M12 2v20M3 7l9 5 9-5" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
                 </svg>
               </div>
               <div>
-                <div className="font-extrabold text-[17px] text-gray-900 leading-none">
-                  Gmaxepay<span className="text-green-600">HR</span>
+                <div className="font-extrabold text-[18px] text-[#0D2411] leading-none">
+                  Gmaxepay<span className="text-[#28823A]">HR</span>
                 </div>
-                <div className="text-[9px] text-gray-400 font-bold tracking-[1px] leading-none mt-0.5 uppercase">PHARMA HRMS</div>
+                <div className="text-[9px] text-[#5C715E] font-bold tracking-[1.5px] leading-none mt-1.5 uppercase">PHARMA HRMS</div>
               </div>
             </div>
 
-            <p className="text-[13px] text-gray-400 leading-relaxed max-w-[240px] mb-5">
-              The intelligent HRMS built for pharma enterprises. From hire to rehire — one seamless platform.
+            <p className="text-[14px] text-gray-500 leading-relaxed max-w-md font-normal">
+              Gmaxepay Fintech Solutions Pvt Ltd.
+
+              2nd Floor, No 712, Modi Hospital Rd.
+
+              Mahalakshmi Puram, West of Chord Road, Stage 2, Nagapura, Bengaluru,
+
+              Karnataka 560086
             </p>
 
-            {[
-              { icon: '📧', text: 'hello@gmaxepayhr.in' },
-              { icon: '📞', text: '+91 98765 43210' },
-              { icon: '🏢', text: 'Mumbai · Bengaluru · Hyderabad' },
-            ].map((c, i) => (
-              <div key={i} className="flex items-center gap-2 mb-2">
-                <span className="text-[13px]">{c.icon}</span>
-                <span className="text-[13px] text-gray-400 font-medium">{c.text}</span>
-              </div>
-            ))}
-
-            <div className="mt-5">
-              <span className="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-3 py-1 rounded-[20px] tracking-wide inline-block">
-                🏛️ Empaneled with NICSI · MeitY, Govt. of India
-              </span>
-            </div>
-          </div>
-
-          {/* Nav groups */}
-          {NAV_GROUPS.map((group, i) => (
-            <div key={i}>
-              <div className="text-[11px] font-bold text-green-700 uppercase tracking-widest mb-4">
-                {group.title}
-              </div>
-              {group.links.map(link => (
-                <a
-                  key={link}
-                  href="#"
-                  className="block text-[13px] text-gray-400 hover:text-green-600 transition-colors duration-150 mb-2.5 font-medium no-underline"
-                >
-                  {link}
-                </a>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom bar */}
-        <div className="border-t border-gray-200 py-6 flex flex-wrap items-center justify-between gap-3 text-center sm:text-left">
-          <div className="text-[12px] text-gray-400 font-medium">
-            © 2026 GmaxepayHR. Powered by <span className="text-green-600 font-bold">GreenCall Technologies Pvt. Ltd.</span> · All rights reserved.
-          </div>
-          <div className="flex gap-4">
-            {['Privacy Policy', 'Terms', 'Cookies'].map(l => (
+            {/* Social Icons */}
+            <div className="flex items-center gap-5 text-gray-400">
               <a
-                key={l}
-                href="#"
-                className="text-[12px] text-gray-400 hover:text-green-600 transition-colors duration-150 font-semibold no-underline"
+                href="https://www.facebook.com/gmaxepayfintech"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#28823A] transition-colors duration-150"
+                aria-label="Facebook"
               >
-                {l}
+                <FacebookIcon />
               </a>
+              <a
+                href="https://www.instagram.com/gmaxepay_fintech"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#28823A] transition-colors duration-150"
+                aria-label="Instagram"
+              >
+                <InstagramIcon />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/gmaxepay-fintech/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#28823A] transition-colors duration-150"
+                aria-label="LinkedIn"
+              >
+                <LinkedinIcon />
+              </a>
+              <a
+                href="https://api.whatsapp.com/send/?phone=918088651844&text&type=phone_number&app_absent=0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#28823A] transition-colors duration-150"
+                aria-label="WhatsApp"
+              >
+                <WhatsappIcon />
+              </a>
+            </div>
+          </div>
+
+          {/* Right Columns: Navigation Columns */}
+          <div className="md:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            {NAV_GROUPS.map((group, i) => (
+              <div key={i} className="space-y-4">
+                <div className="text-[14px] font-bold text-[#0D2411] tracking-wide">
+                  {group.title}
+                </div>
+                <div className="space-y-2.5">
+                  {group.links.map(link => (
+                    <a
+                      key={link}
+                      href={group.title === 'Product' ? `#${TARGET_MAP[link]}` : '#'}
+                      onClick={(e) => {
+                        if (group.title === 'Product') {
+                          e.preventDefault();
+                          const el = document.getElementById(TARGET_MAP[link]);
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className="block text-[13px] sm:text-[14px] text-gray-400 hover:text-[#28823A] transition-colors duration-150 font-normal no-underline"
+                    >
+                      {link}
+                    </a>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
+
         </div>
-      </div>
-    </footer>
+
+        {/* Bottom Bar: Copyright and Legal */}
+        <div className="border-t border-gray-150 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="text-[13px] text-gray-400 font-normal">
+            © 2026 Gmaxepay. All rights reserved.
+          </div>
+          <div className="text-[13px] text-gray-400 font-normal">
+            Crafted by <a href="https://www.gmaxepay.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5C715E] hover:text-[#28823A] transition-colors duration-150 no-underline">Gmaxepay</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }

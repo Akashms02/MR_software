@@ -1,180 +1,136 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-const TABS = ['Payroll', 'Attendance', 'Compliance']
-
-const PAYROLL = [
-  { name: 'Aisha Sharma',  role: 'Sr. MR',       basic: '₹32,000', hra: '₹12,800', net: '₹55,000',  status: 'Processed', color: '#16a34a' },
-  { name: 'Rohit Verma',   role: 'Area Manager',  basic: '₹45,000', hra: '₹18,000', net: '₹76,500',  status: 'Processed', color: '#16a34a' },
-  { name: 'Priya Nair',    role: 'MR',            basic: '₹25,000', hra: '₹10,000', net: '₹42,000',  status: 'Pending',   color: '#d97706' },
-  { name: 'Ankit Joshi',   role: 'Pharmacist',    basic: '₹28,000', hra: '₹11,200', net: '₹47,200',  status: 'Processed', color: '#16a34a' },
-  { name: 'Sneha Patil',   role: 'Lab Tech',      basic: '₹22,000', hra: '₹8,800',  net: '₹37,000',  status: 'On Hold',   color: '#dc2626' },
+const TABS = [
+  {
+    id: 'onboarding',
+    name: 'Onboarding Request',
+    image: '/landing/onboarding request.svg',
+    description: 'Simplify Onboarding With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  },
+  {
+    id: 'dcr',
+    name: 'DCR Reports',
+    image: '/landing/DCR Reports.svg',
+    description: 'Simplify DCR Reports With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  },
+  {
+    id: 'leave',
+    name: 'Leave Management',
+    image: '/landing/leave mangement.svg',
+    description: 'Simplify Leave Management With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  },
+  {
+    id: 'distributor',
+    name: 'Distributor Sales',
+    image: '/landing/Distributor sales.svg',
+    description: 'Simplify Distributor Sales With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  },
+  {
+    id: 'attendance',
+    name: 'Field Attendance',
+    image: '/landing/field Attendance.svg',
+    description: 'Simplify Field Attendance With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  },
+  {
+    id: 'tour',
+    name: 'Tour Plan',
+    image: '/landing/tour plan.svg',
+    description: 'Simplify Tour Plan With A Centralized System To Manage Doctors, Chemists, And Pharmacies Review Requests, Approve Applications, And Maintain Accurate Records Effortlessly'
+  }
 ]
-
-const ATTENDANCE = [
-  { name: 'Aisha Sharma',  dept: 'Sales',     present: 24, absent: 2, leave: 4, status: 'Active',    color: '#16a34a' },
-  { name: 'Rohit Verma',   dept: 'Sales',     present: 26, absent: 0, leave: 4, status: 'Active',    color: '#16a34a' },
-  { name: 'Priya Nair',    dept: 'Marketing', present: 20, absent: 4, leave: 6, status: 'On Leave',  color: '#2563eb' },
-  { name: 'Ankit Joshi',   dept: 'QA/QC',    present: 25, absent: 1, leave: 4, status: 'Active',    color: '#16a34a' },
-  { name: 'Sneha Patil',   dept: 'Lab',       present: 22, absent: 3, leave: 5, status: 'Active',    color: '#16a34a' },
-]
-
-const COMPLIANCE = [
-  { type: 'PF Contribution', month: 'Apr 2026', due: '15 May 2026', amount: '₹1,84,500', status: 'Filed',   color: '#16a34a' },
-  { type: 'ESI Contribution', month: 'Apr 2026', due: '15 May 2026', amount: '₹62,400',  status: 'Filed',   color: '#16a34a' },
-  { type: 'TDS (Salary)',      month: 'Apr 2026', due: '07 May 2026', amount: '₹94,200',  status: 'Filed',   color: '#16a34a' },
-  { type: 'Prof. Tax (PT)',    month: 'Apr 2026', due: '30 Apr 2026', amount: '₹18,750',  status: 'Filed',   color: '#16a34a' },
-  { type: 'LWF',               month: 'Apr 2026', due: '31 May 2026', amount: '₹3,200',   status: 'Pending', color: '#d97706' },
-]
-
-function StatusBadge({ status, color }) {
-  const bg = color === '#16a34a' ? 'bg-green-100 text-green-800' : color === '#d97706' ? 'bg-amber-100 text-amber-800' : color === '#dc2626' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'
-  return (
-    <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-bold tracking-wide uppercase ${bg}`}>{status}</span>
-  )
-}
-
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useRef } from 'react'
 
 export default function DemoPreview() {
-  const [tab, setTab] = useState('Payroll')
-  const ref = useRef(null)
-  
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  })
+  const [activeTabId, setActiveTabId] = useState('onboarding')
 
-  // GSAP-like Parallax Effect
-  const yOffset = useTransform(scrollYProgress, [0, 1], [100, -100])
-  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -10])
+  const currentTab = TABS.find((t) => t.id === activeTabId)
 
   return (
-    <section ref={ref} className="py-20 bg-white overflow-hidden" style={{ perspective: '1500px' }}>
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} 
-          viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}
-          className="mb-10 text-center flex flex-col items-center"
+    <section id="demo" className="py-24 bg-white overflow-hidden font-sans select-none">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col items-center">
+
+        {/* Live Demo Preview Badge */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="bg-[#28823A] text-white text-[13px] sm:text-[14px] font-bold px-5 py-2 rounded-full shadow-[0_4px_15px_rgba(40,130,58,0.15)] flex items-center gap-2.5 mb-6"
         >
-          <div className="text-[12px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-[20px] uppercase tracking-[1px] mb-3 inline-block">
-            🖥️ Live Demo Preview
-          </div>
-          <h2 className="text-[32px] md:text-[38px] font-extrabold text-gray-900 tracking-tight leading-tight">
-            See GmaxepayHR in Action
-          </h2>
+          <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
+          Live Demo Preview
         </motion.div>
 
-        <motion.div 
-          style={{
-            y: yOffset, rotateX: rotateX
-          }}
-          className="flex flex-col items-center"
+        {/* Title & Description */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16 space-y-4"
         >
-          {/* Tabs */}
-          <div className="inline-flex gap-1 p-1 bg-slate-50 border border-gray-200 rounded-xl mb-6 shadow-sm">
-            {TABS.map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex items-center gap-1.5 py-2.5 px-5 rounded-lg border-none font-bold text-[14px] cursor-pointer transition-all duration-200 ${
-                  tab === t ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                {t === 'Payroll' ? '💰' : t === 'Attendance' ? '📅' : '⚖️'} {t}
-              </button>
-            ))}
-          </div>
-
-          {/* Browser Window Mockup */}
-          <motion.div 
-            whileHover={{ scale: 1.02 }} transition={{ type: 'spring', bounce: 0.4 }}
-            className="w-full max-w-[900px] mx-auto shadow-2xl rounded-2xl border border-gray-200 bg-white overflow-hidden"
+          <h2
+            className="text-[32px] sm:text-[40px] font-extrabold text-[#0D2411] tracking-tight leading-tight"
+            style={{ fontFamily: '"Adelle Cyrillic", "Adelle", Georgia, Cambria, "Times New Roman", Times, serif' }}
           >
-            <div className="p-4 px-5 bg-slate-50 border-b border-gray-200 flex items-center gap-4">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-amber-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-              </div>
-              <div className="text-[12px] text-gray-400 font-bold bg-white px-4 py-1 rounded-md border border-gray-200">
-                app.gmaxepayhr.in/dashboard
-              </div>
-            </div>
-
-            <div className="p-0 bg-white">
-              <div className="overflow-x-auto">
-                {tab === 'Payroll' && (
-                  <table className="w-full border-collapse text-left">
-                    <thead className="border-b border-gray-200 bg-slate-50">
-                      <tr>{['Employee','Role','Basic','HRA','Net Pay','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {PAYROLL.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.name}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.role}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.basic}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.hra}</td>
-                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.net}</td>
-                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-                {tab === 'Attendance' && (
-                  <table className="w-full border-collapse text-left">
-                    <thead className="border-b border-gray-200 bg-slate-50">
-                      <tr>{['Employee','Dept.','Present','Absent','Leave','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {ATTENDANCE.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.name}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.dept}</td>
-                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.present}</td>
-                          <td className="p-4 text-red-600 font-bold text-[14px]">{r.absent}</td>
-                          <td className="p-4 text-blue-600 font-bold text-[14px]">{r.leave}</td>
-                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-                {tab === 'Compliance' && (
-                  <table className="w-full border-collapse text-left">
-                    <thead className="border-b border-gray-200 bg-slate-50">
-                      <tr>{['Statutory Type','Month','Due Date','Amount','Status'].map(h => <th key={h} className="p-4 text-[13px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {COMPLIANCE.map((r, i) => (
-                        <motion.tr initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} key={i} className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4 font-bold text-gray-955 text-[14px]">{r.type}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.month}</td>
-                          <td className="p-4 text-[14px] text-gray-500">{r.due}</td>
-                          <td className="p-4 text-green-600 font-bold text-[14px]">{r.amount}</td>
-                          <td className="p-4"><StatusBadge status={r.status} color={r.color} /></td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 px-5 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
-              <span className="text-[12px] text-gray-400 font-medium">Showing 5 of {tab === 'Compliance' ? '18' : '1,250'} records</span>
-              <div className="flex gap-2">
-                {['⬇ Export', '🖨 Print', '📊 Report'].map(a => (
-                  <button key={a} className="py-1.5 px-3 rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700 text-[12px] font-bold cursor-pointer transition-colors">{a}</button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+            Powerful Web Portal
+          </h2>
+          <p className="text-[15px] sm:text-[16px] text-[#5C715E] font-medium max-w-2xl mx-auto leading-relaxed">
+            A Centralized Dashboard For Teams, Managers, And Administrators To Manage Employees, Monitor Field Activities, And Make Data-Driven Decisions With Ease
+          </p>
         </motion.div>
+
+        {/* Custom Tabs Capsule */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="w-full max-w-[1140px] bg-white border border-gray-200/80 rounded-full py-2.5 px-6 shadow-[0_6px_25px_rgba(0,0,0,0.02)] flex flex-row flex-nowrap overflow-x-auto no-scrollbar justify-start lg:justify-center items-center gap-2 md:gap-3.5 mb-16 scroll-smooth"
+        >
+          {TABS.map((t) => {
+            const isActive = t.id === activeTabId
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTabId(t.id)}
+                className={`py-3 px-5 sm:px-7 rounded-full font-extrabold text-[13px] sm:text-[14px] lg:text-[15px] transition-all duration-200 cursor-pointer text-center whitespace-nowrap ${isActive
+                    ? 'bg-[#28823A] text-white shadow-[0_4px_15px_rgba(40,130,58,0.2)]'
+                    : 'text-[#0D2411] hover:text-[#28823A] bg-transparent'
+                  }`}
+              >
+                {t.name}
+              </button>
+            )
+          })}
+        </motion.div>
+
+        {/* Main Mockup Screen and Description Container */}
+        <div className="w-full max-w-5xl flex flex-col items-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTabId}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              className="w-full flex flex-col items-center"
+            >
+              {/* Image Showcase */}
+              <div className="w-full rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 bg-[#E8F1EA]/10 p-2 md:p-3">
+                <img
+                  src={currentTab.image}
+                  alt={currentTab.name}
+                  className="w-full h-auto select-none pointer-events-none rounded-xl"
+                />
+              </div>
+
+              {/* Text Description */}
+              {/* <p className="mt-12 text-center text-[#0D2411] font-bold text-[16px] sm:text-[18px] max-w-4xl leading-relaxed px-4">
+                {currentTab.description}
+              </p> */}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
       </div>
     </section>
   )
