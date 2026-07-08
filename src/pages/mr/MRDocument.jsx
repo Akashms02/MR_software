@@ -7,6 +7,7 @@ import {
   fetchTerminationLetterAction
 } from '../../redux/actions/documentActions';
 import { Calendar, Download, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import useProtectedUrl from '../../hooks/useProtectedUrl';
 
@@ -23,16 +24,7 @@ export default function MRDocument() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
-  const [toastMessage, setToastMessage] = useState(null);
-  const [toastType, setToastType] = useState('info'); 
-
-  const showToast = (message, type = 'info') => {
-    setToastMessage(message);
-    setToastType(type);
-    if (type !== 'loading') {
-      setTimeout(() => setToastMessage(null), 4000);
-    }
-  };
+  const { showToast } = useToast();
 
   const [payslipData, setPayslipData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -315,15 +307,7 @@ export default function MRDocument() {
         )}
       </div>
 
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 rounded-2xl bg-[#111827] border border-[#1F2937] px-5 py-3.5 text-white shadow-2xl animate-[slideUp_0.3s_ease-out]">
-          {toastType === 'loading' && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
-          {toastType === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-          {toastType === 'error' && <AlertCircle className="w-4 h-4 text-rose-400" />}
-          <span className="text-[13px] font-extrabold tracking-wide">{toastMessage}</span>
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       <style>{`
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

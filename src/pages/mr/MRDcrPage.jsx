@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { ClipboardList, Plus, Trash2, CheckCircle2, AlertCircle, Calendar, Clock, MapPin, Eye, Send, Loader2 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import {
   fetchMyDcrsAction,
   saveDcrDraftAction,
@@ -33,9 +34,19 @@ const MRDcrPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   
-  // Local notification triggers
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  // Local notification triggers routed to global useToast hook
+  const { showToast } = useToast();
+  const [errorMsg, _setErrorMsg] = useState(null);
+  const [successMsg, _setSuccessMsg] = useState(null);
+
+  const setSuccessMsg = (msg) => {
+    _setSuccessMsg(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setErrorMsg = (msg) => {
+    _setErrorMsg(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // View modal state
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -225,18 +236,7 @@ const MRDcrPage = () => {
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
       {/* Notifications */}
-      {successMsg && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-3 shrink-0">
-          <CheckCircle2 size={16} />
-          {successMsg}
-        </div>
-      )}
-      {errorMsg && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-3 shrink-0">
-          <AlertCircle size={16} />
-          {errorMsg}
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Tab controls */}
       <div className="flex gap-2.5 mb-4 shrink-0">

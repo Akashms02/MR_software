@@ -5,6 +5,7 @@ import { Loader2, Calendar, FileSpreadsheet, Eye, Download, AlertCircle, Refresh
 import * as XLSX from 'xlsx-js-style';
 import { distributerActivityReport, getDistributorsList } from '../../redux/actions/reportActions';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 // Date Helpers
 const getTodayDateString = () => {
@@ -62,6 +63,7 @@ const formatDateTime = (isoString) => {
 
 export default function DistributerReport() {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [startDate, setStartDate] = useState(getFirstOfMonthString());
@@ -283,8 +285,10 @@ export default function DistributerReport() {
       const fileName = `${safeDistName}_sales_${group.uploadDate}.xlsx`;
 
       XLSX.writeFile(workbook, fileName);
+      showToast("Distributor activity report exported successfully!", "success");
     } catch (err) {
       console.error('Failed to export to Excel:', err);
+      showToast(err.message || 'Failed to export to Excel', 'error');
     }
   };
 

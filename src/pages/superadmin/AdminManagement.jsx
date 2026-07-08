@@ -26,9 +26,11 @@ import { updateCompanyAccess, editCompanyData } from "../../redux/actions/compan
 import EditAdminModal from "./EditAdminModal";
 import ModuleAccessModal from "./ModuleAccessModal";
 import Pagination from "../../components/common/Pagination";
+import { useToast } from "../../context/ToastContext";
 
 const AdminManagement = () => {
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   const { admins = [], loading, error, success } = useSelector(
     (state) => state.admin || {}
   );
@@ -116,35 +118,16 @@ const AdminManagement = () => {
     dispatch(getAdmins());
   }, [dispatch]);
 
-  // Handle success/error clearing
+  // Sync / clear Redux errors/success immediately as we handle reporting via Toast
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => {
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          role: "ADMIN",
-          companyCode: "",
-          allowedModules: "all",
-        });
-        setShowModal(false);
-        setShowEditModal(false);
-        setShowAccessModal(false);
-        setSelectedAdmin(null);
-
-        dispatch(clearSuccess());
-      }, 1500);
-      return () => clearTimeout(timer);
+      dispatch(clearSuccess());
     }
   }, [success, dispatch]);
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
-        dispatch(clearErrors());
-      }, 3000);
-      return () => clearTimeout(timer);
+      dispatch(clearErrors());
     }
   }, [error, dispatch]);
 
@@ -159,7 +142,22 @@ const AdminManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(registerAdmin(formData));
+    showToast("Registering administrator...", "loading");
+    const res = await dispatch(registerAdmin(formData));
+    if (res && (res.status === 'SUCCESS' || res.status === 200 || res.status === 201)) {
+      showToast(res.message || "Administrator registered successfully!", "success");
+      setShowModal(false);
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        role: "ADMIN",
+        companyCode: "",
+        allowedModules: "all",
+      });
+    } else {
+      showToast(res?.message || "Failed to register administrator.", "error");
+    }
   };
 
   const handleOpenEditModal = (admin) => {
@@ -181,15 +179,20 @@ const AdminManagement = () => {
         companyCode: selectedAdmin.adminReferenceCode,
         allowedModules: allowedModulesStr,
       };
+      showToast("Updating module permissions...", "loading");
       try {
         const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
         if (res) {
+          showToast(res.message || "Module permissions updated successfully.", "success");
           setShowAccessModal(false);
           setSelectedAdmin(null);
           dispatch(getAdmins());
+        } else {
+          showToast("Failed to update module permissions.", "error");
         }
       } catch (err) {
         console.error("Error updating module access:", err);
+        showToast(err.message || "Error updating module permissions.", "error");
       }
     }
   };
@@ -202,6 +205,7 @@ const AdminManagement = () => {
         phone: modalFormData.phone,
         companyCode: modalFormData.adminReferenceCode,
       };
+      showToast("Updating administrator details...", "loading");
       try {
         const wasEnabled = selectedAdmin.enabled !== false;
         if (modalFormData.enabled !== wasEnabled) {
@@ -210,24 +214,35 @@ const AdminManagement = () => {
 
         const res = await dispatch(editCompanyData(selectedAdmin.id, payload));
         if (res) {
+          showToast(res.message || "Administrator details updated successfully.", "success");
           setShowEditModal(false);
           setSelectedAdmin(null);
           dispatch(getAdmins());
+        } else {
+          showToast("Failed to update administrator details.", "error");
         }
       } catch (err) {
         console.error("Error updating company details:", err);
+        showToast(err.message || "Error updating administrator details.", "error");
       }
     }
   };
 
   const handleToggleAdminStatus = async (adminId, currentStatus) => {
     setUpdatingStatusId(adminId);
+    const newStatus = !currentStatus;
+    showToast(`${newStatus ? 'Enabling' : 'Disabling'} administrator account...`, "loading");
     try {
-      const newStatus = !currentStatus;
-      await dispatch(updateCompanyAccess(adminId, newStatus));
-      dispatch(getAdmins());
+      const res = await dispatch(updateCompanyAccess(adminId, newStatus));
+      if (res) {
+        showToast(res.message || `Administrator account successfully ${newStatus ? 'enabled' : 'disabled'}.`, "success");
+        dispatch(getAdmins());
+      } else {
+        showToast(`Failed to update administrator status.`, "error");
+      }
     } catch (err) {
       console.error("Error updating admin status:", err);
+      showToast(err.message || "Error updating administrator status.", "error");
     } finally {
       setUpdatingStatusId(null);
     }
@@ -243,6 +258,7 @@ const AdminManagement = () => {
       <ToggleLeft size={16} />
     );
   };
+
 
   return (
     <div className="animate-[fadeIn_0.4s_ease-out_forwards] p-2">

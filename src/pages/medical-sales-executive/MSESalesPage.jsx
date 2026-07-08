@@ -6,6 +6,7 @@ import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { Loader2, Calendar, FileSpreadsheet, Eye, Download, AlertCircle, RefreshCw, X, Filter } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 // Date Helpers
 const getTodayDateString = () => {
@@ -71,6 +72,7 @@ export default function MSESalesPage() {
   const [loading, setLoading] = useState(false);
   const [distributorsLoading, setDistributorsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const { showToast } = useToast();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
@@ -314,8 +316,10 @@ export default function MSESalesPage() {
       const fileName = `${safeDistName}_sales_${group.uploadDate}.xlsx`;
 
       XLSX.writeFile(workbook, fileName);
+      showToast(`Sales data exported for ${group.distributorName}`, 'success');
     } catch (err) {
       console.error('Failed to export to Excel:', err);
+      showToast('Failed to export sales data to Excel.', 'error');
     }
   };
 

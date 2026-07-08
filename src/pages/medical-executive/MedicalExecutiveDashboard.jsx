@@ -6,6 +6,7 @@ import {
   Users, Calendar, FileText, Search, UserPlus, Navigation, BarChart2, Gift, Map as MapIcon,
   Loader2, Check, X, AlertCircle, CheckCircle2, ExternalLink, HelpCircle, Bell, Coffee
 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import { cn } from '../../utils/cn';
 import { fetchProfile } from '../../redux/actions/authActions';
 import { getMyTeam } from '../../redux/actions/teamActions';
@@ -116,8 +117,18 @@ const MedicalExecutiveDashboard = () => {
 
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
-  const [localSuccess, setLocalSuccess] = useState(null);
-  const [localError, setLocalError] = useState(null);
+  const { showToast } = useToast();
+  const [localSuccess, _setLocalSuccess] = useState(null);
+  const [localError, _setLocalError] = useState(null);
+
+  const setLocalSuccess = (msg) => {
+    _setLocalSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setLocalError = (msg) => {
+    _setLocalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
   const [selectedNotice, setSelectedNotice] = useState(null);
 
   useEffect(() => {
@@ -416,19 +427,7 @@ const MedicalExecutiveDashboard = () => {
         </div>
       </div>
 
-      {/* Notifications */}
-      {localSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl flex items-center gap-2 text-emerald-700 text-[13px] font-semibold mb-5 animate-fade">
-          <CheckCircle2 size={16} />
-          {localSuccess}
-        </div>
-      )}
-      {localError && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3 rounded-xl flex items-center gap-2 text-red-700 text-[13px] font-semibold mb-5 animate-fade">
-          <AlertCircle size={16} />
-          {localError}
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* ── Stat Cards Row ── */}
       <div className="grid grid-cols-4 gap-4 mb-5">

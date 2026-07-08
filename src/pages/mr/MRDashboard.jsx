@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import DailyQuote from '../../components/DailyQuote';
+import { useToast } from '../../context/ToastContext';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { Loader2, Gift, ExternalLink, Bell, AlertCircle, Calendar, Coffee, X } from 'lucide-react';
@@ -100,20 +101,7 @@ function ConfirmCard({ title, message, confirmLabel, cancelLabel, onConfirm, onC
   );
 }
 
-// ─── Toast ─────────────────────────────────────────────────────────────────────
-function Toast({ msg, type, onClose }) {
-  return (
-    <div 
-      className={`fixed bottom-7 right-7 z-[9999] text-white rounded-2xl px-5 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] flex items-center gap-2.5 max-w-[380px] animate-[toastIn_0.3s_ease-out] ${
-        type === 'error' ? 'bg-[#7F1D1D]' : 'bg-[#064E3B]'
-      }`}
-    >
-      <span className="text-[20px]">{type === 'error' ? '⚠️' : '✅'}</span>
-      <span className="text-[13px] font-semibold flex-1">{msg}</span>
-      <button onClick={onClose} className="bg-white/15 border-none text-white rounded-lg px-2 py-0.5 cursor-pointer">✕</button>
-    </div>
-  );
-}
+// Local Toast component removed to use global useToast hook
 
 // ─── Photo Capture Modal ───────────────────────────────────────────────────────
 function PhotoCaptureModal({ title, onDone, onClose }) {
@@ -576,7 +564,7 @@ export default function MRDashboard() {
     fetchAssignedTargets();
   }, [user]);
 
-  const [toast,       setToast]       = useState(null);
+  const { showToast } = useToast();
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsMessage, setGpsMessage] = useState('');
   const [gpsAction, setGpsAction] = useState(null);
@@ -680,10 +668,7 @@ export default function MRDashboard() {
     return () => clearInterval(timerRef.current);
   }, [activeDay?.status, activeDay?.punchInTime]);
 
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+  // Local showToast helper removed to use global useToast hook
 
   const clearGpsFeedback = (delay = 2500) => {
     setTimeout(() => {
@@ -890,7 +875,7 @@ export default function MRDashboard() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="animate-[fadeIn_0.35s_ease-out] p-2.5">
-      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      {/* Alerts handled by global toast system */}
 
       {/* ── Welcome Banner ── */}
       <div className="rounded-[20px] px-[30px] py-7 mb-5.5 text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.15)] flex items-center justify-between flex-wrap gap-6 relative overflow-hidden border border-white/10">

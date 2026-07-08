@@ -10,14 +10,27 @@ import {
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import Pagination from '../../components/common/Pagination';
+import { useToast } from '../../context/ToastContext';
 
 const STATUS_TABS = ['All', 'Pending', 'Approved', 'Rejected'];
 
 const AdminRequestsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   const { requests, loading, error, pagination } = useSelector((state) => state.request);
-  const [success, setSuccess] = useState(null);
+  const [success, _setSuccess] = useState(null);
+
+  const setSuccess = (msg) => {
+    _setSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error');
+    }
+  }, [error]);
 
   // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(0);
@@ -165,20 +178,7 @@ const AdminRequestsPage = () => {
         </button>
       </div>
 
-      {/* Notifications */}
-      {success && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5">
-          <Check size={16} /> {success}
-        </div>
-      )}
-      {error && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5">
-          <AlertCircle size={16} /> {error}
-          <button onClick={() => { fetchRequests(activeTab, currentPage); initializeTabCounts(); }} className="ml-auto bg-transparent border-none text-[#B91C1C] font-bold underline cursor-pointer flex items-center gap-1">
-            <RefreshCw size={12} /> Retry
-          </button>
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Content wrapper */}
       <div className="bg-white rounded-[18px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_12px_rgba(0,0,0,0.02)] pt-6 px-6 pb-2.5 flex flex-col h-[calc(100vh-150px)] min-h-[400px]">

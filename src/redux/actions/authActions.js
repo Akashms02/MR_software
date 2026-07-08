@@ -162,14 +162,15 @@ export const login = (credentials) => async (dispatch) => {
       });
 
       dispatch({ type: SET_REQUIRE_PASSWORD_CHANGE, payload: false });
-      return true;
+      return { success: true, message: response.data?.message || 'Login successful' };
     }
 
+    const failureMsg = response?.data?.message || commonError;
     dispatch({
       type: LOGIN_FAILURE,
-      payload: response?.data?.message || commonError,
+      payload: failureMsg,
     });
-    return false;
+    return { success: false, message: failureMsg };
   } catch (error) {
     const message =
       error.response?.data?.message || error.message || commonError;
@@ -188,7 +189,7 @@ export const login = (credentials) => async (dispatch) => {
       type: LOGIN_FAILURE,
       payload: message,
     });
-    return false;
+    return { success: false, message };
   } finally {
     dispatch({ type: LOADING_END });
   }
@@ -606,22 +607,34 @@ export const firstLoginAction = (firstLoginData) => async (dispatch) => {
 export const logout = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   try {
-    // Unregister FCM push token if available
-    try {
-      const { messaging } = await import('../../utils/firebase');
-      const { getToken } = await import('firebase/messaging');
-      const currentToken = await getToken(messaging);
-      if (currentToken) {
-        await axios.post(`${API_ROUTE}/push-tokens/unregister`, { token: currentToken });
-        console.log('[FCM] Token unregistered on backend successfully.');
-      }
-    } catch (fcmErr) {
-      console.warn('[FCM] Clean up failed during logout:', fcmErr.message);
-    }
+    // Unregister FCM push token in the background (non-blocking)
+    import('../../utils/firebase')
+      .then(({ messaging }) => {
+        import('firebase/messaging')
+          .then(({ getToken }) => {
+            getToken(messaging)
+              .then((currentToken) => {
+                if (currentToken) {
+                  axios.post(`${API_ROUTE}/push-tokens/unregister`, { token: currentToken })
+                    .catch(err => console.warn('[FCM] Background unregister call failed:', err.message));
+                }
+              })
+              .catch(fcmErr => console.warn('[FCM] Failed to get token in background:', fcmErr.message));
+          })
+          .catch(err => console.warn('[FCM] Failed to import firebase/messaging in background:', err.message));
+      })
+      .catch(err => console.warn('[FCM] Failed to import firebase utils in background:', err.message));
 
-    await axios.post(`${API_ROUTE}/auth/logout`, {});
+    // Await ONLY the fast logout API call
+    const response = await axios.post(`${API_ROUTE}/auth/logout`, {});
+    if (response.data && response.data.message) {
+      localStorage.setItem('logoutMsg', response.data.message);
+    } else {
+      localStorage.setItem('logoutMsg', 'Logged out successfully.');
+    }
   } catch (error) {
     console.error("Logout API failed:", error);
+    localStorage.setItem('logoutMsg', 'Logged out successfully.');
   } finally {
     setAccessToken(null);
     localStorage.removeItem("user");

@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Upload,
 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const STEP_LABELS = [
   'Basic Setup',
@@ -129,8 +130,18 @@ const OnboardingWizard = () => {
     return params.get('employeeId')?.toUpperCase() || '';
   });
   const [resumeLoading, setResumeLoading] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(null);
+  const { showToast } = useToast();
+  const [formError, _setFormError] = useState(null);
+  const [formSuccess, _setFormSuccess] = useState(null);
+
+  const setFormError = (msg) => {
+    _setFormError(msg);
+    if (msg) showToast(msg, 'error');
+  };
+  const setFormSuccess = (msg) => {
+    _setFormSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
 
   const [reportingManagers, setReportingManagers] = useState([]);
 
@@ -620,19 +631,7 @@ const OnboardingWizard = () => {
 
       {/* ── Main Card ─────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-10 py-9">
-        {/* Alerts */}
-        {formError && (
-          <div className="bg-red-50 border-[1.5px] border-red-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-red-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
-            <AlertCircle size={18} />
-            {formError}
-          </div>
-        )}
-        {formSuccess && (
-          <div className="bg-emerald-50 border-[1.5px] border-emerald-200 px-[18px] py-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-semibold mb-6 animate-[fadeSlideIn_0.2s_ease-out]">
-            <CheckCircle2 size={18} />
-            {formSuccess}
-          </div>
-        )}
+        {/* Alerts handled by global toast system */}
 
         <form onSubmit={handleStepSubmit}>
           {/* ═══ STEP 1: Basic Setup ══════════════════════════════════ */}

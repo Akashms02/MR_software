@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Loader2, Check, X, Calendar, AlertCircle, CheckCircle2, MessageSquare, Eye, Users, Plus, Send } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import {
   fetchTeamLeavesAction,
   reviewLeaveAction,
@@ -31,8 +32,18 @@ const MSELeaveReviewPage = () => {
   }, [activeTab]);
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
-  const [localSuccess, setLocalSuccess] = useState(null);
-  const [localError, setLocalError] = useState(null);
+  const { showToast } = useToast();
+  const [localSuccess, _setLocalSuccess] = useState(null);
+  const [localError, _setLocalError] = useState(null);
+
+  const setLocalSuccess = (msg) => {
+    _setLocalSuccess(msg);
+    if (msg) showToast(msg, 'success');
+  };
+  const setLocalError = (msg) => {
+    _setLocalError(msg);
+    if (msg) showToast(msg, 'error');
+  };
 
   // Inspector Modal State for Team Leaves
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
@@ -234,19 +245,7 @@ const MSELeaveReviewPage = () => {
   return (
     <div className="animate-[fadeIn_0.4s_ease-out] p-[10px] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
 
-      {/* Notifications */}
-      {localSuccess && (
-        <div className="bg-[#ECFDF5] border border-[#A7F3D0] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#047857] text-[13px] font-semibold mb-5 shrink-0">
-          <CheckCircle2 size={16} />
-          {localSuccess}
-        </div>
-      )}
-      {localError && (
-        <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5 shrink-0">
-          <AlertCircle size={16} />
-          {localError}
-        </div>
-      )}
+      {/* Alerts handled by global toast system */}
 
       {/* Tab controls */}
       <div className="flex gap-2.5 mb-6 shrink-0">
