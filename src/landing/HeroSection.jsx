@@ -19,7 +19,7 @@ export default function HeroSection({ onBookDemoClick }) {
   }
 
   return (
-    <section id="home" className="relative min-h-screen bg-[#E5F7E3] overflow-hidden pt-36 pb-24 font-sans select-none">
+    <section id="home" className="relative min-h-screen bg-[#E5F7E3] overflow-hidden pt-28 pb-16 lg:pt-36 lg:pb-24 font-sans select-none">
 
       {/* Soft Grid Background & Radial Highlight */}
       <div
@@ -37,7 +37,7 @@ export default function HeroSection({ onBookDemoClick }) {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-white/45 rounded-full blur-[120px] pointer-events-none z-0" />
 
       {/* Center Copywriting & CTAs */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 text-center mb-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 text-center mb-6 lg:mb-8">
         <div className="space-y-6">
           <h1
             className="text-[22px] sm:text-[24px] md:text-[28px] lg:text-[32px] font-extrabold text-[#0D2411] tracking-tight leading-tight max-w-7xl mx-auto lg:whitespace-nowrap text-center"
@@ -69,51 +69,77 @@ export default function HeroSection({ onBookDemoClick }) {
         </div>
       </div>
 
-      {/* Screen Mockups Showcase */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-4 pb-12 flex flex-col lg:flex-row items-center lg:items-end justify-center gap-8 lg:gap-6 xl:gap-8 min-h-[580px]">
+      {/* Screen Mockups Showcase (Desktop version) */}
+      <div className="relative z-10 max-w-[1440px] w-full mx-auto px-4 hidden lg:flex flex-row items-end justify-center gap-8 lg:gap-6 xl:gap-8 overflow-visible min-h-[460px] lg:min-h-[500px]">
 
         {/* LEFT MOBILE MOCKUP: Leaves App */}
-        <motion.div
-          initial={{ opacity: 0, x: -60, rotate: 0 }}
-          animate={{ opacity: 1, x: 0, rotate: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          whileHover={{ scale: 1.03, zIndex: 30 }}
-          className="w-full max-w-[230px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] rounded-[30px] overflow-hidden hidden lg:block transition-all duration-300 flex-shrink-0"
-        >
-          <img
-            src="/landing/mobile L.svg"
-            alt="Leaves Mobile View"
-            className="w-full h-auto select-none pointer-events-none"
-          />
+        <motion.div className="w-full max-w-[230px] flex-shrink-0 z-10 -translate-y-12 lg:-translate-y-16 xl:-translate-y-24">
+          <motion.div
+            initial={{ opacity: 0, x: -60, rotate: 0 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            whileHover={{ scale: 1.03, zIndex: 30 }}
+            className="w-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] rounded-[30px] overflow-hidden transition-all duration-300 cursor-pointer"
+          >
+            <img
+              src="/landing/mobile L.svg"
+              alt="Leaves Mobile View"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+          </motion.div>
         </motion.div>
 
         {/* CENTER DESKTOP MOCKUP: Main HRMS Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-20 w-full max-w-[920px] shadow-[0_30px_70px_rgba(0,0,0,0.18)] overflow-hidden flex-shrink-0"
-        >
-          <img
-            src="/landing/Desktop.svg"
-            alt="HRMS Desktop View"
-            className="w-full h-auto select-none pointer-events-none rounded-1xl"
-          />
+        <motion.div className="relative z-20 w-full max-w-[920px] flex-shrink-0 -translate-y-8 xl:-translate-y-12">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="w-full shadow-[0_30px_70px_rgba(0,0,0,0.18)] overflow-hidden rounded-2xl"
+          >
+            <img
+              src="/landing/Desktop.svg"
+              alt="HRMS Desktop View"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+          </motion.div>
         </motion.div>
 
         {/* RIGHT MOBILE MOCKUP: Field Attendance Map */}
-        <motion.div
-          initial={{ opacity: 0, x: 60, rotate: 0 }}
-          animate={{ opacity: 1, x: 0, rotate: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          whileHover={{ scale: 1.03, zIndex: 30 }}
-          className="w-full max-w-[230px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] rounded-[30px] overflow-hidden hidden lg:block transition-all duration-300 flex-shrink-0"
-        >
-          <img
-            src="/landing/mobile R.svg"
-            alt="Map Mobile View"
-            className="w-full h-auto select-none pointer-events-none"
-          />
+        <motion.div className="w-full max-w-[230px] flex-shrink-0 z-10 -translate-y-12 lg:-translate-y-16 xl:-translate-y-24">
+          <motion.div
+            initial={{ opacity: 0, x: 60, rotate: 0 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            whileHover={{ scale: 1.03, zIndex: 30 }}
+            className="w-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] rounded-[30px] overflow-hidden transition-all duration-300 cursor-pointer"
+          >
+            <img
+              src="/landing/mobile R.svg"
+              alt="Map Mobile View"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Screen Mockups Showcase (Mobile & Tablet version) */}
+      <div className="relative z-10 w-full max-w-[540px] sm:max-w-[640px] mx-auto px-4 pb-0 pt-4 flex flex-col items-center justify-center lg:hidden overflow-visible">
+        
+        {/* CENTER DESKTOP MOCKUP (Mobile) */}
+        <motion.div className="relative z-20 w-full max-w-[380px] xs:max-w-[440px] sm:max-w-[540px] flex-shrink-0 pb-0 translate-y-12 xs:translate-y-16 sm:translate-y-20">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="w-full shadow-[0_25px_60px_rgba(0,0,0,0.18)] rounded-xl overflow-hidden"
+          >
+            <img
+              src="/landing/Desktop.svg"
+              alt="HRMS Desktop View"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+          </motion.div>
         </motion.div>
       </div>
 
