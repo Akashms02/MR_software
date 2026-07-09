@@ -82,10 +82,15 @@ const DcrReviewPage = () => {
   };
 
   const handleReview = async (dcrId, status) => {
-    const remarks = remarksMap[dcrId] || (status === 'APPROVED' ? 'Approved' : 'Rejected');
+    const remarks = remarksMap[dcrId] || '';
+    if (status === 'REJECTED' && !remarks.trim()) {
+      triggerNotice('error', 'Feedback/Remarks is mandatory when rejecting a DCR report.');
+      return;
+    }
+    const finalRemarks = remarks || (status === 'APPROVED' ? 'Approved' : 'Rejected');
     setReviewingId(dcrId);
     try {
-      await dispatch(reviewDcrAction(dcrId, status, remarks));
+      await dispatch(reviewDcrAction(dcrId, status, finalRemarks));
       dispatch(fetchTeamDcrsAction());
       setInspectModalOpen(false);
       setRemarksMap(prev => {
@@ -141,12 +146,13 @@ const DcrReviewPage = () => {
   const pendingCount = teamDcrs.filter(d => d.status === 'SUBMITTED').length;
   const approvedCount = teamDcrs.filter(d => d.status === 'APPROVED').length;
   const rejectedCount = teamDcrs.filter(d => d.status === 'REJECTED').length;
+  const draftCount = teamDcrs.filter(d => d.status === 'DRAFT').length;
 
   const stats = [
     { label: 'Pending Reviews', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Action required' : 'All caught up!', color: '#D97706', bg: '#FFFBEB', icon: '📋' },
     { label: 'Approved DCRs', value: `${approvedCount}`, sub: 'Completed reviews', color: '#10B981', bg: '#ECFDF5', icon: '✅' },
     { label: 'Rejected DCRs', value: `${rejectedCount}`, sub: 'Requires corrections', color: '#EF4444', bg: '#FEF2F2', icon: '❌' },
-    { label: 'Total Logs Managed', value: `${teamDcrs.length}`, sub: 'All-time history', color: '#6366F1', bg: '#EEF2FF', icon: '📝' },
+    { label: 'Draft DCRs', value: `${draftCount}`, sub: 'Saved drafts', color: '#6366F1', bg: '#EEF2FF', icon: '📝' },
   ];
 
   const getStatusBadgeClass = (status) => {

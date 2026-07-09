@@ -50,6 +50,8 @@ const MRDcrPage = () => {
 
   // View modal state
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [isEditingModal, setIsEditingModal] = useState(false);
+  const [modalVisits, setModalVisits] = useState([]);
 
   // Form State for logging new DCR
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
@@ -205,9 +207,87 @@ const MRDcrPage = () => {
   const handleViewDcrDetails = async (dcrId) => {
     try {
       await dispatch(fetchDcrDetailsAction(dcrId));
+      setIsEditingModal(false);
       setDetailModalOpen(true);
     } catch (err) {
       triggerLocalNotification('error', 'Failed to retrieve DCR details.');
+    }
+  };
+
+  const startEditingInModal = () => {
+    setModalVisits((currentDcr.visits || []).map(v => ({
+      id: v.id,
+      doctorId: v.doctorId || '',
+      visitTime: v.visitTime ? v.visitTime.slice(0, 5) : '10:00',
+      productsDiscussed: v.productsDiscussed || '',
+      samplesGiven: v.samplesGiven || '',
+      feedback: v.feedback || '',
+      isGpsVerified: v.isGpsVerified !== false
+    })));
+    setIsEditingModal(true);
+  };
+
+  const handleModalVisitChange = (idx, field, value) => {
+    const updated = [...modalVisits];
+    updated[idx][field] = value;
+    setModalVisits(updated);
+  };
+
+  const addModalVisitField = () => {
+    setModalVisits([
+      ...modalVisits,
+      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true }
+    ]);
+  };
+
+  const removeModalVisitField = (idx) => {
+    if (modalVisits.length === 1) {
+      triggerLocalNotification('error', 'A DCR report must contain at least one doctor visit.');
+      return;
+    }
+    setModalVisits(modalVisits.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveModalEdits = async (e, andSubmit = false) => {
+    if (e) e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const invalid = modalVisits.some(v => !v.doctorId);
+    if (invalid) {
+      triggerLocalNotification('error', 'Please select a doctor for all listed visits.');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const payload = {
+        reportDate: currentDcr.reportDate,
+        visits: modalVisits.map(v => ({
+          doctorId: parseInt(v.doctorId),
+          visitTime: v.visitTime.length === 5 ? v.visitTime + ':00' : v.visitTime,
+          productsDiscussed: v.productsDiscussed,
+          samplesGiven: v.samplesGiven,
+          feedback: v.feedback,
+          isGpsVerified: v.isGpsVerified
+        }))
+      };
+
+      const res = await dispatch(saveDcrDraftAction(payload));
+      const updatedDcr = res?.data || res;
+      
+      if (updatedDcr && updatedDcr.id) {
+        if (andSubmit) {
+          await dispatch(submitDcrAction(updatedDcr.id));
+        }
+        dispatch(fetchMyDcrsAction());
+        setDetailModalOpen(false);
+        setIsEditingModal(false);
+      }
+    } catch (err) {
+      // Handled by toast/redux error
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -548,107 +628,232 @@ const MRDcrPage = () => {
               )}
 
               {/* Visits list */}
-              <div className="flex flex-col gap-3.5">
-                <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Doctor Visit Logs ({currentDcr.visits?.length || 0})</div>
-                {currentDcr.visits?.map((visit, index) => {
-                  const doc = doctorListOptions.find(d => d.id === visit.doctorId) || { fullName: `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
-                  return (
-                    <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
-                      <div className="flex justify-between items-center mb-2.5">
-                        <span className="text-[14px] font-bold text-[#1F2937]">{visit.doctorName || doc.fullName}</span>
-                        <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
-                          <Clock size={12} className="text-[#9CA3AF]" />
-                          {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
-                        </span>
+              {isEditingModal ? (
+                <form onSubmit={(e) => handleSaveModalEdits(e, false)} className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Edit Doctor Visit Logs ({modalVisits.length})</div>
+                    <button
+                      type="button"
+                      onClick={addModalVisitField}
+                      className="flex items-center gap-1 bg-[#111827] text-white border-none px-3 py-1.5 rounded-lg text-[11.5px] font-bold cursor-pointer hover:bg-gray-800 transition-colors"
+                    >
+                      <Plus size={12} /> Add Visit
+                    </button>
+                  </div>
+                  {modalVisits.map((visit, idx) => (
+                    <div key={idx} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA] relative">
+                      <button
+                        type="button"
+                        onClick={() => removeModalVisitField(idx)}
+                        className="absolute right-3 top-3 bg-transparent border-none cursor-pointer text-[#9CA3AF] hover:text-[#EF4444] p-1 rounded hover:bg-[#FEE2E2]"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                      <div className="text-[10px] font-extrabold text-[#C8F04A] bg-[#111827] px-1.5 py-0.5 rounded inline-block mb-3">
+                        CALL VISIT #{idx + 1}
                       </div>
-                      
-                      {(visit.speciality || doc.speciality) && (
-                        <div className="text-[11px] text-[#9CA3AF] mb-2">
-                          Specialty: <span className="text-[#4B5563] font-semibold">{visit.speciality || doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
-                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Select Doctor *</label>
+                          <select
+                            value={visit.doctorId}
+                            onChange={(e) => handleModalVisitChange(idx, 'doctorId', e.target.value)}
+                            required
+                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] bg-white outline-none font-sans"
+                          >
+                            <option value="">Choose doctor...</option>
+                            {doctorListOptions.map((doc) => (
+                              <option key={doc.id} value={doc.id}>
+                                {doc.fullName} ({doc.speciality || 'GENERAL'})
+                              </option>
+                            ))}
+                          </select>
                         </div>
                         <div>
-                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Distributed Samples</div>
-                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.samplesGiven || '—'}</div>
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Visit Time *</label>
+                          <input
+                            type="time"
+                            value={visit.visitTime}
+                            onChange={(e) => handleModalVisitChange(idx, 'visitTime', e.target.value)}
+                            required
+                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
+                          />
                         </div>
                       </div>
-
-                      <div className="border-t border-[#F3F4F6] pt-2">
-                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
-                        <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
-                          {visit.feedback || 'No feedback details logged.'}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Products Promoted</label>
+                          <input
+                            type="text"
+                            value={visit.productsDiscussed}
+                            onChange={(e) => handleModalVisitChange(idx, 'productsDiscussed', e.target.value)}
+                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Distributed Samples</label>
+                          <input
+                            type="text"
+                            value={visit.samplesGiven}
+                            onChange={(e) => handleModalVisitChange(idx, 'samplesGiven', e.target.value)}
+                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
+                          />
                         </div>
                       </div>
-
-                      {visit.isGpsVerified && (
-                        <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
-                          <MapPin size={10} /> GPS COORDINATES RECORDED
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Chemist Visits list */}
-              {currentDcr.chemistVisits && currentDcr.chemistVisits.length > 0 && (
-                <div className="flex flex-col gap-3.5 mt-4 border-t border-[#F3F4F6] pt-4">
-                  <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Chemist Visit Logs ({currentDcr.chemistVisits.length})</div>
-                  {currentDcr.chemistVisits.map((visit, index) => (
-                    <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
-                      <div className="flex justify-between items-center mb-2.5">
-                        <span className="text-[14px] font-bold text-[#1F2937]">{visit.chemistName || `Chemist ID: ${visit.chemistId}`}</span>
-                        <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
-                          <Clock size={12} className="text-[#9CA3AF]" />
-                          {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
-                        </span>
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#374151] mb-1">Feedback / Notes</label>
+                        <textarea
+                          value={visit.feedback}
+                          onChange={(e) => handleModalVisitChange(idx, 'feedback', e.target.value)}
+                          className="w-full h-[50px] px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] resize-none outline-none font-sans"
+                        />
                       </div>
-                      
-                      {visit.address && (
-                        <div className="text-[11px] text-[#9CA3AF] mb-2">
-                          Address: <span className="text-[#4B5563] font-semibold">{visit.address}</span>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
-                        <div className="col-span-2">
-                          <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
-                          <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-[#F3F4F6] pt-2">
-                        <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
-                        <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
-                          {visit.feedback || 'No feedback details logged.'}
-                        </div>
-                      </div>
-
-                      {visit.isGpsVerified && (
-                        <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
-                          <MapPin size={10} /> GPS COORDINATES RECORDED
-                        </div>
-                      )}
                     </div>
                   ))}
-                </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-3.5">
+                    <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Doctor Visit Logs ({currentDcr.visits?.length || 0})</div>
+                    {currentDcr.visits?.map((visit, index) => {
+                      const doc = doctorListOptions.find(d => d.id === visit.doctorId) || { fullName: `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
+                      return (
+                        <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
+                          <div className="flex justify-between items-center mb-2.5">
+                            <span className="text-[14px] font-bold text-[#1F2937]">{visit.doctorName || doc.fullName}</span>
+                            <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
+                              <Clock size={12} className="text-[#9CA3AF]" />
+                              {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                            </span>
+                          </div>
+                          
+                          {(visit.speciality || doc.speciality) && (
+                            <div className="text-[11px] text-[#9CA3AF] mb-2">
+                              Specialty: <span className="text-[#4B5563] font-semibold">{visit.speciality || doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+                            <div>
+                              <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
+                              <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Distributed Samples</div>
+                              <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.samplesGiven || '—'}</div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-[#F3F4F6] pt-2">
+                            <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
+                            <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
+                              {visit.feedback || 'No feedback details logged.'}
+                            </div>
+                          </div>
+
+                          {visit.isGpsVerified && (
+                            <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
+                              <MapPin size={10} /> GPS COORDINATES RECORDED
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Chemist Visits list */}
+                  {currentDcr.chemistVisits && currentDcr.chemistVisits.length > 0 && (
+                    <div className="flex flex-col gap-3.5 mt-4 border-t border-[#F3F4F6] pt-4">
+                      <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Chemist Visit Logs ({currentDcr.chemistVisits.length})</div>
+                      {currentDcr.chemistVisits.map((visit, index) => (
+                        <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
+                          <div className="flex justify-between items-center mb-2.5">
+                            <span className="text-[14px] font-bold text-[#1F2937]">{visit.chemistName || `Chemist ID: ${visit.chemistId}`}</span>
+                            <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
+                              <Clock size={12} className="text-[#9CA3AF]" />
+                              {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                            </span>
+                          </div>
+                          
+                          {visit.address && (
+                            <div className="text-[11px] text-[#9CA3AF] mb-2">
+                              Address: <span className="text-[#4B5563] font-semibold">{visit.address}</span>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+                            <div className="col-span-2">
+                              <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
+                              <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-[#F3F4F6] pt-2">
+                            <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
+                            <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
+                              {visit.feedback || 'No feedback details logged.'}
+                            </div>
+                          </div>
+
+                          {visit.isGpsVerified && (
+                            <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
+                              <MapPin size={10} /> GPS COORDINATES RECORDED
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t-[1.5px] border-[#F3F4F6] flex justify-end shrink-0">
-              <button
-                onClick={() => setDetailModalOpen(false)}
-                className="bg-[#111827] text-white border-none px-[22px] py-2.5 rounded-xl font-bold text-[13px] cursor-pointer outline-none hover:bg-gray-800 transition-colors duration-155"
-              >
-                Close Report
-              </button>
+            <div className="px-6 py-4 border-t-[1.5px] border-[#F3F4F6] flex justify-end gap-3 shrink-0">
+              {isEditingModal ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingModal(false)}
+                    className="px-[20px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSaveModalEdits(e, false)}
+                    disabled={actionLoading}
+                    className="px-[20px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    {actionLoading ? 'Saving...' : 'Save Draft'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSaveModalEdits(e, true)}
+                    disabled={actionLoading}
+                    className="px-[20px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-opacity"
+                  >
+                    {actionLoading ? 'Submitting...' : 'Save & Submit'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  {currentDcr.status === 'REJECTED' && (
+                    <button
+                      onClick={startEditingInModal}
+                      className="bg-[#C8F04A] text-[#111827] border-none px-[22px] py-2.5 rounded-xl font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-all duration-155"
+                    >
+                      Edit DCR
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDetailModalOpen(false)}
+                    className="bg-[#111827] text-white border-none px-[22px] py-2.5 rounded-xl font-bold text-[13px] cursor-pointer outline-none hover:bg-gray-800 transition-colors duration-155"
+                  >
+                    Close Report
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
