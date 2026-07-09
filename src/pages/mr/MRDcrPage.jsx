@@ -235,8 +235,6 @@ const MRDcrPage = () => {
 
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
-      {/* Notifications */}
-      {/* Alerts handled by global toast system */}
 
       {/* Tab controls */}
       <div className="flex gap-2.5 mb-4 shrink-0">
@@ -334,6 +332,17 @@ const MRDcrPage = () => {
                               >
                                 <Eye size={12} /> View
                               </button>
+                              {dcr.status === 'DRAFT' && (
+                                <button
+                                  onClick={() => handleSubmitDcr(dcr.id)}
+                                  disabled={actionLoading}
+                                  title="Submit Report"
+                                  className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-extrabold text-[#111827] hover:opacity-90 disabled:opacity-50 transition-all duration-150"
+                                >
+                                  {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                                  Submit
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
