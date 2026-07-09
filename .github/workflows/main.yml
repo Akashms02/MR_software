@@ -35,11 +35,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
-        # 1. Sync hashed assets with long-term cache headers (never change)
-        aws s3 sync ./dist/assets s3://${{ secrets.BUCKET_NAME }}/assets --cache-control "public, max-age=31536000, immutable"
-
-        # 2. Sync root files (index.html, favicon, etc.) with no-cache headers (always check for updates)
-        aws s3 sync ./dist s3://${{ secrets.BUCKET_NAME }} --exclude "assets/*" --cache-control "no-cache, no-store, must-revalidate"
+        aws s3 sync ./dist s3://${{ secrets.BUCKET_NAME }}
 
     - name: Invalidate CloudFront Cache
       env:
