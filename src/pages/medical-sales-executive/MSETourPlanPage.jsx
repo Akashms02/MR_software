@@ -104,7 +104,31 @@ const MSETourPlanPage = () => {
     if (e) e.preventDefault();
     setErrorMsg(null); setSuccessMsg(null);
     if (planDays.some(d => !d.plannedDate)) { triggerLocalNotification('error', 'Please select a planned date for all days.'); return; }
-    if (planDays.some(d => d.activityType === 'FIELD_WORK' && !d.targetTerritory)) { triggerLocalNotification('error', 'Please specify a target territory for field work days.'); return; }
+
+    const monthPrefix = targetMonth;
+    const invalidMonth = planDays.some(d => !d.plannedDate.startsWith(monthPrefix));
+    if (invalidMonth) {
+      triggerLocalNotification('error', `All planned dates must belong to the selected target month: ${formatMonthLabel(targetMonth)}.`);
+      return;
+    }
+
+    const dates = planDays.map(d => d.plannedDate);
+    const hasDuplicateDates = new Set(dates).size !== dates.length;
+    if (hasDuplicateDates) {
+      triggerLocalNotification('error', 'Duplicate dates are not allowed. Each planned date must be unique.');
+      return;
+    }
+
+    if (planDays.some(d => d.activityType === 'FIELD_WORK' && !d.targetTerritory)) { 
+      triggerLocalNotification('error', 'Please specify a target territory for field work days.'); 
+      return; 
+    }
+
+    const invalidTerritory = planDays.some(d => d.activityType === 'FIELD_WORK' && d.targetTerritory.trim().length < 3);
+    if (invalidTerritory) {
+      triggerLocalNotification('error', 'Target territory must be at least 3 characters long for field work.');
+      return;
+    }
 
     setActionLoading(true);
     try {

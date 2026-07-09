@@ -140,9 +140,23 @@ const MELeaveReviewPage = () => {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (end < start) {
       triggerLocalNotification('error', 'End Date cannot be before Start Date.');
+      return;
+    }
+
+    const minStartDate = new Date(today);
+    minStartDate.setDate(today.getDate() - 30);
+    if (start < minStartDate) {
+      triggerLocalNotification('error', 'Leave application cannot be backdated by more than 30 days.');
+      return;
+    }
+
+    if (reason.trim().length < 10) {
+      triggerLocalNotification('error', 'Reason for leave must be at least 10 characters long.');
       return;
     }
 
