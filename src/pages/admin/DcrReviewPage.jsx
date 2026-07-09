@@ -133,26 +133,25 @@ const DcrReviewPage = () => {
       const name = (dcr.mrName || '').toLowerCase();
       const matchesSearch = name.includes(searchTerm.toLowerCase());
       
-      const isPending = dcr.status === 'SUBMITTED';
       if (activeTab === 'pending') {
-        return matchesSearch && isPending;
+        return matchesSearch && (dcr.status === 'SUBMITTED' || dcr.status === 'DRAFT');
       } else {
-        return matchesSearch && !isPending;
+        return matchesSearch && (dcr.status === 'APPROVED' || dcr.status === 'REJECTED');
       }
     });
   }, [teamDcrs, activeTab, searchTerm]);
 
   // Statistics calculation
-  const pendingCount = teamDcrs.filter(d => d.status === 'SUBMITTED').length;
+  const pendingCount = teamDcrs.filter(d => d.status === 'SUBMITTED' || d.status === 'DRAFT').length;
   const approvedCount = teamDcrs.filter(d => d.status === 'APPROVED').length;
   const rejectedCount = teamDcrs.filter(d => d.status === 'REJECTED').length;
-  const draftCount = teamDcrs.filter(d => d.status === 'DRAFT').length;
+  const totalCount = pendingCount + approvedCount + rejectedCount;
 
   const stats = [
     { label: 'Pending Reviews', value: `${pendingCount}`, sub: pendingCount > 0 ? 'Action required' : 'All caught up!', color: '#D97706', bg: '#FFFBEB', icon: '📋' },
     { label: 'Approved DCRs', value: `${approvedCount}`, sub: 'Completed reviews', color: '#10B981', bg: '#ECFDF5', icon: '✅' },
     { label: 'Rejected DCRs', value: `${rejectedCount}`, sub: 'Requires corrections', color: '#EF4444', bg: '#FEF2F2', icon: '❌' },
-    { label: 'Draft DCRs', value: `${draftCount}`, sub: 'Saved drafts', color: '#6366F1', bg: '#EEF2FF', icon: '📝' },
+    { label: 'Total Records', value: `${totalCount}`, sub: 'All-time history', color: '#6366F1', bg: '#EEF2FF', icon: '📝' },
   ];
 
   const getStatusBadgeClass = (status) => {
