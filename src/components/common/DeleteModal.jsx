@@ -17,7 +17,7 @@ const DeleteModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4">
       <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
         <div className="p-8 flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-4 ring-rose-50/50">

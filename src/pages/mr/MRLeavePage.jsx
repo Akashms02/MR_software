@@ -114,9 +114,25 @@ const MRLeavePage = () => {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
 
     if (end < start) {
       triggerLocalNotification('error', 'End Date cannot be before Start Date.');
+      return;
+    }
+
+    // Limit backdating to a reasonable 30 days (for emergencies/sick leave)
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    if (start < thirtyDaysAgo) {
+      triggerLocalNotification('error', 'Leave start date cannot be more than 30 days in the past.');
+      return;
+    }
+
+    if (reason.trim().length < 10) {
+      triggerLocalNotification('error', 'Please provide a detailed reason for leave (minimum 10 characters).');
       return;
     }
 

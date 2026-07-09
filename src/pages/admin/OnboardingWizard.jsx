@@ -388,44 +388,103 @@ const OnboardingWizard = () => {
 
     // ── Validation Checks ───────────────────────────────────────────
     if (activeStep === 1) {
-      if (formData.phone && formData.phone.length !== 10) {
-        setFormError("Phone number must be exactly 10 digits.");
-        return;
+      // Full Name
+      if (!formData.fullName.trim()) return setFormError("Full Name is required.");
+      if (formData.fullName.trim().length < 2) return setFormError("Full Name must be at least 2 characters.");
+      if (/\d/.test(formData.fullName.trim())) return setFormError("Full Name must not contain numbers.");
+
+      // Email
+      if (!formData.email.trim()) return setFormError("Email address is required.");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) return setFormError("Please enter a valid email address.");
+
+      // Phone
+      if (!formData.phone.trim()) return setFormError("Phone number is required.");
+      if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
+        return setFormError("Phone number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
+      }
+    } else if (activeStep === 2) {
+      // First Name
+      if (!formData.firstName.trim()) return setFormError("First Name is required.");
+      if (formData.firstName.trim().length < 2) return setFormError("First Name must be at least 2 characters.");
+      if (/\d/.test(formData.firstName.trim())) return setFormError("First Name must not contain numbers.");
+
+      // Surname
+      if (!formData.surname.trim()) return setFormError("Surname is required.");
+      if (formData.surname.trim().length < 2) return setFormError("Surname must be at least 2 characters.");
+      if (/\d/.test(formData.surname.trim())) return setFormError("Surname must not contain numbers.");
+
+      // Date of Birth
+      if (!formData.dateOfBirth) return setFormError("Date of Birth is required.");
+      const dob = new Date(formData.dateOfBirth);
+      const today = new Date();
+      if (dob >= today) return setFormError("Date of Birth cannot be in the future.");
+      const age = (today - dob) / (1000 * 60 * 60 * 24 * 365.25);
+      if (age < 18) return setFormError("Employee must be at least 18 years old.");
+      if (age > 65) return setFormError("Employee age exceeds standard working limit (65 years).");
+
+      // Father's Name
+      if (!formData.fatherName.trim()) return setFormError("Father's Name is required.");
+      if (formData.fatherName.trim().length < 2) return setFormError("Father's Name must be at least 2 characters.");
+      if (/\d/.test(formData.fatherName.trim())) return setFormError("Father's Name must not contain numbers.");
+
+      // Mother's Name
+      if (!formData.motherName.trim()) return setFormError("Mother's Name is required.");
+      if (formData.motherName.trim().length < 2) return setFormError("Mother's Name must be at least 2 characters.");
+      if (/\d/.test(formData.motherName.trim())) return setFormError("Mother's Name must not contain numbers.");
+
+      // Addresses
+      if (!formData.currentAddress.trim()) return setFormError("Current Address is required.");
+      if (formData.currentAddress.trim().length < 10) return setFormError("Current Address must be at least 10 characters.");
+      if (!formData.sameAsCurrentAddress) {
+        if (!formData.permanentAddress.trim()) return setFormError("Permanent Address is required.");
+        if (formData.permanentAddress.trim().length < 10) return setFormError("Permanent Address must be at least 10 characters.");
       }
     } else if (activeStep === 5) {
-      if (formData.ifscCode && formData.ifscCode.length !== 11) {
-        setFormError("IFSC Code must be exactly 11 characters.");
-        return;
+      if (!formData.bankName.trim()) return setFormError("Bank Name is required.");
+      if (formData.bankName.trim().length < 2) return setFormError("Bank Name must be at least 2 characters.");
+      if (!formData.branchName.trim()) return setFormError("Branch Name is required.");
+      if (formData.branchName.trim().length < 2) return setFormError("Branch Name must be at least 2 characters.");
+
+      if (!formData.accountNumber.trim()) return setFormError("Account Number is required.");
+      if (formData.accountNumber.length < 9 || formData.accountNumber.length > 18) {
+        return setFormError("Bank Account Number must be between 9 and 18 digits.");
       }
-      if (formData.accountNumber && (formData.accountNumber.length < 9 || formData.accountNumber.length > 18)) {
-        setFormError("Bank Account Number must be between 9 and 18 digits.");
-        return;
+
+      if (!formData.ifscCode.trim()) return setFormError("IFSC Code is required.");
+      const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (!ifscRegex.test(formData.ifscCode.trim())) {
+        return setFormError("Invalid IFSC code format (e.g. SBIN0001234).");
       }
     } else if (activeStep === 6) {
-      if (formData.panNumber && formData.panNumber.length !== 10) {
-        setFormError("PAN Number must be exactly 10 characters.");
-        return;
+      if (formData.panNumber) {
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        if (!panRegex.test(formData.panNumber.trim())) {
+          return setFormError("Invalid PAN format (e.g. ABCDE1234F).");
+        }
       }
       if (formData.aadharNumber && formData.aadharNumber.length !== 12) {
-        setFormError("Aadhaar Number must be exactly 12 digits.");
-        return;
+        return setFormError("Aadhaar Number must be exactly 12 digits.");
       }
       if (formData.uanNumber && formData.uanNumber.length !== 12) {
-        setFormError("UAN Number must be exactly 12 digits.");
-        return;
+        return setFormError("UAN Number must be exactly 12 digits.");
       }
       if (formData.esiNumber && formData.esiNumber.length !== 17) {
-        setFormError("ESIC Number must be exactly 17 digits.");
-        return;
+        return setFormError("ESIC Number must be exactly 17 digits.");
       }
     } else if (activeStep === 7) {
-      if (formData.emergencyContactNumber && formData.emergencyContactNumber.length !== 10) {
-        setFormError("Emergency contact number must be exactly 10 digits.");
-        return;
+      if (!formData.emergencyContactName.trim()) return setFormError("Emergency Contact Name is required.");
+      if (formData.emergencyContactName.trim().length < 2) return setFormError("Emergency Contact Name must be at least 2 characters.");
+      if (/\d/.test(formData.emergencyContactName.trim())) return setFormError("Emergency Contact Name must not contain numbers.");
+
+      if (!formData.relationship.trim()) return setFormError("Relationship is required.");
+
+      if (!formData.emergencyContactNumber.trim()) return setFormError("Emergency contact number is required.");
+      if (!/^[6-9]\d{9}$/.test(formData.emergencyContactNumber.trim())) {
+        return setFormError("Emergency contact number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
       }
-      if (formData.alternateContactNumber && formData.alternateContactNumber.length !== 10) {
-        setFormError("Alternate contact number must be exactly 10 digits.");
-        return;
+      if (formData.alternateContactNumber && !/^[6-9]\d{9}$/.test(formData.alternateContactNumber.trim())) {
+        return setFormError("Alternate contact number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
       }
     }
 

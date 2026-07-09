@@ -101,8 +101,48 @@ export default function RelievingLetter({ letterheadSettings: propLetterheadSett
   }
 
   const handleGenerate = async () => {
-    if (!candidateEmail || !candidateEmail.includes('@')) {
-      setModalError('Please enter a valid candidate email address before generating.')
+    if (!candidateName || candidateName.trim().length < 2) {
+      setModalError('Employee Name must be at least 2 characters.')
+      setShowModal(true)
+      return
+    }
+    if (!selectedId || selectedId.trim() === '') {
+      setModalError('Employee ID is required.')
+      setShowModal(true)
+      return
+    }
+    if (!candidateEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateEmail.trim())) {
+      setModalError('Please enter a valid candidate email address.')
+      setShowModal(true)
+      return
+    }
+    if (!designation || designation.trim() === '') {
+      setModalError('Designation is required.')
+      setShowModal(true)
+      return
+    }
+    if (!department || department.trim() === '') {
+      setModalError('Department is required.')
+      setShowModal(true)
+      return
+    }
+    if (!joinedDate) {
+      setModalError('Joined Date is required.')
+      setShowModal(true)
+      return
+    }
+    if (!relievingDate) {
+      setModalError('Relieving Date is required.')
+      setShowModal(true)
+      return
+    }
+    if (new Date(relievingDate) < new Date(joinedDate)) {
+      setModalError('Relieving Date cannot be before Joined Date.')
+      setShowModal(true)
+      return
+    }
+    if (!hrHeadName || hrHeadName.trim().length < 2) {
+      setModalError('HR Head Signatory Name is required.')
       setShowModal(true)
       return
     }

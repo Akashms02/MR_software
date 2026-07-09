@@ -160,23 +160,14 @@ export default function LoginPage() {
         >
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-4 cursor-pointer select-none"
+            className="flex items-center cursor-pointer select-none"
             onClick={() => navigate('/')}
           >
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C8F04A] to-green-600 flex items-center justify-center shadow-lg">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#0F172A" strokeWidth="2.5" strokeLinejoin="round" />
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <div className="font-extrabold text-[28px] text-gray-900 tracking-tight leading-none">
-                GmaxepayHR
-              </div>
-              <div className="text-[11px] text-green-700 font-bold tracking-[2px] uppercase leading-none mt-1">
-                Pharma HRMS
-              </div>
-            </div>
+            <img
+              src="/landing/logo.png"
+              alt="Medistrax"
+              style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
+            />
           </motion.div>
 
           <motion.h1 variants={itemVariants} className="text-[40px] md:text-[50px] lg:text-[56px] font-extrabold text-gray-900 tracking-tight leading-[1.1]">

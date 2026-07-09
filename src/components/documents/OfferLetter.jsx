@@ -596,11 +596,63 @@ export default function OfferLetter({ letterheadSettings: propLetterheadSettings
   };
 
   const handleGenerateOfferLetter = async () => {
-    if (!email || !email.includes('@')) {
-      setModalError('Please enter a valid candidate email address before generating.');
+    if (!candidateName || candidateName.trim().length < 2) {
+      setModalError('Candidate Name must be at least 2 characters.');
       setShowModal(true);
       return;
     }
+    if (!parentName || parentName.trim().length < 2) {
+      setModalError("Father's Name must be at least 2 characters.");
+      setShowModal(true);
+      return;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setModalError('Please enter a valid candidate email address.');
+      setShowModal(true);
+      return;
+    }
+    if (!mobile || !/^[6-9]\d{9}$/.test(mobile.trim())) {
+      setModalError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      setShowModal(true);
+      return;
+    }
+    const combinedAddress = `${addressLine1} ${addressLine2} ${addressLine3}`.trim();
+    if (combinedAddress.length < 10) {
+      setModalError('Combined Address lines must be at least 10 characters.');
+      setShowModal(true);
+      return;
+    }
+    if (!designation || designation.trim() === '') {
+      setModalError('Designation is required.');
+      setShowModal(true);
+      return;
+    }
+    if (!department || department.trim() === '') {
+      setModalError('Department is required.');
+      setShowModal(true);
+      return;
+    }
+    if (!joiningDate) {
+      setModalError('Joining Date is required.');
+      setShowModal(true);
+      return;
+    }
+    if (!baseLocation || baseLocation.trim() === '') {
+      setModalError('Base Location is required.');
+      setShowModal(true);
+      return;
+    }
+    if (!salaryAmount || salaryAmount <= 0) {
+      setModalError('Monthly Salary must be a positive number.');
+      setShowModal(true);
+      return;
+    }
+    if (!hrHeadName || hrHeadName.trim().length < 2) {
+      setModalError('HR Head Signatory Name is required.');
+      setShowModal(true);
+      return;
+    }
+
     setIsGenerating(true);
     setModalError('');
     try {

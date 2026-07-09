@@ -236,13 +236,12 @@ export default function AdminLayout({ children }) {
     <div className="flex min-h-screen bg-[#F0F2F5] font-[Inter,sans-serif]">
       <aside className="w-[220px] shrink-0 bg-white flex flex-col fixed top-0 left-0 bottom-0 z-[100] shadow-[2px_0_16px_rgba(0,0,0,0.04)]">
         {/* Logo */}
-        <div className="h-[72px] flex items-center px-5 gap-2.5 shrink-0 border-b border-gray-100">
-          <div className="w-9 h-9 rounded-[10px] bg-gray-900 flex items-center justify-center shrink-0">
-            <SnowflakeLogo />
-          </div>
-          <span className="font-extrabold text-[18px] text-gray-900 tracking-tight">
-            HRMS
-          </span>
+        <div className="h-[88px] flex items-center justify-center shrink-0 border-b border-gray-100 px-3">
+          <img
+            src="/landing/logo.png"
+            alt="Medistrax"
+            style={{ height: '50px', width: 'auto', objectFit: 'contain', maxWidth: '180px' }}
+          />
         </div>
 
         {/* Navigation */}

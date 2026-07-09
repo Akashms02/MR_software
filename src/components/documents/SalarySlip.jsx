@@ -264,8 +264,53 @@ export default function SalarySlip({ letterheadSettings: propLetterheadSettings,
 
   const handleGenerate = async () => {
     const empEmail = employee.email
-    if (!empEmail || !empEmail.includes('@')) {
+    if (!empEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(empEmail.trim())) {
       setModalError("No valid email found for this employee. Please update the employee's email in the system.")
+      setShowModal(true)
+      return
+    }
+    if (!month || month.trim() === '') {
+      setModalError("Please select a valid cycle month.")
+      setShowModal(true)
+      return
+    }
+    if (earnings.length === 0) {
+      setModalError("At least one Earning component is required.")
+      setShowModal(true)
+      return
+    }
+    // Check components
+    for (let i = 0; i < earnings.length; i++) {
+      if (!earnings[i].label || earnings[i].label.trim() === '') {
+        setModalError(`Earning row #${i + 1} has an empty label.`)
+        setShowModal(true)
+        return
+      }
+      if (earnings[i].amount === '' || Number(earnings[i].amount) < 0) {
+        setModalError(`Earning row #${i + 1} amount must be 0 or positive.`)
+        setShowModal(true)
+        return
+      }
+    }
+    for (let i = 0; i < deductions.length; i++) {
+      if (!deductions[i].label || deductions[i].label.trim() === '') {
+        setModalError(`Deduction row #${i + 1} has an empty label.`)
+        setShowModal(true)
+        return
+      }
+      if (deductions[i].amount === '' || Number(deductions[i].amount) < 0) {
+        setModalError(`Deduction row #${i + 1} amount must be 0 or positive.`)
+        setShowModal(true)
+        return
+      }
+    }
+    if (gross <= 0) {
+      setModalError("Gross salary must be a positive number.")
+      setShowModal(true)
+      return
+    }
+    if (netPay < 0) {
+      setModalError("Net pay cannot be negative (deductions exceed gross earnings).")
       setShowModal(true)
       return
     }
