@@ -363,7 +363,7 @@ const MRLeavePage = () => {
 
         {/* Tab 2: Apply Leave Form */}
         {activeTab === 'new' && (
-          <form onSubmit={handleApplyLeave} className="flex flex-col gap-4 flex-1 pr-1">
+          <form onSubmit={handleApplyLeave} className="flex flex-col gap-4 flex-1 pr-2 overflow-y-auto">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
               {/* Start Date */}
               <div>

@@ -547,7 +547,7 @@ const MELeaveReviewPage = () => {
         {/* Tab 3: Apply Leave Form */}
         {activeTab === 'apply' && (
           <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
-            <form onSubmit={handleApplyLeave} className="flex flex-col gap-4 flex-1 min-h-0">
+            <form onSubmit={handleApplyLeave} className="flex flex-col gap-4 flex-1 pr-2 overflow-y-auto">
               <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
                 {/* Start Date */}
                 <div>
