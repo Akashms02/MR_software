@@ -159,10 +159,15 @@ const MedicalExecutiveDashboard = () => {
   }, [dcrError]);
 
   const handleReview = async (dcrId, status) => {
-    const remarks = remarksMap[dcrId] || (status === 'APPROVED' ? 'Approved via Executive Dashboard' : 'Rejected');
+    const remarks = remarksMap[dcrId] || '';
+    if (status === 'REJECTED' && !remarks.trim()) {
+      setLocalError('Feedback/Remarks is mandatory when rejecting a DCR report.');
+      return;
+    }
+    const finalRemarks = remarks || (status === 'APPROVED' ? 'Approved via Executive Dashboard' : 'Rejected');
     setReviewingId(dcrId);
     try {
-      await dispatch(reviewDcrAction(dcrId, status, remarks));
+      await dispatch(reviewDcrAction(dcrId, status, finalRemarks));
       dispatch(fetchTeamDcrsAction());
       setRemarksMap(prev => {
         const copy = { ...prev };
