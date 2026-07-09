@@ -109,8 +109,58 @@ export default function TerminationLetter({ letterheadSettings: propLetterheadSe
   }
 
   const handleGenerate = async () => {
-    if (!employeeEmail || !employeeEmail.includes('@')) {
-      setModalError('Please enter a valid employee email address before generating.')
+    if (!employeeName || employeeName.trim().length < 2) {
+      setModalError('Employee Name must be at least 2 characters.')
+      setShowModal(true)
+      return
+    }
+    if (!selectedId || selectedId.trim() === '') {
+      setModalError('Employee ID is required.')
+      setShowModal(true)
+      return
+    }
+    if (!employeeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employeeEmail.trim())) {
+      setModalError('Please enter a valid employee email address.')
+      setShowModal(true)
+      return
+    }
+    if (!designation || designation.trim() === '') {
+      setModalError('Designation is required.')
+      setShowModal(true)
+      return
+    }
+    if (!department || department.trim() === '') {
+      setModalError('Department is required.')
+      setShowModal(true)
+      return
+    }
+    if (!joiningDate) {
+      setModalError('Joining Date is required.')
+      setShowModal(true)
+      return
+    }
+    if (!terminationDate) {
+      setModalError('Termination Date is required.')
+      setShowModal(true)
+      return
+    }
+    if (!lastWorkingDay) {
+      setModalError('Last Working Day is required.')
+      setShowModal(true)
+      return
+    }
+    if (new Date(terminationDate) < new Date(joiningDate)) {
+      setModalError('Termination Date cannot be before Joining Date.')
+      setShowModal(true)
+      return
+    }
+    if (new Date(lastWorkingDay) < new Date(joiningDate)) {
+      setModalError('Last Working Day cannot be before Joining Date.')
+      setShowModal(true)
+      return
+    }
+    if (!hrHeadName || hrHeadName.trim().length < 2) {
+      setModalError('HR Head Signatory Name is required.')
       setShowModal(true)
       return
     }

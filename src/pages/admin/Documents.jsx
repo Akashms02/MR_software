@@ -38,8 +38,56 @@ export default function Documents() {
   }, [user])
 
   const handleSaveLetterhead = () => {
+    if (!letterheadSettings.companyName || !letterheadSettings.companyName.trim()) {
+      showToast('Company Name is required.', 'error')
+      return false
+    }
+    if (letterheadSettings.companyName.trim().length < 2) {
+      showToast('Company Name must be at least 2 characters.', 'error')
+      return false
+    }
+
+    if (!letterheadSettings.email || !letterheadSettings.email.trim()) {
+      showToast('Official Email is required.', 'error')
+      return false
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(letterheadSettings.email.trim())) {
+      showToast('Please enter a valid official email address.', 'error')
+      return false
+    }
+
+    if (!letterheadSettings.phone || !letterheadSettings.phone.trim()) {
+      showToast('Contact Phone number is required.', 'error')
+      return false
+    }
+    if (!/^[0-9\s+,;-]{10,40}$/.test(letterheadSettings.phone.trim())) {
+      showToast('Please enter a valid phone number (at least 10 digits).', 'error')
+      return false
+    }
+
+    if (!letterheadSettings.website || !letterheadSettings.website.trim()) {
+      showToast('Corporate Website is required.', 'error')
+      return false
+    }
+    const webRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+    if (!webRegex.test(letterheadSettings.website.trim())) {
+      showToast('Please enter a valid corporate website URL.', 'error')
+      return false
+    }
+
+    if (!letterheadSettings.address || !letterheadSettings.address.trim()) {
+      showToast('Registered Office Address is required.', 'error')
+      return false
+    }
+    if (letterheadSettings.address.trim().length < 10) {
+      showToast('Office Address must be at least 10 characters long.', 'error')
+      return false
+    }
+
     localStorage.setItem('custom_letterhead_settings', JSON.stringify(letterheadSettings))
     showToast('Letterhead style successfully updated!', 'success')
+    return true
   }
 
   const handleResetLetterhead = () => {
@@ -437,8 +485,9 @@ export default function Documents() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleSaveLetterhead()
-                        setShowCustomizer(false)
+                        if (handleSaveLetterhead()) {
+                          setShowCustomizer(false)
+                        }
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
                     >
@@ -537,8 +586,9 @@ export default function Documents() {
                   </button>
                   <button
                     onClick={() => {
-                      handleSaveLetterhead()
-                      setShowPreviewModal(false)
+                      if (handleSaveLetterhead()) {
+                        setShowPreviewModal(false)
+                      }
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                   >

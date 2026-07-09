@@ -282,25 +282,24 @@ const NoticeManagement = () => {
         </div>
       </div>
 
-      {/* Post Notice Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 notice-modal">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-250 relative z-10">
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 notice-modal bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => setIsModalOpen(false)} />
+          <div className="bg-white rounded-[24px] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-250 relative z-10 border border-slate-100">
             <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
               <div>
-                <h3 className="text-lg font-extrabold text-slate-900">{formData.id ? 'Edit Notice' : 'Post New Notice'}</h3>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Fill in details to publish notice</p>
+                <h3 className="text-[15px] font-extrabold text-slate-900 uppercase tracking-tight">{formData.id ? 'Edit Notice' : 'Post New Notice'}</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Fill in details to publish notice</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full text-slate-400 transition-colors border-none bg-transparent cursor-pointer">
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             <div className="p-8 max-h-[70vh] overflow-y-auto">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Notice Title</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Notice Title</label>
                   <input 
                     type="text" 
                     name="title"
@@ -308,24 +307,24 @@ const NoticeManagement = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="Enter notice title..."
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-950 font-medium"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 font-bold text-xs shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Description</label>
                   <textarea 
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
                     required
-                    rows={6}
+                    rows={4}
                     placeholder="Enter notice details..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-h-[120px] text-slate-955 font-medium"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-h-[100px] text-slate-700 font-medium text-xs resize-none shadow-sm"
                   />
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50 p-4.5 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
                   <button 
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
@@ -335,24 +334,24 @@ const NoticeManagement = () => {
                     )}
                   >
                     <div className={cn(
-                      "absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300",
-                      formData.active ? "right-0.5 left-auto" : "left-0.5"
+                      "absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 transform",
+                      formData.active ? "translate-x-4" : "translate-x-0"
                     )} />
                   </button>
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block cursor-pointer" onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}>Active Status</label>
-                    <span className="text-[10px] text-slate-400 font-medium">Toggle whether this notice is visible on dashboards</span>
+                    <label className="text-[11px] font-bold text-slate-700 block cursor-pointer" onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}>Active Status</label>
+                    <span className="text-[9px] text-slate-400 font-medium block leading-tight">Toggle notice visibility on dashboards</span>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 flex gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 border border-slate-200 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer bg-transparent">Cancel</button>
+                <div className="pt-4 border-t border-slate-100 flex gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 border border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer bg-transparent">Cancel</button>
                   <button 
                     type="submit" 
                     disabled={loading}
-                    className="flex-[2] py-3 bg-[#C8F04A] hover:bg-opacity-90 text-[#111827] font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer border-none"
+                    className="flex-[2] py-3 bg-[#C8F04A] hover:bg-opacity-90 text-[#111827] font-bold text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer border-none"
                   >
-                    {loading && <Loader2 className="animate-spin" size={16} />}
+                    {loading && <Loader2 className="animate-spin" size={12} />}
                     {formData.id ? 'Save Changes' : 'Post Notice'}
                   </button>
                 </div>

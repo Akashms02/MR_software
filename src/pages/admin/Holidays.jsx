@@ -283,7 +283,7 @@ const HolidayModal = ({ isOpen, onClose, onSubmit, holiday = null, mode = 'ADD' 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4">
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4">
             <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-gray-100">
                 <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                     <div>

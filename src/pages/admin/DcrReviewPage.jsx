@@ -229,7 +229,7 @@ const DcrReviewPage = () => {
           {stats.map((s, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-150 rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.01)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]"
+              className="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.01)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]"
             >
               <div
                 className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0"
@@ -253,7 +253,7 @@ const DcrReviewPage = () => {
         </div>
 
         {/* Applications Table */}
-        <div className="bg-white border border-gray-150 rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="bg-white rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4 shrink-0">
             <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">
               {activeTab === 'pending' ? 'Pending DCR verifications' : 'Reviewed DCR history'}

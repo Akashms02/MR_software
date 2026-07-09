@@ -87,15 +87,24 @@ const MRDcrPage = () => {
   useEffect(() => {
     dispatch(fetchMyDcrsAction());
     
-    // Fetch doctors list
+    // Fetch onboarding approved doctors list
     const fetchDoctors = async () => {
       try {
-        const res = await axios.get(`${API_ROUTE}/doctor`);
-        if (res.data && res.data.data) {
-          setDoctors(res.data.data);
+        const res = await axios.post(`${API_ROUTE}/requests/me`, { status: 'APPROVED' });
+        const list = res.data?.data || res.data || [];
+        if (Array.isArray(list)) {
+          const approvedDocs = list
+            .filter(r => String(r.type).toUpperCase() === 'DOCTOR' || r.type === 'DOCTOR')
+            .map(r => ({
+              id: r.doctorId || r.id,
+              fullName: r.name,
+              speciality: r.doctorSpeciality || 'GENERAL PHYSICIAN',
+              clinicName: r.address || r.city || ''
+            }));
+          setDoctors(approvedDocs);
         }
       } catch (err) {
-        console.warn('Failed to load doctors database, using fallback options.');
+        console.warn('Failed to load approved onboarding doctors list, using fallback options.');
       }
     };
     fetchDoctors();
@@ -416,11 +425,10 @@ const MRDcrPage = () => {
                                 <button
                                   onClick={() => handleSubmitDcr(dcr.id)}
                                   disabled={actionLoading}
-                                  title="Submit Report"
-                                  className="flex items-center gap-1 bg-[#C8F04A] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-extrabold text-[#111827] hover:opacity-90 disabled:opacity-50 transition-all duration-150"
+                                  title="Submit call report for review"
+                                  className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150"
                                 >
-                                  {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                                  Submit
+                                  <Send size={11} /> Submit
                                 </button>
                               )}
                             </div>
@@ -554,18 +562,7 @@ const MRDcrPage = () => {
                     />
                   </div>
 
-                  {/* GPS checkbox */}
-                  <div className="mt-3">
-                    <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#4B5563] cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={visit.isGpsVerified}
-                        onChange={(e) => handleVisitChange(idx, 'isGpsVerified', e.target.checked)}
-                        className="w-4 h-4 accent-gray-900"
-                      />
-                      GPS Verified Visit Coordinates (Automatic check)
-                    </label>
-                  </div>
+
                 </div>
               ))}
             </div>

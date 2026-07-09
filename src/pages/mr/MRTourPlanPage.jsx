@@ -129,6 +129,11 @@ const MRTourPlanPage = () => {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    if (!targetMonth) {
+      triggerLocalNotification('error', 'Please select a target month.');
+      return;
+    }
+
     const invalidDate = planDays.some(d => !d.plannedDate);
     const invalidTerritory = planDays.some(d => d.activityType === 'FIELD_WORK' && !d.targetTerritory);
     
@@ -138,6 +143,29 @@ const MRTourPlanPage = () => {
     }
     if (invalidTerritory) {
       triggerLocalNotification('error', 'Please specify a target territory for field work days.');
+      return;
+    }
+
+    // Verify all planned dates match the selected targetMonth (YYYY-MM)
+    const targetYearMonth = targetMonth; // Format is YYYY-MM
+    const dateMismatch = planDays.some(d => !d.plannedDate.startsWith(targetYearMonth));
+    if (dateMismatch) {
+      triggerLocalNotification('error', `All planned dates must belong to the selected month: ${formatMonthLabel(targetMonth)}.`);
+      return;
+    }
+
+    // Verify unique dates (no duplicates)
+    const plannedDates = planDays.map(d => d.plannedDate);
+    const hasDuplicates = plannedDates.some((date, index) => plannedDates.indexOf(date) !== index);
+    if (hasDuplicates) {
+      triggerLocalNotification('error', 'Each day in the tour plan must have a unique planned date.');
+      return;
+    }
+
+    // Validate territory character lengths
+    const invalidTerritoryLength = planDays.some(d => d.activityType === 'FIELD_WORK' && d.targetTerritory.trim().length < 3);
+    if (invalidTerritoryLength) {
+      triggerLocalNotification('error', 'Target territory must be at least 3 characters long for field work days.');
       return;
     }
 

@@ -70,10 +70,6 @@ body {
   overflow-x: hidden;
   max-width: 100%;
   width: 100%;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
 }
 
 #root { 
@@ -87,7 +83,6 @@ body {
 img {
   -webkit-user-drag: none;
   user-drag: none;
-  pointer-events: none;
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────── */

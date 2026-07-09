@@ -600,24 +600,101 @@ const MEDoctorOnboarding = () => {
       await handleGeocodeHomeAddress(personalPermanentAddress);
     }
 
-    // Validations
+    // ── Validations ────────────────────────────────────────────────
+
+    // Full Name
     if (!fullName.trim()) return setLocalError('Full Name is required.');
-    if (!email.trim()) return setLocalError('Email is required.');
+    if (fullName.trim().length < 2) return setLocalError('Full Name must be at least 2 characters.');
+    if (/\d/.test(fullName.trim())) return setLocalError('Full Name must not contain numbers.');
+
+    // Email
+    if (!email.trim()) return setLocalError('Email address is required.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) return setLocalError('Please enter a valid email address (e.g. doctor@example.com).');
+
+    // Phone
     if (!phone.trim()) return setLocalError('Phone number is required.');
     if (phone.trim().length !== 10) return setLocalError('Phone number must be exactly 10 digits.');
+    if (!/^[6-9]/.test(phone.trim())) return setLocalError('Phone number must start with 6, 7, 8, or 9.');
+
+    // Clinic / Pharmacy Address
     if (!personalCurrentAddress.trim()) {
       return setLocalError(role === 'DOCTOR' ? 'Clinic Address is required.' : 'Chemist Shop Address is required.');
     }
+    if (personalCurrentAddress.trim().length < 10) {
+      return setLocalError(role === 'DOCTOR' ? 'Clinic Address seems too short. Please provide a full address.' : 'Shop Address seems too short. Please provide a full address.');
+    }
+
+    // Pincode (if entered)
+    if (pincode && !/^\d{6}$/.test(pincode.trim())) {
+      return setLocalError('Pincode must be exactly 6 digits.');
+    }
 
     if (role === 'DOCTOR') {
+      // First Name
       if (!personalFirstName.trim()) return setLocalError('First Name is required.');
+      if (personalFirstName.trim().length < 2) return setLocalError('First Name must be at least 2 characters.');
+      if (/\d/.test(personalFirstName.trim())) return setLocalError('First Name must not contain numbers.');
+
+      // Surname
       if (!personalSurname.trim()) return setLocalError('Surname is required.');
+      if (personalSurname.trim().length < 2) return setLocalError('Surname must be at least 2 characters.');
+      if (/\d/.test(personalSurname.trim())) return setLocalError('Surname must not contain numbers.');
+
+      // Date of Birth
       if (!personalDateOfBirth) return setLocalError('Date of Birth is required.');
+      const dob = new Date(personalDateOfBirth);
+      const today = new Date();
+      if (dob >= today) return setLocalError('Date of Birth cannot be today or a future date.');
+      const ageInYears = (today - dob) / (1000 * 60 * 60 * 24 * 365.25);
+      if (ageInYears < 18) return setLocalError('Doctor must be at least 18 years old.');
+      if (ageInYears > 100) return setLocalError('Please enter a valid Date of Birth.');
+
+      // Father's Name
       if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
+      if (personalFatherName.trim().length < 2) return setLocalError("Father's Name must be at least 2 characters.");
+      if (/\d/.test(personalFatherName.trim())) return setLocalError("Father's Name must not contain numbers.");
+
+      // Mother's Name
       if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
+      if (personalMotherName.trim().length < 2) return setLocalError("Mother's Name must be at least 2 characters.");
+      if (/\d/.test(personalMotherName.trim())) return setLocalError("Mother's Name must not contain numbers.");
+
+      // Permanent Address (when different)
       if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
-        return setLocalError('Permanent Address is required.');
+        return setLocalError('Permanent (Home) Address is required.');
       }
+      if (!personalSameAsCurrentAddress && personalPermanentAddress.trim().length < 10) {
+        return setLocalError('Home Address seems too short. Please provide a full address.');
+      }
+    }
+
+    // Clinic Latitude & Longitude
+    if (!latitude || !/^-?\d+(\.\d+)?$/.test(latitude.trim())) {
+      return setLocalError('Clinic Latitude must be a valid number only (e.g. 13.082680). No alphabets or special characters allowed.');
+    }
+    const latNum = parseFloat(latitude);
+    if (latNum < -90 || latNum > 90) return setLocalError('Clinic Latitude must be between -90 and 90.');
+
+    if (!longitude || !/^-?\d+(\.\d+)?$/.test(longitude.trim())) {
+      return setLocalError('Clinic Longitude must be a valid number only (e.g. 80.270720). No alphabets or special characters allowed.');
+    }
+    const lngNum = parseFloat(longitude);
+    if (lngNum < -180 || lngNum > 180) return setLocalError('Clinic Longitude must be between -180 and 180.');
+
+    // Home Latitude & Longitude (when Doctor has separate home address)
+    if (role === 'DOCTOR' && !personalSameAsCurrentAddress) {
+      if (!personalLatitude || !/^-?\d+(\.\d+)?$/.test(personalLatitude.trim())) {
+        return setLocalError('Home Latitude must be a valid number only. No alphabets or special characters allowed.');
+      }
+      const homeLatNum = parseFloat(personalLatitude);
+      if (homeLatNum < -90 || homeLatNum > 90) return setLocalError('Home Latitude must be between -90 and 90.');
+
+      if (!personalLongitude || !/^-?\d+(\.\d+)?$/.test(personalLongitude.trim())) {
+        return setLocalError('Home Longitude must be a valid number only. No alphabets or special characters allowed.');
+      }
+      const homeLngNum = parseFloat(personalLongitude);
+      if (homeLngNum < -180 || homeLngNum > 180) return setLocalError('Home Longitude must be between -180 and 180.');
     }
 
     setIsSubmitting(true);
