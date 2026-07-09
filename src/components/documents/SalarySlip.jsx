@@ -962,7 +962,7 @@ export default function SalarySlip({ letterheadSettings: propLetterheadSettings,
                     ⚠️ Digitally approved computer-generated payslip.
                   </div>
                   <div className="rotate-[-4deg] rounded-md border border-emerald-250 px-3 py-1 font-bold uppercase tracking-wider text-emerald-700 text-[10px] bg-white w-fit self-end md:self-auto print:self-auto shrink-0 shadow-sm">
-                    PAID · {user?.adminReferenceCode || "GMPY"}
+                    PAID BY {companyName}
                   </div>
                 </div>
               ) : (
