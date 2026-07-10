@@ -15,6 +15,112 @@ import {
 } from '../../redux/actions/dcrActions';
 import Pagination from '../../components/common/Pagination';
 
+// Searchable target selector component (Doctors and Chemists)
+const SearchableTargetDropdown = ({ value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => `${opt.type}_${opt.id}` === value);
+
+  const filteredOptions = options.filter(opt => {
+    const term = search.toLowerCase();
+    return (
+      opt.fullName.toLowerCase().includes(term) ||
+      (opt.speciality && opt.speciality.toLowerCase().includes(term)) ||
+      (opt.clinicName && opt.clinicName.toLowerCase().includes(term)) ||
+      opt.type.toLowerCase().includes(term)
+    );
+  });
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-[13.5px] cursor-pointer flex justify-between items-center outline-none font-sans"
+      >
+        {selectedOption ? (
+          <span className="truncate">
+            <span className={`inline-block text-[10px] font-bold uppercase px-1.5 py-0.5 rounded mr-2 ${
+              selectedOption.type === 'CHEMIST' ? 'bg-[#EFF6FF] text-[#1E40AF]' : 'bg-[#ECFDF5] text-[#065F46]'
+            }`}>
+              {selectedOption.type}
+            </span>
+            <strong>{selectedOption.fullName}</strong> {selectedOption.speciality ? `(${selectedOption.speciality})` : ''}
+          </span>
+        ) : (
+          <span className="text-[#9CA3AF]">{placeholder}</span>
+        )}
+        <span className="ml-2 text-gray-400">▼</span>
+      </div>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-[2000] max-h-[250px] flex flex-col overflow-hidden animate-[fadeIn_0.15s_ease-out] w-full">
+          <div className="p-2 border-b border-gray-100 shrink-0">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, speciality, clinic or type..."
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-[12.5px] outline-none focus:border-[#C8F04A] font-sans"
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {filteredOptions.length === 0 ? (
+              <div className="px-4 py-3 text-[12.5px] text-[#9CA3AF] text-center">No targets found</div>
+            ) : (
+              filteredOptions.map((opt) => {
+                const optVal = `${opt.type}_${opt.id}`;
+                const isSelected = optVal === value;
+                return (
+                  <div
+                    key={optVal}
+                    onClick={() => {
+                      onChange(optVal);
+                      setSearch('');
+                      setIsOpen(false);
+                    }}
+                    className={`px-4 py-2.5 text-[12.5px] cursor-pointer flex flex-col gap-0.5 border-b border-gray-50 last:border-none transition-colors text-left ${
+                      isSelected ? 'bg-[#F3F4F6] font-bold' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-[#111827]">{opt.fullName}</span>
+                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                        opt.type === 'CHEMIST' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#ECFDF5] text-[#047857]'
+                      }`}>
+                        {opt.type}
+                      </span>
+                    </div>
+                    {opt.speciality && (
+                      <div className="text-[11px] text-gray-550 truncate">{opt.speciality}</div>
+                    )}
+                    {opt.clinicName && (
+                      <div className="text-[11px] text-gray-400 truncate">{opt.clinicName}</div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MRDcrPage = () => {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -87,24 +193,34 @@ const MRDcrPage = () => {
   useEffect(() => {
     dispatch(fetchMyDcrsAction());
     
-    // Fetch onboarding approved doctors list
+    // Fetch onboarding approved doctors and chemists list
     const fetchDoctors = async () => {
       try {
-        const res = await axios.post(`${API_ROUTE}/requests/me`, { status: 'APPROVED' });
-        const list = res.data?.data || res.data || [];
-        if (Array.isArray(list)) {
-          const approvedDocs = list
-            .filter(r => String(r.type).toUpperCase() === 'DOCTOR' || r.type === 'DOCTOR')
-            .map(r => ({
-              id: r.doctorId || r.id,
-              fullName: r.name,
-              speciality: r.doctorSpeciality || 'GENERAL PHYSICIAN',
-              clinicName: r.address || r.city || ''
-            }));
-          setDoctors(approvedDocs);
+        const res = await axios.get(`${API_ROUTE}/doctor/unified-contacts`);
+        if (res.data && (res.data.success || res.data.status === true) && res.data.data) {
+          const dataObj = res.data.data;
+          const doctorsList = Array.isArray(dataObj.doctors) 
+            ? dataObj.doctors.map(d => ({ 
+                id: d.id, 
+                fullName: d.fullName,
+                speciality: d.speciality || 'GENERAL PHYSICIAN',
+                clinicName: d.clinicName || d.address || '',
+                type: 'DOCTOR'
+              })) 
+            : [];
+          const chemistsList = Array.isArray(dataObj.chemists) 
+            ? dataObj.chemists.map(c => ({ 
+                id: c.id, 
+                fullName: c.name || c.fullName || 'Unknown Chemist',
+                speciality: c.contactPerson ? `Chemist (Contact: ${c.contactPerson})` : 'Chemist',
+                clinicName: c.address || '',
+                type: 'CHEMIST'
+              })) 
+            : [];
+          setDoctors([...doctorsList, ...chemistsList]);
         }
       } catch (err) {
-        console.warn('Failed to load approved onboarding doctors list, using fallback options.');
+        console.warn('Failed to load approved targets, using fallback options.');
       }
     };
     fetchDoctors();
@@ -132,7 +248,7 @@ const MRDcrPage = () => {
   // Form: Remove visit card
   const removeVisitField = (idx) => {
     if (visits.length === 1) {
-      triggerLocalNotification('error', 'A DCR report must contain at least one doctor visit.');
+      triggerLocalNotification('error', 'A DCR report must contain at least one visit.');
       return;
     }
     setVisits(visits.filter((_, i) => i !== idx));
@@ -154,22 +270,44 @@ const MRDcrPage = () => {
     // Validate fields
     const invalid = visits.some(v => !v.doctorId);
     if (invalid) {
-      triggerLocalNotification('error', 'Please select a doctor for all listed visits.');
+      triggerLocalNotification('error', 'Please select a doctor or chemist for all listed visits.');
       return;
     }
 
     setActionLoading(true);
     try {
+      const doctorVisits = [];
+      const chemistVisits = [];
+
+      visits.forEach(v => {
+        const [type, idStr] = v.doctorId.split('_');
+        const id = parseInt(idStr);
+        const visitTimeFormatted = v.visitTime.length === 5 ? v.visitTime + ':00' : v.visitTime;
+        
+        if (type === 'CHEMIST') {
+          chemistVisits.push({
+            chemistId: id,
+            visitTime: visitTimeFormatted,
+            productsDiscussed: v.productsDiscussed,
+            feedback: v.feedback,
+            isGpsVerified: v.isGpsVerified !== false
+          });
+        } else {
+          doctorVisits.push({
+            doctorId: id,
+            visitTime: visitTimeFormatted,
+            productsDiscussed: v.productsDiscussed,
+            samplesGiven: v.samplesGiven,
+            feedback: v.feedback,
+            isGpsVerified: v.isGpsVerified !== false
+          });
+        }
+      });
+
       const draftPayload = {
         reportDate,
-        visits: visits.map(v => ({
-          doctorId: parseInt(v.doctorId),
-          visitTime: v.visitTime + ':00', // Format to HH:MM:SS
-          productsDiscussed: v.productsDiscussed,
-          samplesGiven: v.samplesGiven,
-          feedback: v.feedback,
-          isGpsVerified: v.isGpsVerified
-        }))
+        visits: doctorVisits,
+        chemistVisits: chemistVisits
       };
 
       // 1. Dispatch save action
@@ -224,15 +362,27 @@ const MRDcrPage = () => {
   };
 
   const startEditingInModal = () => {
-    setModalVisits((currentDcr.visits || []).map(v => ({
+    const mappedDocVisits = (currentDcr.visits || []).map(v => ({
       id: v.id,
-      doctorId: v.doctorId || '',
+      doctorId: `DOCTOR_${v.doctorId || v.id}`,
       visitTime: v.visitTime ? v.visitTime.slice(0, 5) : '10:00',
       productsDiscussed: v.productsDiscussed || '',
       samplesGiven: v.samplesGiven || '',
       feedback: v.feedback || '',
       isGpsVerified: v.isGpsVerified !== false
-    })));
+    }));
+
+    const mappedChemistVisits = (currentDcr.chemistVisits || []).map(v => ({
+      id: v.id,
+      doctorId: `CHEMIST_${v.chemistId || v.id}`,
+      visitTime: v.visitTime ? v.visitTime.slice(0, 5) : '10:00',
+      productsDiscussed: v.productsDiscussed || '',
+      samplesGiven: '',
+      feedback: v.feedback || '',
+      isGpsVerified: v.isGpsVerified !== false
+    }));
+
+    setModalVisits([...mappedDocVisits, ...mappedChemistVisits]);
     setIsEditingModal(true);
   };
 
@@ -251,7 +401,7 @@ const MRDcrPage = () => {
 
   const removeModalVisitField = (idx) => {
     if (modalVisits.length === 1) {
-      triggerLocalNotification('error', 'A DCR report must contain at least one doctor visit.');
+      triggerLocalNotification('error', 'A DCR report must contain at least one visit.');
       return;
     }
     setModalVisits(modalVisits.filter((_, i) => i !== idx));
@@ -264,22 +414,44 @@ const MRDcrPage = () => {
 
     const invalid = modalVisits.some(v => !v.doctorId);
     if (invalid) {
-      triggerLocalNotification('error', 'Please select a doctor for all listed visits.');
+      triggerLocalNotification('error', 'Please select a doctor or chemist for all listed visits.');
       return;
     }
 
     setActionLoading(true);
     try {
+      const doctorVisits = [];
+      const chemistVisits = [];
+
+      modalVisits.forEach(v => {
+        const [type, idStr] = String(v.doctorId).includes('_') ? v.doctorId.split('_') : ['DOCTOR', v.doctorId];
+        const id = parseInt(idStr);
+        const visitTimeFormatted = v.visitTime.length === 5 ? v.visitTime + ':00' : v.visitTime;
+        
+        if (type === 'CHEMIST') {
+          chemistVisits.push({
+            chemistId: id,
+            visitTime: visitTimeFormatted,
+            productsDiscussed: v.productsDiscussed,
+            feedback: v.feedback,
+            isGpsVerified: v.isGpsVerified !== false
+          });
+        } else {
+          doctorVisits.push({
+            doctorId: id,
+            visitTime: visitTimeFormatted,
+            productsDiscussed: v.productsDiscussed,
+            samplesGiven: v.samplesGiven,
+            feedback: v.feedback,
+            isGpsVerified: v.isGpsVerified !== false
+          });
+        }
+      });
+
       const payload = {
         reportDate: currentDcr.reportDate,
-        visits: modalVisits.map(v => ({
-          doctorId: parseInt(v.doctorId),
-          visitTime: v.visitTime.length === 5 ? v.visitTime + ':00' : v.visitTime,
-          productsDiscussed: v.productsDiscussed,
-          samplesGiven: v.samplesGiven,
-          feedback: v.feedback,
-          isGpsVerified: v.isGpsVerified
-        }))
+        visits: doctorVisits,
+        chemistVisits: chemistVisits
       };
 
       const res = await dispatch(saveDcrDraftAction(payload));
@@ -316,10 +488,11 @@ const MRDcrPage = () => {
 
   // Fallback doctors list if API is empty
   const doctorListOptions = doctors.length > 0 ? doctors : [
-    { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic' },
-    { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital' },
-    { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care' },
-    { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic' },
+    { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
+    { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
+    { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
+    { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' },
+    { id: 202, fullName: 'Strange Remedies Pharmacy', speciality: 'Chemist (Contact: Wong)', clinicName: 'Bleecker Street', type: 'CHEMIST' },
   ];
 
   return (
@@ -491,24 +664,17 @@ const MRDcrPage = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-5 mb-4">
-                    {/* Doctor selection */}
+                    {/* Target selection */}
                     <div>
                       <label className="block text-[12px] font-bold text-[#374151] mb-1.5">
-                        Select Doctor <span className="text-[#EF4444]">*</span>
+                        Select Doctor / Chemist <span className="text-[#EF4444]">*</span>
                       </label>
-                      <select
+                      <SearchableTargetDropdown
                         value={visit.doctorId}
-                        onChange={(e) => handleVisitChange(idx, 'doctorId', e.target.value)}
-                        required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] bg-white outline-none font-sans"
-                      >
-                        <option value="">Choose healthcare professional...</option>
-                        {doctorListOptions.map((doc) => (
-                          <option key={doc.id} value={doc.id}>
-                            {doc.fullName} ({doc.speciality || 'GENERAL'}) - {doc.clinicName || doc.hospitalName}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleVisitChange(idx, 'doctorId', val)}
+                        options={doctorListOptions}
+                        placeholder="Choose healthcare professional or pharmacy..."
+                      />
                     </div>
 
                     {/* Visit time */}
@@ -528,7 +694,7 @@ const MRDcrPage = () => {
 
                   <div className="grid grid-cols-2 gap-5 mb-4">
                     {/* Products discussed */}
-                    <div>
+                    <div className={String(visit.doctorId || '').startsWith('CHEMIST_') ? "col-span-2" : "col-span-1"}>
                       <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Products Promoted</label>
                       <input
                         type="text"
@@ -539,16 +705,18 @@ const MRDcrPage = () => {
                       />
                     </div>
                     {/* Samples given */}
-                    <div>
-                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Samples / Literature Distributed</label>
-                      <input
-                        type="text"
-                        value={visit.samplesGiven}
-                        onChange={(e) => handleVisitChange(idx, 'samplesGiven', e.target.value)}
-                        placeholder="e.g. Cardace (10 Tabs), Visual Aid brochures"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
-                      />
-                    </div>
+                    {!String(visit.doctorId || '').startsWith('CHEMIST_') && (
+                      <div className="col-span-1">
+                        <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Samples / Literature Distributed</label>
+                        <input
+                          type="text"
+                          value={visit.samplesGiven}
+                          onChange={(e) => handleVisitChange(idx, 'samplesGiven', e.target.value)}
+                          placeholder="e.g. Cardace (10 Tabs), Visual Aid brochures"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -651,20 +819,13 @@ const MRDcrPage = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Select Doctor *</label>
-                          <select
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Select Doctor / Chemist *</label>
+                          <SearchableTargetDropdown
                             value={visit.doctorId}
-                            onChange={(e) => handleModalVisitChange(idx, 'doctorId', e.target.value)}
-                            required
-                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] bg-white outline-none font-sans"
-                          >
-                            <option value="">Choose doctor...</option>
-                            {doctorListOptions.map((doc) => (
-                              <option key={doc.id} value={doc.id}>
-                                {doc.fullName} ({doc.speciality || 'GENERAL'})
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(val) => handleModalVisitChange(idx, 'doctorId', val)}
+                            options={doctorListOptions}
+                            placeholder="Choose doctor or chemist..."
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] font-bold text-[#374151] mb-1">Visit Time *</label>
@@ -678,7 +839,7 @@ const MRDcrPage = () => {
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
+                        <div className={String(visit.doctorId || '').startsWith('CHEMIST_') ? "col-span-2" : "col-span-1"}>
                           <label className="block text-[11px] font-bold text-[#374151] mb-1">Products Promoted</label>
                           <input
                             type="text"
@@ -687,15 +848,17 @@ const MRDcrPage = () => {
                             className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
                           />
                         </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Distributed Samples</label>
-                          <input
-                            type="text"
-                            value={visit.samplesGiven}
-                            onChange={(e) => handleModalVisitChange(idx, 'samplesGiven', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
-                          />
-                        </div>
+                        {!String(visit.doctorId || '').startsWith('CHEMIST_') && (
+                          <div className="col-span-1">
+                            <label className="block text-[11px] font-bold text-[#374151] mb-1">Distributed Samples</label>
+                            <input
+                              type="text"
+                              value={visit.samplesGiven}
+                              onChange={(e) => handleModalVisitChange(idx, 'samplesGiven', e.target.value)}
+                              className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="block text-[11px] font-bold text-[#374151] mb-1">Feedback / Notes</label>
@@ -713,11 +876,11 @@ const MRDcrPage = () => {
                   <div className="flex flex-col gap-3.5">
                     <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Doctor Visit Logs ({currentDcr.visits?.length || 0})</div>
                     {currentDcr.visits?.map((visit, index) => {
-                      const doc = doctorListOptions.find(d => d.id === visit.doctorId) || { fullName: `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
+                      const doc = doctorListOptions.find(d => Number(d.id) === Number(visit.doctorId) && d.type === 'DOCTOR') || { fullName: visit.doctorName || `Doctor ID: ${visit.doctorId}`, speciality: '', clinicName: '' };
                       return (
                         <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
                           <div className="flex justify-between items-center mb-2.5">
-                            <span className="text-[14px] font-bold text-[#1F2937]">{visit.doctorName || doc.fullName}</span>
+                            <span className="text-[14px] font-bold text-[#1F2937]">{doc.fullName}</span>
                             <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
                               <Clock size={12} className="text-[#9CA3AF]" />
                               {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
@@ -729,8 +892,8 @@ const MRDcrPage = () => {
                               Specialty: <span className="text-[#4B5563] font-semibold">{visit.speciality || doc.speciality}</span> • Clinic: <span className="text-[#4B5563] font-semibold">{doc.clinicName || 'N/A'}</span>
                             </div>
                           )}
-
-                          <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+ 
+                           <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
                             <div>
                               <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
                               <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
@@ -740,15 +903,15 @@ const MRDcrPage = () => {
                               <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.samplesGiven || '—'}</div>
                             </div>
                           </div>
-
-                          <div className="border-t border-[#F3F4F6] pt-2">
+ 
+                           <div className="border-t border-[#F3F4F6] pt-2">
                             <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
                             <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
                               {visit.feedback || 'No feedback details logged.'}
                             </div>
                           </div>
-
-                          {visit.isGpsVerified && (
+ 
+                           {visit.isGpsVerified && (
                             <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
                               <MapPin size={10} /> GPS COORDINATES RECORDED
                             </div>
@@ -757,48 +920,51 @@ const MRDcrPage = () => {
                       );
                     })}
                   </div>
-
-                  {/* Chemist Visits list */}
+ 
+                   {/* Chemist Visits list */}
                   {currentDcr.chemistVisits && currentDcr.chemistVisits.length > 0 && (
                     <div className="flex flex-col gap-3.5 mt-4 border-t border-[#F3F4F6] pt-4">
                       <div className="text-[12px] font-extrabold text-[#9CA3AF] uppercase tracking-wider">Chemist Visit Logs ({currentDcr.chemistVisits.length})</div>
-                      {currentDcr.chemistVisits.map((visit, index) => (
-                        <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
-                          <div className="flex justify-between items-center mb-2.5">
-                            <span className="text-[14px] font-bold text-[#1F2937]">{visit.chemistName || `Chemist ID: ${visit.chemistId}`}</span>
-                            <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
-                              <Clock size={12} className="text-[#9CA3AF]" />
-                              {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
-                            </span>
+                      {currentDcr.chemistVisits.map((visit, index) => {
+                        const chem = doctorListOptions.find(d => Number(d.id) === Number(visit.chemistId) && d.type === 'CHEMIST') || { fullName: visit.chemistName || `Chemist ID: ${visit.chemistId}`, clinicName: '' };
+                        return (
+                          <div key={index} className="border-[1.5px] border-[#F3F4F6] p-4 rounded-xl bg-[#FAFAFA]">
+                            <div className="flex justify-between items-center mb-2.5">
+                              <span className="text-[14px] font-bold text-[#1F2937]">{chem.fullName}</span>
+                              <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
+                                <Clock size={12} className="text-[#9CA3AF]" />
+                                {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                              </span>
+                            </div>
+                            
+                            {(visit.address || chem.clinicName) && (
+                              <div className="text-[11px] text-[#9CA3AF] mb-2">
+                                Address: <span className="text-[#4B5563] font-semibold">{visit.address || chem.clinicName}</span>
+                              </div>
+                            )}
+  
+                            <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
+                              <div className="col-span-2">
+                                <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
+                                <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
+                              </div>
+                            </div>
+  
+                            <div className="border-t border-[#F3F4F6] pt-2">
+                              <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
+                              <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
+                                {visit.feedback || 'No feedback details logged.'}
+                              </div>
+                            </div>
+  
+                            {visit.isGpsVerified && (
+                              <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
+                                <MapPin size={10} /> GPS COORDINATES RECORDED
+                              </div>
+                            )}
                           </div>
-                          
-                          {visit.address && (
-                            <div className="text-[11px] text-[#9CA3AF] mb-2">
-                              Address: <span className="text-[#4B5563] font-semibold">{visit.address}</span>
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-3 mb-2.5 border-t border-[#F3F4F6] pt-2">
-                            <div className="col-span-2">
-                              <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Promoted Products</div>
-                              <div className="text-[12.5px] text-[#374151] font-medium mt-0.5">{visit.productsDiscussed || '—'}</div>
-                            </div>
-                          </div>
-
-                          <div className="border-t border-[#F3F4F6] pt-2">
-                            <div className="text-[10.5px] font-bold text-[#9CA3AF] uppercase">Feedback Details</div>
-                            <div className={`text-[12.5px] text-[#4B5563] mt-0.5 ${visit.feedback ? '' : 'italic'}`}>
-                              {visit.feedback || 'No feedback details logged.'}
-                            </div>
-                          </div>
-
-                          {visit.isGpsVerified && (
-                            <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
-                              <MapPin size={10} /> GPS COORDINATES RECORDED
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>

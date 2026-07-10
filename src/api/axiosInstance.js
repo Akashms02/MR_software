@@ -532,7 +532,8 @@ axios.interceptors.request.use(
               reportDate: body.reportDate,
               status: 'DRAFT',
               remarks: '',
-              visits: body.visits || []
+              visits: body.visits || [],
+              chemistVisits: body.chemistVisits || []
             };
             dcrs.push(newDcr);
             localStorage.setItem('mock_dcrs', JSON.stringify(dcrs));
