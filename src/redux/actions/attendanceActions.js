@@ -105,10 +105,13 @@ export const fetchTeamAttendanceAction = () => async (dispatch) => {
   dispatch({ type: FETCH_TEAM_ATTENDANCE_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/attendance/team`);
-    const payloadData = response.data?.data || response.data || [];
+    const rawData = response.data?.data || response.data || [];
+    const payloadData = Array.isArray(rawData) 
+      ? rawData 
+      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
     dispatch({
       type: FETCH_TEAM_ATTENDANCE_SUCCESS,
-      payload: Array.isArray(payloadData) ? payloadData : [],
+      payload: payloadData,
     });
     return response.data;
   } catch (error) {
@@ -187,10 +190,13 @@ export const fetchTeamVisitsAction = () => async (dispatch) => {
   dispatch({ type: FETCH_TEAM_VISITS_REQUEST });
   try {
     const response = await axios.get(`${API_ROUTE}/attendance/location/team`);
-    const payloadData = response.data?.data || response.data || [];
+    const rawData = response.data?.data || response.data || [];
+    const payloadData = Array.isArray(rawData) 
+      ? rawData 
+      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
     dispatch({
       type: FETCH_TEAM_VISITS_SUCCESS,
-      payload: Array.isArray(payloadData) ? payloadData : [],
+      payload: payloadData,
     });
     return response.data;
   } catch (error) {
