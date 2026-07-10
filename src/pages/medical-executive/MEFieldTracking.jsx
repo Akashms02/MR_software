@@ -44,7 +44,7 @@ function VisitHistoryModal({ target, mrName, onClose }) {
             mrId: target.mrId
           }
         });
-        if (res.data && res.data.success) {
+        if (res.data && (res.data.success || res.data.status === true)) {
           setHistory(res.data.data || []);
         }
       } catch (err) {

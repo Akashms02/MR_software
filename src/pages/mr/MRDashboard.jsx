@@ -220,7 +220,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
             targetId: selectedId
           }
         });
-        if (res.data && res.data.success && res.data.data && res.data.data.length > 0) {
+        if (res.data && (res.data.success || res.data.status === true) && res.data.data && res.data.data.length > 0) {
           setLastVisit(res.data.data[0]);
         } else {
           setLastVisit(null);
