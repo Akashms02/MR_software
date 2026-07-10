@@ -1001,7 +1001,7 @@ const MRDcrPage = () => {
                 </>
               ) : (
                 <>
-                  {currentDcr.status === 'REJECTED' && (
+                  {(currentDcr.status === 'REJECTED' || currentDcr.status === 'DRAFT') && (
                     <button
                       onClick={startEditingInModal}
                       className="bg-[#C8F04A] text-[#111827] border-none px-[22px] py-2.5 rounded-xl font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.2)] hover:opacity-90 transition-all duration-155"
