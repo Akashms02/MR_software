@@ -581,8 +581,8 @@ const MRDcrPage = () => {
                             </span>
                           </td>
                           {/* Remarks */}
-                          <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {dcr.remarks || '—'}
+                          <td className="px-4 py-4 text-[13px] text-[#6B7280] italic max-w-[280px] overflow-hidden text-ellipsis whitespace-nowrap" title={dcr.managerRemarks || dcr.remarks || ''}>
+                            {dcr.managerRemarks || dcr.remarks || '—'}
                           </td>
                           {/* Actions */}
                           <td className="px-4 py-4">
@@ -785,10 +785,10 @@ const MRDcrPage = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
               {/* Manager remarks if reviewed */}
-              {currentDcr.remarks && (
+              {(currentDcr.managerRemarks || currentDcr.remarks) && (
                 <div className="bg-[#FFFBEB] border border-[#FDE68A] p-3.5 rounded-xl">
                   <div className="text-[11px] font-extrabold text-[#B45309] uppercase tracking-wider">Manager Feedback Remarks</div>
-                  <div className="text-[13px] text-[#78350F] mt-1 italic">"{currentDcr.remarks}"</div>
+                  <div className="text-[13px] text-[#78350F] mt-1 italic">"{currentDcr.managerRemarks || currentDcr.remarks}"</div>
                 </div>
               )}
 
