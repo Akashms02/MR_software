@@ -476,8 +476,7 @@ export default function SalarySlip({ letterheadSettings: propLetterheadSettings,
       formData.append('otherDeductions', '0')
       formData.append('tds', '0')
 
-      const queryParams = monthName && yearStr ? `?month=${monthName}&year=${yearStr}` : ''
-      const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData, queryParams))
+      const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData))
 
       if (res?.data) {
         setModalData({
