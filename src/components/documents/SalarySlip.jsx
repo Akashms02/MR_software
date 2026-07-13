@@ -469,6 +469,12 @@ export default function SalarySlip({ letterheadSettings: propLetterheadSettings,
       const formData = new FormData()
       formData.append('email', empEmail)
       formData.append('file', pdfBlob, fileName)
+      formData.append('month', monthName || '')
+      formData.append('year', yearStr || '')
+      formData.append('lopDays', '0')
+      formData.append('bonus', '0')
+      formData.append('otherDeductions', '0')
+      formData.append('tds', '0')
 
       const queryParams = monthName && yearStr ? `?month=${monthName}&year=${yearStr}` : ''
       const res = await dispatch(CompanyPayslip(employee.employeeId || selectedId, formData, queryParams))

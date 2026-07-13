@@ -41,9 +41,7 @@ export const editCompanyData = (adminId, payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_EDIT_DATA_REQUEST_REQUEST });
   try {
-    const config = payload instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } }
-      : {};
+    const config = {};
     const response = await axios.put(`${API_ROUTE}/admin/company/${adminId}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
@@ -73,9 +71,7 @@ export const CompanyOfferLetter = (payload) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_OFFER_LETTER_GENERATE_REQUEST });
   try {
-    const config = payload instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } }
-      : {};
+    const config = {};
     const response = await axios.post(`${API_ROUTE}/admin/offer-letter/generate`, payload, config);
     const { status, message, data } = response.data ?? {};
 
@@ -105,9 +101,7 @@ export const CompanyPayslip = (employeeId, payload, queryParams = "") => async (
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_PAYSLIP_GENERATE_REQUEST });
   try {
-    const config = payload instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } }
-      : {};
+    const config = {};
     const response = await axios.post(`${API_ROUTE}/admin/payslip/generate/${employeeId}${queryParams}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
@@ -137,9 +131,7 @@ export const CompanyReleivingLetter = (employeeId, payload) => async (dispatch) 
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_RELEIVING_LETTER_GENERATE_REQUEST });
   try {
-    const config = payload instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } }
-      : {};
+    const config = {};
     const response = await axios.post(`${API_ROUTE}/admin/relieving-letter/generate/${employeeId}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
@@ -169,9 +161,7 @@ export const CompanyTerminationLetter = (employeeId, payload) => async (dispatch
   dispatch({ type: LOADING_START });
   dispatch({ type: COMPANY_TERMINATION_LETTER_GENERATE_REQUEST });
   try {
-    const config = payload instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } }
-      : {};
+    const config = {};
     const response = await axios.post(`${API_ROUTE}/admin/termination-letter/generate/${employeeId}`, payload, config);
     const { status, message, data } = response.data ?? {};
 
