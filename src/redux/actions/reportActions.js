@@ -435,3 +435,45 @@ export const getDistributorsList = () => async (dispatch) => {
     dispatch({ type: LOADING_END });
   }
 };
+
+export const uploadDistributorSalesExcel = (distributorName, file) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const formData = new FormData();
+    formData.append("distributorName", distributorName);
+    formData.append("file", file);
+
+    const response = await axios.post(
+      `${API_ROUTE}/mr/distributors/sales/upload`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    const resData = response?.data ?? {};
+    if (resData.status === true || response.status === 200) {
+      return { success: true, data: resData };
+    }
+    return { success: false, error: resData.message || commonError };
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || commonError;
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const downloadDistributorSalesSample = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(
+      `${API_ROUTE}/mr/distributors/sales/sample`,
+      { responseType: "blob" }
+    );
+    return { success: true, data: response.data, headers: response.headers };
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || commonError;
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};

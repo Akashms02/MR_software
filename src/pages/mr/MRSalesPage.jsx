@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from '../../api/axiosInstance';
-import { API_ROUTE } from '../../data/env';
+import { useDispatch, useSelector } from 'react-redux';
+import { getDistributorsList, uploadDistributorSalesExcel, downloadDistributorSalesSample } from '../../redux/actions/reportActions';
 import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '../../context/ToastContext';
 
 const MRSalesPage = () => {
-  const [distributors, setDistributors] = useState([]);
+  const dispatch = useDispatch();
+  const { distributorsList, loading } = useSelector((state) => state.reports || {});
+  const { user } = useSelector((state) => state.auth || {});
+  const distributors = Array.isArray(distributorsList) ? distributorsList : [];
+
   const [selectedDistributorId, setSelectedDistributorId] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +18,6 @@ const MRSalesPage = () => {
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
 
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useToast();
   const [errorMsg, _setErrorMsg] = useState(null);
@@ -29,28 +32,23 @@ const MRSalesPage = () => {
     if (msg) showToast(msg, 'error');
   };
 
-  // Fetch Distributors list on mount
+  // Fetch Distributors list on mount via Redux
   useEffect(() => {
     const fetchDistributors = async () => {
-      setLoading(true);
       setErrorMsg(null);
       try {
-        const response = await axios.get(`${API_ROUTE}/mr/distributors`);
-        const rawData = response.data?.data || response.data;
-        const list = Array.isArray(rawData) 
-          ? rawData 
-          : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
-        setDistributors(list);
+        const result = await dispatch(getDistributorsList());
+        if (!result.success) {
+          setErrorMsg(result.error || 'Failed to load distributors.');
+        }
       } catch (err) {
         console.error('Failed to fetch distributors:', err);
         setErrorMsg('Failed to load distributors. Please check your connection.');
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchDistributors();
-  }, []);
+  }, [dispatch]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -164,29 +162,59 @@ const MRSalesPage = () => {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    const formData = new FormData();
-    formData.append('distributorName', finalDistributorName);
-    formData.append('file', file);
-
     try {
-      const response = await axios.post(`${API_ROUTE}/mr/distributors/sales/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setSuccessMsg('Sales spreadsheet uploaded successfully!');
-      // Reset form
-      setSelectedDistributorId('');
-      setInputValue('');
-      setFile(null);
-      setPreviewData([]);
+      const result = await dispatch(uploadDistributorSalesExcel(finalDistributorName, file));
+      if (result.success) {
+        setSuccessMsg('Sales spreadsheet uploaded successfully!');
+        // Reset form
+        setSelectedDistributorId('');
+        setInputValue('');
+        setFile(null);
+        setPreviewData([]);
+      } else {
+        setErrorMsg(`Upload failed: ${result.error}`);
+      }
     } catch (err) {
       console.error('Upload failed:', err);
-      const errDetail = err.response?.data?.message || err.message || 'Server error occurred during upload.';
-      setErrorMsg(`Upload failed: ${errDetail}`);
+      setErrorMsg('Upload failed: An error occurred.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDownloadSample = async () => {
+    try {
+      const result = await dispatch(downloadDistributorSalesSample());
+      if (result.success) {
+        const url = window.URL.createObjectURL(new Blob([result.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Parse filename from Content-Disposition header
+        const contentDisposition = result.headers?.['content-disposition'];
+        let filename = 'sample_sales.xlsx';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?([^";\n\r]+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1];
+          }
+        } else if (user) {
+          const rawName = user.fullName || user.clientId || 'Company';
+          const sanitizedName = rawName.replace(/[^a-zA-Z0-9_-]/g, '_');
+          filename = `${sanitizedName}_sales_template.xlsx`;
+        }
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        showToast('Sample template downloaded successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to download sample template.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to download sample template:', err);
+      showToast('Failed to download sample template. Please try again.', 'error');
     }
   };
 
@@ -299,9 +327,19 @@ const MRSalesPage = () => {
 
           {/* Excel File Upload Drag & Drop */}
           <div className="flex flex-col gap-1.5">
-            <label className="block text-[12px] font-bold text-gray-755 uppercase tracking-wider">
-              Upload Excel Spreadsheet <span className="text-rose-500">*</span>
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="block text-[12px] font-bold text-gray-755 uppercase tracking-wider">
+                Upload Excel Spreadsheet <span className="text-rose-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleDownloadSample}
+                className="text-[11.5px] font-extrabold text-[#4F46E5] hover:text-[#3730A3] transition-colors flex items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
+              >
+                <FileSpreadsheet size={13} />
+                Download Sample Template
+              </button>
+            </div>
             
             {!file ? (
               <label className="border-2 border-dashed border-gray-200 rounded-2xl p-8 bg-gray-50/50 hover:bg-gray-50 flex flex-col items-center justify-center gap-3 cursor-pointer group transition-all duration-200">
