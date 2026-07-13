@@ -6,32 +6,25 @@ import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { getMyTeam } from '../../redux/actions/teamActions';
 import { fetchTeamAttendanceAction, fetchTeamVisitsAction } from '../../redux/actions/attendanceActions';
-import { parseCoord, visitCheckInCoords, visitCheckOutCoords } from '../../utils/attendanceUtils';
+import { parseCoord, visitCheckInCoords, visitCheckOutCoords, isSameCalendarDay } from '../../utils/attendanceUtils';
 import { 
   Users, MapPin, CheckCircle, Clock, Navigation, 
   Map, Award, Calendar, RefreshCw, BarChart2, Eye, ShieldAlert,
   ChevronRight, Camera, Search, UserCheck, Square, X, Loader2
 } from 'lucide-react';
 
-// Inline SVG base64 Marker Icons for Leaflet to prevent asset loading bugs
-const BLUE_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
-    <path fill="%233B82F6" stroke="%23FFFFFF" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-  </svg>
-`);
-
-const GREEN_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-    <path fill="%2310B981" stroke="%23FFFFFF" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-  </svg>
-`);
-
-const RED_PIN = "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="34" height="34">
-    <path fill="%23EF4444" stroke="%23FFFFFF" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-    <circle cx="12" cy="9" r="2" fill="%23FFFFFF"/>
-  </svg>
-`);
+const getLatLngDistanceMeters = (lat1, lon1, lat2, lon2) => {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return 0;
+  const R = 6371000; // Radius of Earth in meters
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 // ─── Visit History Modal (Admin View) ───────────────────────────────────────
 function VisitHistoryModal({ target, mrName, onClose }) {
@@ -300,7 +293,7 @@ export default function MSEFieldTracking() {
       const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
       const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
       return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
-             a.punchInTime && isSameDay(a.punchInTime, selectedDate);
+             a.punchInTime && isSameCalendarDay(a.punchInTime, selectedDate);
     });
   }, [teamAttendance, selectedMrId, selectedMrProfile, selectedDate]);
 
@@ -312,7 +305,7 @@ export default function MSEFieldTracking() {
       const matchesProfileId = selectedMrProfile?.id && logMrId === String(selectedMrProfile.id);
       const matchesProfileEmployeeId = selectedMrProfile?.employeeId && logMrId === String(selectedMrProfile.employeeId);
       return (matchesMrId || matchesProfileId || matchesProfileEmployeeId) && 
-             v.checkInTime && isSameDay(v.checkInTime, selectedDate);
+             v.checkInTime && isSameCalendarDay(v.checkInTime, selectedDate);
     });
   }, [teamVisits, selectedMrId, selectedMrProfile, selectedDate]);
 
@@ -349,7 +342,7 @@ export default function MSEFieldTracking() {
     markersRef.current = [];
     if (routeLineRef.current) {
       routeLineRef.current.remove();
-      routeLineRef.current = null;
+    routeLineRef.current = null;
     }
 
     // 2. Select target record
@@ -360,23 +353,44 @@ export default function MSEFieldTracking() {
 
     const pathCoordinates = [];
 
-    // Custom Icon helper
-    const getCustomIcon = (pinUrl, width = 32, height = 32) => {
-      return L.icon({
-        iconUrl: pinUrl,
+    // Custom Icon helper using L.divIcon to avoid base64 data-URL rendering issues in browsers
+    const getCustomIcon = (color, width = 32, height = 32, isPulse = false) => {
+      return L.divIcon({
+        html: `
+          <div style="position: relative; width: ${width}px; height: ${height}px; display: flex; align-items: center; justify-content: center;">
+            ${isPulse ? `
+              <div style="
+                position: absolute;
+                width: ${width + 12}px;
+                height: ${height + 12}px;
+                border-radius: 50%;
+                background-color: ${color};
+                opacity: 0.4;
+                animation: pin-pulse 1.8s infinite ease-in-out;
+                top: -6px;
+                left: -6px;
+                pointer-events: none;
+              "></div>
+            ` : ''}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${width}" height="${height}" style="position: relative; z-index: 10; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+              <path fill="${color}" stroke="#FFFFFF" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        `,
+        className: 'custom-leaflet-icon-container',
         iconSize: [width, height],
         iconAnchor: [width / 2, height],
         popupAnchor: [0, -height]
       });
     };
 
-    // Workday punch-in
+    // Workday punch-in (Blue color: #3B82F6)
     if (rec.startLocation?.lat != null) {
       const p = rec.startLocation;
       pathCoordinates.push([p.lat, p.lng]);
       
       const startMarker = L.marker([p.lat, p.lng], {
-        icon: getCustomIcon(BLUE_PIN, 36, 36)
+        icon: getCustomIcon('#3B82F6', 36, 36)
       })
       .bindPopup(`<strong>Workday punch-in</strong><br/>Time: ${rec.startTime}`)
       .addTo(mapInstanceRef.current);
@@ -384,16 +398,13 @@ export default function MSEFieldTracking() {
       markersRef.current.push(startMarker);
     }
 
-    // Field visits
+    // Field visits (visit-in GPS)
     if (rec.visits && rec.visits.length > 0) {
       rec.visits.forEach(v => {
         if (v.checkInCoords?.lat != null) {
           pathCoordinates.push([v.checkInCoords.lat, v.checkInCoords.lng]);
 
           const isCompleted = v.status === 'COMPLETED';
-          if (isCompleted && v.checkOutCoords?.lat != null) {
-            pathCoordinates.push([v.checkOutCoords.lat, v.checkOutCoords.lng]);
-          }
           
           let imageTag = '';
           if (v.checkInPhoto) {
@@ -409,33 +420,54 @@ export default function MSEFieldTracking() {
             </div>
           `;
 
+          // Active visits use Red (#EF4444) with pulsing glow, completed visits use Green (#10B981)
           const pinMarker = L.marker([v.checkInCoords.lat, v.checkInCoords.lng], {
-            icon: getCustomIcon(isCompleted ? GREEN_PIN : RED_PIN, 32, 32)
+            icon: getCustomIcon(isCompleted ? '#10B981' : '#EF4444', 32, 32, !isCompleted)
           })
           .bindPopup(popupContent)
           .addTo(mapInstanceRef.current);
 
           markersRef.current.push(pinMarker);
 
+          // Render warning marker if completed check-out is remote (distance > 300 meters)
           if (isCompleted && v.checkOutCoords?.lat != null) {
-            const outMarker = L.marker([v.checkOutCoords.lat, v.checkOutCoords.lng], {
-              icon: getCustomIcon(GREEN_PIN, 28, 28)
-            })
-            .bindPopup(`<strong>Visit out</strong><br/>${v.name}<br/>${v.checkOutTime}`)
-            .addTo(mapInstanceRef.current);
-            markersRef.current.push(outMarker);
+            const distance = getLatLngDistanceMeters(
+              v.checkInCoords.lat,
+              v.checkInCoords.lng,
+              v.checkOutCoords.lat,
+              v.checkOutCoords.lng
+            );
+
+            if (distance > 300) {
+              pathCoordinates.push([v.checkOutCoords.lat, v.checkOutCoords.lng]);
+
+              const remoteMarker = L.marker([v.checkOutCoords.lat, v.checkOutCoords.lng], {
+                icon: getCustomIcon('#F59E0B', 30, 30) // Amber color for remote out-of-bounds warning
+              })
+              .bindPopup(`
+                <div style="font-family:'Inter',sans-serif; font-size:12px; line-height:1.4;">
+                  <strong style="color:#D97706">⚠️ Remote Visit Out</strong><br/>
+                  <strong>Name:</strong> ${v.name}<br/>
+                  <strong>Time:</strong> ${v.checkOutTime}<br/>
+                  <strong>Distance:</strong> ${Math.round(distance)}m away from check-in
+                </div>
+              `)
+              .addTo(mapInstanceRef.current);
+
+              markersRef.current.push(remoteMarker);
+            }
           }
         }
       });
     }
 
-    // Workday punch-out
+    // Workday punch-out (Indigo color: #6366F1)
     if (rec.status === 'ENDED' && rec.endLocation?.lat != null) {
       const p = rec.endLocation;
       pathCoordinates.push([p.lat, p.lng]);
 
       const endMarker = L.marker([p.lat, p.lng], {
-        icon: getCustomIcon(BLUE_PIN, 36, 36)
+        icon: getCustomIcon('#6366F1', 36, 36)
       })
       .bindPopup(`<strong>Workday punch-out</strong><br/>Time: ${rec.endTime}`)
       .addTo(mapInstanceRef.current);
@@ -689,10 +721,12 @@ export default function MSEFieldTracking() {
           />
           
           {/* Map Legend */}
-          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-5 flex-wrap text-[11.5px] font-semibold text-gray-600 shrink-0">
-            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Workday punch</span>
-            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Visit completed</span>
-            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Visit open</span>
+          <div className="px-5 py-4 border-t border-gray-100 bg-[#FAFAFA] flex gap-5 flex-wrap text-[11.5px] font-semibold text-gray-655 shrink-0">
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /> Punch In</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#6366F1]" /> Punch Out</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" /> Visit Completed</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" /> Remote Visit Out</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" /> Visit Open (Active)</span>
           </div>
         </div>
 
@@ -742,13 +776,21 @@ export default function MSEFieldTracking() {
                 ) : (
                   visits.map((v, idx) => {
                     const isCompleted = v.status === 'COMPLETED';
-                    const visitColor = isCompleted ? '#10B981' : '#F59E0B';
+                    const visitDistance = isCompleted && v.checkInCoords?.lat != null && v.checkOutCoords?.lat != null
+                      ? getLatLngDistanceMeters(v.checkInCoords.lat, v.checkInCoords.lng, v.checkOutCoords.lat, v.checkOutCoords.lng)
+                      : 0;
+                    const isRemoteCheckout = isCompleted && visitDistance > 300;
+
                     return (
                       <div key={v.id || idx} className="relative mb-6">
                         {/* Dot indicator */}
                         <div 
                           className={`absolute left-[-31px] top-1 w-3 h-3 rounded-full border-2 border-white ${
-                            isCompleted ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]' : 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
+                            isRemoteCheckout
+                              ? 'bg-[#F59E0B] shadow-[0_0_0_3px_rgba(245,158,11,0.15)]'
+                              : isCompleted
+                                ? 'bg-[#10B981] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]'
+                                : 'bg-[#EF4444] shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
                           }`}
                         />
                         
@@ -793,8 +835,11 @@ export default function MSEFieldTracking() {
 
                           {/* Check-In Section */}
                           <div className={isCompleted ? "mb-3" : "mb-0"}>
-                            <div className="flex justify-between text-[11px] text-gray-600 font-bold mb-1">
-                              <span>📥 VISIT IN</span>
+                            <div className="flex justify-between text-[11px] text-gray-650 font-bold mb-1 items-center font-sans">
+                              <span className="flex items-center gap-1.5">
+                                <span className={`inline-block w-2.5 h-2.5 rounded-full ${isCompleted ? 'bg-[#10B981]' : 'bg-[#EF4444] animate-pulse'}`} />
+                                📥 VISIT IN
+                              </span>
                               <span>{v.checkInTime}</span>
                             </div>
                             {v.checkInPhoto && (
@@ -807,8 +852,16 @@ export default function MSEFieldTracking() {
                           {/* Check-Out Section (displays inside the same card if completed) */}
                           {isCompleted && (
                             <div className="border-t border-dashed border-gray-250 pt-2.5 mt-2.5">
-                              <div className="flex justify-between text-[11px] text-emerald-700 font-bold mb-1.5">
-                                <span>📤 VISIT OUT</span>
+                              <div className={`flex justify-between text-[11px] font-bold mb-1.5 items-center font-sans ${isRemoteCheckout ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                <span className="flex items-center gap-1.5">
+                                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${isRemoteCheckout ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`} />
+                                  📤 VISIT OUT
+                                  {isRemoteCheckout && (
+                                    <span className="text-[9px] text-amber-700 font-extrabold px-1.5 py-0.5 rounded bg-amber-50 uppercase border border-amber-200 ml-2">
+                                      Remote ({Math.round(visitDistance)}m)
+                                    </span>
+                                  )}
+                                </span>
                                 <span>{v.checkOutTime}</span>
                               </div>
                               <div className="flex flex-col gap-1 text-[12px] text-gray-700">
@@ -829,7 +882,7 @@ export default function MSEFieldTracking() {
                 {/* 3. END WORKDAY NODE */}
                 {targetRecord.status === 'ENDED' ? (
                   <div className="relative mb-2">
-                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-[#1E3A8A] border-2 border-white shadow-[0_0_0_3px_rgba(30,58,138,0.15)]" />
+                    <div className="absolute left-[-31px] top-1 w-3 h-3 rounded-full bg-[#6366F1] border-2 border-white shadow-[0_0_0_3px_rgba(99,102,241,0.15)]" />
                     
                     <div className="bg-[#F8FAFC] rounded-xl border border-gray-300 p-3 px-4">
                       <div className="flex justify-between items-center mb-1">
