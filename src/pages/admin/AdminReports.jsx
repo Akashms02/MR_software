@@ -606,6 +606,28 @@ export default function AdminReports() {
                 </div>
               </Card>
             )}
+
+            {/* Chemists detailed logs - highlighted */}
+            {currentData.chemistsMet && currentData.chemistsMet.length > 0 && (
+              <Card className="p-6">
+                <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Chemist Records</h3>
+                <div className="flex flex-col gap-3">
+                  {currentData.chemistsMet.map((chem, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border-[1.5px] border-blue-200 bg-blue-50/20 flex justify-between items-center shadow-[0_2px_8px_rgba(59,130,246,0.04)]">
+                      <div>
+                        <span className="mb-1.5 inline-block rounded bg-blue-105 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">Chemist / Pharmacy</span>
+                        <div className="font-extrabold text-[#1F2937] text-sm">{chem.name}</div>
+                        <div className="text-xs text-[#6B7280] mt-0.5">{chem.clinic} · <span className="font-semibold">{chem.time}</span></div>
+                      </div>
+                      <div className="text-right max-w-[250px]">
+                        <div className="text-[11px] text-blue-600 font-bold">VISIT DETAIL FEEDBACK</div>
+                        <div className="text-[12.5px] text-[#4B5563] mt-1 italic">{chem.feedback}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </>
         )}
 

@@ -1,6 +1,17 @@
 /** Local calendar date key (YYYY-MM-DD) for reliable same-day checks */
 export const toLocalDateKey = (value) => {
   if (!value) return '';
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    if (value.includes('T')) {
+      const part = value.split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(part)) {
+        return part;
+      }
+    }
+  }
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '';
   const y = d.getFullYear();

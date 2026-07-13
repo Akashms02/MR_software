@@ -556,6 +556,28 @@ export default function MRReports() {
                 </div>
               </Card>
             )}
+
+            {/* Chemists detailed logs - highlighted */}
+            {currentData.chemistsMet && currentData.chemistsMet.length > 0 && (
+              <Card className="p-6">
+                <h3 className="m-0 mb-4 text-[14.5px] font-extrabold text-gray-800">Visited Chemist Records</h3>
+                <div className="flex flex-col gap-3">
+                  {currentData.chemistsMet.map((chem, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-xl border-[1.5px] border-blue-200 bg-blue-50/20 p-4 shadow-[0_2px_8px_rgba(59,130,246,0.04)]">
+                      <div>
+                        <span className="mb-1.5 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">Chemist / Pharmacy</span>
+                        <div className="text-sm font-extrabold text-gray-800">{chem.name}</div>
+                        <div className="mt-0.5 text-xs text-gray-500">{chem.clinic} · <span className="font-semibold">{chem.time}</span></div>
+                      </div>
+                      <div className="max-w-[250px] text-right">
+                        <div className="text-[11px] font-bold uppercase text-blue-600">VISIT DETAIL FEEDBACK</div>
+                        <div className="mt-1 text-[12.5px] italic text-gray-600">{chem.feedback}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </>
         )}
 

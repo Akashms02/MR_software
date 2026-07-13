@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  fetchTeamDcrsAction, 
-  reviewDcrAction, 
-  clearDcrErrorsAction, 
-  clearDcrSuccessAction 
+import {
+  fetchTeamDcrsAction,
+  reviewDcrAction,
+  clearDcrErrorsAction,
+  clearDcrSuccessAction
 } from '../../redux/actions/dcrActions';
 import { Loader2, Check, X, Calendar, AlertCircle, CheckCircle2, MessageSquare, Eye, Users, FileText, CheckSquare } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
@@ -13,11 +13,11 @@ import { useToast } from '../../context/ToastContext';
 const DcrReviewPage = () => {
   const dispatch = useDispatch();
   const { teamDcrs = [], loading, error, success } = useSelector((state) => state.dcr || {});
-  
+
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'history'
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
@@ -132,7 +132,7 @@ const DcrReviewPage = () => {
     return teamDcrs.filter((dcr) => {
       const name = (dcr.mrName || '').toLowerCase();
       const matchesSearch = name.includes(searchTerm.toLowerCase());
-      
+
       if (activeTab === 'pending') {
         return matchesSearch && (dcr.status === 'SUBMITTED' || dcr.status === 'DRAFT');
       } else {
@@ -167,7 +167,7 @@ const DcrReviewPage = () => {
 
   return (
     <div className="animate-[fadeIn_0.4s_ease-out] p-[10px] flex flex-col h-[calc(100vh-104px)] min-h-0 overflow-hidden">
-      
+
       {/* Alerts handled by global toast system */}
 
       {/* Header filter & search controls */}
@@ -175,30 +175,28 @@ const DcrReviewPage = () => {
         <div className="flex gap-2.5">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-              activeTab === 'pending' 
-                ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)]' 
-                : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-            }`}
+            className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${activeTab === 'pending'
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)]'
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+              }`}
           >
             Pending DCRs ({pendingCount})
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-              activeTab === 'history' 
-                ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)]' 
-                : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-            }`}
+            className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${activeTab === 'history'
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)]'
+              : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
+              }`}
           >
             DCR Review History
           </button>
         </div>
 
         <div className="flex gap-3 items-center">
-          <input 
-            type="text" 
-            placeholder="Search by MR Name..." 
+          <input
+            type="text"
+            placeholder="Search by MR Name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-4 py-2 text-[13.5px] bg-white border border-gray-200 rounded-xl outline-none focus:border-gray-400 w-[220px]"
@@ -222,7 +220,7 @@ const DcrReviewPage = () => {
 
       {/* Main content grid */}
       <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-hidden mb-1">
-        
+
         {/* Stats Grid */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[4px] shrink-0">
           {stats.map((s, i) => (
@@ -290,7 +288,7 @@ const DcrReviewPage = () => {
                       const reporterInitial = dcr.mrName ? dcr.mrName.charAt(0).toUpperCase() : 'E';
                       const docCount = dcr.visits?.length || 0;
                       const chemCount = dcr.chemistVisits?.length || 0;
-                      
+
                       return (
                         <tr key={dcr.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
                           <td className="p-4">
@@ -313,7 +311,7 @@ const DcrReviewPage = () => {
                             </span>
                           </td>
                           <td className="p-4 text-[13.5px] font-semibold text-gray-700">
-                            <span className="bg-[#F5F3FF] text-[#5B21B6] px-2.5 py-1 rounded-lg text-xs font-bold">
+                            <span className="bg-[#EFF6FF] text-[#1E40AF] px-2.5 py-1 rounded-lg text-xs font-bold">
                               {chemCount} Visited
                             </span>
                           </td>
@@ -355,14 +353,14 @@ const DcrReviewPage = () => {
       {inspectModalOpen && inspectDcr && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/45 backdrop-blur-[2px] p-4">
           <div className="bg-white rounded-3xl w-full max-w-[650px] shadow-2xl flex flex-col h-[85vh] max-h-[750px] overflow-hidden animate-[scaleIn_0.2s_ease-out]">
-            
+
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
               <div>
                 <h3 className="m-0 text-[17px] font-extrabold text-[#1F2937]">Inspect DCR: {inspectDcr.mrName}</h3>
                 <span className="text-[11.5px] font-bold text-[#9CA3AF] block mt-0.5">Submitted Log Date: {inspectDcr.reportDate}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setInspectModalOpen(false)}
                 className="w-8 h-8 rounded-full border border-gray-250 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
               >
@@ -372,7 +370,7 @@ const DcrReviewPage = () => {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              
+
               {/* Doctor Visits Section */}
               <div>
                 <h4 className="text-[13px] font-extrabold text-[#1F2937] uppercase tracking-[0.5px] border-b border-gray-100 pb-2 mb-3">
@@ -464,7 +462,7 @@ const DcrReviewPage = () => {
                 <>
                   <div className="flex items-center gap-3">
                     <MessageSquare size={16} className="text-gray-400 shrink-0" />
-                    <input 
+                    <input
                       type="text"
                       placeholder="Add review remarks (optional)..."
                       value={remarksMap[inspectDcr.id] || ''}
