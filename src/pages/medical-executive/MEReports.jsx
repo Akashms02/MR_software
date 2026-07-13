@@ -668,6 +668,39 @@ export default function MEReports() {
                 </div>
               </Card>
             )}
+
+            {/* Chemists detailed logs - highlighted */}
+            {currentData.chemistsMet && currentData.chemistsMet.length > 0 && (
+              <Card style={{ padding: '24px', marginTop: '16px' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '14.5px', fontWeight: 800, color: '#1F2937' }}>Visited Chemist Records</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {currentData.chemistsMet.map((chem, idx) => (
+                    <div key={idx} style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #BFDBFE',
+                      background: 'rgba(239, 246, 255, 0.4)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.04)'
+                    }}>
+                      <div>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#1E40AF', background: '#DBEAFE', display: 'inline-block', padding: '2px 8px', borderRadius: '6px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                          Chemist / Pharmacy
+                        </span>
+                        <div style={{ fontWeight: 800, color: '#1F2937', fontSize: '14px' }}>{chem.name}</div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>{chem.clinic} · <span style={{ fontWeight: 600 }}>{chem.time}</span></div>
+                      </div>
+                      <div style={{ textAlign: 'right', maxWidth: '250px' }}>
+                        <div style={{ fontSize: '11px', color: '#2563EB', fontWeight: 700 }}>VISIT DETAIL FEEDBACK</div>
+                        <div style={{ fontSize: '12.5px', color: '#4B5563', marginTop: '4px', fontStyle: 'italic' }}>{chem.feedback}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </>
         )}
 

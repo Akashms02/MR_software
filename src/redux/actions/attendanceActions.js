@@ -100,15 +100,13 @@ export const fetchMyAttendanceAction = () => async (dispatch, getState) => {
   }
 };
 
-export const fetchTeamAttendanceAction = () => async (dispatch) => {
+export const fetchTeamAttendanceAction = (date) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_ATTENDANCE_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/attendance/team`);
-    const rawData = response.data?.data || response.data || [];
-    const payloadData = Array.isArray(rawData) 
-      ? rawData 
-      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+    const url = date ? `${API_ROUTE}/attendance/team?date=${date}` : `${API_ROUTE}/attendance/team`;
+    const response = await axios.get(url);
+    const payloadData = extractAttendanceList(response);
     dispatch({
       type: FETCH_TEAM_ATTENDANCE_SUCCESS,
       payload: payloadData,
@@ -185,15 +183,15 @@ export const fetchMyVisitsAction = () => async (dispatch, getState) => {
   }
 };
 
-export const fetchTeamVisitsAction = () => async (dispatch) => {
+export const fetchTeamVisitsAction = (date) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_VISITS_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/attendance/location/team`);
-    const rawData = response.data?.data || response.data || [];
-    const payloadData = Array.isArray(rawData) 
-      ? rawData 
-      : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
+    const url = date 
+      ? `${API_ROUTE}/attendance/location/team?size=1000&date=${date}` 
+      : `${API_ROUTE}/attendance/location/team?size=1000`;
+    const response = await axios.get(url);
+    const payloadData = extractVisitList(response);
     dispatch({
       type: FETCH_TEAM_VISITS_SUCCESS,
       payload: payloadData,

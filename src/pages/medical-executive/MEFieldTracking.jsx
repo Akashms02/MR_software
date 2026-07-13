@@ -115,6 +115,39 @@ function VisitHistoryModal({ target, mrName, onClose }) {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-605 mt-1.5 pt-1.5 border-t border-slate-100/60">
+                    <div>
+                      <strong>📍 In Coords:</strong>{' '}
+                      {h.latitude && h.longitude ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${h.latitude},${h.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
+                        >
+                          {h.latitude.toFixed(6)}, {h.longitude.toFixed(6)}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </div>
+                    <div>
+                      <strong>📍 Out Coords:</strong>{' '}
+                      {h.checkOutLatitude && h.checkOutLongitude ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${h.checkOutLatitude},${h.checkOutLongitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
+                        >
+                          {h.checkOutLatitude.toFixed(6)}, {h.checkOutLongitude.toFixed(6)}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </div>
+                  </div>
+
                   <div className="text-xs space-y-1 text-slate-700">
                     {h.productsDiscussed && (
                       <div>💊 <strong>Brands:</strong> {h.productsDiscussed}</div>
@@ -169,8 +202,8 @@ export default function MEFieldTracking() {
 
   const handleRefresh = () => {
     dispatch(getMyTeam());
-    dispatch(fetchTeamAttendanceAction());
-    dispatch(fetchTeamVisitsAction());
+    dispatch(fetchTeamAttendanceAction(selectedDate));
+    dispatch(fetchTeamVisitsAction(selectedDate));
   };
 
   // UI Refs
@@ -195,11 +228,11 @@ export default function MEFieldTracking() {
     dispatch(getMyTeam());
   }, [dispatch]);
 
-  // 2. Fetch team logs on mount
+  // 2. Fetch team logs when selectedDate changes
   useEffect(() => {
-    dispatch(fetchTeamAttendanceAction());
-    dispatch(fetchTeamVisitsAction());
-  }, [dispatch]);
+    dispatch(fetchTeamAttendanceAction(selectedDate));
+    dispatch(fetchTeamVisitsAction(selectedDate));
+  }, [dispatch, selectedDate]);
 
   useEffect(() => {
     if (mrList.length > 0 && !selectedMrId) {
@@ -207,7 +240,12 @@ export default function MEFieldTracking() {
     }
   }, [mrList, selectedMrId]);
 
-
+  const isSameDay = (date1, date2) => {
+    if (!date1 || !date2) return false;
+    const normalized1 = String(date1).includes('T') ? String(date1).split('T')[0] : String(date1);
+    const normalized2 = String(date2).includes('T') ? String(date2).split('T')[0] : String(date2);
+    return normalized1 === normalized2;
+  };
 
   const formatIsoToTime = (isoStr) => {
     if (!isoStr) return '';

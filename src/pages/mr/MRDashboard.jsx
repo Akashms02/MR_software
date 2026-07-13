@@ -537,23 +537,41 @@ export default function MRDashboard() {
   const fetchAssignedTargets = async () => {
     setTargetsLoading(true);
     try {
-      const res = await axios.get(`${API_ROUTE}/doctor/my-assigned`);
-      if (res.data && (res.data.success || res.data.status === true) && Array.isArray(res.data.data)) {
-        const mapped = res.data.data.map(item => {
-          const isChemist = String(item.type).toUpperCase() === 'CHEMIST';
-          return {
-            id: item.id,
-            name: item.fullName || item.name || 'Unknown',
-            type: isChemist ? 'Pharmacy' : 'Doctor',
-            apiType: isChemist ? 'CHEMIST' : 'DOCTOR',
-            specialty: item.speciality || item.specialty || item.chemistContactPerson || (isChemist ? 'Chemist' : 'Doctor'),
-            clinic: item.clinicName || item.clinic || [item.address, item.city].filter(Boolean).join(', ') || '',
-            latitude: item.latitude,
-            longitude: item.longitude
-          };
-        });
-        setAssignedTargets(mapped);
-      }
+      const [docRes, chemRes] = await Promise.all([
+        axios.get(`${API_ROUTE}/doctor/my-assigned`),
+        axios.get(`${API_ROUTE}/chemist/my-assigned`)
+      ]);
+
+      const docData = docRes.data && (docRes.data.success || docRes.data.status === true) && Array.isArray(docRes.data.data)
+        ? docRes.data.data
+        : [];
+      const chemData = chemRes.data && (chemRes.data.success || chemRes.data.status === true) && Array.isArray(chemRes.data.data)
+        ? chemRes.data.data
+        : [];
+
+      const docMapped = docData.map(item => ({
+        id: item.id,
+        name: item.fullName || item.name || 'Unknown',
+        type: 'Doctor',
+        apiType: 'DOCTOR',
+        specialty: item.speciality || item.specialty || 'Doctor',
+        clinic: item.clinicName || item.clinic || [item.address, item.city].filter(Boolean).join(', ') || '',
+        latitude: item.latitude,
+        longitude: item.longitude
+      }));
+
+      const chemMapped = chemData.map(item => ({
+        id: item.id,
+        name: item.name || item.fullName || 'Unknown',
+        type: 'Pharmacy',
+        apiType: 'CHEMIST',
+        specialty: item.contactPerson || 'Chemist',
+        clinic: [item.address, item.city].filter(Boolean).join(', ') || '',
+        latitude: item.latitude,
+        longitude: item.longitude
+      }));
+
+      setAssignedTargets([...docMapped, ...chemMapped]);
     } catch (err) {
       console.error('Failed to fetch assigned targets:', err);
     } finally {
