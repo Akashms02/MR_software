@@ -72,12 +72,16 @@ const extractPagination = (data, page, size) => {
   return null;
 };
 
-export const fetchPendingRequestsAction = (status = "ALL", page = 0, size = 10) => async (dispatch) => {
+export const fetchPendingRequestsAction = (status = "ALL", page = 0, size = 10, search = "") => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_PENDING_REQUESTS_REQUEST });
   try {
     const apiStatus = String(status || "ALL").toUpperCase();
-    const response = await axios.post(`${API_ROUTE}/requests/pending`, { status: apiStatus, page, size });
+    const payload = { status: apiStatus, page, size };
+    if (search && search.trim()) {
+      payload.search = search.trim();
+    }
+    const response = await axios.post(`${API_ROUTE}/requests/pending`, payload);
     
     const data = response.data?.data ?? response.data;
     const list = Array.isArray(data) ? data : (data && Array.isArray(data.content) ? data.content : []);
