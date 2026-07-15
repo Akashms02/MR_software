@@ -824,6 +824,7 @@ const MRDoctorOnboarding = () => {
                       <option value="GENERAL_PHYSICIAN">General Physician</option>
                       <option value="DERMATOLOGIST">Dermatology</option>
                       <option value="NEUROLOGIST">Neurology</option>
+                      <option value="PSYCHIATRIST">Psychiatry</option>
                       <option value="OTHER">Other</option>
                     </select>
                   </div>

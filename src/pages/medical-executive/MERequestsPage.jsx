@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Check, X, AlertCircle, FileText, Loader2, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
@@ -50,8 +50,10 @@ const MERequestsPage = () => {
   const [remarks, setRemarks] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  const fetchRequests = (tab = activeTab, page = currentPage) => {
-    dispatch(fetchPendingRequestsAction(requestStatusFromTab(tab), page, pageSize));
+  const searchTimerRef = useRef(null);
+
+  const fetchRequests = (tab = activeTab, page = currentPage, search = searchQuery) => {
+    dispatch(fetchPendingRequestsAction(requestStatusFromTab(tab), page, pageSize, search));
   };
 
   const initializeTabCounts = async () => {
@@ -84,8 +86,18 @@ const MERequestsPage = () => {
 
   useEffect(() => {
     setCurrentPage(0);
-    fetchRequests(activeTab, 0);
+    fetchRequests(activeTab, 0, searchQuery);
   }, [activeTab]);
+
+  // Debounced server-side search: fires 400ms after user stops typing
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(0);
+      fetchRequests(activeTab, 0, searchQuery);
+    }, 400);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (pagination && pagination.totalElements !== undefined) {
@@ -98,25 +110,13 @@ const MERequestsPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchRequests(activeTab, page);
+    fetchRequests(activeTab, page, searchQuery);
   };
 
   const counts = tabCounts;
 
-  const filteredRequests = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    if (!q) return requests;
-    return requests.filter(
-      (req) =>
-        req.name?.toLowerCase().includes(q) ||
-        req.email?.toLowerCase().includes(q) ||
-        req.phone?.includes(q) ||
-        req.type?.toLowerCase().includes(q) ||
-        (typeof req.submittedBy === 'string'
-          ? req.submittedBy.toLowerCase().includes(q)
-          : req.submittedBy?.fullName?.toLowerCase().includes(q))
-    );
-  }, [requests, searchQuery]);
+  // Search is now server-side — no client filtering needed
+  const filteredRequests = requests;
 
   const handleOpenReview = (request, status) => {
     setSelectedRequest(request);
