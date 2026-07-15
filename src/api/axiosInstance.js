@@ -105,6 +105,139 @@ const getApiOrigin = () => {
   return '';
 };
 
+const getOrInitializeOnboardingRequests = () => {
+  try {
+    const saved = localStorage.getItem('mock_onboarding_requests');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {}
+
+  const defaultRequests = [
+    {
+      id: 201,
+      type: "DOCTOR",
+      name: "Dr. Stephen Strange",
+      email: "doctorstrange@example.com",
+      phone: "9876543009",
+      address: "Sanctum Sanctorum, New York",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600008",
+      latitude: 13.08268,
+      longitude: 80.27072,
+      doctorSpeciality: "NEUROLOGY",
+      doctorQualification: "MD, PhD",
+      doctorLicenseNumber: "MC-99999",
+      status: "PENDING",
+      remarks: "",
+      submittedBy: "Marcus Rep"
+    },
+    {
+      id: 202,
+      type: "CHEMIST",
+      name: "Strange Remedies Pharmacy",
+      email: "strangeremedies@example.com",
+      phone: "9876543008",
+      address: "Bleecker Street, New York",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600008",
+      latitude: 13.08270,
+      longitude: 80.27074,
+      chemistContactPerson: "Wong",
+      status: "PENDING",
+      remarks: "",
+      submittedBy: "Marcus Rep"
+    },
+    {
+      id: 1,
+      type: "DOCTOR",
+      name: "Dr. Ramesh Sharma",
+      email: "ramesh@example.com",
+      phone: "9876543010",
+      address: "City Heart Clinic, Anna Nagar",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600040",
+      latitude: 13.08500,
+      longitude: 80.27200,
+      doctorSpeciality: "CARDIOLOGY",
+      doctorQualification: "MD",
+      doctorLicenseNumber: "MC-10001",
+      doctorId: 1,
+      status: "APPROVED",
+      remarks: "Approved for field visits",
+      submittedBy: "Marcus Rep"
+    },
+    {
+      id: 2,
+      type: "DOCTOR",
+      name: "Dr. Sunita Patel",
+      email: "sunita@example.com",
+      phone: "9876543011",
+      address: "Metro General Hospital",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600006",
+      latitude: 13.08000,
+      longitude: 80.26800,
+      doctorSpeciality: "PEDIATRICS",
+      doctorQualification: "MD",
+      doctorLicenseNumber: "MC-10002",
+      doctorId: 2,
+      status: "PENDING",
+      remarks: "",
+      submittedBy: "Marcus Rep"
+    },
+    {
+      id: 3,
+      type: "DOCTOR",
+      name: "Dr. Vivek Verma",
+      email: "vivek@example.com",
+      phone: "9876543012",
+      address: "Verma Ortho Care",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600008",
+      latitude: 13.08200,
+      longitude: 80.27400,
+      doctorSpeciality: "ORTHOPEDICS",
+      doctorQualification: "MS",
+      doctorLicenseNumber: "MC-10003",
+      doctorId: 3,
+      status: "APPROVED",
+      remarks: "Approved ortho clinic",
+      submittedBy: "Marcus Rep"
+    },
+    {
+      id: 4,
+      type: "DOCTOR",
+      name: "Dr. Neha Gupta",
+      email: "neha@example.com",
+      phone: "9876543013",
+      address: "Care Clinic",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600008",
+      latitude: 13.08400,
+      longitude: 80.27600,
+      doctorSpeciality: "GENERAL PHYSICIAN",
+      doctorQualification: "MBBS",
+      doctorLicenseNumber: "MC-10004",
+      doctorId: 4,
+      status: "APPROVED",
+      remarks: "Approved clinic",
+      submittedBy: "Marcus Rep"
+    }
+  ];
+
+  try {
+    localStorage.setItem('mock_onboarding_requests', JSON.stringify(defaultRequests));
+  } catch (e) {}
+  return defaultRequests;
+};
+
 axios.interceptors.request.use(
   (config) => {
     const requestUrl = config.url || '';
@@ -171,10 +304,7 @@ axios.interceptors.request.use(
               { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
             ];
 
-            let onboardingReqs = [];
-            try {
-              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
-            } catch (e) {}
+            const onboardingReqs = getOrInitializeOnboardingRequests();
 
             let assignments = [];
             try {
@@ -183,15 +313,18 @@ axios.interceptors.request.use(
 
             const mergedList = [
               { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
-              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
               { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
               { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
             ];
 
             onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
               const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              const reqId = req.doctorId || req.chemistId || req.id;
+              if (mergedList.some(d => String(d.id) === String(reqId))) {
+                return;
+              }
               mergedList.push({
-                id: req.doctorId || req.chemistId || req.id,
+                id: reqId,
                 fullName: req.name,
                 speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
                 clinicName: req.address || req.city || '',
@@ -242,10 +375,7 @@ axios.interceptors.request.use(
               { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
             ];
 
-            let onboardingReqs = [];
-            try {
-              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
-            } catch (e) {}
+            const onboardingReqs = getOrInitializeOnboardingRequests();
 
             let assignments = [];
             try {
@@ -254,15 +384,18 @@ axios.interceptors.request.use(
 
             const mergedList = [
               { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
-              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
               { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
               { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
             ];
 
             onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
               const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              const reqId = req.doctorId || req.chemistId || req.id;
+              if (mergedList.some(d => String(d.id) === String(reqId))) {
+                return;
+              }
               mergedList.push({
-                id: req.doctorId || req.chemistId || req.id,
+                id: reqId,
                 fullName: req.name,
                 speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
                 clinicName: req.address || req.city || '',
@@ -332,10 +465,7 @@ axios.interceptors.request.use(
               { id: '4', fullName: 'Sanjay Dutt', email: 'sanjay.dutt@mrmedical.com', role: 'MR', status: 'ACTIVE' }
             ];
 
-            let onboardingReqs = [];
-            try {
-              onboardingReqs = JSON.parse(localStorage.getItem('mock_onboarding_requests') || '[]');
-            } catch (e) {}
+            const onboardingReqs = getOrInitializeOnboardingRequests();
 
             let assignments = [];
             try {
@@ -344,15 +474,18 @@ axios.interceptors.request.use(
 
             const mergedList = [
               { id: 1, fullName: 'Dr. Ramesh Sharma', speciality: 'CARDIOLOGY', clinicName: 'City Heart Clinic', type: 'DOCTOR' },
-              { id: 2, fullName: 'Dr. Sunita Patel', speciality: 'PEDIATRICS', clinicName: 'Metro General Hospital', type: 'DOCTOR' },
               { id: 3, fullName: 'Dr. Vivek Verma', speciality: 'ORTHOPEDICS', clinicName: 'Verma Ortho Care', type: 'DOCTOR' },
               { id: 4, fullName: 'Dr. Neha Gupta', speciality: 'GENERAL PHYSICIAN', clinicName: 'Care Clinic', type: 'DOCTOR' }
             ];
 
             onboardingReqs.filter(r => r.status === 'APPROVED').forEach(req => {
               const isChemist = String(req.type).toUpperCase() === 'CHEMIST';
+              const reqId = req.doctorId || req.chemistId || req.id;
+              if (mergedList.some(d => String(d.id) === String(reqId))) {
+                return;
+              }
               mergedList.push({
-                id: req.doctorId || req.chemistId || req.id,
+                id: reqId,
                 fullName: req.name,
                 speciality: isChemist ? 'CHEMIST' : req.doctorSpeciality || 'GENERAL PHYSICIAN',
                 clinicName: req.address || req.city || '',
@@ -658,93 +791,7 @@ axios.interceptors.request.use(
               };
             }
           } else if (cfg.url.includes('/requests/me') && cfg.method === 'post') {
-              let requests = [];
-              try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) {
-                  requests = JSON.parse(saved);
-                } else {
-                  requests = [
-                    {
-                      id: 201,
-                      type: "DOCTOR",
-                      name: "Dr. Stephen Strange",
-                      email: "doctorstrange@example.com",
-                      phone: "9876543009",
-                      address: "Sanctum Sanctorum",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600008",
-                      latitude: 13.08268,
-                      longitude: 80.27072,
-                      doctorSpeciality: "NEUROLOGY",
-                      doctorQualification: "MD, PhD",
-                      doctorLicenseNumber: "MC-99999",
-                      doctorId: 201,
-                      status: "APPROVED",
-                      remarks: "Approved for field visits",
-                      submittedBy: "Marcus Rep"
-                    },
-                    {
-                      id: 202,
-                      type: "CHEMIST",
-                      name: "Strange Remedies Pharmacy",
-                      email: "strangeremedies@example.com",
-                      phone: "9876543008",
-                      address: "Bleecker Street",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600008",
-                      latitude: 13.08270,
-                      longitude: 80.27074,
-                      chemistContactPerson: "Wong",
-                      chemistId: 202,
-                      status: "APPROVED",
-                      remarks: "Approved chemist",
-                      submittedBy: "Marcus Rep"
-                    },
-                    {
-                      id: 203,
-                      type: "DOCTOR",
-                      name: "Dr. Ramesh Sharma",
-                      email: "ramesh@example.com",
-                      phone: "9876543010",
-                      address: "City Heart Clinic, Anna Nagar",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600040",
-                      latitude: 13.08500,
-                      longitude: 80.27200,
-                      doctorSpeciality: "CARDIOLOGY",
-                      doctorQualification: "MD",
-                      doctorLicenseNumber: "MC-10001",
-                      doctorId: 203,
-                      status: "APPROVED",
-                      remarks: "",
-                      submittedBy: "Marcus Rep"
-                    },
-                    {
-                      id: 204,
-                      type: "DOCTOR",
-                      name: "Dr. Sunita Patel",
-                      email: "sunita@example.com",
-                      phone: "9876543011",
-                      address: "Metro General Hospital",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600006",
-                      latitude: 13.08000,
-                      longitude: 80.26800,
-                      doctorSpeciality: "PEDIATRICS",
-                      doctorId: 204,
-                      status: "PENDING",
-                      remarks: "",
-                      submittedBy: "Marcus Rep"
-                    }
-                  ];
-                  localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
-                }
-              } catch (e) {}
+              const requests = getOrInitializeOnboardingRequests();
               let statusFilter = '';
               try {
                 const body = JSON.parse(cfg.data || '{}');
@@ -755,53 +802,7 @@ axios.interceptors.request.use(
                 : requests;
               mockData = { success: true, status: 200, data: list };
             } else if (cfg.url.includes('/requests/pending') && cfg.method === 'post') {
-              let requests = [];
-              try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) {
-                  requests = JSON.parse(saved);
-                } else {
-                  requests = [
-                    {
-                      id: 201,
-                      type: "DOCTOR",
-                      name: "Dr. Stephen Strange",
-                      email: "doctorstrange@example.com",
-                      phone: "9876543009",
-                      address: "Sanctum Sanctorum, New York",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600008",
-                      latitude: 13.08268,
-                      longitude: 80.27072,
-                      doctorSpeciality: "NEUROLOGY",
-                      doctorQualification: "MD, PhD",
-                      doctorLicenseNumber: "MC-99999",
-                      status: "PENDING",
-                      remarks: "",
-                      submittedBy: "Marcus Rep"
-                    },
-                    {
-                      id: 202,
-                      type: "CHEMIST",
-                      name: "Strange Remedies Pharmacy",
-                      email: "strangeremedies@example.com",
-                      phone: "9876543008",
-                      address: "Bleecker Street, New York",
-                      city: "Chennai",
-                      state: "Tamil Nadu",
-                      pincode: "600008",
-                      latitude: 13.08268,
-                      longitude: 80.27072,
-                      chemistContactPerson: "Wong",
-                      status: "PENDING",
-                      remarks: "",
-                      submittedBy: "Marcus Rep"
-                    }
-                  ];
-                  localStorage.setItem('mock_onboarding_requests', JSON.stringify(requests));
-                }
-              } catch (e) {}
+              const requests = getOrInitializeOnboardingRequests();
               let statusFilter = 'PENDING';
               let page = 0;
               let size = 10;
@@ -851,11 +852,7 @@ axios.interceptors.request.use(
                 remarks = urlObj.searchParams.get('remarks') || '';
               } catch (e) {}
 
-              let requests = [];
-              try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) requests = JSON.parse(saved);
-              } catch (e) {}
+              const requests = getOrInitializeOnboardingRequests();
 
               const req = requests.find(r => r.id === requestId);
               if (req) {
@@ -878,11 +875,7 @@ axios.interceptors.request.use(
               const lat = parseFloat(body.latitude);
               const lng = parseFloat(body.longitude);
 
-              let requests = [];
-              try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) requests = JSON.parse(saved);
-              } catch (e) {}
+              const requests = getOrInitializeOnboardingRequests();
 
               const req = requests.find(r => 
                 r.id === targetId || 
@@ -901,11 +894,7 @@ axios.interceptors.request.use(
               mockData = { success: true, status: 200, message: "Location updated successfully." };
             } else if (cfg.url.includes('/requests') && !cfg.url.includes('/requests/pending') && !cfg.url.includes('/requests/me') && cfg.method === 'post') {
               const body = JSON.parse(cfg.data || '{}');
-              let requests = [];
-              try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) requests = JSON.parse(saved);
-              } catch (e) {}
+              const requests = getOrInitializeOnboardingRequests();
 
               const newReq = {
                 id: Math.floor(Math.random() * 10000),
@@ -1117,18 +1106,16 @@ axios.interceptors.request.use(
               
               let approvedTargets = [];
               try {
-                const saved = localStorage.getItem('mock_onboarding_requests');
-                if (saved) {
-                  approvedTargets = JSON.parse(saved)
-                    .filter((r) => r.status === 'APPROVED')
-                    .map((r) => ({
-                      id: r.doctorId || r.chemistId || r.id,
-                      name: r.name,
-                      type: r.type === 'CHEMIST' ? 'Pharmacy' : 'Doctor',
-                      specialty: r.doctorSpeciality || r.chemistContactPerson || '',
-                      clinic: [r.address, r.city].filter(Boolean).join(', ') || r.city || '',
-                    }));
-                }
+                const onboardingReqs = getOrInitializeOnboardingRequests();
+                approvedTargets = onboardingReqs
+                  .filter((r) => r.status === 'APPROVED')
+                  .map((r) => ({
+                    id: r.doctorId || r.chemistId || r.id,
+                    name: r.name,
+                    type: r.type === 'CHEMIST' ? 'Pharmacy' : 'Doctor',
+                    specialty: r.doctorSpeciality || r.chemistContactPerson || '',
+                    clinic: [r.address, r.city].filter(Boolean).join(', ') || r.city || '',
+                  }));
               } catch (e) {}
               const t = approvedTargets.find(item => String(item.id) === String(body.targetId)) || {
                 name: 'Unknown Target',
