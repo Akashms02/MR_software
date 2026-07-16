@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   getAdmins,
   registerAdmin,
@@ -21,6 +22,9 @@ import {
   ToggleLeft,
   ToggleRight,
   Edit,
+  KeyRound,
+  ShieldCheck,
+  Check,
 } from "lucide-react";
 import { updateCompanyAccess, editCompanyData } from "../../redux/actions/companyAction";
 import EditAdminModal from "./EditAdminModal";
@@ -420,167 +424,230 @@ const AdminManagement = () => {
       </div>
 
       {/* Register Modal */}
-      {showModal && createPortal(
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-start justify-center z-[1000] p-5 overflow-y-auto">
-          <div className="bg-white w-full max-w-[500px] my-auto rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-              <div>
-                <h3 className="text-xl font-extrabold text-gray-900 m-0">
-                  Register Administrator
-                </h3>
-                <p className="text-[13px] text-gray-500 mt-1">
-                  Create a new administrator account with system access.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="bg-gray-100 border-none rounded-lg p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-150"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {showModal && createPortal(
+          <div className="fixed inset-0 flex items-start justify-center z-[1000] p-4 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-md"
+            />
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="flex flex-col gap-5">
+            {/* Modal Container */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="bg-white w-full max-w-[460px] my-auto rounded-2xl shadow-2xl overflow-hidden z-10 border border-slate-100 flex flex-col relative"
+            >
+              {/* Top Premium Gradient Banner */}
+              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 text-white relative overflow-hidden flex items-center gap-4">
+                {/* Decorative Mesh Blob */}
+                <div className="absolute top-[-50px] right-[-50px] w-[180px] h-[180px] rounded-full bg-lime-400/10 blur-3xl pointer-events-none" />
+                <div className="absolute bottom-[-60px] left-[-20px] w-[150px] h-[150px] rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
+
+                {/* Avatar Preview */}
+                <motion.div 
+                  layout
+                  className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#C8F04A] to-[#A7D800] text-slate-900 font-extrabold text-lg flex items-center justify-center shadow-lg border border-white/20 shrink-0 select-none"
+                >
+                  {formData.fullName ? formData.fullName.trim().split(/\s+/).slice(0, 2).map(n => n[0]).join("").toUpperCase() : "+"}
+                </motion.div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-extrabold tracking-tight m-0 text-white truncate">
+                    Register Administrator
+                  </h3>
+                  <p className="text-[11px] text-slate-300 font-medium mt-0.5 truncate">
+                    Create a new administrator account with system access.
+                  </p>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowModal(false)}
+                  type="button"
+                  className="bg-white/10 border-none rounded-lg p-1.5 cursor-pointer hover:bg-white/20 transition-all text-white/80 hover:text-white"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3.5 bg-slate-50/30">
                 {/* Status Messages */}
                 {error && (
-                  <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-2.5 text-rose-700 text-sm font-semibold">
-                    <AlertCircle size={18} /> {error}
+                  <div className="bg-rose-50 border border-rose-100 p-2.5 rounded-xl flex items-center gap-2 text-rose-700 text-xs font-semibold">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{error}</span>
                   </div>
                 )}
                 {success && (
-                  <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center gap-2.5 text-emerald-700 text-sm font-semibold">
-                    <CheckCircle2 size={18} /> {success}
+                  <div className="bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl flex items-center gap-2 text-emerald-700 text-xs font-semibold">
+                    <CheckCircle2 size={14} className="shrink-0" />
+                    <span>{success}</span>
                   </div>
                 )}
 
                 {/* Input Fields */}
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g. John Doe"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-3">
+                  {/* Full Name */}
                   <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      Email Address
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">
+                      Full Name
                     </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="admin@example.com"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                    />
+                    <div className="relative">
+                      <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="e.g. John Doe"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none bg-white focus:border-slate-800 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                      />
+                    </div>
                   </div>
+
+                  {/* Email & Phone Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="admin@example.com"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none bg-white focus:border-slate-800 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">
+                        Phone Number
+                      </label>
+                      <div className="relative">
+                        <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="9876543210"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none bg-white focus:border-slate-800 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company Code & System Role */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">
+                        Company Code
+                      </label>
+                      <div className="relative">
+                        <KeyRound size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          name="companyCode"
+                          value={formData.companyCode}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="e.g. APEX"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none bg-white focus:border-slate-800 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">
+                        System Role
+                      </label>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-150 bg-slate-100/70 text-slate-500 select-none">
+                        <Shield size={14} className="text-slate-400 shrink-0" />
+                        <span className="text-xs font-bold tracking-wide">Administrator</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Module Access Control */}
                   <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                      Phone Number
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-0.5">
+                      Module Access Control
                     </label>
-                    <input
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="9876543210"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    Company Code
-                  </label>
-                  <input
-                    name="companyCode"
-                    value={formData.companyCode}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g. APEX"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-500 transition-colors duration-200"
-                  />
-                  <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed">
-                    A unique reference code for the company (e.g. APEX).
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    System Role
-                  </label>
-                  <select
-                    name="role"
-                    value="ADMIN"
-                    disabled
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none bg-gray-100 cursor-not-allowed text-gray-500"
-                  >
-                    <option value="ADMIN">Administrator</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-2">
-                    Module Access Control
-                  </label>
-                  <div className="grid grid-cols-2 gap-2.5 bg-gray-50 p-4 rounded-xl border border-gray-150 max-h-[170px] overflow-y-auto">
-                    {AVAILABLE_MODULES.map((m) => {
-                      const checked = isModuleChecked(m.id, formData.allowedModules);
-                      return (
-                        <label key={m.id} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer select-none transition-all">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => handleToggleModule(m.id, formData.allowedModules, (val) => setFormData({ ...formData, allowedModules: val }))}
-                            className="rounded text-indigo-650 focus:ring-indigo-500 w-4 h-4 cursor-pointer accent-indigo-600"
-                          />
-                          <span className="text-[12.5px] font-bold text-gray-700 ml-1.5">{m.label}</span>
-                        </label>
-                      );
-                    })}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-100/60 p-2.5 rounded-xl border border-slate-200">
+                      {AVAILABLE_MODULES.map((m) => {
+                        const checked = isModuleChecked(m.id, formData.allowedModules);
+                        return (
+                          <label 
+                            key={m.id} 
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border cursor-pointer select-none transition-all ${
+                              checked 
+                                ? "bg-white border-slate-800 shadow-sm" 
+                                : "bg-white/40 border-slate-200 hover:border-slate-300"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => handleToggleModule(m.id, formData.allowedModules, (val) => setFormData({ ...formData, allowedModules: val }))}
+                              className="sr-only"
+                            />
+                            {/* Custom Checkbox Design */}
+                            <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center shrink-0 ${
+                              checked 
+                                ? "bg-slate-900 border-slate-900 text-white" 
+                                : "border-slate-350 bg-white"
+                            }`}>
+                              {checked && <Check size={10} strokeWidth={3} />}
+                            </div>
+                            <span className={`text-xs font-bold truncate transition-all ${checked ? "text-slate-900" : "text-slate-500"}`}>
+                              {m.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="flex gap-3 mt-2.5">
+                <div className="flex gap-3 mt-1.5 border-t border-slate-100 pt-3.5">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-[1.5] py-3.5 rounded-xl border-none bg-gray-900 text-white font-bold text-sm cursor-pointer hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center justify-center gap-2"
+                    className="flex-[1.5] py-2.5 rounded-xl border-none bg-slate-900 text-white font-bold text-xs cursor-pointer hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-slate-950/10"
                   >
                     {loading ? (
-                      <Loader2 className="animate-spin" size={18} />
+                      <Loader2 className="animate-spin" size={12} />
                     ) : (
                       "Create Account"
                     )}
                   </button>
                 </div>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+              </form>
+            </motion.div>
+          </div>,
+          document.body
+        )}
+      </AnimatePresence>
+
 
       {/* Edit Modal */}
       <EditAdminModal

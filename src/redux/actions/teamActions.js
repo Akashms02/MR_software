@@ -321,3 +321,43 @@ export const updateOnboardingDetails = (employeeId, payload, isMultipart = false
     dispatch({ type: LOADING_END });
   }
 };
+
+/* =======================
+   DOWNLOAD DOCTOR EXCEL SAMPLE
+   GET /api/v1/doctor/sample-excel
+  ======================= */
+export const downloadDoctorExcelSample = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(
+      `${API_ROUTE}/doctor/sample-excel`,
+      { responseType: 'blob' }
+    );
+    return { success: true, data: response.data, headers: response.headers };
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || 'Failed to download sample file.';
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   DOWNLOAD CHEMIST EXCEL SAMPLE
+   GET /api/v1/chemist/sample-excel
+  ======================= */
+export const downloadChemistExcelSample = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(
+      `${API_ROUTE}/chemist/sample-excel`,
+      { responseType: 'blob' }
+    );
+    return { success: true, data: response.data, headers: response.headers };
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || 'Failed to download sample file.';
+    return { success: false, error: errMsg };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
