@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { onboardMember, uploadDoctorExcel, uploadChemistExcel, clearSuccess, clearErrors } from '../../redux/actions/teamActions';
+import { onboardMember, uploadDoctorExcel, uploadChemistExcel, clearSuccess, clearErrors, downloadDoctorExcelSample, downloadChemistExcelSample } from '../../redux/actions/teamActions';
 import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, Mail, Phone, MapPin, Calendar, Users, Heart, FileSpreadsheet } from 'lucide-react';
 import L from 'leaflet';
 import { useToast } from '../../context/ToastContext';
@@ -154,6 +154,41 @@ const MSEDoctorOnboarding = () => {
       setIsSubmitting(false);
     } finally {
       e.target.value = '';
+    }
+  };
+
+  const handleDownloadSample = async () => {
+    try {
+      const result = role === 'PHARMACIST'
+        ? await dispatch(downloadChemistExcelSample())
+        : await dispatch(downloadDoctorExcelSample());
+
+      if (result.success) {
+        const url = window.URL.createObjectURL(new Blob([result.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Parse filename from Content-Disposition header
+        const contentDisposition = result.headers?.['content-disposition'];
+        let filename = role === 'PHARMACIST' ? 'sample_chemists.xlsx' : 'sample_doctors.xlsx';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?([^";\n\r]+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        showToast('Sample template downloaded successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to download sample template.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to download sample template:', err);
+      showToast('Failed to download sample template. Please try again.', 'error');
     }
   };
 
@@ -762,6 +797,17 @@ const MSEDoctorOnboarding = () => {
           <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
             Fill in the information below. Drag map pin to center coordinates, search by address, or capture live device GPS.
           </p>
+        </div>
+
+        <div className="flex justify-end -mb-4">
+          <button
+            type="button"
+            onClick={handleDownloadSample}
+            className="text-[12.5px] font-extrabold text-[#7C3AED] hover:text-[#5B21B6] transition-colors flex items-center gap-1.5 cursor-pointer bg-transparent border-none outline-none"
+          >
+            <FileSpreadsheet size={15} />
+            Download Sample Template
+          </button>
         </div>
 
         {/* Excel Import Section */}
