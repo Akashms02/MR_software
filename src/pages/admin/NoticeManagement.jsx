@@ -145,11 +145,7 @@ const NoticeManagement = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] animate-in fade-in duration-500 max-w-[1600px] mx-auto overflow-hidden">
       {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-6 shrink-0">
-        <div>
-          <h1 className="text-xl sm:text-[22px] font-bold text-slate-800 tracking-tight">Notice Board</h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 font-sans">Manage announcements & team updates</p>
-        </div>
+      <div className="flex justify-end items-center mb-6 shrink-0">
         <button 
           onClick={() => { dispatch(clearNoticeSuccess()); resetForm(); setIsModalOpen(true); }}
           className="bg-[#C8F04A] hover:bg-opacity-90 text-[#111827] px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 group cursor-pointer border-none"
