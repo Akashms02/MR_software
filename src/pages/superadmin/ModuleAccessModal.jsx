@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, AlertCircle, CheckCircle2, Loader2, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  X, 
+  AlertCircle, 
+  CheckCircle2, 
+  Loader2, 
+  Shield, 
+  ShieldCheck, 
+  Check 
+} from 'lucide-react';
 
 const ModuleAccessModal = ({
   show,
@@ -60,100 +69,155 @@ const ModuleAccessModal = ({
       setAllowedModules(newList.join(","));
     }
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(allowedModules);
   };
 
-  if (!show) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[4px] flex items-start justify-center z-[1000] p-5 overflow-y-auto">
-      <div className="bg-white w-full max-w-[450px] my-auto rounded-[24px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] overflow-hidden animate-[slideUp_0.4s_ease-out_forwards]">
-        {/* Modal Header */}
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <Shield size={16} />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-gray-900 m-0">
-                Module Permissions
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Manage access for {selectedAdmin?.fullName || "Company"}.
-              </p>
-            </div>
-          </div>
-          <button
+    <AnimatePresence>
+      {show && (
+        <div className="fixed inset-0 flex items-start justify-center z-[1000] p-4 overflow-y-auto">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            type="button"
-            className="bg-gray-100 border-none rounded-lg p-2 cursor-pointer hover:bg-gray-200 transition-colors duration-150"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-md"
+          />
+
+          {/* Modal Container */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 15 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 15 }}
+            transition={{ type: "spring", damping: 25, stiffness: 350 }}
+            className="bg-white w-full max-w-[460px] my-auto rounded-2xl shadow-2xl overflow-hidden z-10 border border-slate-100 flex flex-col relative"
           >
-            <X size={18} className="text-gray-500" />
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="flex flex-col gap-5">
-            {error && (
-              <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-2.5 text-rose-700 text-sm font-semibold">
-                <AlertCircle size={18} /> {error}
+            {/* Top Premium Gradient Banner */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 text-white relative overflow-hidden flex items-center gap-4">
+              {/* Decorative Mesh Blobs */}
+              <div className="absolute top-[-50px] right-[-50px] w-[180px] h-[180px] rounded-full bg-[#C8F04A]/10 blur-3xl pointer-events-none" />
+              
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#C8F04A] border border-white/15 shrink-0">
+                <ShieldCheck size={20} />
               </div>
-            )}
-            {success && (
-              <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center gap-2.5 text-emerald-700 text-sm font-semibold">
-                <CheckCircle2 size={18} /> {success}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-extrabold tracking-tight m-0 text-white truncate">
+                  Module Permissions
+                </h3>
+                <p className="text-[11px] text-slate-300 mt-0.5 truncate">
+                  Configure access control for {selectedAdmin?.fullName || "Administrator"}
+                </p>
               </div>
-            )}
 
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-150">
-              <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Allowed Modules</span>
-              <div className="flex flex-col gap-2.5 max-h-[250px] overflow-y-auto pr-1">
-                {AVAILABLE_MODULES.map((m) => {
-                  const checked = isModuleChecked(m.id);
-                  return (
-                    <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-indigo-100 cursor-pointer select-none transition-all">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => handleToggleModule(m.id)}
-                        className="rounded text-indigo-650 focus:ring-indigo-500 w-4 h-4 cursor-pointer accent-indigo-600"
-                      />
-                      <span className="text-[13px] font-bold text-gray-700">{m.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="flex gap-3 mt-1">
+              {/* Close Button */}
               <button
-                type="button"
                 onClick={onClose}
-                className="flex-1 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                type="button"
+                className="bg-white/10 border-none rounded-lg p-1.5 cursor-pointer hover:bg-white/20 transition-all text-white/80 hover:text-white"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-[1.5] py-3.5 rounded-xl border-none bg-gray-900 text-white font-bold text-sm cursor-pointer hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  "Save Permissions"
-                )}
+                <X size={14} />
               </button>
             </div>
-          </div>
-        </form>
-      </div>
-    </div>,
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3.5 bg-slate-50/30">
+              {/* Notifications */}
+              {error && (
+                <div className="bg-rose-50 border border-rose-100 p-2.5 rounded-2xl flex items-center gap-2 text-rose-700 text-xs font-semibold">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {success && (
+                <div className="bg-emerald-50 border border-emerald-100 p-2.5 rounded-2xl flex items-center gap-2 text-emerald-700 text-xs font-semibold">
+                  <CheckCircle2 size={14} className="shrink-0" />
+                  <span>{success}</span>
+                </div>
+              )}
+
+              {/* Module List Grid Container */}
+              <div className="bg-slate-50/55 p-3 rounded-2xl border border-slate-100">
+                <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 ml-0.5">
+                  Select Allowed Features
+                </span>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  {AVAILABLE_MODULES.map((m) => {
+                    const checked = isModuleChecked(m.id);
+                    return (
+                      <motion.label 
+                        key={m.id} 
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer select-none transition-all ${
+                          checked 
+                            ? "bg-white border-slate-800 shadow-sm" 
+                            : "bg-white/40 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => handleToggleModule(m.id)}
+                            className="sr-only"
+                          />
+                          {/* Custom Checkbox Design */}
+                          <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center shrink-0 ${
+                            checked 
+                              ? "bg-slate-900 border-slate-900 text-white" 
+                              : "border-slate-355 bg-white"
+                          }`}>
+                            {checked && <Check size={10} strokeWidth={3} />}
+                          </div>
+                        </div>
+                        <span className={`text-xs font-bold truncate transition-all ${
+                          checked ? "text-slate-900" : "text-slate-500"
+                        }`}>
+                          {m.label}
+                        </span>
+                      </motion.label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center gap-3 mt-1 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-3.5 rounded-2xl border border-slate-200 bg-white text-slate-700 font-bold text-sm cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-[1.5] py-3.5 rounded-2xl border-none bg-slate-900 text-white font-bold text-sm cursor-pointer hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-950/10"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={16} />
+                  ) : (
+                    "Save Permissions"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 };

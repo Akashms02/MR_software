@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Calendar,
@@ -59,10 +59,20 @@ const HolidayDataTable = ({
     onEdit,
     onDelete
 }) => {
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const inputRef = useRef(null);
+
+    const filteredHolidays = holidays.filter(holiday => 
+        holiday.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        holiday.primaryType?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-full animate-[fadeSlideIn_0.35s_ease-out]">
-            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
-                <div className="flex items-center gap-3">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0 relative min-h-[77px]">
+                {/* Left Side: Title and Icon */}
+                <div className="flex items-center gap-3 shrink-0">
                     <div className={cn("p-2 rounded-xl bg-opacity-10", {
                         'bg-blue-50 text-blue-600': color === 'blue',
                         'bg-amber-50 text-amber-600': color === 'amber',
@@ -70,8 +80,66 @@ const HolidayDataTable = ({
                         <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                        <h2 className="text-[14px] font-bold text-gray-800 tracking-tight uppercase leading-tight">{title}</h2>
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">{holidays.length} Observances</p>
+                        <h2 className="text-[14px] font-bold text-gray-800 tracking-tight uppercase leading-tight whitespace-nowrap">{title}</h2>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5 whitespace-nowrap">{filteredHolidays.length} Observances</p>
+                    </div>
+                </div>
+
+                {/* Right Side: Search */}
+                <div className="flex-1 flex justify-end items-center ml-4">
+                    <div 
+                        className={cn(
+                            "relative flex items-center transition-all duration-300 ease-in-out overflow-hidden rounded-xl",
+                            isSearchOpen 
+                                ? "w-[220px] bg-gray-50 border border-gray-100 px-3 h-10 shadow-sm" 
+                                : "w-10 h-10 border border-transparent bg-transparent hover:bg-gray-50 hover:border-gray-200"
+                        )}
+                    >
+                        {/* Search Icon on the left */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!isSearchOpen) {
+                                    setIsSearchOpen(true);
+                                    setTimeout(() => inputRef.current?.focus(), 100);
+                                }
+                            }}
+                            className={cn(
+                                "text-gray-400 hover:text-blue-600 transition-colors flex items-center justify-center shrink-0",
+                                isSearchOpen ? "cursor-default animate-in fade-in duration-300" : "cursor-pointer w-full h-full"
+                            )}
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+
+                        {/* Input (always mounted but width/opacity animated) */}
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search holiday..."
+                            className={cn(
+                                "flex-1 bg-transparent border-0 outline-none text-xs font-bold text-gray-700 focus:ring-0 p-0 shadow-none focus:outline-none focus:border-0 focus:shadow-none focus:ring-transparent focus-visible:outline-none transition-all duration-300",
+                                isSearchOpen ? "opacity-100 pointer-events-auto ml-2 w-full" : "opacity-0 pointer-events-none w-0 overflow-hidden ml-0"
+                            )}
+                            ref={inputRef}
+                        />
+
+                        {/* Clear/Close 'X' Icon */}
+                        <button 
+                            type="button"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setIsSearchOpen(false);
+                            }}
+                            className={cn(
+                                "p-1 text-gray-400 hover:text-gray-600 active:scale-95 transition-all shrink-0",
+                                isSearchOpen ? "opacity-100 pointer-events-auto ml-1 w-6" : "opacity-0 pointer-events-none w-0 overflow-hidden ml-0"
+                            )}
+                            title="Clear and close search"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -87,7 +155,7 @@ const HolidayDataTable = ({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                        {holidays.map((holiday, idx) => {
+                        {filteredHolidays.map((holiday, idx) => {
                             const RowIcon = getHolidayIcon(holiday.primaryType);
                             const isVisible = holiday.visible !== false;
                             return (
@@ -173,7 +241,7 @@ const HolidayDataTable = ({
                             );
                         })}
 
-                        {!loading && holidays.length === 0 && (
+                        {!loading && filteredHolidays.length === 0 && (
                             <tr>
                                 <td colSpan="5" className="px-6 py-16 text-center">
                                     <div className="flex flex-col items-center opacity-40">
@@ -283,8 +351,8 @@ const HolidayModal = ({ isOpen, onClose, onSubmit, holiday = null, mode = 'ADD' 
     };
 
     return (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4">
-            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-gray-100">
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 px-4 py-6">
+            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-full">
                 <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                     <div>
                         <h3 className="text-[15px] font-extrabold text-gray-900 uppercase tracking-tight">
@@ -296,7 +364,7 @@ const HolidayModal = ({ isOpen, onClose, onSubmit, holiday = null, mode = 'ADD' 
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-4">
+                <form onSubmit={handleSubmit} className="p-8 space-y-4 overflow-y-auto flex-1 min-h-0">
                     <div className="space-y-1.5">
                         <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider ml-1">Holiday Name</label>
                         <input

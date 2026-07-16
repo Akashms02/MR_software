@@ -34,6 +34,7 @@ import {
   mergeVisitLists,
   normalizeAttendanceRecord,
   normalizeVisitRecord,
+  extractPagination,
 } from "../../utils/attendanceUtils";
 
 const commonError = "Something went wrong!";
@@ -100,16 +101,29 @@ export const fetchMyAttendanceAction = () => async (dispatch, getState) => {
   }
 };
 
-export const fetchTeamAttendanceAction = (date) => async (dispatch) => {
+export const fetchTeamAttendanceAction = (date, page, size) => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_ATTENDANCE_REQUEST });
   try {
-    const url = date ? `${API_ROUTE}/attendance/team?date=${date}` : `${API_ROUTE}/attendance/team`;
+    let url = `${API_ROUTE}/attendance/team`;
+    const params = [];
+    if (date) params.push(`date=${date}`);
+    if (page !== undefined) params.push(`page=${page}`);
+    if (size !== undefined) params.push(`size=${size}`);
+    
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+
     const response = await axios.get(url);
     const payloadData = extractAttendanceList(response);
+    const rawData = response.data?.data ?? response.data;
+    const pagination = extractPagination(rawData, page || 0, size || 10);
+
     dispatch({
       type: FETCH_TEAM_ATTENDANCE_SUCCESS,
       payload: payloadData,
+      pagination: pagination,
     });
     return response.data;
   } catch (error) {
