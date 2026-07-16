@@ -16,6 +16,7 @@ import { fetchTeamDcrsAction, reviewDcrAction } from '../../redux/actions/dcrAct
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
 import { getActiveNotices } from '../../redux/actions/noticeActions';
+import Pagination from '../../components/common/Pagination';
 
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
@@ -131,16 +132,21 @@ const MedicalExecutiveDashboard = () => {
   };
   const [selectedNotice, setSelectedNotice] = useState(null);
 
+  const [mrPage, setMrPage] = useState(0);
+  const mrPageSize = 5;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     dispatch(fetchProfile());
     dispatch(getMyTeam());
     dispatch(fetchTeamLeavesAction());
-    dispatch(fetchTeamAttendanceAction());
+    dispatch(fetchTeamAttendanceAction(todayStr, 0, 1000));
     dispatch(fetchTeamVisitsAction());
     dispatch(fetchTeamDcrsAction());
     dispatch(fetchActiveUpcomingHolidaysAction());
     dispatch(getActiveNotices());
-  }, [dispatch]);
+  }, [dispatch, todayStr]);
 
   useEffect(() => {
     if (dcrSuccess) {
@@ -242,6 +248,12 @@ const MedicalExecutiveDashboard = () => {
     const isSuperAdmin = name.includes('superadmin') || name.includes('admin');
     return isMr && !isSuperAdmin;
   });
+
+  const paginatedEmployees = mrEmployees.slice(mrPage * mrPageSize, (mrPage + 1) * mrPageSize);
+
+  useEffect(() => {
+    setMrPage(0);
+  }, [mrEmployees.length]);
 
   // Leaves calculation
   const pendingLeavesCount = teamLeaves.filter(l => l.status === 'PENDING').length;
@@ -747,80 +759,94 @@ const MedicalExecutiveDashboard = () => {
             </div>
           </div>
 
-          <div className="max-h-[460px] overflow-y-auto pr-1">
+          <div className="flex flex-col min-h-[350px] overflow-y-auto pr-1">
             {mrEmployees.length === 0 ? (
               <div className="py-8 text-center text-[#9CA3AF] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB]">
                 <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No MRs in your team database.</p>
               </div>
             ) : (
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-[1.5px] border-[#F3F4F6]">
-                    {['Employee', 'Today\'s Activity', 'Action'].map((h) => (
-                      <th key={h} className="px-3 py-2.5 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {mrEmployees.map((member) => {
-                    const initials = member.fullName ? member.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
-                    const punchRec = getTodayPunchRecord(member.id || member.employeeId);
-                    
-                    let activityStatus = 'Not Punched In';
-                    let activityColorClass = 'bg-[#F3F4F6] text-[#6B7280]';
-                    
-                    if (punchRec) {
-                      if (punchRec.punchOutTime) {
-                        activityStatus = `Punched Out at ${formatIsoToTime(punchRec.punchOutTime)}`;
-                        activityColorClass = 'bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]';
-                      } else if (punchRec.punchInTime) {
-                        activityStatus = `Punched In at ${formatIsoToTime(punchRec.punchInTime)}`;
-                        activityColorClass = 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]';
+              <div className="flex-1 flex flex-col justify-between">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b-[1.5px] border-[#F3F4F6]">
+                      {['Employee', 'Today\'s Activity', 'Action'].map((h) => (
+                        <th key={h} className="px-3 py-2.5 text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.5px]">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedEmployees.map((member) => {
+                      const initials = member.fullName ? member.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
+                      const punchRec = getTodayPunchRecord(member.id || member.employeeId);
+                      
+                      let activityStatus = 'Not Punched In';
+                      let activityColorClass = 'bg-[#F3F4F6] text-[#6B7280]';
+                      
+                      if (punchRec) {
+                        if (punchRec.punchOutTime) {
+                          activityStatus = `Punched Out at ${formatIsoToTime(punchRec.punchOutTime)}`;
+                          activityColorClass = 'bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]';
+                        } else if (punchRec.punchInTime) {
+                          activityStatus = `Punched In at ${formatIsoToTime(punchRec.punchInTime)}`;
+                          activityColorClass = 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]';
+                        }
                       }
-                    }
 
-                    return (
-                      <tr key={member.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
-                        {/* Name & Avatar */}
-                        <td className="py-3 px-2">
-                          <div className="flex items-center gap-2">
-                            {member.photoUrl ? (
-                              <img src={getFullAssetUrl(member.photoUrl)} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#CBD5E1] to-[#94A3B8] text-white text-[11px] font-bold flex items-center justify-center">
-                                {initials}
+                      return (
+                        <tr key={member.id} className="border-b border-[#FAFAFA] transition-colors duration-150 hover:bg-slate-50/50">
+                          {/* Name & Avatar */}
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              {member.photoUrl ? (
+                                <img src={getFullAssetUrl(member.photoUrl)} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#CBD5E1] to-[#94A3B8] text-white text-[11px] font-bold flex items-center justify-center">
+                                  {initials}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <div className="text-[13px] font-extrabold text-[#1F2937] truncate max-w-[100px]">{member.fullName || 'Unknown'}</div>
+                                <div className="text-[10px] text-[#9CA3AF] truncate max-w-[100px]">{member.email || 'N/A'}</div>
                               </div>
-                            )}
-                            <div className="min-w-0">
-                              <div className="text-[13px] font-extrabold text-[#1F2937] truncate max-w-[100px]">{member.fullName || 'Unknown'}</div>
-                              <div className="text-[10px] text-[#9CA3AF] truncate max-w-[100px]">{member.email || 'N/A'}</div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Activity */}
-                        <td className="py-3 px-2">
-                          <span className={`inline-flex px-2 py-0.5 rounded-[12px] text-[10px] font-extrabold ${activityColorClass}`}>
-                            {activityStatus}
-                          </span>
-                        </td>
+                          {/* Activity */}
+                          <td className="py-3 px-2">
+                            <span className={`inline-flex px-2 py-0.5 rounded-[12px] text-[10px] font-extrabold ${activityColorClass}`}>
+                              {activityStatus}
+                            </span>
+                          </td>
 
-                        {/* Track Action */}
-                        <td className="py-3 px-2">
-                          <button
-                            onClick={() => navigate('/medical-executive/fieldtracking')}
-                            className="bg-white text-gray-700 border border-gray-200 px-2 py-1 rounded-lg cursor-pointer font-bold text-[11px] hover:bg-gray-50 transition-colors whitespace-nowrap"
-                          >
-                            Track
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          {/* Track Action */}
+                          <td className="py-3 px-2">
+                            <button
+                              onClick={() => navigate('/medical-executive/fieldtracking')}
+                              className="bg-white text-gray-700 border border-gray-200 px-2 py-1 rounded-lg cursor-pointer font-bold text-[11px] hover:bg-gray-50 transition-colors whitespace-nowrap"
+                            >
+                              Track
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Pagination Controls */}
+                <div className="mt-4 border-t border-[#F3F4F6] pt-3">
+                  <Pagination
+                    currentPage={mrPage}
+                    totalPages={Math.ceil(mrEmployees.length / mrPageSize)}
+                    totalElements={mrEmployees.length}
+                    pageSize={mrPageSize}
+                    onPageChange={(page) => setMrPage(page)}
+                    isLoading={false}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </Card>
