@@ -221,33 +221,6 @@ const DcrReviewPage = () => {
       {/* Main content grid */}
       <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-hidden mb-1">
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5 mb-[4px] shrink-0">
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.01)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]"
-            >
-              <div
-                className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0"
-                style={{ background: s.bg }}
-              >
-                {s.icon}
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.5px]">
-                  {s.label}
-                </div>
-                <div className="text-[20px] font-extrabold text-[#1F2937] my-0.5">
-                  {s.value}
-                </div>
-                <div className="text-[11px] text-[#9CA3AF] font-bold">
-                  {s.sub}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Applications Table */}
         <div className="bg-white rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">

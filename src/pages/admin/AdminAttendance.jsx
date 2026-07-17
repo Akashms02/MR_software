@@ -12,6 +12,7 @@ import {
   clearLeaveSuccessAction
 } from '../../redux/actions/leaveActions';
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions';
+import { isManagerRole } from '../../utils/roleHelpers';
 
 /* ── Small Donut Chart (SVG) ─────────────────────────────────────────── */
 function DonutChart({ used, total, color }) {
@@ -69,7 +70,7 @@ function LeaveCard({ label, total, used, color }) {
 function LeaveHistoryRow({ type, sub, date, status }) {
   const badgeClasses = {
     'APPROVED': 'bg-[#F0FDF4] text-[#22C55E]',
-    'PENDING':  'bg-[#FFFBEB] text-[#F59E0B]',
+    'PENDING': 'bg-[#FFFBEB] text-[#F59E0B]',
     'REJECTED': 'bg-[#FFF1F2] text-[#F43F5E]',
   }[status?.toUpperCase()] || 'bg-[#F3F4F6] text-[#6B7280]';
 
@@ -103,11 +104,10 @@ function CalendarRow({ dateBg, dateColor, dateText, title, sub, actionLabel, act
       {actionLabel && (
         <button
           onClick={onAction}
-          className={`px-3 py-1 rounded-md text-[10px] font-bold border-0 cursor-pointer transition-all active:scale-95 ${
-            actionColor === 'lime' 
-              ? 'bg-[#C8F04A] text-[#1A1A1A] hover:opacity-90' 
+          className={`px-3 py-1 rounded-md text-[10px] font-bold border-0 cursor-pointer transition-all active:scale-95 ${actionColor === 'lime'
+              ? 'bg-[#C8F04A] text-[#1A1A1A] hover:opacity-90'
               : 'bg-[#FFF1F2] text-[#F43F5E] hover:bg-[#FFE4E6]'
-          }`}
+            }`}
         >
           {actionLabel}
         </button>
@@ -154,9 +154,10 @@ export default function AdminAttendance() {
     dispatch(fetchActiveUpcomingHolidaysAction());
     dispatch(fetchLeaveTypesAction());
 
-    const isSupervisor = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'HR' || 
-                         user?.role === 'MANAGER' || user?.role === 'VP' || user?.role === 'ZONE_MANAGER' || 
-                         user?.role === 'REGIONAL_MANAGER' || user?.role === 'AREA_MANAGER';
+    const isSupervisor = isManagerRole(user?.role) ||
+                         user?.role === 'ADMIN' ||
+                         user?.role === 'SUPER_ADMIN' ||
+                         user?.role === 'HR';
     if (isSupervisor) {
       dispatch(fetchTeamLeavesAction());
     }
@@ -206,7 +207,7 @@ export default function AdminAttendance() {
       setEndDate('');
       setReason('');
       setIsApplyModalOpen(false);
-      
+
       const currentYear = new Date().getFullYear();
       dispatch(fetchMyLeavesAction());
       dispatch(fetchMyBalancesAction(currentYear));
@@ -237,6 +238,10 @@ export default function AdminAttendance() {
 
   const upcomingHolidays = (activeUpcomingHolidays || []).slice(0, 4);
   const myLeavesHistory = (leaves || []).slice(0, 4);
+  const isSupervisor = isManagerRole(user?.role) ||
+                       user?.role === 'ADMIN' ||
+                       user?.role === 'SUPER_ADMIN' ||
+                       user?.role === 'HR';
 
   return (
     <div className="animate-[fadeSlideIn_0.3s_ease-out] relative">
@@ -288,7 +293,7 @@ export default function AdminAttendance() {
               <div className="text-sm font-extrabold text-[#111827]">Leave History</div>
               <Calendar size={14} className="text-[#9CA3AF]" />
             </div>
-            
+
             {myLeavesHistory.length > 0 ? (
               <div className="space-y-1">
                 {myLeavesHistory.map((leave, idx) => (
@@ -341,32 +346,39 @@ export default function AdminAttendance() {
       </div>
 
       {/* ── Team Leave Calendar (only for supervisors/managers) ── */}
-      {approvedTeamLeaves.length > 0 && (
+      {isSupervisor && (
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
           <div className="text-sm font-extrabold text-[#111827] mb-3">Team On Leave</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {approvedTeamLeaves.map((leave, idx) => {
-              const name = leave.employeeName || leave.fullName || "Team Member";
-              const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-              const fromDate = leave.startDate || leave.fromDate || "";
-              const toDate = leave.endDate || leave.toDate || "";
-              
-              return (
-                <div key={leave.id || idx} className="bg-[#FFF8F0] border border-[#FEF3C7] rounded-xl px-4 py-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-xs font-bold text-amber-800 shrink-0">
-                    {initials}
+          {approvedTeamLeaves.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {approvedTeamLeaves.map((leave, idx) => {
+                const name = leave.employeeName || leave.fullName || "Team Member";
+                const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const fromDate = leave.startDate || leave.fromDate || "";
+                const toDate = leave.endDate || leave.toDate || "";
+
+                return (
+                  <div key={leave.id || idx} className="bg-[#FFF8F0] border border-[#FEF3C7] rounded-xl px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-xs font-bold text-amber-800 shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-extrabold text-[#374151] truncate">{name}</div>
+                      <div className="text-[10px] text-[#9CA3AF] mt-0.5">{formatLeaveTypeName(leave.leaveTypeName || leave.leaveType)}</div>
+                    </div>
+                    <div className="text-[9px] font-extrabold text-amber-700 bg-amber-100/60 border border-amber-200/50 px-2 py-0.5 rounded-md whitespace-nowrap">
+                      {fromDate.substring(5)} to {toDate.substring(5)}
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-extrabold text-[#374151] truncate">{name}</div>
-                    <div className="text-[10px] text-[#9CA3AF] mt-0.5">{formatLeaveTypeName(leave.leaveTypeName || leave.leaveType)}</div>
-                  </div>
-                  <div className="text-[9px] font-extrabold text-amber-700 bg-amber-100/60 border border-amber-200/50 px-2 py-0.5 rounded-md whitespace-nowrap">
-                    {fromDate.substring(5)} to {toDate.substring(5)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 text-center text-gray-400">
+              <Clock size={24} className="mb-1.5 text-gray-300" />
+              <span className="text-xs font-semibold">No team members are currently on leave</span>
+            </div>
+          )}
         </div>
       )}
 
