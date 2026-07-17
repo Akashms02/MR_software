@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import { login, clearErrors } from '../redux/actions/authActions'
 import { useToast } from '../context/ToastContext'
-import { isFieldSalesRole } from '../utils/roleHelpers'
+import { isFieldSalesRole, isManagerRole } from '../utils/roleHelpers'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -56,12 +56,8 @@ export default function LoginPage() {
         navigate('/mr/dashboard', { replace: true });
       } else if (roleStr === 'HR') {
         navigate('/hr/dashboard', { replace: true });
-      } else if (roleStr === 'REGIONAL_MANAGER' || roleStr === 'REGIONAL MANAGER') {
-        navigate('/regional-manager/dashboard', { replace: true });
-      } else if (roleStr === 'AREA_MANAGER' || roleStr === 'AREA MANAGER') {
-        navigate('/area-manager/dashboard', { replace: true });
-      } else if (roleStr === 'MEDICAL_MANAGER' || roleStr === 'MEDICAL MANAGER') {
-        navigate('/medical-manager/dashboard', { replace: true });
+      } else if (isManagerRole(user.role)) {
+        navigate('/manager/dashboard', { replace: true });
       } else if (roleStr === 'DOCTOR') {
         navigate('/doctor/dashboard', { replace: true });
       } else if (roleStr === 'PHARMACIST') {
