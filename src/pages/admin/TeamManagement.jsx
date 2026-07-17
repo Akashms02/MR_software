@@ -48,6 +48,10 @@ const TeamManagement = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 6; // Set to 6 per page for dynamic card layout fit
 
+  // Detect role path prefix for onboarding redirection
+  const isManager = window.location.pathname.includes('/manager');
+  const onboardPath = isManager ? '/manager/myteam/onboard' : '/admin/myteam/onboard';
+
   // Reset page when search query changes
   useEffect(() => {
     setCurrentPage(0);
@@ -94,7 +98,7 @@ const TeamManagement = () => {
   const handleResumeSubmit = (e) => {
     e.preventDefault();
     if (resumeId.trim()) {
-      navigate(`/admin/myteam/onboard?employeeId=${resumeId.trim()}`);
+      navigate(`${onboardPath}?employeeId=${resumeId.trim()}`);
     }
   };
 
@@ -128,59 +132,31 @@ const TeamManagement = () => {
 
   return (
     <div className="p-2 animate-in fade-in duration-300">
-      {/* Action Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <span className="text-[11px] font-extrabold text-teal-600 uppercase tracking-widest bg-teal-50 px-3 py-1 rounded-full">
-            Organization Directory
-          </span>
-          <h2 className="text-xl font-extrabold text-gray-900 mt-2 mb-0">My Reporting Team</h2>
-        </div>
-        <button
-          onClick={() => navigate('/admin/myteam/onboard')}
-          className="flex items-center gap-2 bg-[#0F766E] text-white px-5.5 py-3 rounded-xl border-none font-bold text-sm cursor-pointer shadow-lg hover:bg-[#0D9488] transition-all duration-200 hover:-translate-y-0.5"
-        >
-          <Plus size={18} strokeWidth={3} />
-          Onboard New Member
-        </button>
-      </div>
-
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-        {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-white p-5 rounded-2xl border border-gray-150 shadow-sm flex flex-col gap-1.5"
-          >
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              {s.label}
-            </span>
-            <span className={`text-2xl font-black ${s.textClass}`}>
-              {s.value}
-            </span>
-          </div>
-        ))}
-      </div>
-
       {/* Card Grid Container */}
-      <div className="bg-white rounded-3xl border border-gray-150 shadow-sm p-6 flex flex-col min-h-[500px]">
+      <div className="bg-white rounded-3xl p-6 flex flex-col min-h-[500px]">
         {/* Search Toolbar */}
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 pb-6 border-b border-gray-100 mb-6 shrink-0">
-          <div className="relative flex-1 max-w-sm">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              placeholder="Search by name, email or role…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3.5 py-2.5 rounded-xl border-[1.5px] border-gray-200 w-full text-[13px] outline-none transition-[border-color] duration-200 focus:border-teal-500 bg-white"
-            />
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1">
+            <div className="relative flex-1 max-w-sm">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                placeholder="Search by name, email or role…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-3.5 py-2.5 rounded-xl border-[1.5px] border-gray-200 w-full text-[13px] outline-none transition-[border-color] duration-200 focus:border-teal-500 bg-white"
+              />
+            </div>
           </div>
-          <span className="text-[12px] text-gray-400 font-bold self-end sm:self-center">
-            {filteredTeam.length} Active Member{filteredTeam.length !== 1 ? 's' : ''}
-          </span>
+          <button
+            onClick={() => navigate(onboardPath)}
+            className="flex items-center gap-2 bg-[#0F766E] text-white px-5.5 py-2.5 rounded-xl border-none font-bold text-sm cursor-pointer shadow-lg hover:bg-[#0D9488] transition-all duration-200 hover:-translate-y-0.5"
+          >
+            <Plus size={18} strokeWidth={3} />
+            Onboard New Member
+          </button>
         </div>
 
         {/* Dynamic Card Area */}
