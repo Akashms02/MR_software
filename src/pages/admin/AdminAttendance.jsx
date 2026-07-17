@@ -25,12 +25,14 @@ function DonutChart({ used, total, color }) {
   return (
     <svg width="68" height="68" viewBox="0 0 68 68">
       <circle cx="34" cy="34" r={r} fill="none" stroke="#F3F4F6" strokeWidth="7" />
-      <circle cx="34" cy="34" r={r} fill="none" stroke={color} strokeWidth="7"
+      {/* Used portion (Soft Red/Rose) */}
+      <circle cx="34" cy="34" r={r} fill="none" stroke="#FCA5A5" strokeWidth="7"
         strokeDasharray={`${usedDash} ${circ - usedDash}`}
         strokeLinecap="round"
         transform="rotate(-90 34 34)"
       />
-      <circle cx="34" cy="34" r={r} fill="none" stroke="#E5E7EB" strokeWidth="7"
+      {/* Unused/Remaining portion (Theme Color) */}
+      <circle cx="34" cy="34" r={r} fill="none" stroke={color} strokeWidth="7"
         strokeDasharray={`${remDash} ${circ - remDash}`}
         strokeLinecap="round"
         transform={`rotate(${(used / safeTotal) * 360 - 90} 34 34)`}
