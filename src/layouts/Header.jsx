@@ -59,7 +59,10 @@ export default function Header({ role }) {
 
       {/* Apply Leave button (only on Me page) */}
       {showApplyLeave && (
-        <button className="inline-flex items-center gap-1.5 py-[9px] px-[18px] bg-[#C8F04A] text-[#1A1A1A] font-bold text-[13px] rounded-[10px] border-none cursor-pointer transition-all duration-[180ms] hover:bg-[#B8E040] hover:-translate-y-0.5 font-sans ml-4 shrink-0">
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('open-apply-leave-modal'))}
+          className="inline-flex items-center gap-1.5 py-[9px] px-[18px] bg-[#C8F04A] text-[#1A1A1A] font-bold text-[13px] rounded-[10px] border-none cursor-pointer transition-all duration-[180ms] hover:bg-[#B8E040] hover:-translate-y-0.5 font-sans ml-4 shrink-0"
+        >
           Apply Leave
         </button>
       )}

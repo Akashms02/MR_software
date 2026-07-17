@@ -160,6 +160,13 @@ export default function AdminAttendance() {
     }
   }, [dispatch, user]);
 
+  // Listen for Apply Leave trigger from layout Header
+  useEffect(() => {
+    const handleOpenModal = () => setIsApplyModalOpen(true);
+    window.addEventListener('open-apply-leave-modal', handleOpenModal);
+    return () => window.removeEventListener('open-apply-leave-modal', handleOpenModal);
+  }, []);
+
   // Default leave type setup
   useEffect(() => {
     if (leaveTypes?.length > 0 && !leaveTypeId) {
@@ -231,20 +238,6 @@ export default function AdminAttendance() {
 
   return (
     <div className="animate-[fadeSlideIn_0.3s_ease-out] relative">
-
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex justify-between items-center mb-5">
-        <div>
-          <h2 className="text-xl font-extrabold text-[#111827] tracking-tight">Me & Leaves</h2>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">View leave balances, active upcoming holidays, and apply for leaves</p>
-        </div>
-        <button
-          onClick={() => setIsApplyModalOpen(true)}
-          className="flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-[#111827] hover:bg-gray-800 text-white border-none font-bold text-[12.5px] cursor-pointer shadow-sm transition-all"
-        >
-          <Plus size={14} strokeWidth={2.5} /> Apply Leave
-        </button>
-      </div>
 
       {/* ── Leave Balance Cards Row ─────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
