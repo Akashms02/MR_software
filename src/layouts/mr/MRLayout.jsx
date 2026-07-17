@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp, FileSpreadsheet } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getDisplayRole } from '../../utils/roleHelpers'
 import {
   getNotifications,
   getUnreadCount,
@@ -100,7 +101,7 @@ export default function MRLayout({ children }) {
   const { user } = useSelector(state => state.auth)
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'MR Employee'
-  const displayRole = 'Medical Representative (MR)'
+  const displayRole = getDisplayRole(user?.role)
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   
