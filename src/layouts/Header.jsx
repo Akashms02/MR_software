@@ -9,7 +9,7 @@ function getPageTitle(activePage, role) {
     return 'Dashboard'
   }
   if (activePage === 'dcr') return 'Daily Call Reports (DCR)'
-  if (activePage === 'me') return 'Me > Leaves'
+  if (activePage === 'me') return 'My Leaves'
   if (activePage === 'recruitment') return 'Recruitment > Candidates'
   if (activePage === 'myteam') return 'My Team'
   if (activePage === 'fieldtracking') return 'Field Tracking'
@@ -31,7 +31,7 @@ function getPageSub(activePage, role) {
     return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
   if (activePage === 'dcr') return 'Log and track call visits submitted to your reporting manager.'
-  if (activePage === 'me') return 'Working Hard? Request time off!'
+  if (activePage === 'me') return 'Track your leave balances, history, and request time off.'
   if (activePage === 'recruitment') return '189 Total'
   return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }

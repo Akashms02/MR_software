@@ -118,8 +118,7 @@ export default function ManagerLayout({ children }) {
     { id: 'tourplans',     icon: MapPin,          label: 'Tour Plans',      path: '/manager/tourplans' },
     { id: 'sales',         icon: TrendingUp,      label: 'Distributor Sales', path: '/manager/sales' },
     { id: 'finance',       icon: FileText,        label: 'My Payslips',     path: '/manager/finance' },
-    { id: 'me',            icon: User,            label: 'Me',              path: '/manager/me' },
-    { id: 'watercooler',   icon: Coffee,          label: 'Water Cooler',    path: '/manager/watercooler' },
+    { id: 'me',            icon: User,            label: 'My Leaves',       path: '/manager/me' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
