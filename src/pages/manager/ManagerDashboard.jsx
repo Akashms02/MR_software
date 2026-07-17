@@ -36,22 +36,25 @@ const ManagerDashboard = () => {
     const fetchPendingCounts = async () => {
       setLoadingStats(true);
       try {
-        // Fetch pending DCRs
-        const dcrRes = await axios.get(`${API_ROUTE}/dcr/pending`);
+        // Fetch team DCRs and filter for pending
+        const dcrRes = await axios.get(`${API_ROUTE}/dcr/team`);
         if (dcrRes.data && dcrRes.data.data) {
-          setPendingDcrCount(dcrRes.data.data.length);
+          const pending = dcrRes.data.data.filter(item => item.status === 'PENDING');
+          setPendingDcrCount(pending.length);
         }
         
-        // Fetch pending leaves
-        const leaveRes = await axios.get(`${API_ROUTE}/leaves/pending`);
-        if (leaveRes.data && leaveRes.data.data) {
-          setPendingLeaveCount(leaveRes.data.data.length);
+        // Fetch team leaves and filter for pending
+        const leaveRes = await axios.get(`${API_ROUTE}/leaves/requests/team?size=1000`);
+        if (leaveRes.data && leaveRes.data.data && leaveRes.data.data.content) {
+          const pending = leaveRes.data.data.content.filter(item => item.status === 'PENDING');
+          setPendingLeaveCount(pending.length);
         }
 
-        // Fetch pending tour plans
-        const tourRes = await axios.get(`${API_ROUTE}/tourplans/pending`);
-        if (tourRes.data && tourRes.data.data) {
-          setPendingTourPlanCount(tourRes.data.data.length);
+        // Fetch team tour plans and filter for pending
+        const tourRes = await axios.post(`${API_ROUTE}/tour-plan/team`, { size: 1000 });
+        if (tourRes.data && tourRes.data.data && tourRes.data.data.content) {
+          const pending = tourRes.data.data.content.filter(item => item.status === 'PENDING');
+          setPendingTourPlanCount(pending.length);
         }
       } catch (err) {
         console.error('Failed to fetch supervisor pending counts:', err);
