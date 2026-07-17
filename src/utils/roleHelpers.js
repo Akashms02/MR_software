@@ -76,13 +76,11 @@ export const isManagerRole = (role) => {
 export const getDisplayRole = (role) => {
   if (!role) return 'Employee';
   
-  const normalized = role.toUpperCase().trim();
+  if (isFieldSalesRole(role)) {
+    return 'Medical Representative';
+  }
   
-  // Reps
-  if (normalized === 'MR') return 'Medical Representative (MR)';
-  if (normalized === 'ME') return 'Medical Executive (ME)';
-  if (normalized === 'MSE') return 'Medical Sales Executive (MSE)';
-  if (normalized === 'MSR') return 'Medical Sales Representative (MSR)';
+  const normalized = role.toUpperCase().trim();
   
   // Managers
   if (normalized === 'ABM') return 'Area Business Manager (ABM)';
