@@ -274,21 +274,19 @@ const AdminLeaveReviewPage = () => {
       <div className="flex gap-2.5 mb-4 shrink-0">
         <button
           onClick={() => setActiveTab('requests')}
-          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-            activeTab === 'requests' 
-              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${activeTab === 'requests'
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none'
               : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-          }`}
+            }`}
         >
           Leave Approvals
         </button>
         <button
           onClick={() => setActiveTab('policies')}
-          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${
-            activeTab === 'policies' 
-              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none' 
+          className={`px-[22px] py-2.5 rounded-xl border-none cursor-pointer text-[13.5px] font-bold transition-all duration-200 outline-none ${activeTab === 'policies'
+              ? 'bg-[#C8F04A] text-[#111827] shadow-[0_4px_12px_rgba(200,240,74,0.25)] border-none'
               : 'bg-white text-[#111827] border border-gray-200 hover:bg-gray-50'
-          }`}
+            }`}
         >
           Leave Policies & Types
         </button>
@@ -296,7 +294,7 @@ const AdminLeaveReviewPage = () => {
 
       {/* Main Content Layout */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        
+
         {/* Section 1: Types of Leave Table */}
         {activeTab === 'policies' && (
           <div className="bg-white border-[1.5px] border-[#F3F4F6] rounded-[18px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -352,11 +350,10 @@ const AdminLeaveReviewPage = () => {
                           {alloc.description || 'No policy description provided.'}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                            alloc.applicableGender === 'MALE' ? 'bg-blue-50 text-blue-600' :
-                            alloc.applicableGender === 'FEMALE' ? 'bg-pink-50 text-pink-600' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${alloc.applicableGender === 'MALE' ? 'bg-blue-50 text-blue-600' :
+                              alloc.applicableGender === 'FEMALE' ? 'bg-pink-50 text-pink-600' :
+                                'bg-gray-100 text-gray-600'
+                            }`}>
                             {alloc.applicableGender || 'ALL'}
                           </span>
                         </td>
@@ -364,9 +361,8 @@ const AdminLeaveReviewPage = () => {
                           {alloc.maxAllowedDays ?? alloc.limit ?? alloc.days ?? 0} Days
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                            alloc.carryForward ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
-                          }`}>
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${alloc.carryForward ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                            }`}>
                             {alloc.carryForward ? 'Enabled' : 'Disabled'}
                           </span>
                         </td>
@@ -431,11 +427,10 @@ const AdminLeaveReviewPage = () => {
                         key={tab.value}
                         type="button"
                         onClick={() => setFilterStatus(tab.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border-none ${
-                          isActive
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border-none ${isActive
                             ? 'bg-[#111827] text-white shadow-sm'
                             : 'text-gray-500 hover:text-[#111827] bg-transparent'
-                        }`}
+                          }`}
                       >
                         {tab.label}
                       </button>
