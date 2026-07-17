@@ -15,9 +15,7 @@ import SuperAdminLayoutRouter from './layouts/superadmin';
 import AdminLayoutRouter from './layouts/admin';
 import MRLayoutRouter from './layouts/mr';
 import HRLayoutRouter from './layouts/hr';
-import RegionalManagerLayoutRouter from './layouts/regional-manager';
-import AreaManagerLayoutRouter from './layouts/area-manager';
-import MedicalManagerLayoutRouter from './layouts/medical-manager';
+import ManagerLayoutRouter from './layouts/manager';
 import DoctorLayoutRouter from './layouts/doctor';
 import PharmacistLayoutRouter from './layouts/pharmacist';
 import DistributorLayoutRouter from './layouts/distributor';
@@ -36,6 +34,13 @@ function DashboardRedirect() {
     } catch (e) {}
   }
   
+  if (isFieldSalesRole(role)) {
+    return <Navigate to="/mr/dashboard" replace />;
+  }
+  if (isManagerRole(role)) {
+    return <Navigate to="/manager/dashboard" replace />;
+  }
+
   const normalizedRole = (role || '').toUpperCase().trim();
   
   switch (normalizedRole) {
@@ -45,19 +50,8 @@ function DashboardRedirect() {
       return <Navigate to="/superadmin/dashboard" replace />;
     case 'ADMIN':
       return <Navigate to="/admin/dashboard" replace />;
-    case 'MR':
-      return <Navigate to="/mr/dashboard" replace />;
     case 'HR':
       return <Navigate to="/hr/dashboard" replace />;
-    case 'REGIONAL_MANAGER':
-    case 'REGIONAL MANAGER':
-      return <Navigate to="/regional-manager/dashboard" replace />;
-    case 'AREA_MANAGER':
-    case 'AREA MANAGER':
-      return <Navigate to="/area-manager/dashboard" replace />;
-    case 'MEDICAL_MANAGER':
-    case 'MEDICAL MANAGER':
-      return <Navigate to="/medical-manager/dashboard" replace />;
     case 'DOCTOR':
       return <Navigate to="/doctor/dashboard" replace />;
     case 'PHARMACIST':
@@ -66,17 +60,6 @@ function DashboardRedirect() {
       return <Navigate to="/distributor/dashboard" replace />;
     case 'PATIENT':
       return <Navigate to="/patient/dashboard" replace />;
-    case 'MEDICAL_EXECUTIVE':
-    case 'MEDICAL EXECUTIVE':
-    case 'ME':
-      return <Navigate to="/medical-executive/dashboard" replace />;
-    case 'MEDICAL_SALES_EXECUTIVE':
-    case 'MEDICAL SALES EXECUTIVE':
-    case 'MSE':
-    case 'MEDICAL_SALES_REPRESENTATIVE':
-    case 'MEDICAL SALES REPRESENTATIVE':
-    case 'MSR':
-      return <Navigate to="/medical-sales-executive/dashboard" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
@@ -84,6 +67,7 @@ function DashboardRedirect() {
 
 // Actions & Utils
 import { initializeAuth, refreshToken, logout } from './redux/actions/authActions';
+import { isManagerRole, isFieldSalesRole } from './utils/roleHelpers';
 
 
 export default function App() {
@@ -297,29 +281,38 @@ export default function App() {
         }
       />
       <Route
+        path="/manager/*"
+        element={
+          <ProtectedRoute allowedRoles={['manager']}>
+            <ManagerLayoutRouter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/regional-manager/*"
         element={
-          <ProtectedRoute allowedRoles={['regional_manager', 'regional manager']}>
-            <RegionalManagerLayoutRouter />
+          <ProtectedRoute allowedRoles={['manager']}>
+            <ManagerLayoutRouter />
           </ProtectedRoute>
         }
       />
       <Route
         path="/area-manager/*"
         element={
-          <ProtectedRoute allowedRoles={['area_manager', 'area manager']}>
-            <AreaManagerLayoutRouter />
+          <ProtectedRoute allowedRoles={['manager']}>
+            <ManagerLayoutRouter />
           </ProtectedRoute>
         }
       />
       <Route
         path="/medical-manager/*"
         element={
-          <ProtectedRoute allowedRoles={['medical_manager', 'medical manager']}>
-            <MedicalManagerLayoutRouter />
+          <ProtectedRoute allowedRoles={['manager']}>
+            <ManagerLayoutRouter />
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/doctor/*"
         element={
@@ -349,22 +342,6 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['patient']}>
             <PatientLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/medical-executive/*"
-        element={
-          <ProtectedRoute allowedRoles={['mr']}>
-            <MRLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/medical-sales-executive/*"
-        element={
-          <ProtectedRoute allowedRoles={['mr']}>
-            <MRLayoutRouter />
           </ProtectedRoute>
         }
       />

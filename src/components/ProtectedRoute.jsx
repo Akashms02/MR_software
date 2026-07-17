@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { isFieldSalesRole } from '../utils/roleHelpers';
+import { isFieldSalesRole, isManagerRole } from '../utils/roleHelpers';
 
 /**
  * ProtectedRoute handles both authentication and authorization.
@@ -34,6 +34,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   } else if (allowedRoles.includes(userRole)) {
     isAllowed = true;
   } else if (allowedRoles.includes('mr') && isFieldSalesRole(user?.role)) {
+    isAllowed = true;
+  } else if (allowedRoles.includes('manager') && isManagerRole(user?.role)) {
     isAllowed = true;
   }
 

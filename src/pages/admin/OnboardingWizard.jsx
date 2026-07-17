@@ -775,11 +775,13 @@ const OnboardingWizard = () => {
                   onChange={handleInputChange}
                   options={[
                     { value: 'MR', label: 'Medical Representative (MR)' },
-                    { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive' },
-                    { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive' },
+                    { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive (ME)' },
+                    { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive (MSE)' },
+                    { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
+                    { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
+                    { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
+                    { value: 'VICE_PRESIDENT', label: 'Vice President (VP)' },
                     { value: 'HR', label: 'HR Manager' },
-                    { value: 'REGIONAL_MANAGER', label: 'Regional Manager' },
-                    { value: 'AREA_MANAGER', label: 'Area Manager' },
                     { value: 'MEDICAL_MANAGER', label: 'Medical Manager' },
                     { value: 'DOCTOR', label: 'Doctor' },
                     { value: 'PHARMACIST', label: 'Pharmacist' },
