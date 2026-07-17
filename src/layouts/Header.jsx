@@ -9,7 +9,7 @@ function getPageTitle(activePage, role) {
     return 'Dashboard'
   }
   if (activePage === 'dcr') return 'Daily Call Reports (DCR)'
-  if (activePage === 'me') return 'Me > Leaves'
+  if (activePage === 'me') return 'My Leaves'
   if (activePage === 'recruitment') return 'Recruitment > Candidates'
   if (activePage === 'myteam') return 'My Team'
   if (activePage === 'fieldtracking') return 'Field Tracking'
@@ -31,7 +31,7 @@ function getPageSub(activePage, role) {
     return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
   if (activePage === 'dcr') return 'Log and track call visits submitted to your reporting manager.'
-  if (activePage === 'me') return 'Working Hard? Request time off!'
+  if (activePage === 'me') return 'Track your leave balances, history, and request time off.'
   if (activePage === 'recruitment') return '189 Total'
   return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -59,7 +59,10 @@ export default function Header({ role }) {
 
       {/* Apply Leave button (only on Me page) */}
       {showApplyLeave && (
-        <button className="inline-flex items-center gap-1.5 py-[9px] px-[18px] bg-[#C8F04A] text-[#1A1A1A] font-bold text-[13px] rounded-[10px] border-none cursor-pointer transition-all duration-[180ms] hover:bg-[#B8E040] hover:-translate-y-0.5 font-sans ml-4 shrink-0">
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('open-apply-leave-modal'))}
+          className="inline-flex items-center gap-1.5 py-[9px] px-[18px] bg-[#C8F04A] text-[#1A1A1A] font-bold text-[13px] rounded-[10px] border-none cursor-pointer transition-all duration-[180ms] hover:bg-[#B8E040] hover:-translate-y-0.5 font-sans ml-4 shrink-0"
+        >
           Apply Leave
         </button>
       )}

@@ -4,6 +4,8 @@ import {
   fetchOnboardingStatus,
   fetchReportingManagers,
   updateOnboardingDetails,
+  fetchRoleTypes,
+  fetchDepartments,
 } from '../../redux/actions/teamActions';
 import {
   X,
@@ -229,6 +231,71 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
     if (msg) showToast(msg, 'success');
   };
   const [reportingManagers, setReportingManagers] = useState([]);
+  const [roleOptions, setRoleOptions] = useState([
+    { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
+    { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
+    { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
+    { value: 'MR', label: 'Medical Representative (MR)' },
+  ]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await dispatch(fetchRoleTypes());
+        if (response && response.data) {
+          const allRoles = response.data;
+          const allowedKeys = ['ZONE_MANAGER', 'AREA_MANAGER', 'REGIONAL_MANAGER', 'MR'];
+          const filtered = allRoles
+            .filter(role => allowedKeys.includes(role))
+            .map(role => {
+              if (role === 'ZONE_MANAGER') return { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' };
+              if (role === 'AREA_MANAGER') return { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' };
+              if (role === 'REGIONAL_MANAGER') return { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' };
+              return { value: 'MR', label: 'Medical Representative (MR)' };
+            });
+          if (filtered.length > 0) {
+            setRoleOptions(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch roles via Redux:", err);
+      }
+    };
+    if (isOpen) {
+      fetchRoles();
+    }
+  }, [dispatch, isOpen]);
+
+  const [departmentsList, setDepartmentsList] = useState([
+    { value: 'Sales & Marketing', label: 'Sales & Marketing' },
+    { value: 'Medical Affairs', label: 'Medical Affairs' },
+    { value: 'Clinical Research', label: 'Clinical Research' },
+    { value: 'Regulatory', label: 'Regulatory' },
+    { value: 'Manufacturing', label: 'Manufacturing' },
+    { value: 'QA/QC', label: 'QA/QC' },
+    { value: 'HR', label: 'HR' },
+    { value: 'Finance', label: 'Finance' },
+    { value: 'IT', label: 'IT' },
+  ]);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const response = await dispatch(fetchDepartments());
+        if (response && response.data) {
+          const list = response.data;
+          if (Array.isArray(list) && list.length > 0) {
+            setDepartmentsList(list.map(dept => ({ value: dept, label: dept })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch departments via Redux:", err);
+      }
+    };
+    if (isOpen) {
+      loadDepartments();
+    }
+  }, [dispatch, isOpen]);
   
   // Track existing document paths from API
   const [existingDocs, setExistingDocs] = useState({
@@ -782,19 +849,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           value={formData.role}
                           onChange={handleInputChange}
                           isEditing={isEditing}
-                          options={[
-                            { value: 'MR', label: 'Medical Representative (MR)' },
-                            { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive' },
-                            { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive' },
-                            { value: 'HR', label: 'HR Manager' },
-                            { value: 'REGIONAL_MANAGER', label: 'Regional Manager' },
-                            { value: 'AREA_MANAGER', label: 'Area Manager' },
-                            { value: 'MEDICAL_MANAGER', label: 'Medical Manager' },
-                            { value: 'DOCTOR', label: 'Doctor' },
-                            { value: 'PHARMACIST', label: 'Pharmacist' },
-                            { value: 'DISTRIBUTOR', label: 'Distributor' },
-                            { value: 'PATIENT', label: 'Patient' },
-                          ]}
+                          options={roleOptions}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-5">
@@ -993,7 +1048,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           onChange={handleInputChange}
                           isEditing={isEditing}
                           required
-                          placeholder="e.g. Sales, Operations"
+                          options={departmentsList}
                         />
                         <FormField
                           label="Designation"

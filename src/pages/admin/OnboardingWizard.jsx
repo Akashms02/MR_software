@@ -5,6 +5,8 @@ import {
   saveOnboardingStep,
   fetchOnboardingStatus,
   fetchReportingManagers,
+  fetchRoleTypes,
+  fetchDepartments,
 } from '../../redux/actions/teamActions';
 import {
   ChevronLeft,
@@ -144,6 +146,67 @@ const OnboardingWizard = () => {
   };
 
   const [reportingManagers, setReportingManagers] = useState([]);
+  const [roleOptions, setRoleOptions] = useState([
+    { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
+    { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
+    { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
+    { value: 'MR', label: 'Medical Representative (MR)' },
+  ]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await dispatch(fetchRoleTypes());
+        if (response && response.data) {
+          const allRoles = response.data;
+          const allowedKeys = ['ZONE_MANAGER', 'AREA_MANAGER', 'REGIONAL_MANAGER', 'MR'];
+          const filtered = allRoles
+            .filter(role => allowedKeys.includes(role))
+            .map(role => {
+              if (role === 'ZONE_MANAGER') return { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' };
+              if (role === 'AREA_MANAGER') return { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' };
+              if (role === 'REGIONAL_MANAGER') return { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' };
+              return { value: 'MR', label: 'Medical Representative (MR)' };
+            });
+          if (filtered.length > 0) {
+            setRoleOptions(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch roles via Redux:", err);
+      }
+    };
+    fetchRoles();
+  }, [dispatch]);
+
+  const [departmentsList, setDepartmentsList] = useState([
+    { value: 'Sales & Marketing', label: 'Sales & Marketing' },
+    { value: 'Medical Affairs', label: 'Medical Affairs' },
+    { value: 'Clinical Research', label: 'Clinical Research' },
+    { value: 'Regulatory', label: 'Regulatory' },
+    { value: 'Manufacturing', label: 'Manufacturing' },
+    { value: 'QA/QC', label: 'QA/QC' },
+    { value: 'HR', label: 'HR' },
+    { value: 'Finance', label: 'Finance' },
+    { value: 'IT', label: 'IT' },
+  ]);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const response = await dispatch(fetchDepartments());
+        if (response && response.data) {
+          const list = response.data;
+          if (Array.isArray(list) && list.length > 0) {
+            setDepartmentsList(list.map(dept => ({ value: dept, label: dept })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch departments via Redux:", err);
+      }
+    };
+    loadDepartments();
+  }, [dispatch]);
 
   const [formData, setFormData] = useState({
     // Step 1
@@ -773,19 +836,7 @@ const OnboardingWizard = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  options={[
-                    { value: 'MR', label: 'Medical Representative' },
-                    { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
-                    { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
-                    { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
-                    { value: 'VICE_PRESIDENT', label: 'Vice President (VP)' },
-                    { value: 'HR', label: 'HR Manager' },
-                    { value: 'MEDICAL_MANAGER', label: 'Medical Manager' },
-                    { value: 'DOCTOR', label: 'Doctor' },
-                    { value: 'PHARMACIST', label: 'Pharmacist' },
-                    { value: 'DISTRIBUTOR', label: 'Distributor' },
-                    { value: 'PATIENT', label: 'Patient' },
-                  ]}
+                  options={roleOptions}
                 />
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">
@@ -975,7 +1026,7 @@ const OnboardingWizard = () => {
                   value={formData.department}
                   onChange={handleInputChange}
                   required
-                  placeholder="e.g. Sales, Operations"
+                  options={departmentsList}
                 />
                 <FormField
                   label="Designation"

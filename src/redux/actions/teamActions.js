@@ -361,3 +361,37 @@ export const downloadChemistExcelSample = () => async (dispatch) => {
     dispatch({ type: LOADING_END });
   }
 };
+
+/* =======================
+   FETCH ROLES
+   GET /api/v1/admin/roles
+  ======================= */
+export const fetchRoleTypes = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(`${API_ROUTE}/admin/roles`);
+    return response.data;
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || 'Failed to fetch roles.';
+    throw new Error(errMsg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+/* =======================
+   FETCH DEPARTMENTS
+   GET /api/v1/admin/departments
+  ======================= */
+export const fetchDepartments = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.get(`${API_ROUTE}/admin/departments`);
+    return response.data;
+  } catch (error) {
+    const errMsg = error?.response?.data?.message || error?.message || 'Failed to fetch departments.';
+    throw new Error(errMsg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
