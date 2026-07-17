@@ -36,10 +36,10 @@ const ManagerDashboard = () => {
     const fetchPendingCounts = async () => {
       setLoadingStats(true);
       try {
-        // Fetch team DCRs and filter for pending
+        // Fetch team DCRs and filter for pending (SUBMITTED)
         const dcrRes = await axios.get(`${API_ROUTE}/dcr/team`);
         if (dcrRes.data && dcrRes.data.data) {
-          const pending = dcrRes.data.data.filter(item => item.status === 'PENDING');
+          const pending = dcrRes.data.data.filter(item => item.status === 'SUBMITTED');
           setPendingDcrCount(pending.length);
         }
         
@@ -50,10 +50,10 @@ const ManagerDashboard = () => {
           setPendingLeaveCount(pending.length);
         }
 
-        // Fetch team tour plans and filter for pending
+        // Fetch team tour plans and filter for pending (SUBMITTED)
         const tourRes = await axios.post(`${API_ROUTE}/tour-plan/team`, { size: 1000 });
         if (tourRes.data && tourRes.data.data && tourRes.data.data.content) {
-          const pending = tourRes.data.data.content.filter(item => item.status === 'PENDING');
+          const pending = tourRes.data.data.content.filter(item => item.status === 'SUBMITTED');
           setPendingTourPlanCount(pending.length);
         }
       } catch (err) {
