@@ -240,9 +240,9 @@ export default function AdminAttendance() {
     <div className="animate-[fadeSlideIn_0.3s_ease-out] relative">
 
       {/* ── Leave Balance Cards Row ─────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-5">
         {myBalances?.length > 0 ? (
-          myBalances.slice(0, 4).map((bal, idx) => {
+          myBalances.map((bal, idx) => {
             const code = bal.leaveCode || bal.leaveType?.code || bal.leaveTypeCode || '';
             const name = bal.leaveName || bal.leaveType?.name || bal.leaveTypeName || code || 'Leave';
             const used = bal.usedDays ?? bal.used ?? 0;
@@ -267,10 +267,17 @@ export default function AdminAttendance() {
             <LeaveCard label="Compensatory Off" total={5} used={0} color="#3B82F6" />
           </>
         )}
+        {/* Holidays Card */}
+        <LeaveCard
+          label="Upcoming Holidays"
+          total={activeUpcomingHolidays?.length || 0}
+          used={0}
+          color="#F59E0B"
+        />
       </div>
 
-      {/* ── Middle Row: Leave History + Calendar + Other Leaves ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_240px] gap-5 mb-5">
+      {/* ── Middle Row: Leave History + Calendar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Leave History */}
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 flex flex-col justify-between">
@@ -328,38 +335,6 @@ export default function AdminAttendance() {
               <span className="text-xs font-semibold">No upcoming holidays</span>
             </div>
           )}
-        </div>
-
-        {/* Other Leaves list */}
-        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
-          <div className="text-sm font-extrabold text-[#111827] mb-3.5">Leave Categories</div>
-          <div className="flex flex-col gap-2">
-            {leaveTypes?.length > 0 ? (
-              leaveTypes.map((lt) => (
-                <div 
-                  key={lt.id} 
-                  onClick={() => setIsApplyModalOpen(true)}
-                  className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded-lg cursor-pointer hover:bg-[#F3F4F6] transition-colors"
-                >
-                  <span className="text-xs font-semibold text-[#374151] truncate max-w-[170px]" title={lt.name}>
-                    {lt.name}
-                  </span>
-                  <ChevronRight size={14} className="text-[#111827] shrink-0" strokeWidth={2.5} />
-                </div>
-              ))
-            ) : (
-              ['Casual Leave', 'Sick Leave', 'Privilege Leave', 'Earned Leave'].map((l, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => setIsApplyModalOpen(true)}
-                  className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded-lg cursor-pointer hover:bg-[#F3F4F6] transition-colors"
-                >
-                  <span className="text-xs font-semibold text-[#374151]">{l}</span>
-                  <ChevronRight size={14} className="text-[#111827]" strokeWidth={2.5} />
-                </div>
-              ))
-            )}
-          </div>
         </div>
       </div>
 
