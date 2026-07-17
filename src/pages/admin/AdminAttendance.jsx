@@ -318,13 +318,6 @@ export default function AdminAttendance() {
                     dateText={`${dayStr} ${monthStr}`}
                     title={holiday.name}
                     sub={holiday.primaryType || "Public Holiday"}
-                    actionLabel="Apply Leave"
-                    actionColor="lime"
-                    onAction={() => {
-                      setStartDate(holiday.date);
-                      setEndDate(holiday.date);
-                      setIsApplyModalOpen(true);
-                    }}
                   />
                 );
               })}
