@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import DailyQuote from '../../components/DailyQuote'
@@ -6,7 +6,7 @@ import {
   Share2, ExternalLink, ChevronRight, FileText, CreditCard, 
   ShieldCheck, HeartHandshake, Network, Briefcase, Users, 
   Calendar, Search, HelpCircle, UserPlus, Navigation, Wallet, BarChart2, Gift,
-  Map as MapIcon
+  Map as MapIcon, Loader2
 } from 'lucide-react'
 import { fetchProfile } from '../../redux/actions/authActions'
 import { getMyTeam } from '../../redux/actions/teamActions'
@@ -14,6 +14,7 @@ import { fetchAdminLeaveTableAction } from '../../redux/actions/leaveActions'
 import { fetchTeamAttendanceAction } from '../../redux/actions/attendanceActions'
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions'
+import Pagination from '../../components/common/Pagination'
 
 /* ── Stat Card ── */
 function StatCard({ label, value, type }) {
@@ -109,16 +110,21 @@ export default function AdminDashboard() {
   const { user } = useSelector((state) => state.auth)
   const { team = [] } = useSelector((state) => state.team || {})
   const { adminLeavesTable = [] } = useSelector((state) => state.leave || {})
-  const { teamAttendance = [] } = useSelector((state) => state.attendance || {})
+  const { teamAttendance = [], pagination: attendancePagination, loading: attendanceLoading } = useSelector((state) => state.attendance || {})
   const { activeUpcomingHolidays = [] } = useSelector((state) => state.holiday || {})
+
+  const [mrPage, setMrPage] = useState(0)
+  const mrPageSize = 5
+
+  const todayStr = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     dispatch(fetchProfile())
     dispatch(getMyTeam())
     dispatch(fetchAdminLeaveTableAction())
-    dispatch(fetchTeamAttendanceAction())
+    dispatch(fetchTeamAttendanceAction(todayStr, 0, 1000))
     dispatch(fetchActiveUpcomingHolidaysAction())
-  }, [dispatch])
+  }, [dispatch, todayStr])
 
   const displayName = user?.fullName || 'Company Admin'
 
@@ -194,9 +200,11 @@ export default function AdminDashboard() {
       { role: 'Medical Executive', count: 0 }
     ]
 
-    while (items.length < 4) {
-      const nextFallback = fallbacks[items.length]
-      items.push(nextFallback)
+    for (const fb of fallbacks) {
+      if (items.length >= 4) break;
+      if (!items.some(item => item.role === fb.role)) {
+        items.push(fb);
+      }
     }
 
     return items
@@ -254,6 +262,12 @@ export default function AdminDashboard() {
            role === 'MSE' ||
            role === 'MEDICAL_SALES_EXECUTIVE';
   })
+
+  const paginatedEmployees = mrEmployees.slice(mrPage * mrPageSize, (mrPage + 1) * mrPageSize)
+
+  useEffect(() => {
+    setMrPage(0)
+  }, [mrEmployees.length])
 
   // Attendance Punch-in mapping helper
   const isSameDay = (date1, date2) => {
@@ -424,8 +438,8 @@ export default function AdminDashboard() {
             <p className="m-0 text-[13.5px] font-semibold text-[#4B5563]">No Medical Representatives found in the team database.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+          <div className="overflow-x-auto flex flex-col min-h-[350px]">
+            <table className="w-full border-collapse text-left flex-1">
               <thead>
                 <tr className="border-b-[1.5px] border-[#F3F4F6]">
                   {['Employee', 'Designation', 'Today\'s Activity', 'Action'].map((h) => (
@@ -436,7 +450,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {mrEmployees.map((member) => {
+                {paginatedEmployees.map((member) => {
                   const initials = member.fullName ? member.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
                   const punchRec = getTodayPunchRecord(member.id || member.employeeId);
                   
@@ -472,7 +486,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
 
-                      {/* Role */}
+                      {/* Designation */}
                       <td className="p-4 text-[13px] text-[#4B5563] font-semibold">
                         {formatRole(member.role)}
                       </td>
@@ -498,6 +512,18 @@ export default function AdminDashboard() {
                 })}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            <div className="mt-4 border-t border-[#F3F4F6] pt-3">
+              <Pagination
+                currentPage={mrPage}
+                totalPages={Math.ceil(mrEmployees.length / mrPageSize)}
+                totalElements={mrEmployees.length}
+                pageSize={mrPageSize}
+                onPageChange={(page) => setMrPage(page)}
+                isLoading={false}
+              />
+            </div>
           </div>
         )}
       </Card>

@@ -157,3 +157,43 @@ export const mergeAttendanceLists = (fetched, previous) => {
   }
   return list;
 };
+
+export const extractPagination = (data, page, size) => {
+  if (!data || typeof data !== 'object') return null;
+  
+  if (data.paginator) {
+    return {
+      totalElements: data.paginator.itemCount,
+      totalPages: data.paginator.pageCount,
+      number: data.paginator.currentPage - 1,
+      size: data.paginator.perPage,
+      first: data.paginator.currentPage === 1,
+      last: data.paginator.currentPage === data.paginator.pageCount
+    };
+  }
+  
+  if (Array.isArray(data)) {
+    return {
+      totalElements: data.length,
+      totalPages: Math.ceil(data.length / size),
+      number: page,
+      size: size,
+      first: page === 0,
+      last: (page + 1) * size >= data.length
+    };
+  }
+  
+  if ('totalElements' in data) {
+    return {
+      totalElements: data.totalElements,
+      totalPages: data.totalPages,
+      number: data.number,
+      size: data.size,
+      first: data.first,
+      last: data.last
+    };
+  }
+  
+  return null;
+};
+

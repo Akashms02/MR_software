@@ -34,6 +34,7 @@ const initialState = {
   myVisits: [],
   teamAttendance: [],
   teamVisits: [],
+  pagination: null,
 };
 
 export const attendanceReducer = (state = initialState, action) => {
@@ -99,6 +100,7 @@ export const attendanceReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         teamAttendance: Array.isArray(action.payload) ? action.payload : [],
+        pagination: action.pagination || null,
         error: null,
       };
 
