@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { isFieldSalesRole } from '../utils/roleHelpers';
 
 /**
  * ProtectedRoute handles both authentication and authorization.
@@ -27,7 +28,16 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   // 3. Logged in but role not allowed -> redirect to their own dashboard
   const userRole = user?.role?.toLowerCase();
   
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
+  let isAllowed = false;
+  if (!allowedRoles) {
+    isAllowed = true;
+  } else if (allowedRoles.includes(userRole)) {
+    isAllowed = true;
+  } else if (allowedRoles.includes('mr') && isFieldSalesRole(user?.role)) {
+    isAllowed = true;
+  }
+
+  if (!isAllowed) {
     return <Navigate to="/dashboard" replace />;
   }
 

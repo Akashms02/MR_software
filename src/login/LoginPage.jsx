@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import { login, clearErrors } from '../redux/actions/authActions'
 import { useToast } from '../context/ToastContext'
+import { isFieldSalesRole } from '../utils/roleHelpers'
 
 const EyeOpen = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,7 +52,7 @@ export default function LoginPage() {
         navigate('/superadmin/dashboard', { replace: true });
       } else if (roleStr === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });
-      } else if (roleStr === 'MR') {
+      } else if (isFieldSalesRole(user.role)) {
         navigate('/mr/dashboard', { replace: true });
       } else if (roleStr === 'HR') {
         navigate('/hr/dashboard', { replace: true });
@@ -69,17 +70,6 @@ export default function LoginPage() {
         navigate('/distributor/dashboard', { replace: true });
       } else if (roleStr === 'PATIENT') {
         navigate('/patient/dashboard', { replace: true });
-      } else if (roleStr === 'MEDICAL_EXECUTIVE' || roleStr === 'MEDICAL EXECUTIVE' || roleStr === 'ME') {
-        navigate('/medical-executive/dashboard', { replace: true });
-      } else if (
-        roleStr === 'MEDICAL_SALES_EXECUTIVE' ||
-        roleStr === 'MEDICAL SALES EXECUTIVE' ||
-        roleStr === 'MSE' ||
-        roleStr === 'MEDICAL_SALES_REPRESENTATIVE' ||
-        roleStr === 'MEDICAL SALES REPRESENTATIVE' ||
-        roleStr === 'MSR'
-      ) {
-        navigate('/medical-sales-executive/dashboard', { replace: true });
       } else {
         navigate('/employee/dashboard', { replace: true });
       }
