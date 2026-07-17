@@ -84,7 +84,7 @@ const DcrReviewPage = () => {
   const handleReview = async (dcrId, status) => {
     const remarks = remarksMap[dcrId] || '';
     if (status === 'REJECTED' && !remarks.trim()) {
-      triggerNotice('error', 'Feedback/Remarks is mandatory when rejecting a DCR report.');
+      showToast('Feedback/Remarks is mandatory when rejecting a DCR report.', 'error');
       return;
     }
     const finalRemarks = remarks || (status === 'APPROVED' ? 'Approved' : 'Rejected');
