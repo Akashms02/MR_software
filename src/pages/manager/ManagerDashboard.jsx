@@ -65,6 +65,13 @@ const ManagerDashboard = () => {
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Manager';
 
+  const allowedModules = user?.allowedModules || 'all';
+  const isModuleAllowed = (moduleId) => {
+    if (allowedModules === 'all') return true;
+    const list = allowedModules.split(',').map(s => s.trim().toLowerCase());
+    return list.includes(moduleId.toLowerCase());
+  };
+
   const stats = [
     { 
       label: 'Team Size', 
@@ -73,7 +80,8 @@ const ManagerDashboard = () => {
       color: 'text-teal-600', 
       bg: 'bg-teal-50', 
       icon: Users, 
-      path: '/manager/myteam' 
+      path: '/manager/myteam',
+      module: 'myteam'
     },
     { 
       label: 'Pending DCRs', 
@@ -82,7 +90,8 @@ const ManagerDashboard = () => {
       color: 'text-blue-600', 
       bg: 'bg-blue-50', 
       icon: FileText, 
-      path: '/manager/dcr-approvals' 
+      path: '/manager/dcr-approvals',
+      module: 'dcr-approvals'
     },
     { 
       label: 'Pending Leaves', 
@@ -91,7 +100,8 @@ const ManagerDashboard = () => {
       color: 'text-rose-600', 
       bg: 'bg-rose-50', 
       icon: Calendar, 
-      path: '/manager/leaves' 
+      path: '/manager/leaves',
+      module: 'leaves'
     },
     { 
       label: 'Pending Tour Plans', 
@@ -100,7 +110,8 @@ const ManagerDashboard = () => {
       color: 'text-amber-600', 
       bg: 'bg-amber-50', 
       icon: MapPin, 
-      path: '/manager/tourplans' 
+      path: '/manager/tourplans',
+      module: 'tourplans'
     },
   ];
 
@@ -127,7 +138,7 @@ const ManagerDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        {stats.map((s, i) => {
+        {stats.filter(s => isModuleAllowed(s.module)).map((s, i) => {
           const Icon = s.icon;
           return (
             <div
@@ -159,53 +170,59 @@ const ManagerDashboard = () => {
         <div className="bg-white border border-gray-150 rounded-[20px] p-6 shadow-sm">
           <h3 className="m-0 mb-4 text-base font-extrabold text-gray-900">Supervisor Quick Actions</h3>
           <div className="flex flex-col gap-3">
-            <button 
-              onClick={() => navigate('/manager/fieldtracking')}
-              className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                  <MapPin size={18} />
+            {isModuleAllowed('fieldtracking') && (
+              <button 
+                onClick={() => navigate('/manager/fieldtracking')}
+                className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[13px] font-bold text-gray-900">Locate Team</span>
+                    <span className="block text-[10px] text-gray-400 font-medium">View active reps on GPS Map</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[13px] font-bold text-gray-900">Locate Team</span>
-                  <span className="block text-[10px] text-gray-400 font-medium">View active reps on GPS Map</span>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-gray-400" />
-            </button>
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            )}
 
-            <button 
-              onClick={() => navigate('/manager/myteam/onboard')}
-              className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <Users size={18} />
+            {isModuleAllowed('myteam') && (
+              <button 
+                onClick={() => navigate('/manager/myteam/onboard')}
+                className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <Users size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[13px] font-bold text-gray-900">Onboard Employee</span>
+                    <span className="block text-[10px] text-gray-400 font-medium">Initiate new onboarding wizard</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[13px] font-bold text-gray-900">Onboard Employee</span>
-                  <span className="block text-[10px] text-gray-400 font-medium">Initiate new onboarding wizard</span>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-gray-400" />
-            </button>
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            )}
 
-            <button 
-              onClick={() => navigate('/manager/sales')}
-              className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <TrendingUp size={18} />
+            {isModuleAllowed('sales') && (
+              <button 
+                onClick={() => navigate('/manager/sales')}
+                className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-100 bg-slate-50 text-left cursor-pointer hover:bg-slate-100/70 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <TrendingUp size={18} />
+                  </div>
+                  <div>
+                    <span className="block text-[13px] font-bold text-gray-900">Distributor Sales</span>
+                    <span className="block text-[10px] text-gray-400 font-medium">Log and trace primary orders</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[13px] font-bold text-gray-900">Distributor Sales</span>
-                  <span className="block text-[10px] text-gray-400 font-medium">Log and trace primary orders</span>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-gray-400" />
-            </button>
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            )}
           </div>
         </div>
 
