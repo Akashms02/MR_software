@@ -67,7 +67,7 @@ export default function LoginPage() {
       } else if (roleStr === 'PATIENT') {
         navigate('/patient/dashboard', { replace: true });
       } else {
-        navigate('/employee/dashboard', { replace: true });
+        navigate('/mr/dashboard', { replace: true });
       }
     }
   }, [user, requiresPasswordChange, navigate]);

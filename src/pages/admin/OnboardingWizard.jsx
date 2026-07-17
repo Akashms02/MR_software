@@ -774,9 +774,7 @@ const OnboardingWizard = () => {
                   value={formData.role}
                   onChange={handleInputChange}
                   options={[
-                    { value: 'MR', label: 'Medical Representative (MR)' },
-                    { value: 'MEDICAL_EXECUTIVE', label: 'Medical Executive (ME)' },
-                    { value: 'MEDICAL_SALES_EXECUTIVE', label: 'Medical Sales Executive (MSE)' },
+                    { value: 'MR', label: 'Medical Representative' },
                     { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
                     { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
                     { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
