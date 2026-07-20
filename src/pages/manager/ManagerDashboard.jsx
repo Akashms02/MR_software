@@ -241,7 +241,7 @@ const ManagerDashboard = () => {
             </span>
           </div>
 
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3.5 max-h-[295px] overflow-y-auto pr-1">
             {team.length === 0 ? (
               <div className="py-8 text-center text-gray-400">
                 <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-2.5">
@@ -251,7 +251,7 @@ const ManagerDashboard = () => {
                 <p className="text-[11px] text-gray-400 m-0 mt-0.5">Use the onboarding wizard to add members.</p>
               </div>
             ) : (
-              team.slice(0, 3).map((member, idx) => (
+              team.map((member, idx) => (
                 <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
                   <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 font-bold text-sm">
                     {member.fullName?.slice(0,2).toUpperCase() || 'MR'}

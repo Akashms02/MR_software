@@ -138,6 +138,7 @@ const MRDcrPage = () => {
   }, [activeTab]);
 
   const [doctors, setDoctors] = useState([]);
+  const [managers, setManagers] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   
   // Local notification triggers routed to global useToast hook
@@ -162,7 +163,7 @@ const MRDcrPage = () => {
   // Form State for logging new DCR
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [visits, setVisits] = useState([
-    { doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true }
+    { doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
   ]);
 
   // Synchronize Redux Success Notifications
@@ -223,7 +224,20 @@ const MRDcrPage = () => {
         console.warn('Failed to load approved targets, using fallback options.');
       }
     };
+    
+    const fetchManagers = async () => {
+      try {
+        const res = await axios.get(`${API_ROUTE}/mr/managers`);
+        if (res.data && (res.data.success || res.data.status === true) && res.data.data) {
+          setManagers(res.data.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load JFW managers, using fallback option.');
+      }
+    };
+
     fetchDoctors();
+    fetchManagers();
   }, [dispatch]);
 
   // Set local timeout helper to clear notices (for local validation errors)
@@ -241,7 +255,7 @@ const MRDcrPage = () => {
   const addVisitField = () => {
     setVisits([
       ...visits,
-      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true }
+      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
     ]);
   };
 
@@ -299,7 +313,8 @@ const MRDcrPage = () => {
             productsDiscussed: v.productsDiscussed,
             samplesGiven: v.samplesGiven,
             feedback: v.feedback,
-            isGpsVerified: v.isGpsVerified !== false
+            isGpsVerified: v.isGpsVerified !== false,
+            jfwManagerId: v.jfwManagerId ? Number(v.jfwManagerId) : null
           });
         }
       });
@@ -327,7 +342,7 @@ const MRDcrPage = () => {
 
         // Reset form
         setReportDate(new Date().toISOString().split('T')[0]);
-        setVisits([{ doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true }]);
+        setVisits([{ doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }]);
         setActiveTab('list');
       }
     } catch (err) {
@@ -369,7 +384,8 @@ const MRDcrPage = () => {
       productsDiscussed: v.productsDiscussed || '',
       samplesGiven: v.samplesGiven || '',
       feedback: v.feedback || '',
-      isGpsVerified: v.isGpsVerified !== false
+      isGpsVerified: v.isGpsVerified !== false,
+      jfwManagerId: v.jfwManagerId || ''
     }));
 
     const mappedChemistVisits = (currentDcr.chemistVisits || []).map(v => ({
@@ -379,7 +395,8 @@ const MRDcrPage = () => {
       productsDiscussed: v.productsDiscussed || '',
       samplesGiven: '',
       feedback: v.feedback || '',
-      isGpsVerified: v.isGpsVerified !== false
+      isGpsVerified: v.isGpsVerified !== false,
+      jfwManagerId: ''
     }));
 
     setModalVisits([...mappedDocVisits, ...mappedChemistVisits]);
@@ -395,7 +412,7 @@ const MRDcrPage = () => {
   const addModalVisitField = () => {
     setModalVisits([
       ...modalVisits,
-      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true }
+      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
     ]);
   };
 
@@ -443,7 +460,8 @@ const MRDcrPage = () => {
             productsDiscussed: v.productsDiscussed,
             samplesGiven: v.samplesGiven,
             feedback: v.feedback,
-            isGpsVerified: v.isGpsVerified !== false
+            isGpsVerified: v.isGpsVerified !== false,
+            jfwManagerId: v.jfwManagerId ? Number(v.jfwManagerId) : null
           });
         }
       });
@@ -719,6 +737,22 @@ const MRDcrPage = () => {
                     )}
                   </div>
 
+                  {!String(visit.doctorId || '').startsWith('CHEMIST_') && visit.doctorId && (
+                    <div className="mb-4">
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Joint Field Work (JFW Accompanying Manager)</label>
+                      <select
+                        value={visit.jfwManagerId || ''}
+                        onChange={(e) => handleVisitChange(idx, 'jfwManagerId', e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-[13.5px] outline-none font-sans"
+                      >
+                        <option value="">No manager accompanied (Independent Visit)</option>
+                        {managers.map(m => (
+                          <option key={m.id} value={m.id}>{m.fullName} ({m.role})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-1.5">
                     {/* Feedback */}
                     <label className="block text-[12px] font-bold text-[#374151]">Doctor Feedback / Notes</label>
@@ -860,7 +894,7 @@ const MRDcrPage = () => {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div className="mb-3">
                         <label className="block text-[11px] font-bold text-[#374151] mb-1">Feedback / Notes</label>
                         <textarea
                           value={visit.feedback}
@@ -868,6 +902,21 @@ const MRDcrPage = () => {
                           className="w-full h-[50px] px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] resize-none outline-none font-sans"
                         />
                       </div>
+                      {!String(visit.doctorId || '').startsWith('CHEMIST_') && visit.doctorId && (
+                        <div className="mb-1">
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Joint Field Work (JFW Manager)</label>
+                          <select
+                            value={visit.jfwManagerId || ''}
+                            onChange={(e) => handleModalVisitChange(idx, 'jfwManagerId', e.target.value)}
+                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 bg-white text-[12.5px] outline-none font-sans"
+                          >
+                            <option value="">No manager accompanied</option>
+                            {managers.map(m => (
+                              <option key={m.id} value={m.id}>{m.fullName} ({m.role})</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </form>
@@ -911,11 +960,18 @@ const MRDcrPage = () => {
                             </div>
                           </div>
  
-                           {visit.isGpsVerified && (
-                            <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold mt-2.5">
-                              <MapPin size={10} /> GPS COORDINATES RECORDED
-                            </div>
-                          )}
+                           <div className="flex gap-2 flex-wrap mt-2.5">
+                             {visit.isGpsVerified && (
+                              <div className="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#047857] px-2 py-1 rounded text-[10.5px] font-extrabold">
+                                <MapPin size={10} /> GPS COORDINATES RECORDED
+                              </div>
+                            )}
+                            {visit.jfwManagerName && (
+                              <div className="inline-flex items-center gap-1 bg-[#EFF6FF] text-[#1E40AF] px-2 py-1 rounded text-[10.5px] font-extrabold">
+                                JFW ACCOMPANIED BY: {visit.jfwManagerName.toUpperCase()}
+                              </div>
+                            )}
+                           </div>
                         </div>
                       );
                     })}

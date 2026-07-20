@@ -46,6 +46,20 @@ const MRTourPlanPage = () => {
   };
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
+  const isMonthLocked = (monthStr) => {
+    if (!monthStr) return false;
+    const normalizedTarget = `${monthStr}-01`;
+    const existingPlan = tourPlans.find(p => p.targetMonth === normalizedTarget);
+    
+    if (existingPlan) {
+      return existingPlan.locked;
+    }
+    
+    const [year, month] = monthStr.split('-').map(Number);
+    const lockDeadline = new Date(year, month - 2, 25, 23, 59, 59);
+    return new Date() > lockDeadline;
+  };
+
   // Form State
   const [targetMonth, setTargetMonth] = useState(() => {
     const nextMonth = new Date();
@@ -351,9 +365,9 @@ const MRTourPlanPage = () => {
                               {plan.status === 'DRAFT' && (
                                 <button
                                   onClick={() => handleSubmitExistingDraft(plan.id)}
-                                  disabled={actionLoading}
-                                  title="Submit tour plan for review"
-                                  className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150"
+                                  disabled={actionLoading || plan.locked}
+                                  title={plan.locked ? "This plan is locked after the 25th" : "Submit tour plan for review"}
+                                  className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <Send size={11} /> Submit
                                 </button>
@@ -383,6 +397,12 @@ const MRTourPlanPage = () => {
         {/* Tab 2: Create New Tour Plan */}
         {activeTab === 'new' && (
           <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex-1 flex flex-col min-h-0">
+            {isMonthLocked(targetMonth) && (
+              <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] p-4 rounded-xl text-xs font-bold flex items-center gap-2 mb-4 shrink-0">
+                <AlertCircle size={16} />
+                <span>This month is locked because the submission deadline (25th of the previous month) has passed. Please contact your Zonal Business Manager (ZBM) to unlock this month.</span>
+              </div>
+            )}
             <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#F3F4F6] pb-4 mb-4 shrink-0">
               <div>
                 <h4 className="text-[16px] font-extrabold text-[#111827] margin-0">Create Monthly Tour Schedule</h4>
@@ -483,7 +503,8 @@ const MRTourPlanPage = () => {
               <button
                 type="button"
                 onClick={addDayField}
-                className="flex items-center gap-1.5 bg-[#111827] text-white border-none px-4.5 py-2.5 rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-[1px]"
+                disabled={isMonthLocked(targetMonth)}
+                className="flex items-center gap-1.5 bg-[#111827] text-white border-none px-4.5 py-2.5 rounded-xl font-bold text-[12.5px] cursor-pointer transition-transform hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus size={14} /> Add Another Day Plan
               </button>
@@ -491,16 +512,16 @@ const MRTourPlanPage = () => {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={actionLoading}
-                  className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                  disabled={actionLoading || isMonthLocked(targetMonth)}
+                  className="px-[22px] py-2.5 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   type="button"
                   onClick={(e) => handleSaveDraft(null, true)}
-                  disabled={actionLoading}
-                  className="px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:opacity-90 transition-opacity duration-150"
+                  disabled={actionLoading || isMonthLocked(targetMonth)}
+                  className="px-[22px] py-2.5 rounded-xl border-none bg-[#C8F04A] text-[#111827] font-extrabold text-[13px] cursor-pointer shadow-[0_4px_12px_rgba(200,240,74,0.25)] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? 'Submitting...' : 'Save & Submit Plan'}
                 </button>
