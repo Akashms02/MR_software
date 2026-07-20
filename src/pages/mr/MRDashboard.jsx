@@ -191,6 +191,22 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
   const [notes, setNotes]         = useState('');
   const [photo, setPhoto]         = useState(null);
   const [showPhoto, setShowPhoto] = useState(false);
+  const [managers, setManagers] = useState([]);
+  const [jfwManagerId, setJfwManagerId] = useState('');
+
+  useEffect(() => {
+    const fetchManagers = async () => {
+      try {
+        const res = await axios.get(`${API_ROUTE}/mr/managers`);
+        if (res.data && res.data.data) {
+          setManagers(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch JFW managers:', err);
+      }
+    };
+    fetchManagers();
+  }, []);
 
   const filtered = visitTargets.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -199,6 +215,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
   );
 
   const selectedTarget = visitTargets.find(t => String(t.id) === String(selectedId));
+  const isDoctor = selectedTarget && (selectedTarget.type === 'Doctor' || selectedTarget.type === 'DOCTOR');
 
   const canSubmit = !!selectedId && !!selectedTarget && !!notes.trim();
 
@@ -355,6 +372,27 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
               required />
           </div>
 
+          {/* Accompanying JFW Manager Dropdown */}
+          {selectedId && selectedTarget && isDoctor && (
+            <div>
+              <label className="block text-[12px] font-bold text-gray-755 mb-1.5 font-sans">
+                Accompanying JFW Manager <span className="text-gray-400 font-medium">(optional)</span>
+              </label>
+              <select
+                value={jfwManagerId}
+                onChange={e => setJfwManagerId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 bg-white outline-none box-border cursor-pointer font-medium"
+              >
+                <option value="">Select Accompanying Manager (JFW)...</option>
+                {managers.map(mgr => (
+                  <option key={mgr.id} value={mgr.id}>
+                    👤 {mgr.fullName} ({mgr.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Photo */}
           <div>
             <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Place / Clinic Photo <span className="text-gray-400 font-medium">(optional)</span></label>
@@ -372,7 +410,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
 
           {/* Submit */}
           <button
-            onClick={() => onSubmit({ target: selectedTarget, notes, photo })}
+            onClick={() => onSubmit({ target: selectedTarget, notes, photo, jfwManagerId })}
             disabled={!canSubmit || gpsLoading}
             className={`w-full p-3.5 rounded-2xl border-none text-[15px] font-extrabold transition-all duration-200 ${
               (!canSubmit || gpsLoading) 
@@ -776,7 +814,7 @@ export default function MRDashboard() {
     }
   };
 
-  const handleVisitCheckIn = async ({ target, notes, photo }) => {
+  const handleVisitCheckIn = async ({ target, notes, photo, jfwManagerId }) => {
     const coords = await getGps('visitIn');
     try {
       await dispatch(
@@ -785,6 +823,7 @@ export default function MRDashboard() {
           targetId: Number(target.id),
           latitude: coords.lat,
           longitude: coords.lng,
+          jfwManagerId: jfwManagerId ? Number(jfwManagerId) : null,
         })
       );
       
