@@ -2,19 +2,30 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { Loader2, Check, X, FileText, AlertCircle, CheckCircle2, MessageSquare, Eye, Calendar, MapPin, Users } from 'lucide-react';
+import { Loader2, Check, X, FileText, AlertCircle, CheckCircle2, MessageSquare, Eye, Calendar, MapPin, Users, Lock, Unlock } from 'lucide-react';
 import {
   fetchTeamTourPlansAction,
   reviewTourPlanAction,
   clearTourPlanErrorsAction,
   clearTourPlanSuccessAction
 } from '../../redux/actions/tourPlanActions';
+import { getMyTeam } from '../../redux/actions/teamActions';
 import Pagination from '../../components/common/Pagination';
 import { useToast } from '../../context/ToastContext';
 
 const AdminTourPlanReviewPage = () => {
   const dispatch = useDispatch();
   const { teamTourPlans, loading, error, success } = useSelector((state) => state.tourPlan);
+  const { teamList } = useSelector((state) => state.team || {});
+  const { user } = useSelector((state) => state.auth || {});
+
+  const userRole = (user?.role || '').toUpperCase().trim();
+  const canLockUnlock = userRole === 'ZONE_MANAGER' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+  const [forceUnlockModalOpen, setForceUnlockModalOpen] = useState(false);
+  const [selectedMrId, setSelectedMrId] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [togglingLock, setTogglingLock] = useState(false);
 
   const [reviewingId, setReviewingId] = useState(null);
   const [remarksMap, setRemarksMap] = useState({});
@@ -60,6 +71,58 @@ const AdminTourPlanReviewPage = () => {
     };
     loadDoctors();
   }, [dispatch]);
+
+  useEffect(() => {
+    if (canLockUnlock) {
+      dispatch(getMyTeam());
+    }
+  }, [dispatch, canLockUnlock]);
+
+  const isMRRole = (role) => {
+    if (!role) return false;
+    const norm = role.toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+    return norm.includes('MR') || norm.includes('REPRESENTATIVE') || norm.includes('EXECUTIVE') || norm.includes('SALES EXECUTIVE');
+  };
+
+  const mrMembers = useMemo(() => {
+    if (!teamList || !Array.isArray(teamList)) return [];
+    return teamList.filter(m => isMRRole(m.role));
+  }, [teamList]);
+
+  const handleToggleLock = async (plan) => {
+    setTogglingLock(true);
+    try {
+      const endpoint = plan.unlocked ? 'lock' : 'unlock';
+      const res = await axios.post(`${API_ROUTE}/tour-plan/${endpoint}?mrId=${plan.employeeId}&targetMonth=${plan.targetMonth}`);
+      setLocalSuccess(res.data?.message || `Tour plan successfully ${plan.unlocked ? 'locked' : 'unlocked'}.`);
+      dispatch(fetchTeamTourPlansAction());
+      setInspectModalOpen(false);
+    } catch (err) {
+      setLocalError(err.response?.data?.message || err.message || 'Failed to update lock status.');
+    } finally {
+      setTogglingLock(false);
+    }
+  };
+
+  const handleForceUnlock = async (mrId, monthStr, isUnlockAction) => {
+    if (!mrId || !monthStr) {
+      setLocalError('Please select both a representative and target month.');
+      return;
+    }
+    setTogglingLock(true);
+    try {
+      const endpoint = isUnlockAction ? 'unlock' : 'lock';
+      const targetMonth = `${monthStr}-01`;
+      const res = await axios.post(`${API_ROUTE}/tour-plan/${endpoint}?mrId=${mrId}&targetMonth=${targetMonth}`);
+      setLocalSuccess(res.data?.message || `Tour plan successfully ${isUnlockAction ? 'unlocked' : 'locked'}.`);
+      dispatch(fetchTeamTourPlansAction());
+      setForceUnlockModalOpen(false);
+    } catch (err) {
+      setLocalError(err.response?.data?.message || err.message || 'Failed to update lock status.');
+    } finally {
+      setTogglingLock(false);
+    }
+  };
 
   useEffect(() => {
     if (success) {
@@ -210,6 +273,15 @@ const AdminTourPlanReviewPage = () => {
               <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
                 Pending: {pendingCount}
               </span>
+              {canLockUnlock && (
+                <button
+                  type="button"
+                  onClick={() => setForceUnlockModalOpen(true)}
+                  className="flex items-center gap-1.5 bg-[#4F46E5] text-white border-0 px-3.5 py-1.5 rounded-xl cursor-pointer font-bold text-xs transition-colors duration-150 hover:bg-[#4338CA] shrink-0 ml-2"
+                >
+                  <Lock size={12} /> Lock / Unlock Entry
+                </button>
+              )}
             </div>
           </div>
  
@@ -418,6 +490,30 @@ const AdminTourPlanReviewPage = () => {
 
               {/* Action buttons */}
               <div className="flex justify-end gap-2.5 w-full">
+                {canLockUnlock && (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleLock(inspectPlan)}
+                    disabled={togglingLock}
+                    className={`flex items-center gap-1.5 border-0 px-5 py-2.5 rounded-xl cursor-pointer font-bold text-[13px] text-white transition-colors duration-150 disabled:opacity-50 mr-auto ${
+                      inspectPlan.unlocked
+                        ? 'bg-[#EF4444] hover:bg-[#DC2626]'
+                        : 'bg-[#4F46E5] hover:bg-[#4338CA]'
+                    }`}
+                  >
+                    {togglingLock ? (
+                      <Loader2 size={13} className="animate-spin text-white" />
+                    ) : inspectPlan.unlocked ? (
+                      <>
+                        <Lock size={13} /> Lock Entry
+                      </>
+                    ) : (
+                      <>
+                        <Unlock size={13} /> Unlock Entry
+                      </>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => setInspectModalOpen(false)}
                   className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
@@ -443,6 +539,75 @@ const AdminTourPlanReviewPage = () => {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Force Lock/Unlock Entry Modal */}
+      {forceUnlockModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-[6px] flex items-center justify-center z-[1100] p-5 animate-[fadeIn_0.2s]">
+          <div className="bg-white rounded-[20px] w-full max-w-[450px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-[scaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden p-6 flex flex-col gap-4">
+            <div>
+              <h3 className="text-[17px] font-extrabold text-[#111827] m-0">
+                Lock / Unlock Entry Override
+              </h3>
+              <p className="text-xs text-gray-500 mt-1 mb-0">
+                Allows an MR to edit or submit their Tour Plan past the 25th of the month.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-[#4B5563]">Select Field Representative</label>
+                <select
+                  value={selectedMrId}
+                  onChange={(e) => setSelectedMrId(e.target.value)}
+                  className="px-3.5 py-2.5 rounded-lg border border-[#E5E7EB] text-[13px] outline-none bg-white w-full cursor-pointer focus:border-[#4F46E5]"
+                >
+                  <option value="">-- Choose Representative --</option>
+                  {mrMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.fullName || m.name} ({m.employeeId || m.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-[#4B5563]">Target Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-3.5 py-2.5 rounded-lg border border-[#E5E7EB] text-[13px] outline-none bg-white w-full focus:border-[#4F46E5]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 mt-2">
+              <button
+                type="button"
+                onClick={() => setForceUnlockModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-bold text-xs cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleForceUnlock(selectedMrId, selectedMonth, false)}
+                disabled={togglingLock || !selectedMrId || !selectedMonth}
+                className="flex items-center gap-1 bg-[#EF4444] text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-bold text-xs hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+              >
+                {togglingLock ? <Loader2 size={12} className="animate-spin text-white" /> : <Lock size={12} />} Lock Entry
+              </button>
+              <button
+                type="button"
+                onClick={() => handleForceUnlock(selectedMrId, selectedMonth, true)}
+                disabled={togglingLock || !selectedMrId || !selectedMonth}
+                className="flex items-center gap-1 bg-[#4F46E5] text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-bold text-xs hover:bg-[#4338CA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+              >
+                {togglingLock ? <Loader2 size={12} className="animate-spin text-white" /> : <Unlock size={12} />} Unlock Entry
+              </button>
             </div>
           </div>
         </div>

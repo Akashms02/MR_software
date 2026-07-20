@@ -120,6 +120,7 @@ const OnboardingWizard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.team);
+  const { user } = useSelector((state) => state.auth || {});
 
   const [activeStep, setActiveStep] = useState(1);
   const [employeeId, setEmployeeId] = useState('');
@@ -135,7 +136,7 @@ const OnboardingWizard = () => {
   const { showToast } = useToast();
   const [formError, _setFormError] = useState(null);
   const [formSuccess, _setFormSuccess] = useState(null);
-
+ 
   const setFormError = (msg) => {
     _setFormError(msg);
     if (msg) showToast(msg, 'error');
@@ -144,22 +145,56 @@ const OnboardingWizard = () => {
     _setFormSuccess(msg);
     if (msg) showToast(msg, 'success');
   };
-
+ 
   const [reportingManagers, setReportingManagers] = useState([]);
-  const [roleOptions, setRoleOptions] = useState([
-    { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
-    { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
-    { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
-    { value: 'MR', label: 'Medical Representative (MR)' },
-  ]);
-
+  const [roleOptions, setRoleOptions] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        const userRole = (parsed?.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+        const isARM = userRole.includes('AREA MANAGER') || userRole.includes('AREA SALES') || userRole === 'ABM' || userRole === 'ASM';
+        const isRBM = userRole.includes('REGIONAL') || userRole === 'RBM' || userRole === 'RSM';
+        if (isARM) {
+          return [{ value: 'MR', label: 'Medical Representative (MR)' }];
+        }
+        if (isRBM) {
+          return [
+            { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
+            { value: 'MR', label: 'Medical Representative (MR)' }
+          ];
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      { value: 'ZONE_MANAGER', label: 'Zonal Business Manager (ZBM)' },
+      { value: 'AREA_MANAGER', label: 'Area Business Manager (ABM)' },
+      { value: 'REGIONAL_MANAGER', label: 'Regional Business Manager (RBM)' },
+      { value: 'MR', label: 'Medical Representative (MR)' },
+    ];
+  });
+ 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const response = await dispatch(fetchRoleTypes());
         if (response && response.data) {
           const allRoles = response.data;
-          const allowedKeys = ['ZONE_MANAGER', 'AREA_MANAGER', 'REGIONAL_MANAGER', 'MR'];
+          
+          // Highly robust role restriction rules
+          const userRole = (user?.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+          const isARM = userRole.includes('AREA MANAGER') || userRole.includes('AREA SALES') || userRole === 'ABM' || userRole === 'ASM';
+          const isRBM = userRole.includes('REGIONAL') || userRole === 'RBM' || userRole === 'RSM';
+          
+          let allowedKeys = ['ZONE_MANAGER', 'AREA_MANAGER', 'REGIONAL_MANAGER', 'MR'];
+          if (isARM) {
+            allowedKeys = ['MR'];
+          } else if (isRBM) {
+            allowedKeys = ['AREA_MANAGER', 'MR'];
+          }
+          
           const filtered = allRoles
             .filter(role => allowedKeys.includes(role))
             .map(role => {
@@ -170,6 +205,10 @@ const OnboardingWizard = () => {
             });
           if (filtered.length > 0) {
             setRoleOptions(filtered);
+            
+            // Set initial selected role based on first allowed option
+            const defaultRoleValue = filtered.some(f => f.value === 'MR') ? 'MR' : filtered[0].value;
+            setFormData(prev => ({ ...prev, role: defaultRoleValue }));
           }
         }
       } catch (err) {
@@ -177,7 +216,7 @@ const OnboardingWizard = () => {
       }
     };
     fetchRoles();
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const [departmentsList, setDepartmentsList] = useState([
     { value: 'Sales & Marketing', label: 'Sales & Marketing' },
