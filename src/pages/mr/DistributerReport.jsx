@@ -185,11 +185,12 @@ export default function DistributerReport() {
   const handleExportGroupToExcel = (group) => {
     try {
       const rows = group.records.map((r) => ({
-        'Sales Date': formatDate(r.salesDate),
+        'Month': r.salesMonth || '—',
         'Product Name': r.productName || '—',
         'Quantity': r.quantity || 0,
         'Unit Price': r.unitPrice || 0,
         'Total Amount': r.totalAmount || 0,
+        'Closing Balance': r.closingBalance || 0,
         'MR Name': r.mrName || '—',
         'MR Email': r.mrEmail || '—',
       }));
@@ -206,11 +207,12 @@ export default function DistributerReport() {
 
       // Set column widths to prevent truncation and improve spacing
       worksheet['!cols'] = [
-        { wch: 15 }, // Sales Date
+        { wch: 15 }, // Month
         { wch: 25 }, // Product Name
         { wch: 12 }, // Quantity
         { wch: 15 }, // Unit Price
         { wch: 18 }, // Total Amount
+        { wch: 18 }, // Closing Balance
         { wch: 20 }, // MR Name
         { wch: 25 }, // MR Email
       ];
@@ -246,9 +248,9 @@ export default function DistributerReport() {
           // Style header row
           worksheet[cellRef].s = { ...headerStyle };
           // Left-align product name and MR info headers, right-align numeric headers
-          if (colLetter === 'B' || colLetter === 'F' || colLetter === 'G') {
+          if (colLetter === 'B' || colLetter === 'G' || colLetter === 'H') {
             worksheet[cellRef].s.alignment = { vertical: "center", horizontal: "left" };
-          } else if (colLetter === 'C' || colLetter === 'D' || colLetter === 'E') {
+          } else if (colLetter === 'C' || colLetter === 'D' || colLetter === 'E' || colLetter === 'F') {
             worksheet[cellRef].s.alignment = { vertical: "center", horizontal: "right" };
           }
         } else if (rowNum > 4) {
@@ -261,7 +263,7 @@ export default function DistributerReport() {
           // Column specific alignments
           if (colLetter === 'A') {
             worksheet[cellRef].s.alignment.horizontal = "center";
-          } else if (colLetter === 'C' || colLetter === 'D' || colLetter === 'E') {
+          } else if (colLetter === 'C' || colLetter === 'D' || colLetter === 'E' || colLetter === 'F') {
             worksheet[cellRef].s.alignment.horizontal = "right";
           }
 
@@ -504,22 +506,24 @@ export default function DistributerReport() {
                 <table className="w-full border-collapse text-[12px] font-sans border border-gray-200">
                   <thead>
                     <tr className="bg-[#107C41] text-white border-b border-gray-300 sticky top-0 z-10">
-                      <th className="w-[15%] min-w-[120px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-center border-r border-[#0e6c38] text-white">Sales Date</th>
-                      <th className="w-[43%] min-w-[220px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-left border-r border-[#0e6c38] text-white">Product Name</th>
-                      <th className="w-[12%] min-w-[90px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right border-r border-[#0e6c38] text-white">Quantity</th>
-                      <th className="w-[15%] min-w-[120px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right border-r border-[#0e6c38] text-white">Unit Price</th>
-                      <th className="w-[15%] min-w-[130px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right text-white">Total Amount</th>
+                      <th className="w-[12%] min-w-[100px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-center border-r border-[#0e6c38] text-white">Month</th>
+                      <th className="w-[36%] min-w-[180px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-left border-r border-[#0e6c38] text-white">Product Name</th>
+                      <th className="w-[10%] min-w-[80px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right border-r border-[#0e6c38] text-white">Quantity</th>
+                      <th className="w-[13%] min-w-[100px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right border-r border-[#0e6c38] text-white">Unit Price</th>
+                      <th className="w-[14%] min-w-[110px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right border-r border-[#0e6c38] text-white">Total Amount</th>
+                      <th className="w-[15%] min-w-[120px] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-right text-white">Closing Balance</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewGroup.records.map((r, idx) => {
                       return (
                         <tr key={r.id || idx} className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors odd:bg-white even:bg-gray-50/30">
-                          <td className="px-4 py-2.5 text-center text-gray-600 border-r border-gray-200 font-medium">{formatDate(r.salesDate)}</td>
+                          <td className="px-4 py-2.5 text-center text-gray-600 border-r border-gray-200 font-medium">{r.salesMonth || '—'}</td>
                           <td className="px-4 py-2.5 text-left text-gray-800 border-r border-gray-200 font-semibold">{r.productName || '—'}</td>
                           <td className="px-4 py-2.5 text-right text-gray-700 border-r border-gray-200 font-medium">{r.quantity || 0}</td>
                           <td className="px-4 py-2.5 text-right text-gray-700 border-r border-gray-200 font-medium">₹{(r.unitPrice || 0).toFixed(2)}</td>
-                          <td className="px-4 py-2.5 text-right text-[#047857] font-bold">₹{(r.totalAmount || 0).toFixed(2)}</td>
+                          <td className="px-4 py-2.5 text-right text-[#047857] border-r border-gray-200 font-bold">₹{(r.totalAmount || 0).toFixed(2)}</td>
+                          <td className="px-4 py-2.5 text-right text-indigo-700 font-bold">₹{(r.closingBalance || 0).toFixed(2)}</td>
                         </tr>
                       );
                     })}

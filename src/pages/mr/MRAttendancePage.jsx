@@ -18,6 +18,7 @@ import {
   visitCheckInCoords,
   visitCheckOutCoords,
 } from '../../utils/attendanceUtils';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
 // ─── Visit History Modal (MR View) ─────────────────────────────────────────
 function VisitHistoryModal({ target, onClose }) {
@@ -206,6 +207,8 @@ const MRAttendancePage = () => {
       products: v.productsDiscussed || v.products || '',
       samples: v.samplesGiven || v.samples || '',
       feedback: v.feedback || '',
+      checkInPhoto: v.checkInPhoto ? getFullAssetUrl(v.checkInPhoto) : '',
+      checkOutPhoto: v.checkOutPhoto ? getFullAssetUrl(v.checkOutPhoto) : '',
     };
   };
 

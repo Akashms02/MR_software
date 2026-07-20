@@ -445,6 +445,8 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }
   const [products,  setProducts]  = useState('');
   const [samples,   setSamples]   = useState('');
   const [feedback,  setFeedback]  = useState('');
+  const [photo,     setPhoto]     = useState(null);
+  const [showPhoto, setShowPhoto] = useState(false);
 
   return (
     <div className="fixed inset-0 bg-black/55 z-[1000] flex items-center justify-center p-4">
@@ -486,7 +488,34 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }
               rows={3} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border resize-y" />
           </div>
 
-          <button onClick={() => onSubmit({ products, samples, feedback })}
+          {/* Prescription / Visiting Card Photo */}
+          <div>
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">
+              Prescription / Visiting Card Photo <span className="text-gray-400 font-medium">(optional)</span>
+            </label>
+            {photo ? (
+              <div className="relative">
+                <img src={photo} alt="Prescription or Visiting Card" className="w-full h-[120px] object-cover rounded-xl" />
+                <button 
+                  type="button"
+                  onClick={() => setPhoto(null)} 
+                  className="absolute top-1.5 right-1.5 bg-red-500 border-none text-white rounded-full w-6 h-6 cursor-pointer font-bold flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button 
+                type="button"
+                onClick={() => setShowPhoto(true)} 
+                className="w-full p-3 rounded-xl border border-dashed border-gray-300 bg-[#F8FAFC] text-gray-500 font-semibold text-[13px] cursor-pointer flex items-center justify-center gap-2"
+              >
+                Capture / Upload Photo
+              </button>
+            )}
+          </div>
+
+          <button onClick={() => onSubmit({ products, samples, feedback, checkOutPhoto: photo })}
             disabled={gpsLoading}
             className={`w-full p-3.5 rounded-2xl border-none text-white font-extrabold text-[14px] transition-all ${
               gpsLoading ? 'bg-gray-350 cursor-not-allowed shadow-none' : 'bg-emerald-600 cursor-pointer shadow-[0_4px_16px_rgba(5,150,105,0.3)]'
@@ -502,6 +531,14 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }
           </button>
         </div>
       </div>
+
+      {showPhoto && (
+        <PhotoCaptureModal
+          title="Prescription / Visiting Card Photo"
+          onDone={img => { setPhoto(img); setShowPhoto(false); }}
+          onClose={() => setShowPhoto(false)}
+        />
+      )}
     </div>
   );
 }
@@ -661,6 +698,8 @@ export default function MRDashboard() {
       products: v.productsDiscussed || v.products || '',
       samples: v.samplesGiven || v.samples || '',
       feedback: v.feedback || '',
+      checkInPhoto: v.checkInPhoto ? getFullAssetUrl(v.checkInPhoto) : '',
+      checkOutPhoto: v.checkOutPhoto ? getFullAssetUrl(v.checkOutPhoto) : '',
     };
   };
 
@@ -844,7 +883,7 @@ export default function MRDashboard() {
     }
   };
 
-  const handleVisitCheckOut = async ({ products, samples, feedback }) => {
+  const handleVisitCheckOut = async ({ products, samples, feedback, checkOutPhoto }) => {
     const coords = await getGps('visitOut');
     try {
       await dispatch(
@@ -854,6 +893,7 @@ export default function MRDashboard() {
           productsDiscussed: products,
           samplesGiven: samples,
           feedback: feedback,
+          checkOutPhoto: checkOutPhoto || null,
         })
       );
       setModal(null);

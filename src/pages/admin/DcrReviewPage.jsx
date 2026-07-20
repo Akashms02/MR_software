@@ -9,6 +9,7 @@ import {
 import { Loader2, Check, X, Calendar, AlertCircle, CheckCircle2, MessageSquare, Eye, Users, FileText, CheckSquare } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
 import { useToast } from '../../context/ToastContext';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
 const DcrReviewPage = () => {
   const dispatch = useDispatch();
@@ -386,6 +387,17 @@ const DcrReviewPage = () => {
                           <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Doctor Feedback</span>
                           <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
                         </div>
+                        {vis.checkOutPhoto && (
+                          <div className="mt-2.5 border-t border-gray-100 pt-2.5">
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px] mb-1">Prescription / Visiting Card Photo</span>
+                            <img 
+                              src={getFullAssetUrl(vis.checkOutPhoto)} 
+                              alt="Prescription or Visiting Card" 
+                              className="w-[100px] h-[75px] object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 animate-[fadeIn_0.2s_ease-out]"
+                              onClick={() => window.open(getFullAssetUrl(vis.checkOutPhoto), '_blank')}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -425,6 +437,17 @@ const DcrReviewPage = () => {
                           <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Chemist Feedback / Order</span>
                           <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
                         </div>
+                        {vis.checkOutPhoto && (
+                          <div className="mt-2.5 border-t border-gray-100 pt-2.5">
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px] mb-1">Prescription / Visiting Card Photo</span>
+                            <img 
+                              src={getFullAssetUrl(vis.checkOutPhoto)} 
+                              alt="Prescription or Visiting Card" 
+                              className="w-[100px] h-[75px] object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 animate-[fadeIn_0.2s_ease-out]"
+                              onClick={() => window.open(getFullAssetUrl(vis.checkOutPhoto), '_blank')}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
