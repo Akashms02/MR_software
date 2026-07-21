@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { useToast } from '../../context/ToastContext';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { 
   Plus, Trash2, FileText, Image, Search, ChevronLeft, 
   Upload, Tag, List, Calendar, User, Info, Loader2, Eye, X
@@ -287,7 +288,7 @@ export default function AdminVisualAidPage() {
                   <div key={page.id} className="group relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-200/80 shadow-sm flex flex-col">
                     <div className="aspect-[4/3] w-full bg-white relative overflow-hidden flex items-center justify-center border-b border-gray-200">
                       <img 
-                        src={page.imageUrl} 
+                        src={getFullAssetUrl(page.imageUrl)} 
                         alt={page.title || `Page ${page.pageNumber}`} 
                         className="object-contain max-h-full max-w-full transition-transform duration-300 group-hover:scale-105" 
                       />
@@ -388,7 +389,7 @@ export default function AdminVisualAidPage() {
                         </button>
                       ) : (
                         <a
-                          href={b.pdfUrl}
+                          href={getFullAssetUrl(b.pdfUrl)}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 no-underline"

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from '../api/axiosInstance';
+import axios, { getAccessToken } from '../api/axiosInstance';
 import { API_ROUTE } from '../data/env';
 import { useToast } from '../context/ToastContext';
+import { getFullAssetUrl } from '../utils/getFullAssetUrl';
 import { 
   X, ChevronLeft, ChevronRight, Search, ZoomIn, ZoomOut, 
   Loader2, Save, FileText, CheckSquare, Square
@@ -44,7 +45,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         try {
           const pdfjs = await loadPdfJs();
           // Load document
-          const doc = await pdfjs.getDocument(brochure.pdfUrl).promise;
+          const doc = await pdfjs.getDocument(getFullAssetUrl(brochure.pdfUrl)).promise;
           setPdfDoc(doc);
           setTotalPages(doc.numPages);
           
@@ -356,7 +357,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
                 // Custom Image Rendering
                 <div className="relative max-w-full max-h-[65vh] flex items-center justify-center rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-slate-850">
                   <img
-                    src={visiblePages[activePageIndex].imgUrl}
+                    src={getFullAssetUrl(visiblePages[activePageIndex].imgUrl)}
                     alt={visiblePages[activePageIndex].title}
                     className="max-w-full max-h-[65vh] object-contain"
                   />
