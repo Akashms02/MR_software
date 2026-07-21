@@ -435,6 +435,8 @@ const OnboardingWizard = () => {
       val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     } else if (name === 'ifscCode') {
       val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+    } else if (name === 'emergencyContactName' || name === 'relationship') {
+      val = value.replace(/[^a-zA-Z\s]/g, '');
     }
 
     if (name === 'sameAsCurrentAddress' && checked) {
@@ -580,6 +582,8 @@ const OnboardingWizard = () => {
       if (/\d/.test(formData.emergencyContactName.trim())) return setFormError("Emergency Contact Name must not contain numbers.");
 
       if (!formData.relationship.trim()) return setFormError("Relationship is required.");
+      if (formData.relationship.trim().length < 2) return setFormError("Relationship must be at least 2 characters.");
+      if (/\d/.test(formData.relationship.trim())) return setFormError("Relationship must not contain numbers.");
 
       if (!formData.emergencyContactNumber.trim()) return setFormError("Emergency contact number is required.");
       if (!/^[6-9]\d{9}$/.test(formData.emergencyContactNumber.trim())) {

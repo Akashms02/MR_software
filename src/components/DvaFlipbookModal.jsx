@@ -94,6 +94,21 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
     initPages();
   }, [brochure]);
 
+  // Prevent native browser scrolling on vertical swipe in touch devices
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventDefaultScroll = (e) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('touchmove', preventDefaultScroll, { passive: false });
+    return () => {
+      container.removeEventListener('touchmove', preventDefaultScroll);
+    };
+  }, []);
+
   // Helper to dynamically load pdf.js from CDN
   const loadPdfJs = () => {
     return new Promise((resolve, reject) => {
@@ -113,15 +128,22 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   };
 
   // Index PDF texts in background
+  // Index PDF texts in background in parallel
   const extractPdfTexts = async (doc) => {
     try {
-      const texts = [];
+      const textPromises = [];
       for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
-        texts.push(pageText);
+        textPromises.push((async () => {
+          try {
+            const page = await doc.getPage(i);
+            const textContent = await page.getTextContent();
+            return textContent.items.map(item => item.str).join(' ').toLowerCase();
+          } catch (e) {
+            return '';
+          }
+        })());
       }
+      const texts = await Promise.all(textPromises);
       setPdfTexts(texts);
     } catch (e) {
       console.error('Failed to extract PDF texts for search indexing', e);
@@ -161,7 +183,8 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   };
 
   // 3. Handle swiping and keyword filtering
-  const handleSearch = async (e) => {
+  // 3. Handle swiping and keyword filtering
+  const handleSearch = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     setActivePageIndex(0); // Reset slider to first matched page
@@ -195,45 +218,22 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
       });
       setVisiblePages(filtered);
     } else {
-      // Filter PDF pages by checking indexed texts (must match ALL search tokens)
-      try {
-        const filtered = [];
-        for (let i = 0; i < allPages.length; i++) {
-          const p = allPages[i];
-          let pageText = pdfTexts[p.pageNumber - 1];
-          if (!pageText && pdfDoc) {
-            const page = await pdfDoc.getPage(p.pageNumber);
-            const textContent = await page.getTextContent();
-            pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
-            
-            // Cache pageText locally
-            setPdfTexts(prev => {
-              const updated = [...prev];
-              updated[p.pageNumber - 1] = pageText;
-              return updated;
-            });
-          }
-          
-          const pageTextNoSpaces = (pageText || '').replace(/\s+/g, '');
-          const title = (p.title || '').toLowerCase();
-          
-          const isMatch = tokens.every(token => {
-            const tokenNoSpaces = token.replace(/\s+/g, '');
-            return (
-              (pageText && pageText.includes(token)) ||
-              pageTextNoSpaces.includes(tokenNoSpaces) ||
-              title.includes(token)
-            );
-          });
-          
-          if (isMatch) {
-            filtered.push(p);
-          }
-        }
-        setVisiblePages(filtered);
-      } catch (err) {
-        console.error('Error during dynamic PDF text search matching:', err);
-      }
+      // Filter PDF pages by checking already indexed background texts (must match ALL search tokens)
+      const filtered = allPages.filter(p => {
+        const pageText = pdfTexts[p.pageNumber - 1] || '';
+        const pageTextNoSpaces = pageText.replace(/\s+/g, '');
+        const title = (p.title || '').toLowerCase();
+
+        return tokens.every(token => {
+          const tokenNoSpaces = token.replace(/\s+/g, '');
+          return (
+            pageText.includes(token) ||
+            pageTextNoSpaces.includes(tokenNoSpaces) ||
+            title.includes(token)
+          );
+        });
+      });
+      setVisiblePages(filtered);
     }
   };
 
