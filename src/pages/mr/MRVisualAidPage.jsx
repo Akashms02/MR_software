@@ -9,6 +9,36 @@ import {
 import DvaFlipbookModal from '../../components/DvaFlipbookModal';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
+const matchSpeciality = (speciality, query) => {
+  if (!speciality) return false;
+  const spec = speciality.toLowerCase().trim();
+  const q = query.toLowerCase().trim();
+  
+  if (spec.includes(q) || q.includes(spec)) return true;
+  
+  // Stemming / Synonym mapping for medical specialities
+  const mappings = [
+    { stems: ['dermat', 'skin', 'dermatolof'], label: 'dermatology' },
+    { stems: ['pediatr', 'child'], label: 'pediatrics' },
+    { stems: ['cardio', 'heart'], label: 'cardiology' },
+    { stems: ['gyneco', 'women', 'obgyn'], label: 'gynecology' },
+    { stems: ['ortho', 'bone'], label: 'orthopedics' },
+    { stems: ['ophthal', 'eye'], label: 'ophthalmology' },
+    { stems: ['neuro', 'brain'], label: 'neurology' },
+    { stems: ['gastro', 'stomach'], label: 'gastroenterology' },
+    { stems: ['dent', 'tooth', 'teeth'], label: 'dentist' },
+    { stems: ['general', 'gp', 'physician'], label: 'general medicine' }
+  ];
+  
+  for (const map of mappings) {
+    const qMatches = map.stems.some(stem => q.includes(stem));
+    const specMatches = map.stems.some(stem => spec.includes(stem));
+    if (qMatches && specMatches) return true;
+  }
+  
+  return false;
+};
+
 export default function MRVisualAidPage() {
   const { showToast } = useToast();
 
@@ -21,6 +51,10 @@ export default function MRVisualAidPage() {
   const [isSelectTargetOpen, setIsSelectTargetOpen] = useState(false);
   const [targetSearch, setTargetSearch] = useState('');
   const [selectedTarget, setSelectedTarget] = useState(null);
+  
+  // Main Page Target Selector
+  const [mainTargetSearch, setMainTargetSearch] = useState('');
+  const [isMainDropdownOpen, setIsMainDropdownOpen] = useState(false);
 
   // Active Presentation Flipbook
   const [activePresentation, setActivePresentation] = useState(null); // { brochure, target }
@@ -65,10 +99,18 @@ export default function MRVisualAidPage() {
   }, [fetchData]);
 
   const handleStartPresentation = (brochure) => {
-    setSelectedBrochure(brochure);
-    setIsSelectTargetOpen(true);
-    setSelectedTarget(null);
-    setTargetSearch('');
+    if (selectedTarget) {
+      // If a target session is active, start detailing directly!
+      setActivePresentation({
+        brochure,
+        target: selectedTarget
+      });
+    } else {
+      setSelectedBrochure(brochure);
+      setIsSelectTargetOpen(true);
+      setSelectedTarget(null);
+      setTargetSearch('');
+    }
   };
 
   const launchViewer = (withTarget = true) => {
@@ -85,12 +127,45 @@ export default function MRVisualAidPage() {
   };
 
   const filteredContacts = contacts.filter(c => {
-    const term = targetSearch.toLowerCase();
-    return (
-      c.fullName.toLowerCase().includes(term) ||
-      (c.speciality && c.speciality.toLowerCase().includes(term)) ||
-      c.type.toLowerCase().includes(term)
-    );
+    if (!targetSearch.trim()) return true;
+    const term = targetSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    
+    const fullName = (c.fullName || '').toLowerCase();
+    const speciality = (c.speciality || '').toLowerCase();
+    const type = (c.type || '').toLowerCase();
+    const clinicName = (c.clinicName || '').toLowerCase();
+
+    return tokens.every(token => {
+      const isSpecMatch = matchSpeciality(speciality, token);
+      return (
+        fullName.includes(token) ||
+        isSpecMatch ||
+        type.includes(token) ||
+        clinicName.includes(token)
+      );
+    });
+  });
+
+  const filteredMainContacts = contacts.filter(c => {
+    if (!mainTargetSearch.trim()) return false;
+    const term = mainTargetSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    
+    const fullName = (c.fullName || '').toLowerCase();
+    const speciality = (c.speciality || '').toLowerCase();
+    const type = (c.type || '').toLowerCase();
+    const clinicName = (c.clinicName || '').toLowerCase();
+
+    return tokens.every(token => {
+      const isSpecMatch = matchSpeciality(speciality, token);
+      return (
+        fullName.includes(token) ||
+        isSpecMatch ||
+        type.includes(token) ||
+        clinicName.includes(token)
+      );
+    });
   });
 
   return (
@@ -99,6 +174,95 @@ export default function MRVisualAidPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Product Visual Aids</h1>
         <p className="text-gray-500 text-sm">Select a catalog to detail and present pharmaceutical product cards to doctors or chemists.</p>
+      </div>
+
+      {/* Detailing Target Session Selection Panel */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Users size={16} className="text-indigo-650" />
+              Active Detailing Target
+            </h3>
+            <p className="text-gray-500 text-xs">
+              Select the doctor or chemist you are visiting to log detailing actions directly.
+            </p>
+          </div>
+          {selectedTarget ? (
+            <div className="flex items-center gap-3 bg-indigo-50/70 border border-indigo-150 px-4 py-2 rounded-xl">
+              <div className="text-xs">
+                <span className="font-bold text-indigo-900">{selectedTarget.fullName}</span>
+                <span className="text-indigo-650 ml-1.5 uppercase font-extrabold text-[10px] bg-indigo-100 px-1.5 py-0.5 rounded">
+                  {selectedTarget.speciality || selectedTarget.type}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedTarget(null);
+                  setMainTargetSearch('');
+                }}
+                className="p-1 text-indigo-400 hover:text-indigo-700 bg-transparent border-none cursor-pointer flex items-center"
+                title="Clear detailing session"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="relative w-80 max-w-full">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={14} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search doctor name or speciality..."
+                  value={mainTargetSearch}
+                  onChange={(e) => {
+                    setMainTargetSearch(e.target.value);
+                    setIsMainDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsMainDropdownOpen(true)}
+                  className="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 bg-gray-50/50"
+                />
+              </div>
+
+              {/* Main Search Dropdown */}
+              {isMainDropdownOpen && mainTargetSearch.trim() && (
+                <>
+                  <div className="fixed inset-0 z-[40]" onClick={() => setIsMainDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-150 rounded-xl shadow-lg max-h-60 overflow-y-auto z-[50]">
+                    {filteredMainContacts.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-gray-400">No doctors or chemists found</div>
+                    ) : (
+                      filteredMainContacts.map(contact => (
+                        <div
+                          key={`${contact.type}_${contact.id}`}
+                          onClick={() => {
+                            setSelectedTarget(contact);
+                            setIsMainDropdownOpen(false);
+                            setMainTargetSearch('');
+                            showToast(`Detailing session started for ${contact.fullName}`, 'success');
+                          }}
+                          className="p-2.5 hover:bg-indigo-50/40 cursor-pointer flex items-center justify-between border-b border-gray-50 last:border-none text-left"
+                        >
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-xs">{contact.fullName}</h4>
+                            <span className="text-[10px] text-gray-400">{contact.speciality || 'Chemist'}</span>
+                          </div>
+                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                            contact.type === 'CHEMIST' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+                          }`}>
+                            {contact.type}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (
