@@ -16,6 +16,14 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
+const DESIGNATION_OPTIONS = [
+  { value: 'Medical Representative (MR)', label: 'Medical Representative (MR)' },
+  { value: 'Area Sales Manager (ASM)', label: 'Area Sales Manager (ASM)' },
+  { value: 'Regional Sales Manager (RSM)', label: 'Regional Sales Manager (RSM)' },
+  { value: 'Zonal Business Manager (ZBM)', label: 'Zonal Business Manager (ZBM)' },
+  { value: 'Other', label: 'Other / Custom Designation...' }
+];
+
 const STEP_LABELS = [
   'Basic Setup',
   'Personal Info',
@@ -62,13 +70,11 @@ const FormField = ({
   placeholder = '',
   options = null,
 }) => {
-  const inputClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
-    isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
-  }`;
+  const inputClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+    }`;
 
-  const selectClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
-    isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
-  }`;
+  const selectClass = `w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+    }`;
 
   return (
     <div>
@@ -118,15 +124,13 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
         {required && <span className="text-red-500"> *</span>}
       </label>
       <div
-        className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-4 relative transition-all duration-200 ${
-          disabled ? 'cursor-default' : 'cursor-pointer'
-        } ${
-          file
+        className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-4 relative transition-all duration-200 ${disabled ? 'cursor-default' : 'cursor-pointer'
+          } ${file
             ? 'border-indigo-500 bg-indigo-50'
             : existingFileUrl
-            ? 'border-emerald-500 bg-emerald-50'
-            : 'border-gray-200 bg-[#FAFAFA]'
-        }`}
+              ? 'border-emerald-500 bg-emerald-50'
+              : 'border-gray-200 bg-[#FAFAFA]'
+          }`}
       >
         {/* Preview Thumbnail or Icon */}
         {displayUrl && isImg ? (
@@ -139,9 +143,8 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
           </div>
         ) : (
           <div
-            className={`w-[54px] h-[54px] rounded-lg flex items-center justify-center shrink-0 border-[1.5px] border-gray-200 ${
-              file ? 'bg-indigo-100' : existingFileUrl ? 'bg-emerald-100' : 'bg-gray-100'
-            }`}
+            className={`w-[54px] h-[54px] rounded-lg flex items-center justify-center shrink-0 border-[1.5px] border-gray-200 ${file ? 'bg-indigo-100' : existingFileUrl ? 'bg-emerald-100' : 'bg-gray-100'
+              }`}
           >
             <Upload size={20} className={file ? 'text-indigo-600' : existingFileUrl ? 'text-emerald-700' : 'text-gray-400'} />
           </div>
@@ -149,13 +152,12 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
 
         <div className="flex-1 min-w-0">
           <div
-            className={`text-[13px] font-bold truncate ${
-              file ? 'text-indigo-700' : existingFileUrl ? 'text-emerald-800' : 'text-gray-700'
-            }`}
+            className={`text-[13px] font-bold truncate ${file ? 'text-indigo-700' : existingFileUrl ? 'text-emerald-800' : 'text-gray-700'
+              }`}
           >
             {file ? file.name : existingFileUrl ? `Current ${label}` : `No file uploaded`}
           </div>
-          
+
           <div className="flex gap-2 items-center mt-1">
             {existingFileUrl && !file && (
               <>
@@ -296,7 +298,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       loadDepartments();
     }
   }, [dispatch, isOpen]);
-  
+
   // Track existing document paths from API
   const [existingDocs, setExistingDocs] = useState({
     experienceLetter: null,
@@ -359,6 +361,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
   const [originalData, setOriginalData] = useState({});
 
   // Files state
+  const [isCustomDesignation, setIsCustomDesignation] = useState(false);
   const [experienceLetter, setExperienceLetter] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [aadharDoc, setAadharDoc] = useState(null);
@@ -392,7 +395,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       setFormSuccess(null);
       setActiveTab(1);
       setIsEditing(false);
-      
+
       // Reset files
       setExperienceLetter(null);
       setProfilePhoto(null);
@@ -403,6 +406,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       try {
         const res = await dispatch(fetchOnboardingStatus(employeeId));
         const data = res.data;
+
+        const desig = data.employment?.designation || '';
+        const isCustom = desig && !['Medical Representative (MR)', 'Area Sales Manager (ASM)', 'Regional Sales Manager (RSM)', 'Zonal Business Manager (ZBM)'].includes(desig);
+        setIsCustomDesignation(!!isCustom);
 
         const initialFormValues = {
           fullName: data.fullName || '',
@@ -472,8 +479,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       } catch (err) {
         setFormError(
           err?.response?.data?.message ||
-            err.message ||
-            'Failed to load employee details.'
+          err.message ||
+          'Failed to load employee details.'
         );
       } finally {
         setInitialLoading(false);
@@ -503,7 +510,31 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       val = value.replace(/[^a-zA-Z\s]/g, '');
     }
 
-    if (name === 'sameAsCurrentAddress' && checked) {
+    if (name === 'role') {
+      let dept = '';
+      let desig = '';
+      let isCustom = false;
+      if (val === 'MR') {
+        dept = 'Sales & Marketing';
+        desig = 'Medical Representative (MR)';
+      } else if (val === 'AREA_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Area Sales Manager (ASM)';
+      } else if (val === 'REGIONAL_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Regional Sales Manager (RSM)';
+      } else if (val === 'ZONE_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Zonal Business Manager (ZBM)';
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        role: val,
+        department: dept || prev.department,
+        designation: desig || prev.designation,
+      }));
+    } else if (name === 'sameAsCurrentAddress' && checked) {
       setFormData((prev) => ({
         ...prev,
         sameAsCurrentAddress: true,
@@ -511,6 +542,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: val }));
+    }
+  };
+
+  const handleDesignationSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === 'Other') {
+      setIsCustomDesignation(true);
+      setFormData(prev => ({ ...prev, designation: '' }));
+    } else {
+      setIsCustomDesignation(false);
+      setFormData(prev => ({ ...prev, designation: val }));
     }
   };
 
@@ -688,7 +730,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
       setFormSuccess(`Section details updated successfully!`);
       setOriginalData(formData);
-      
+
       // Update local existing doc state if new file is uploaded
       if (activeTab === 4 && experienceLetter) {
         setExistingDocs(prev => ({ ...prev, experienceLetter: URL.createObjectURL(experienceLetter) }));
@@ -724,8 +766,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
     } catch (err) {
       setFormError(
         err?.response?.data?.message ||
-          err.message ||
-          'Failed to update details. Please try again.'
+        err.message ||
+        'Failed to update details. Please try again.'
       );
     }
   };
@@ -735,7 +777,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
   return (
     <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center z-[1000] p-5 animate-[fadeIn_0.25s_ease-out]">
       <div className="bg-white rounded-[24px] w-full max-w-[1080px] h-[90vh] max-h-[90vh] flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden animate-[scaleIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
-        
+
         {/* Modal Header */}
         <div className="px-8 py-6 border-b-[1.5px] border-gray-100 flex justify-between items-center shrink-0">
           <div>
@@ -797,9 +839,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                       setResumeDoc(null);
                       setActiveTab(tabIndex);
                     }}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-none text-[13px] cursor-pointer transition-all duration-200 flex items-center justify-between outline-none box-border ${
-                      isActive ? 'bg-indigo-50 text-indigo-600 font-extrabold' : 'bg-transparent text-gray-600 font-semibold hover:bg-gray-200'
-                    }`}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-none text-[13px] cursor-pointer transition-all duration-200 flex items-center justify-between outline-none box-border ${isActive ? 'bg-indigo-50 text-indigo-600 font-extrabold' : 'bg-transparent text-gray-600 font-semibold hover:bg-gray-200'
+                      }`}
                   >
                     <span>{name}</span>
                     {isActive && (
@@ -808,9 +849,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                   </button>
                 );
               })}
-              
+
               <div className="flex-1" />
-              
+
               <button
                 type="button"
                 onClick={onClose}
@@ -840,7 +881,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                   {/* Alerts handled by global toast system */}
 
                   {/* Render content based on activeTab */}
-                  
+
                   {/* TAB 1: Basic Setup */}
                   {activeTab === 1 && (
                     <div className="flex flex-col gap-6">
@@ -894,9 +935,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                             value={formData.reportingToId}
                             onChange={handleInputChange}
                             disabled={!isEditing}
-                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${
-                              isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
-                            }`}
+                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none bg-[#FAFAFA] transition-[border-color] duration-200 ${isEditing ? 'bg-white cursor-pointer focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                              }`}
                           >
                             <option value="">Select Reporting Manager</option>
                             {reportingManagers.map((mgr) => (
@@ -1035,9 +1075,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           required
                           placeholder="Flat, Building, Street, Area, City, PIN"
                           disabled={!isEditing}
-                          className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${
-                            isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
-                          }`}
+                          className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${isEditing ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                            }`}
                         />
                       </div>
                       <div>
@@ -1060,9 +1099,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                             required
                             placeholder="Flat, Building, Street, Area, City, PIN"
                             disabled={!isEditing || formData.sameAsCurrentAddress}
-                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${
-                              (isEditing && !formData.sameAsCurrentAddress) ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
-                            }`}
+                            className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-gray-200 text-sm outline-none box-border transition-[border-color] duration-200 h-20 resize-none ${(isEditing && !formData.sameAsCurrentAddress) ? 'bg-white cursor-text focus:border-indigo-500' : 'bg-gray-50 cursor-not-allowed'
+                              }`}
                           />
                         )}
                       </div>
@@ -1082,15 +1120,35 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                           required
                           options={departmentsList}
                         />
-                        <FormField
-                          label="Designation"
-                          name="designation"
-                          value={formData.designation}
-                          onChange={handleInputChange}
-                          isEditing={isEditing}
-                          required
-                          placeholder="e.g. Senior MR"
-                        />
+                        <div>
+                          {isCustomDesignation ? (
+                            <div>
+                              <FormField
+                                label="Designation"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={handleInputChange}
+                                isEditing={isEditing}
+                                required
+                                placeholder="e.g. Vice President (VP)"
+                              />
+                            </div>
+                          ) : (
+                            <FormField
+                              label="Designation"
+                              name="designationSelect"
+                              value={
+                                ['Medical Representative (MR)', 'Area Sales Manager (ASM)', 'Regional Sales Manager (RSM)', 'Zonal Business Manager (ZBM)', ''].includes(formData.designation)
+                                  ? formData.designation
+                                  : 'Other'
+                              }
+                              onChange={handleDesignationSelectChange}
+                              required
+                              options={DESIGNATION_OPTIONS}
+                              isEditing={isEditing}
+                            />
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
                         <FormField
@@ -1390,9 +1448,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                               <div
                                 key={doc.key}
                                 onClick={() => setActiveDocKey(doc.key)}
-                                className={`p-3 rounded-xl border-[1.5px] cursor-pointer flex flex-col gap-1.5 transition-all duration-200 ${
-                                  isActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-400'
-                                }`}
+                                className={`p-3 rounded-xl border-[1.5px] cursor-pointer flex flex-col gap-1.5 transition-all duration-200 ${isActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-400'
+                                  }`}
                               >
                                 <div className="flex justify-between items-center">
                                   <span className={`text-[13px] font-bold ${isActive ? 'text-indigo-700' : 'text-gray-700'}`}>
@@ -1418,7 +1475,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                                   <span className="text-[11px] text-gray-400 truncate max-w-[140px]">
                                     {doc.fileState ? doc.fileState.name : doc.existingUrl ? 'Stored document' : 'No file chosen'}
                                   </span>
-                                  
+
                                   {isEditing && (
                                     <>
                                       <button
@@ -1427,9 +1484,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                                           e.stopPropagation();
                                           document.getElementById(`file-upload-${doc.key}`).click();
                                         }}
-                                        className={`text-[11px] font-bold border-none rounded px-2 py-1 cursor-pointer transition-all duration-200 ${
-                                          isActive ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
-                                        }`}
+                                        className={`text-[11px] font-bold border-none rounded px-2 py-1 cursor-pointer transition-all duration-200 ${isActive ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+                                          }`}
                                       >
                                         {hasFile ? 'Replace' : 'Upload'}
                                       </button>
@@ -1555,9 +1611,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className={`flex items-center gap-1.5 px-6 py-2.5 rounded-lg border-none bg-indigo-600 text-white font-bold text-[13px] transition-all duration-200 shadow-[0_4px_12px_rgba(79,70,229,0.2)] outline-none hover:bg-indigo-700 ${
-                          loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
-                        }`}
+                        className={`flex items-center gap-1.5 px-6 py-2.5 rounded-lg border-none bg-indigo-600 text-white font-bold text-[13px] transition-all duration-200 shadow-[0_4px_12px_rgba(79,70,229,0.2)] outline-none hover:bg-indigo-700 ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
                       >
                         {loading && (
                           <Loader2 size={14} className="animate-spin" />
