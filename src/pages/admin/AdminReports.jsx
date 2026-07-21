@@ -10,6 +10,8 @@ import {
   clearReportErrors
 } from '../../redux/actions/reportActions';
 import { getMyTeam } from '../../redux/actions/teamActions';
+import axios from '../../api/axiosInstance';
+import { API_ROUTE } from '../../data/env';
 import { Card, TableWrap, Th, Td } from '../../components/ui';
 import { 
   Calendar, MapPin, Award, CheckCircle2, AlertCircle, ChevronRight, BarChart3, 
@@ -69,6 +71,7 @@ const REPORT_TYPES = [
   { id: 'dcr-day', label: 'DCR Day Sheets', icon: '📝', sub: 'Full daily verification log' },
   { id: 'daily-activity', label: 'Daily Activity', icon: '🏃‍♂️', sub: 'Productive visits & tour plans' },
   { id: 'weekly-cross', label: 'Weekly Cross-Tab', icon: '🗓️', sub: 'Weekly log overview' },
+  { id: 'jfw-report', label: 'Joint Work (JWR)', icon: '🤝', sub: 'Joint Field Work (JFW) logs' },
 ];
 
 export default function AdminReports() {
@@ -104,6 +107,13 @@ export default function AdminReports() {
   const [selectedMrId, setSelectedMrId] = useState('');
   const [activeReport, setActiveReport] = useState('visit-summary');
 
+  // Local state for JFW Report
+  const [jfwData, setJfwData] = useState([]);
+  const [jfwType, setJfwType] = useState('team'); // 'team' or 'my'
+  const [jfwLoading, setJfwLoading] = useState(false);
+  const [jfwError, setJfwError] = useState(null);
+  const [jfwFilterMrOnly, setJfwFilterMrOnly] = useState(false); // default false to see entire company JWR initially
+
   // Filters State
   const [startDate, setStartDate] = useState(getFirstOfMonthString());
   const [endDate, setEndDate] = useState(getTodayDateString());
@@ -123,9 +133,33 @@ export default function AdminReports() {
     }
   }, [mrList, selectedMrId]);
 
+  // Fetch JFW report via local axios call
+  const fetchJfwReport = async () => {
+    setJfwLoading(true);
+    setJfwError(null);
+    try {
+      const endpoint = jfwType === 'team' ? '/jfw/team-visits' : '/jfw/my-visits';
+      const response = await axios.get(`${API_ROUTE}${endpoint}`);
+      const resData = response.data;
+      if (resData && (resData.status === 200 || resData.status === 'SUCCESS' || resData.success)) {
+        setJfwData(resData.data || []);
+      } else {
+        setJfwError(resData?.message || 'Failed to fetch Joint Work Reports');
+      }
+    } catch (err) {
+      setJfwError(err.response?.data?.message || err.message || 'Failed to fetch Joint Work Reports');
+    } finally {
+      setJfwLoading(false);
+    }
+  };
+
   // Trigger Action Dispatch
   const handleFetchReport = (targetPage = page) => {
     dispatch(clearReportErrors());
+    if (activeReport === 'jfw-report') {
+      fetchJfwReport();
+      return;
+    }
     if (!selectedMrId) return;
 
     switch (activeReport) {
@@ -154,15 +188,17 @@ export default function AdminReports() {
 
   // Re-fetch report when category, selected MR, or date filters change (reset page to 1)
   useEffect(() => {
-    if (selectedMrId) {
+    if (activeReport === 'jfw-report') {
+      fetchJfwReport();
+    } else if (selectedMrId) {
       setPage(1);
       handleFetchReport(1);
     }
-  }, [activeReport, selectedMrId, startDate, endDate, date, dateInWeek]);
+  }, [activeReport, selectedMrId, startDate, endDate, date, dateInWeek, jfwType]);
 
   // Re-fetch report when page changes
   useEffect(() => {
-    if (selectedMrId && page > 1) {
+    if (selectedMrId && page > 1 && activeReport !== 'jfw-report') {
       handleFetchReport(page);
     }
   }, [page]);
@@ -182,8 +218,19 @@ export default function AdminReports() {
 
   const currentData = getActiveData();
 
+  // Local JFW filtering
+  const filteredJfwData = (jfwData || []).filter(visit => {
+    const vDate = visit.reportDate;
+    const matchDate = !vDate || (vDate >= startDate && vDate <= endDate);
+    const matchMr = !jfwFilterMrOnly || !selectedMrId || String(visit.mrId) === selectedMrId;
+    return matchDate && matchMr;
+  });
+
   // Check if data holds valid results
   const hasData = () => {
+    if (activeReport === 'jfw-report') {
+      return Array.isArray(filteredJfwData) && filteredJfwData.length > 0;
+    }
     if (!currentData) return false;
     if (activeReport === 'datewise-daily' || activeReport === 'call-visit' || activeReport === 'weekly-cross') {
       return Array.isArray(currentData.list) && currentData.list.length > 0;
@@ -278,7 +325,7 @@ export default function AdminReports() {
           </div>
 
           {/* Date range pickers */}
-          {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit') && (
+          {(activeReport === 'visit-summary' || activeReport === 'datewise-daily' || activeReport === 'call-visit' || activeReport === 'jfw-report') && (
             <>
               <div className="flex flex-col gap-1.5">
                 <label className="block text-[11px] font-bold text-[#4B5563] uppercase tracking-[0.5px]">Start Date</label>
@@ -334,7 +381,7 @@ export default function AdminReports() {
       <div className="flex flex-col gap-6 relative min-h-[300px]">
         
         {/* Loading Indicator */}
-        {loading && (
+        {(loading || jfwLoading) && (
           <div className="bg-white/75 backdrop-blur-[1px] absolute inset-0 flex items-center justify-center z-50 rounded-2xl">
             <div className="flex flex-col items-center gap-2">
               <RefreshCw className="animate-spin text-[#10B981]" size={30} />
@@ -344,10 +391,10 @@ export default function AdminReports() {
         )}
 
         {/* Error Notice */}
-        {error && (
+        {(error || jfwError) && (
           <div className="flex items-center gap-2.5 px-4.5 py-3.5 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-[#B91C1C] text-[13px] font-medium">
             <AlertCircle size={18} />
-            <span><strong>API Fetch Failed:</strong> {error}. Please verify the connection parameters.</span>
+            <span><strong>API Fetch Failed:</strong> {error || jfwError}. Please verify the connection parameters.</span>
           </div>
         )}
 
@@ -755,9 +802,109 @@ export default function AdminReports() {
             </TableWrap>
           </>
         )}
+        {/* Condition: Joint Work Report (JWR) */}
+        {activeReport === 'jfw-report' && hasData() && (
+          <>
+            {/* JFW Mode selection and filter toggle */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#F9FAFB] p-4.5 rounded-2xl border border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setJfwType('team')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 ${jfwType === 'team' ? 'bg-[#1F2937] text-white' : 'bg-white text-[#4B5563] border border-[#E5E7EB] hover:bg-gray-50'}`}
+                >
+                  👥 Team's Joint Field Work
+                </button>
+                <button
+                  onClick={() => setJfwType('my')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 ${jfwType === 'my' ? 'bg-[#1F2937] text-white' : 'bg-white text-[#4B5563] border border-[#E5E7EB] hover:bg-gray-50'}`}
+                >
+                  🤝 My Accompanied Joint Work
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="jfwMrFilter"
+                  checked={jfwFilterMrOnly}
+                  onChange={(e) => setJfwFilterMrOnly(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                />
+                <label htmlFor="jfwMrFilter" className="text-xs font-bold text-[#374151] cursor-pointer">
+                  Filter by Selected Field Representative
+                </label>
+              </div>
+            </div>
+
+            {/* JWR Statistics Summary Cards */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="p-5 border-l-5 border-[#3B82F6] flex flex-col justify-between">
+                <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Total Joint Work Visits</div>
+                <div className="text-[24px] font-extrabold text-[#1F2937] mt-1.5">{filteredJfwData.length}</div>
+              </Card>
+              <Card className="p-5 border-l-5 border-[#10B981] flex flex-col justify-between">
+                <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Doctors Met</div>
+                <div className="text-[24px] font-extrabold text-[#1F2937] mt-1.5">
+                  {new Set(filteredJfwData.map(v => v.doctorId)).size}
+                </div>
+              </Card>
+              <Card className="p-5 border-l-5 border-[#8B5CF6] flex flex-col justify-between">
+                <div className="text-[11px] font-bold text-[#9CA3AF] uppercase">Reps Accompanied</div>
+                <div className="text-[24px] font-extrabold text-[#1F2937] mt-1.5">
+                  {new Set(filteredJfwData.map(v => v.mrId)).size}
+                </div>
+              </Card>
+            </div>
+
+            {/* JWR detailed table */}
+            <TableWrap>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <Th>Date & Time</Th>
+                    <Th>Representative</Th>
+                    <Th>Doctor</Th>
+                    <Th>Accompanied Manager</Th>
+                    <Th>Products Discussed</Th>
+                    <Th>Samples Given</Th>
+                    <Th>Feedback</Th>
+                    <Th>GPS Status</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredJfwData.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors">
+                      <Td className="font-bold text-[#1F2937]">
+                        <div>{row.reportDate}</div>
+                        <div className="text-[11px] text-[#6B7280] font-normal mt-0.5">{row.visitTime || '—'}</div>
+                      </Td>
+                      <Td className="font-bold text-[#1F2937]">{row.mrName || `MR #${row.mrId}`}</Td>
+                      <Td>
+                        <div className="font-semibold text-[#1F2937]">{row.doctorName}</div>
+                        <div className="text-[11px] text-[#6B7280]">{row.speciality}</div>
+                      </Td>
+                      <Td>
+                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
+                          👤 {row.jfwManagerName || `Manager #${row.jfwManagerId}`}
+                        </span>
+                      </Td>
+                      <Td>{row.productsDiscussed || '—'}</Td>
+                      <Td>{row.samplesGiven || '—'}</Td>
+                      <Td className="italic text-gray-500 max-w-[200px] truncate" title={row.feedback}>{row.feedback || '—'}</Td>
+                      <Td>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${row.gpsVerified ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FEF2F2] text-[#B91C1C]'}`}>
+                          {row.gpsVerified ? 'GPS VERIFIED' : 'UNVERIFIED'}
+                        </span>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableWrap>
+          </>
+        )}
 
         {/* Fallback state when there's no data */}
-        {!hasData() && !loading && (
+        {!hasData() && !loading && !jfwLoading && (
           <Card className="px-6 py-10 text-center bg-white border-[1.5px] border-dashed border-[#E5E7EB]">
             <ShieldAlert size={48} color="#9CA3AF" className="mx-auto mb-4" />
             <h4 className="text-[15px] font-extrabold text-[#374151] mt-0 mb-1.5">No Database Records Found</h4>

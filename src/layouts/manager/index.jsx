@@ -14,6 +14,7 @@ import AdminAttendance from '../../pages/admin/AdminAttendance'
 import WaterCooler from '../../pages/admin/WaterCooler'
 import AdminSalesPage from '../../pages/admin/AdminSalesPage'
 import EmployeeDocument from '../../pages/employee/EmployeeDocument'
+import AdminVisualAidPage from '../../pages/admin/AdminVisualAidPage'
 
 export default function ManagerLayoutRouter() {
   return (
@@ -31,6 +32,7 @@ export default function ManagerLayoutRouter() {
         <Route path="tourplans" element={<AdminTourPlanReviewPage />} />
         <Route path="sales" element={<AdminSalesPage />} />
         <Route path="finance" element={<EmployeeDocument />} />
+        <Route path="products" element={<AdminVisualAidPage />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="*" element={<Navigate to="/manager/dashboard" replace />} />

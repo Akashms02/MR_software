@@ -23,7 +23,8 @@ import {
   Trash2,
   Check,
   Megaphone,
-  TrendingUp
+  TrendingUp,
+  BookOpen
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -221,12 +222,13 @@ export default function AdminLayout({ children }) {
     // { id: 'watercooler',  icon: Coffee,          label: 'Water Cooler',  path: '/admin/watercooler' },
     { id: 'hrdocuments',  icon: FileText,        label: 'HR Documents',  path: '/admin/hrdocuments' },
     { id: 'notices',      icon: Megaphone,       label: 'Notice Board',  path: '/admin/notices' },
+    { id: 'products',     icon: BookOpen,        label: 'Product Visual Aids', path: '/admin/products' },
     { id: 'settings',     icon: Settings,        label: 'Settings',      path: '/admin/settings' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    if (item.id === 'dashboard' || item.id === 'settings' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     return allowedList.includes(item.id.toLowerCase());
