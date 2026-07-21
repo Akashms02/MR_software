@@ -499,6 +499,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
       val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     } else if (name === 'ifscCode') {
       val = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+    } else if (name === 'emergencyContactName' || name === 'relationship') {
+      val = value.replace(/[^a-zA-Z\s]/g, '');
     }
 
     if (name === 'sameAsCurrentAddress' && checked) {
@@ -565,6 +567,14 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
 
       if (!formData.relationship || !formData.relationship.trim()) {
         setFormError("Relationship is required.");
+        return;
+      }
+      if (formData.relationship.trim().length < 2) {
+        setFormError("Relationship must be at least 2 characters.");
+        return;
+      }
+      if (/\d/.test(formData.relationship.trim())) {
+        setFormError("Relationship must not contain numbers.");
         return;
       }
 
