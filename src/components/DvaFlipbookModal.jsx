@@ -36,6 +36,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   const containerRef = useRef(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const renderTaskRef = useRef(null);
 
   // 1. Initialize pages and load PDF if PDF-based
   useEffect(() => {
@@ -129,22 +130,27 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
 
   // Index PDF texts in background
   // Index PDF texts in background in parallel
+  // Index PDF texts in background sequentially but incrementally to avoid worker/memory spike crashes
   const extractPdfTexts = async (doc) => {
     try {
-      const textPromises = [];
+      const texts = new Array(doc.numPages).fill('');
+      setPdfTexts(texts); // Initialize with blank pages
+
       for (let i = 1; i <= doc.numPages; i++) {
-        textPromises.push((async () => {
-          try {
-            const page = await doc.getPage(i);
-            const textContent = await page.getTextContent();
-            return textContent.items.map(item => item.str).join(' ').toLowerCase();
-          } catch (e) {
-            return '';
-          }
-        })());
+        try {
+          const page = await doc.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
+          
+          setPdfTexts(prev => {
+            const updated = [...prev];
+            updated[i - 1] = pageText;
+            return updated;
+          });
+        } catch (err) {
+          console.error(`Failed to index page ${i}`, err);
+        }
       }
-      const texts = await Promise.all(textPromises);
-      setPdfTexts(texts);
     } catch (e) {
       console.error('Failed to extract PDF texts for search indexing', e);
     }
@@ -161,6 +167,15 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   }, [activePageIndex, visiblePages, loading, pdfDoc, scale]);
 
   const renderPage = async (pageNum) => {
+    // If a previous page render is in progress, cancel it first
+    if (renderTaskRef.current) {
+      try {
+        renderTaskRef.current.cancel();
+      } catch (e) {
+        // Ignore
+      }
+    }
+
     try {
       const page = await pdfDoc.getPage(pageNum);
       const canvas = canvasRef.current;
@@ -176,8 +191,16 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         canvasContext: context,
         viewport: viewport
       };
-      await page.render(renderContext).promise;
+
+      const renderTask = page.render(renderContext);
+      renderTaskRef.current = renderTask;
+
+      await renderTask.promise;
+      renderTaskRef.current = null;
     } catch (err) {
+      if (err.name === 'RenderingCancelledException' || err.message === 'Rendering cancelled') {
+        return; // Ignore task cancellation aborts
+      }
       console.error('Failed to render PDF page onto canvas', err);
     }
   };
@@ -406,7 +429,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
               <Loader2 className="animate-spin text-[#C8F04A]" size={40} />
               <span className="text-sm font-semibold">Loading brochure pages...</span>
             </div>
-          ) : visiblePages.length === 0 ? (
+          ) : (visiblePages.length === 0 || !visiblePages[activePageIndex]) ? (
             <div className="text-center py-20 text-slate-400 space-y-2">
               <p className="text-md font-bold">No matching pages found</p>
               <p className="text-xs text-slate-500">Try searching for other keywords or categories.</p>

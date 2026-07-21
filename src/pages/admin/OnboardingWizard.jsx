@@ -13,11 +13,17 @@ import {
   ArrowLeft,
   ArrowRight,
   Loader2,
-  CheckCircle2,
-  AlertCircle,
   Upload,
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+
+const DESIGNATION_OPTIONS = [
+  { value: 'Medical Representative (MR)', label: 'Medical Representative (MR)' },
+  { value: 'Area Sales Manager (ASM)', label: 'Area Sales Manager (ASM)' },
+  { value: 'Regional Sales Manager (RSM)', label: 'Regional Sales Manager (RSM)' },
+  { value: 'Zonal Business Manager (ZBM)', label: 'Zonal Business Manager (ZBM)' },
+  { value: 'Other', label: 'Other / Custom Designation...' }
+];
 
 const STEP_LABELS = [
   'Basic Setup',
@@ -84,22 +90,19 @@ const FileDropzone = ({ label, file, onChange, required = false }) => (
       {required && <span className="text-red-500"> *</span>}
     </label>
     <div
-      className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-3 cursor-pointer relative transition-all duration-200 ${
-        file ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-[#FAFAFA]'
-      }`}
+      className={`border-2 border-dashed p-4 rounded-xl flex items-center gap-3 cursor-pointer relative transition-all duration-200 ${file ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-[#FAFAFA]'
+        }`}
     >
       <div
-        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-          file ? 'bg-indigo-600' : 'bg-gray-100'
-        }`}
+        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${file ? 'bg-indigo-600' : 'bg-gray-100'
+          }`}
       >
         <Upload size={16} className={file ? 'text-white' : 'text-gray-400'} />
       </div>
       <div className="flex-1 min-w-0">
         <div
-          className={`text-[13px] font-bold truncate ${
-            file ? 'text-indigo-700' : 'text-gray-700'
-          }`}
+          className={`text-[13px] font-bold truncate ${file ? 'text-indigo-700' : 'text-gray-700'
+            }`}
         >
           {file ? file.name : `Choose ${label}`}
         </div>
@@ -136,7 +139,7 @@ const OnboardingWizard = () => {
   const { showToast } = useToast();
   const [formError, _setFormError] = useState(null);
   const [formSuccess, _setFormSuccess] = useState(null);
- 
+
   const setFormError = (msg) => {
     _setFormError(msg);
     if (msg) showToast(msg, 'error');
@@ -145,7 +148,7 @@ const OnboardingWizard = () => {
     _setFormSuccess(msg);
     if (msg) showToast(msg, 'success');
   };
- 
+
   const [reportingManagers, setReportingManagers] = useState([]);
   const [roleOptions, setRoleOptions] = useState(() => {
     try {
@@ -175,26 +178,26 @@ const OnboardingWizard = () => {
       { value: 'MR', label: 'Medical Representative (MR)' },
     ];
   });
- 
+
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const response = await dispatch(fetchRoleTypes());
         if (response && response.data) {
           const allRoles = response.data;
-          
+
           // Highly robust role restriction rules
           const userRole = (user?.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
           const isARM = userRole.includes('AREA MANAGER') || userRole.includes('AREA SALES') || userRole === 'ABM' || userRole === 'ASM';
           const isRBM = userRole.includes('REGIONAL') || userRole === 'RBM' || userRole === 'RSM';
-          
+
           let allowedKeys = ['ZONE_MANAGER', 'AREA_MANAGER', 'REGIONAL_MANAGER', 'MR'];
           if (isARM) {
             allowedKeys = ['MR'];
           } else if (isRBM) {
             allowedKeys = ['AREA_MANAGER', 'MR'];
           }
-          
+
           const filtered = allRoles
             .filter(role => allowedKeys.includes(role))
             .map(role => {
@@ -205,7 +208,7 @@ const OnboardingWizard = () => {
             });
           if (filtered.length > 0) {
             setRoleOptions(filtered);
-            
+
             // Set initial selected role based on first allowed option
             const defaultRoleValue = filtered.some(f => f.value === 'MR') ? 'MR' : filtered[0].value;
             setFormData(prev => ({ ...prev, role: defaultRoleValue }));
@@ -301,6 +304,7 @@ const OnboardingWizard = () => {
     alternateContactNumber: '',
   });
 
+  const [isCustomDesignation, setIsCustomDesignation] = useState(false);
   const [experienceLetter, setExperienceLetter] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [aadharDoc, setAadharDoc] = useState(null);
@@ -316,6 +320,10 @@ const OnboardingWizard = () => {
     try {
       const res = await dispatch(fetchOnboardingStatus(checkId));
       const data = res.data;
+
+      const desig = data.employment?.designation || '';
+      const isCustom = desig && !['Medical Representative (MR)', 'Area Sales Manager (ASM)', 'Regional Sales Manager (RSM)', 'Zonal Business Manager (ZBM)'].includes(desig);
+      setIsCustomDesignation(!!isCustom);
 
       setFormData({
         fullName: data.fullName || '',
@@ -382,8 +390,8 @@ const OnboardingWizard = () => {
     } catch (err) {
       setFormError(
         err?.response?.data?.message ||
-          err.message ||
-          'Employee not found. Leave empty to start a fresh onboarding.'
+        err.message ||
+        'Employee not found. Leave empty to start a fresh onboarding.'
       );
       setTimeout(() => setFormError(null), 4000);
     } finally {
@@ -439,7 +447,30 @@ const OnboardingWizard = () => {
       val = value.replace(/[^a-zA-Z\s]/g, '');
     }
 
-    if (name === 'sameAsCurrentAddress' && checked) {
+    if (name === 'role') {
+      let dept = '';
+      let desig = '';
+      if (val === 'MR') {
+        dept = 'Sales & Marketing';
+        desig = 'Medical Representative (MR)';
+      } else if (val === 'AREA_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Area Sales Manager (ASM)';
+      } else if (val === 'REGIONAL_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Regional Sales Manager (RSM)';
+      } else if (val === 'ZONE_MANAGER') {
+        dept = 'Sales & Marketing';
+        desig = 'Zonal Business Manager (ZBM)';
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        role: val,
+        department: dept || prev.department,
+        designation: desig || prev.designation,
+      }));
+    } else if (name === 'sameAsCurrentAddress' && checked) {
       setFormData((prev) => ({
         ...prev,
         sameAsCurrentAddress: true,
@@ -447,6 +478,17 @@ const OnboardingWizard = () => {
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: val }));
+    }
+  };
+
+  const handleDesignationSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === 'Other') {
+      setIsCustomDesignation(true);
+      setFormData(prev => ({ ...prev, designation: '' }));
+    } else {
+      setIsCustomDesignation(false);
+      setFormData(prev => ({ ...prev, designation: val }));
     }
   };
 
@@ -705,8 +747,8 @@ const OnboardingWizard = () => {
     } catch (err) {
       setFormError(
         err?.response?.data?.message ||
-          err.message ||
-          'An error occurred. Please try again.'
+        err.message ||
+        'An error occurred. Please try again.'
       );
     }
   };
@@ -748,29 +790,27 @@ const OnboardingWizard = () => {
             <React.Fragment key={n}>
               <div className="flex items-center gap-2 shrink-0">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] transition-all duration-300 ${
-                    done
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] transition-all duration-300 ${done
                       ? preCompleted
                         ? 'bg-indigo-500 text-white'
                         : 'bg-emerald-500 text-white'
                       : active
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-400'
-                  }`}
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}
                   title={preCompleted && done ? 'Already submitted' : ''}
                 >
                   {done ? '✓' : n}
                 </div>
                 <span
-                  className={`text-xs white-space-nowrap ${
-                    active
+                  className={`text-xs white-space-nowrap ${active
                       ? 'font-extrabold text-gray-900'
                       : done
-                      ? preCompleted
-                        ? 'font-semibold text-indigo-500'
-                        : 'font-semibold text-emerald-500'
-                      : 'font-semibold text-gray-400'
-                  }`}
+                        ? preCompleted
+                          ? 'font-semibold text-indigo-500'
+                          : 'font-semibold text-emerald-500'
+                        : 'font-semibold text-gray-400'
+                    }`}
                 >
                   {name}
                   {preCompleted && done && (
@@ -780,13 +820,12 @@ const OnboardingWizard = () => {
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div
-                  className={`flex-1 h-[2px] min-w-4 transition-colors duration-300 ${
-                    done
+                  className={`flex-1 h-[2px] min-w-4 transition-colors duration-300 ${done
                       ? preCompleted
                         ? 'bg-indigo-500'
                         : 'bg-emerald-500'
                       : 'bg-gray-100'
-                  }`}
+                    }`}
                 />
               )}
             </React.Fragment>
@@ -1071,14 +1110,33 @@ const OnboardingWizard = () => {
                   required
                   options={departmentsList}
                 />
-                <FormField
-                  label="Designation"
-                  name="designation"
-                  value={formData.designation}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="e.g. Senior MR"
-                />
+                <div>
+                  {isCustomDesignation ? (
+                    <div>
+                      <FormField
+                        label="Designation"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="e.g. Vice President (VP)"
+                      />
+                    </div>
+                  ) : (
+                    <FormField
+                      label="Designation"
+                      name="designationSelect"
+                      value={
+                        ['Medical Representative (MR)', 'Area Sales Manager (ASM)', 'Regional Sales Manager (RSM)', 'Zonal Business Manager (ZBM)', ''].includes(formData.designation)
+                          ? formData.designation
+                          : 'Other'
+                      }
+                      onChange={handleDesignationSelectChange}
+                      required
+                      options={DESIGNATION_OPTIONS}
+                    />
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-5">
                 <FormField
@@ -1347,15 +1405,13 @@ const OnboardingWizard = () => {
             <button
               type="submit"
               disabled={loading || resumeLoading || !!formSuccess}
-              className={`flex items-center gap-2 px-7 py-3 rounded-xl border-none text-white font-bold text-sm transition-all duration-200 ${
-                isStepAlreadyDone(activeStep)
+              className={`flex items-center gap-2 px-7 py-3 rounded-xl border-none text-white font-bold text-sm transition-all duration-200 ${isStepAlreadyDone(activeStep)
                   ? 'bg-indigo-500 shadow-[0_4px_12px_rgba(99,102,241,0.3)]'
                   : 'bg-gray-900 shadow-[0_4px_12px_rgba(17,24,39,0.2)]'
-              } ${
-                (loading || resumeLoading || !!formSuccess)
+                } ${(loading || resumeLoading || !!formSuccess)
                   ? 'opacity-70 cursor-not-allowed'
                   : 'cursor-pointer hover:-translate-y-0.5'
-              }`}
+                }`}
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -1363,8 +1419,8 @@ const OnboardingWizard = () => {
               {activeStep === 7
                 ? 'Complete Onboarding'
                 : isStepAlreadyDone(activeStep)
-                ? 'Next'
-                : 'Save & Continue'}
+                  ? 'Next'
+                  : 'Save & Continue'}
               {!loading && activeStep < 7 && <ArrowRight size={16} />}
             </button>
           </div>
