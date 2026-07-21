@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
@@ -24,11 +24,7 @@ export default function MRVisualAidPage() {
   // Active Presentation Flipbook
   const [activePresentation, setActivePresentation] = useState(null); // { brochure, target }
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [brochureRes, contactRes] = await Promise.all([
@@ -36,13 +32,36 @@ export default function MRVisualAidPage() {
         axios.get(`${API_ROUTE}/doctor/unified-contacts`)
       ]);
       setBrochures(brochureRes.data.data || []);
-      setContacts(contactRes.data.data || []);
+      
+      const dataObj = contactRes.data?.data || {};
+      const doctorsList = Array.isArray(dataObj.doctors)
+        ? dataObj.doctors.map(d => ({
+            ...d,
+            type: 'DOCTOR',
+            clinicName: d.clinicName || d.address || ''
+          }))
+        : [];
+      const chemistsList = Array.isArray(dataObj.chemists)
+        ? dataObj.chemists.map(c => ({
+            ...c,
+            fullName: c.name || c.fullName || 'Unknown Chemist',
+            speciality: 'CHEMIST',
+            type: 'CHEMIST',
+            clinicName: c.address || ''
+          }))
+        : [];
+      setContacts([...doctorsList, ...chemistsList]);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to fetch catalog lists', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   const handleStartPresentation = (brochure) => {
     setSelectedBrochure(brochure);

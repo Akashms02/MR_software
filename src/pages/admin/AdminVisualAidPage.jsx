@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { useToast } from '../../context/ToastContext';
 import { 
   Plus, Trash2, FileText, Image, Search, ChevronLeft, 
-  Upload, Tag, List, Calendar, User, Info, Loader2, Eye
+  Upload, Tag, List, Calendar, User, Info, Loader2, Eye, X
 } from 'lucide-react';
 
 export default function AdminVisualAidPage() {
@@ -40,17 +40,7 @@ export default function AdminVisualAidPage() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [logSearch, setLogSearch] = useState('');
 
-  useEffect(() => {
-    fetchBrochures();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'logs') {
-      fetchLogs();
-    }
-  }, [activeTab]);
-
-  const fetchBrochures = async () => {
+  const fetchBrochures = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_ROUTE}/visual-aids`);
@@ -60,9 +50,9 @@ export default function AdminVisualAidPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLogsLoading(true);
     try {
       const res = await axios.get(`${API_ROUTE}/visual-aids/presentations`);
@@ -72,7 +62,19 @@ export default function AdminVisualAidPage() {
     } finally {
       setLogsLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchBrochures();
+  }, [fetchBrochures]);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchLogs();
+    }
+  }, [activeTab, fetchLogs]);
 
   const handleCreateBrochure = async (e) => {
     e.preventDefault();
@@ -494,8 +496,8 @@ export default function AdminVisualAidPage() {
       {/* CREATE BROCHURE MODAL */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-[150] p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 shrink-0">
               <h3 className="text-lg font-bold text-gray-900">Add Brochure Catalog</h3>
               <button
                 onClick={() => { setIsCreateModalOpen(false); resetCreateForm(); }}
@@ -505,7 +507,7 @@ export default function AdminVisualAidPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateBrochure} className="space-y-4">
+            <form onSubmit={handleCreateBrochure} className="space-y-4 flex-1 overflow-y-auto pr-1">
               {/* Type Switcher */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Brochure Type</label>
@@ -553,23 +555,19 @@ export default function AdminVisualAidPage() {
               {createMode === 'pdf' && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Upload PDF File</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors relative bg-gray-50/50">
-                    <div className="space-y-1 text-center">
-                      <Upload className="mx-auto text-gray-400" size={32} />
-                      <div className="flex text-sm text-gray-600">
-                        <label className="relative cursor-pointer bg-transparent rounded-md font-semibold text-[#4F46E5] hover:text-[#4338CA] outline-none">
-                          <span>Upload a file</span>
-                          <input
-                            type="file"
-                            accept="application/pdf"
-                            className="sr-only"
-                            onChange={(e) => setSelectedFile(e.target.files[0])}
-                          />
-                        </label>
-                      </div>
-                      <p className="text-xs text-gray-500">PDF up to 50MB</p>
-                    </div>
-                  </div>
+                  <label className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors cursor-pointer bg-gray-50/50">
+                    <Upload className="mx-auto text-gray-400 mb-2" size={32} />
+                    <span className="text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA]">
+                      {selectedFile ? 'Change PDF file' : 'Upload a PDF file'}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">PDF up to 50MB</p>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                    />
+                  </label>
                   {selectedFile && (
                     <div className="mt-2 text-xs font-semibold text-[#4F46E5] bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex items-center gap-1.5">
                       <FileText size={14} /> {selectedFile.name}
@@ -603,8 +601,8 @@ export default function AdminVisualAidPage() {
       {/* ADD PAGE MODAL (FOR CUSTOM BUILDER) */}
       {isAddPageOpen && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-[150] p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 shrink-0">
               <h3 className="text-lg font-bold text-gray-900">Add Page to Catalog (Slide #{pageNumber})</h3>
               <button
                 onClick={() => { setIsAddPageOpen(false); resetPageForm(); }}
@@ -614,26 +612,22 @@ export default function AdminVisualAidPage() {
               </button>
             </div>
 
-            <form onSubmit={handleAddPage} className="space-y-4">
+            <form onSubmit={handleAddPage} className="space-y-4 flex-1 overflow-y-auto pr-1">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Page Image (JPEG/PNG)</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors relative bg-gray-50/50">
-                  <div className="space-y-1 text-center">
-                    <Upload className="mx-auto text-gray-400" size={32} />
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-transparent rounded-md font-semibold text-[#4F46E5] hover:text-[#4338CA] outline-none">
-                        <span>Upload page image</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="sr-only"
-                          onChange={(e) => setPageFile(e.target.files[0])}
-                        />
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, or WEBP</p>
-                  </div>
-                </div>
+                <label className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors cursor-pointer bg-gray-50/50">
+                  <Upload className="mx-auto text-gray-400 mb-2" size={32} />
+                  <span className="text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA]">
+                    {pageFile ? 'Change page image' : 'Upload page image'}
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WEBP</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setPageFile(e.target.files[0])}
+                  />
+                </label>
                 {pageFile && (
                   <div className="mt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg p-2 flex items-center gap-1.5">
                     <Image size={14} /> {pageFile.name}
