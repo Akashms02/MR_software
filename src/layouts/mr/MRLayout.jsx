@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp, FileSpreadsheet } from 'lucide-react'
+import { LogOut, LayoutDashboard, FileText, User, Coffee, Settings, ClipboardList, BarChart3, MapPin, Calendar, Navigation, UserPlus, Bell, X, Trash2, Check, TrendingUp, FileSpreadsheet, BookOpen } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getDisplayRole } from '../../utils/roleHelpers'
@@ -181,11 +181,12 @@ export default function MRLayout({ children }) {
     { id: 'sales',        icon: TrendingUp,      label: 'Distributor Sales', path: '/mr/sales' },
     { id: 'distributor-report', icon: FileSpreadsheet, label: 'Distributor Report', path: '/mr/distributor-report' },
     { id: 'finance',      icon: FileText,        label: 'Documents',   path: '/mr/finance' },
+    { id: 'products',     icon: BookOpen,        label: 'Product Visual Aids', path: '/mr/products' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard') return true;
+    if (item.id === 'dashboard' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

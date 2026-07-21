@@ -14,6 +14,7 @@ import MRDoctorOnboarding from '../../pages/mr/MRDoctorOnboarding'
 import MRRequestsPage from '../../pages/mr/MRRequestsPage'
 import MRSalesPage from '../../pages/mr/MRSalesPage'
 import DistributerReport from '../../pages/mr/DistributerReport'
+import MRVisualAidPage from '../../pages/mr/MRVisualAidPage'
 
 export default function MRLayoutRouter() {
   return (
@@ -31,6 +32,7 @@ export default function MRLayoutRouter() {
         <Route path="distributor-report" element={<DistributerReport />} />
         <Route path="onboard-doctor" element={<MRDoctorOnboarding />} />
         <Route path="finance" element={<MRDocument />} />
+        <Route path="products" element={<MRVisualAidPage />} />
         <Route path="me" element={<AdminAttendance />} />
         <Route path="watercooler" element={<WaterCooler />} />
         <Route path="*" element={<Navigate to="/mr/dashboard" replace />} />

@@ -15,7 +15,8 @@ import {
   Bell, 
   X, 
   Trash2, 
-  Check 
+  Check,
+  BookOpen
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -119,11 +120,12 @@ export default function ManagerLayout({ children }) {
     { id: 'sales',         icon: TrendingUp,      label: 'Distributor Sales', path: '/manager/sales' },
     { id: 'finance',       icon: FileText,        label: 'My Payslips',     path: '/manager/finance' },
     { id: 'me',            icon: User,            label: 'My Leaves',       path: '/manager/me' },
+    { id: 'products',      icon: BookOpen,        label: 'Product Visual Aids', path: '/manager/products' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler') return true;
+    if (item.id === 'dashboard' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

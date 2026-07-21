@@ -550,12 +550,34 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         return;
       }
     } else if (activeTab === 7) {
-      if (formData.emergencyContactNumber && formData.emergencyContactNumber.length !== 10) {
-        setFormError("Emergency contact number must be exactly 10 digits.");
+      if (!formData.emergencyContactName || !formData.emergencyContactName.trim()) {
+        setFormError("Emergency Contact Name is required.");
         return;
       }
-      if (formData.alternateContactNumber && formData.alternateContactNumber.length !== 10) {
-        setFormError("Alternate contact number must be exactly 10 digits.");
+      if (formData.emergencyContactName.trim().length < 2) {
+        setFormError("Emergency Contact Name must be at least 2 characters.");
+        return;
+      }
+      if (/\d/.test(formData.emergencyContactName.trim())) {
+        setFormError("Emergency Contact Name must not contain numbers.");
+        return;
+      }
+
+      if (!formData.relationship || !formData.relationship.trim()) {
+        setFormError("Relationship is required.");
+        return;
+      }
+
+      if (!formData.emergencyContactNumber || !formData.emergencyContactNumber.trim()) {
+        setFormError("Emergency contact number is required.");
+        return;
+      }
+      if (!/^[6-9]\d{9}$/.test(formData.emergencyContactNumber.trim())) {
+        setFormError("Emergency contact number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
+        return;
+      }
+      if (formData.alternateContactNumber && !/^[6-9]\d{9}$/.test(formData.alternateContactNumber.trim())) {
+        setFormError("Alternate contact number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
         return;
       }
     }

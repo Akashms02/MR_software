@@ -23,6 +23,7 @@ import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 import NoticeManagement from '../../pages/admin/NoticeManagement'
 import AdminSalesPage from '../../pages/admin/AdminSalesPage'
 import DcrReviewPage from '../../pages/admin/DcrReviewPage'
+import AdminVisualAidPage from '../../pages/admin/AdminVisualAidPage'
 
 export default function AdminLayoutRouter() {
   return (
@@ -50,6 +51,7 @@ export default function AdminLayoutRouter() {
         <Route path="hrdocuments" element={<Documents />} />
         <Route path="notices" element={<NoticeManagement />} />
         <Route path="sales" element={<AdminSalesPage />} />
+        <Route path="products" element={<AdminVisualAidPage />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
