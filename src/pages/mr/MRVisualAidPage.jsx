@@ -56,6 +56,9 @@ export default function MRVisualAidPage() {
   const [mainTargetSearch, setMainTargetSearch] = useState('');
   const [isMainDropdownOpen, setIsMainDropdownOpen] = useState(false);
 
+  // Brochure Search Filter
+  const [brochureSearch, setBrochureSearch] = useState('');
+
   // Active Presentation Flipbook
   const [activePresentation, setActivePresentation] = useState(null); // { brochure, target }
 
@@ -168,6 +171,38 @@ export default function MRVisualAidPage() {
     });
   });
 
+  const filteredBrochures = brochures.filter(b => {
+    if (!brochureSearch.trim()) return true;
+    const term = brochureSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+
+    const title = (b.title || '').toLowerCase();
+    const desc = (b.description || '').toLowerCase();
+
+    // Check custom page keywords/titles if available
+    const hasCustomMatch = b.custom && b.pages && b.pages.some(p => {
+      const pageTitle = (p.title || '').toLowerCase();
+      const pageDesc = (p.description || '').toLowerCase();
+      const pageKws = (p.keywords || '').toLowerCase();
+      return tokens.every(token => 
+        pageTitle.includes(token) || 
+        pageDesc.includes(token) || 
+        pageKws.includes(token)
+      );
+    });
+
+    return tokens.every(token => {
+      const isDermMatch = (token.includes('dermat') || token.includes('skin')) && 
+        (title.includes('dermat') || desc.includes('dermat') || title.includes('skin') || desc.includes('skin'));
+      
+      return (
+        title.includes(token) || 
+        desc.includes(token) ||
+        isDermMatch
+      );
+    }) || hasCustomMatch;
+  });
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -265,6 +300,20 @@ export default function MRVisualAidPage() {
         </div>
       </div>
 
+      {/* Brochure Search Input Bar */}
+      <div className="relative max-w-md">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+          <Search size={16} />
+        </span>
+        <input
+          type="text"
+          placeholder="Search brochures by name, product, or category..."
+          value={brochureSearch}
+          onChange={(e) => setBrochureSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-indigo-500 shadow-sm"
+        />
+      </div>
+
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="animate-spin text-[#4F46E5]" size={36} />
@@ -275,9 +324,15 @@ export default function MRVisualAidPage() {
           <h3 className="text-lg font-bold text-gray-800">No Brochures Uploaded</h3>
           <p className="text-gray-500 text-sm mt-1">Please ask your manager or admin to upload visual aids for presentation.</p>
         </div>
+      ) : filteredBrochures.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <Search className="text-gray-300 mb-4" size={48} />
+          <h3 className="text-lg font-bold text-gray-800">No Matching Catalogs Found</h3>
+          <p className="text-gray-500 text-sm mt-1">Try searching for other keywords, categories, or names.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {brochures.map((b) => (
+          {filteredBrochures.map((b) => (
             <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
