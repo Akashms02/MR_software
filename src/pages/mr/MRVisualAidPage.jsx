@@ -7,6 +7,7 @@ import {
   BookOpen, Eye, Play, Search, X, Users, Tag, Info, Loader2 
 } from 'lucide-react';
 import DvaFlipbookModal from '../../components/DvaFlipbookModal';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
 export default function MRVisualAidPage() {
   const { showToast } = useToast();
@@ -144,7 +145,7 @@ export default function MRVisualAidPage() {
                 </button>
                 {!b.custom && b.pdfUrl && (
                   <a
-                    href={b.pdfUrl}
+                    href={getFullAssetUrl(b.pdfUrl)}
                     target="_blank"
                     rel="noreferrer"
                     className="p-2.5 border border-gray-200 text-gray-500 hover:text-gray-900 rounded-xl transition-colors hover:bg-gray-50 cursor-pointer"

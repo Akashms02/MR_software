@@ -35,12 +35,14 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
 
   // 1. Initialize pages and load PDF if PDF-based
   useEffect(() => {
     const initPages = async () => {
       setLoading(true);
-      if (!brochure.custom && brochure.pdfUrl) {
+      const isCustomBrochure = brochure.custom || brochure.isCustom;
+      if (!isCustomBrochure && brochure.pdfUrl) {
         // PDF brochure
         try {
           const pdfjs = await loadPdfJs();
@@ -159,7 +161,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   };
 
   // 3. Handle swiping and keyword filtering
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     setActivePageIndex(0); // Reset slider to first matched page
@@ -170,22 +172,68 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
     }
 
     const term = query.toLowerCase().trim();
-    if (brochure.custom) {
-      // Filter custom page images by title, desc, or keywords
-      const filtered = allPages.filter(p => 
-        p.title.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term) ||
-        p.keywords.includes(term)
-      );
-      setVisiblePages(filtered);
-    } else {
-      // Filter PDF pages by checking indexed texts
+    // Split query into individual token words for tokenized search
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    if (tokens.length === 0) {
+      setVisiblePages(allPages);
+      return;
+    }
+
+    const isCustomBrochure = brochure.custom || brochure.isCustom;
+    if (isCustomBrochure) {
+      // Filter custom page images (must match ALL search tokens)
       const filtered = allPages.filter(p => {
-        const idx = p.pageNumber - 1;
-        const pageText = pdfTexts[idx] || '';
-        return pageText.includes(term) || p.title.toLowerCase().includes(term);
+        const title = (p.title || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const kws = (p.keywords || '').toLowerCase();
+
+        return tokens.every(token => 
+          title.includes(token) || 
+          desc.includes(token) || 
+          kws.includes(token)
+        );
       });
       setVisiblePages(filtered);
+    } else {
+      // Filter PDF pages by checking indexed texts (must match ALL search tokens)
+      try {
+        const filtered = [];
+        for (let i = 0; i < allPages.length; i++) {
+          const p = allPages[i];
+          let pageText = pdfTexts[p.pageNumber - 1];
+          if (!pageText && pdfDoc) {
+            const page = await pdfDoc.getPage(p.pageNumber);
+            const textContent = await page.getTextContent();
+            pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
+            
+            // Cache pageText locally
+            setPdfTexts(prev => {
+              const updated = [...prev];
+              updated[p.pageNumber - 1] = pageText;
+              return updated;
+            });
+          }
+          
+          const pageTextNoSpaces = (pageText || '').replace(/\s+/g, '');
+          const title = (p.title || '').toLowerCase();
+          
+          const isMatch = tokens.every(token => {
+            const tokenNoSpaces = token.replace(/\s+/g, '');
+            return (
+              (pageText && pageText.includes(token)) ||
+              pageTextNoSpaces.includes(tokenNoSpaces) ||
+              title.includes(token)
+            );
+          });
+          
+          if (isMatch) {
+            filtered.push(p);
+          }
+        }
+        setVisiblePages(filtered);
+      } catch (err) {
+        console.error('Error during dynamic PDF text search matching:', err);
+      }
     }
   };
 
@@ -205,16 +253,34 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   // Touch swiping triggers
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e) => {
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
-    if (Math.abs(diff) > 60) {
-      if (diff > 0) {
-        handleNextPage(); // swiped left
-      } else {
-        handlePrevPage(); // swiped right
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+    
+    // 1. Horizontal Swipes (Left/Right)
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (Math.abs(diffX) > 60) {
+        if (diffX > 0) {
+          handleNextPage(); // swiped left (moves right to left, goes next)
+        } else {
+          handlePrevPage(); // swiped right (moves left to right, goes back)
+        }
+      }
+    } 
+    // 2. Vertical Swipes (Up/Down)
+    else {
+      if (Math.abs(diffY) > 60) {
+        if (diffY > 0) {
+          handleNextPage(); // swiped up (moves right to left, goes next)
+        } else {
+          handlePrevPage(); // swiped down (moves left to right, goes back)
+        }
       }
     }
   };
