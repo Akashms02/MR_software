@@ -263,13 +263,23 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
     const diffX = touchStartX.current - touchEndX;
     const diffY = touchStartY.current - touchEndY;
     
-    // Only turn pages if the swipe was primarily horizontal (horizontal swipe is wider than vertical drift)
+    // 1. Horizontal Swipes (Left/Right)
     if (Math.abs(diffX) > Math.abs(diffY)) {
       if (Math.abs(diffX) > 60) {
         if (diffX > 0) {
-          handleNextPage(); // swiped left (goes next)
+          handleNextPage(); // swiped left (moves right to left, goes next)
         } else {
-          handlePrevPage(); // swiped right (goes back)
+          handlePrevPage(); // swiped right (moves left to right, goes back)
+        }
+      }
+    } 
+    // 2. Vertical Swipes (Up/Down)
+    else {
+      if (Math.abs(diffY) > 60) {
+        if (diffY > 0) {
+          handleNextPage(); // swiped up (moves right to left, goes next)
+        } else {
+          handlePrevPage(); // swiped down (moves left to right, goes back)
         }
       }
     }
