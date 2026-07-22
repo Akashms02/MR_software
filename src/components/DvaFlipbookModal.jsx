@@ -7,7 +7,35 @@ import {
   X, ChevronLeft, ChevronRight, Search, ZoomIn, ZoomOut, 
   Loader2, Save, FileText, CheckSquare, Square
 } from 'lucide-react';
-
+const matchSpeciality = (text, query) => {
+  if (!text) return false;
+  const txt = text.toLowerCase();
+  const q = query.toLowerCase().trim();
+  
+  if (txt.includes(q)) return true;
+  
+  // Stemming / Synonym mapping for medical specialities
+  const mappings = [
+    { stems: ['dermat', 'skin', 'dermatolof'], label: 'dermatology' },
+    { stems: ['pediatr', 'child'], label: 'pediatrics' },
+    { stems: ['cardio', 'heart'], label: 'cardiology' },
+    { stems: ['gyneco', 'women', 'obgyn'], label: 'gynecology' },
+    { stems: ['ortho', 'bone'], label: 'orthopedics' },
+    { stems: ['ophthal', 'eye'], label: 'ophthalmology' },
+    { stems: ['neuro', 'brain'], label: 'neurology' },
+    { stems: ['gastro', 'stomach'], label: 'gastroenterology' },
+    { stems: ['dent', 'tooth', 'teeth'], label: 'dentist' },
+    { stems: ['general', 'gp', 'physician'], label: 'general medicine' }
+  ];
+  
+  for (const map of mappings) {
+    const qMatches = map.stems.some(stem => q.includes(stem));
+    const txtMatches = map.stems.some(stem => txt.includes(stem));
+    if (qMatches && txtMatches) return true;
+  }
+  
+  return false;
+};
 export default function DvaFlipbookModal({ brochure, target, onClose }) {
   const { showToast } = useToast();
   
@@ -37,6 +65,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const renderTaskRef = useRef(null);
+  const lastWheelTime = useRef(0);
 
   // 1. Initialize pages and load PDF if PDF-based
   useEffect(() => {
@@ -140,7 +169,12 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         try {
           const page = await doc.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ').toLowerCase();
+          const pageText = textContent.items
+            .map(item => (typeof item === 'string' ? item : item?.str || ''))
+            .join(' ')
+            .toLowerCase();
+          
+          console.log(`Page ${i} extracted text length: ${pageText.length}, preview: "${pageText.substring(0, 100)}"`);
           
           setPdfTexts(prev => {
             const updated = [...prev];
@@ -205,20 +239,14 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
     }
   };
 
-  // 3. Handle swiping and keyword filtering
-  // 3. Handle swiping and keyword filtering
-  const handleSearch = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    setActivePageIndex(0); // Reset slider to first matched page
-
-    if (!query.trim()) {
+  // 3. Reactive keyword filtering based on search query and background indexing
+  useEffect(() => {
+    if (!searchQuery.trim()) {
       setVisiblePages(allPages);
       return;
     }
 
-    const term = query.toLowerCase().trim();
-    // Split query into individual token words for tokenized search
+    const term = searchQuery.toLowerCase().trim();
     const tokens = term.split(/\s+/).filter(t => t.length > 0);
     if (tokens.length === 0) {
       setVisiblePages(allPages);
@@ -227,7 +255,6 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
 
     const isCustomBrochure = brochure.custom || brochure.isCustom;
     if (isCustomBrochure) {
-      // Filter custom page images (must match ALL search tokens)
       const filtered = allPages.filter(p => {
         const title = (p.title || '').toLowerCase();
         const desc = (p.description || '').toLowerCase();
@@ -236,12 +263,17 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         return tokens.every(token => 
           title.includes(token) || 
           desc.includes(token) || 
-          kws.includes(token)
+          kws.includes(token) ||
+          matchSpeciality(title, token) ||
+          matchSpeciality(desc, token) ||
+          matchSpeciality(kws, token)
         );
       });
       setVisiblePages(filtered);
     } else {
-      // Filter PDF pages by checking already indexed background texts (must match ALL search tokens)
+      const brochureTitle = (brochure.title || '').toLowerCase();
+      const brochureDesc = (brochure.description || '').toLowerCase();
+
       const filtered = allPages.filter(p => {
         const pageText = pdfTexts[p.pageNumber - 1] || '';
         const pageTextNoSpaces = pageText.replace(/\s+/g, '');
@@ -249,15 +281,24 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
 
         return tokens.every(token => {
           const tokenNoSpaces = token.replace(/\s+/g, '');
+          const isSpecMatch = matchSpeciality(pageText, token);
           return (
             pageText.includes(token) ||
             pageTextNoSpaces.includes(tokenNoSpaces) ||
-            title.includes(token)
+            title.includes(token) ||
+            isSpecMatch ||
+            brochureTitle.includes(token) ||
+            brochureDesc.includes(token)
           );
         });
       });
       setVisiblePages(filtered);
     }
+  }, [searchQuery, allPages, pdfTexts, brochure]);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setActivePageIndex(0); // Reset slider to first matched page
   };
 
   // Turning page handlers
@@ -304,6 +345,23 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         } else {
           handlePrevPage(); // swiped down (moves left to right, goes back)
         }
+      }
+    }
+  };
+
+  const handleWheel = (e) => {
+    const now = Date.now();
+    if (now - lastWheelTime.current < 500) return;
+
+    if (Math.abs(e.deltaY) > 10) {
+      if (e.deltaY > 0) {
+        // Scroll DOWN -> Next page (from right to left)
+        handleNextPage();
+        lastWheelTime.current = now;
+      } else if (e.deltaY < 0) {
+        // Scroll UP -> Previous page (from left to right)
+        handlePrevPage();
+        lastWheelTime.current = now;
       }
     }
   };
@@ -409,6 +467,7 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         ref={containerRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
         className="flex-1 flex flex-col md:flex-row items-center justify-center p-6 relative overflow-y-auto"
       >
         {/* Navigation Arrow Left */}

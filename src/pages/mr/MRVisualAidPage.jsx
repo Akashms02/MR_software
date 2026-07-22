@@ -9,6 +9,36 @@ import {
 import DvaFlipbookModal from '../../components/DvaFlipbookModal';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
+const matchSpeciality = (speciality, query) => {
+  if (!speciality) return false;
+  const spec = speciality.toLowerCase().trim();
+  const q = query.toLowerCase().trim();
+  
+  if (spec.includes(q) || q.includes(spec)) return true;
+  
+  // Stemming / Synonym mapping for medical specialities
+  const mappings = [
+    { stems: ['dermat', 'skin', 'dermatolof'], label: 'dermatology' },
+    { stems: ['pediatr', 'child'], label: 'pediatrics' },
+    { stems: ['cardio', 'heart'], label: 'cardiology' },
+    { stems: ['gyneco', 'women', 'obgyn'], label: 'gynecology' },
+    { stems: ['ortho', 'bone'], label: 'orthopedics' },
+    { stems: ['ophthal', 'eye'], label: 'ophthalmology' },
+    { stems: ['neuro', 'brain'], label: 'neurology' },
+    { stems: ['gastro', 'stomach'], label: 'gastroenterology' },
+    { stems: ['dent', 'tooth', 'teeth'], label: 'dentist' },
+    { stems: ['general', 'gp', 'physician'], label: 'general medicine' }
+  ];
+  
+  for (const map of mappings) {
+    const qMatches = map.stems.some(stem => q.includes(stem));
+    const specMatches = map.stems.some(stem => spec.includes(stem));
+    if (qMatches && specMatches) return true;
+  }
+  
+  return false;
+};
+
 export default function MRVisualAidPage() {
   const { showToast } = useToast();
 
@@ -21,6 +51,101 @@ export default function MRVisualAidPage() {
   const [isSelectTargetOpen, setIsSelectTargetOpen] = useState(false);
   const [targetSearch, setTargetSearch] = useState('');
   const [selectedTarget, setSelectedTarget] = useState(null);
+  
+  // Main Page Target Selector
+  const [mainTargetSearch, setMainTargetSearch] = useState('');
+  const [isMainDropdownOpen, setIsMainDropdownOpen] = useState(false);
+
+  // Brochure Search Filter
+  const [brochureSearch, setBrochureSearch] = useState('');
+  const [globalPdfTexts, setGlobalPdfTexts] = useState({}); // { [brochureId]: Array of page texts }
+
+  // Helper to dynamically load pdf.js from CDN
+  const loadPdfJs = () => {
+    return new Promise((resolve, reject) => {
+      if (window.pdfjsLib) {
+        resolve(window.pdfjsLib);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+      script.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      script.onerror = () => reject(new Error('Failed to load PDF loader script'));
+      document.head.appendChild(script);
+    });
+  };
+
+  // Asynchronously index all PDF brochures in the background with local caching
+  useEffect(() => {
+    const indexAllPdfs = async () => {
+      if (brochures.length === 0) return;
+      
+      const pdfBrochures = brochures.filter(b => !b.custom && b.pdfUrl);
+      const cached = {};
+      const pending = [];
+      
+      for (const b of pdfBrochures) {
+        try {
+          const cacheKey = `pdf_texts_cache_${b.id}`;
+          const cachedVal = localStorage.getItem(cacheKey);
+          if (cachedVal) {
+            cached[b.id] = JSON.parse(cachedVal);
+          } else {
+            pending.push(b);
+          }
+        } catch (e) {
+          pending.push(b);
+        }
+      }
+      
+      if (Object.keys(cached).length > 0) {
+        setGlobalPdfTexts(prev => ({ ...prev, ...cached }));
+      }
+      
+      if (pending.length === 0) return;
+
+      try {
+        const pdfjs = await loadPdfJs();
+        for (const b of pending) {
+          try {
+            const url = getFullAssetUrl(b.pdfUrl);
+            const doc = await pdfjs.getDocument(url).promise;
+            const texts = [];
+            
+            for (let i = 1; i <= doc.numPages; i++) {
+              const page = await doc.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items
+                .map(item => (typeof item === 'string' ? item : item?.str || ''))
+                .join(' ')
+                .toLowerCase();
+              texts.push(pageText);
+            }
+            
+            try {
+              localStorage.setItem(`pdf_texts_cache_${b.id}`, JSON.stringify(texts));
+            } catch (e) {
+              console.warn('Storage quota exceeded, text not cached locally', e);
+            }
+            
+            setGlobalPdfTexts(prev => ({
+              ...prev,
+              [b.id]: texts
+            }));
+          } catch (err) {
+            console.error(`Failed to globally index PDF brochure ${b.title}`, err);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load PDF.js for global indexing', err);
+      }
+    };
+
+    indexAllPdfs();
+  }, [brochures]);
 
   // Active Presentation Flipbook
   const [activePresentation, setActivePresentation] = useState(null); // { brochure, target }
@@ -65,10 +190,18 @@ export default function MRVisualAidPage() {
   }, [fetchData]);
 
   const handleStartPresentation = (brochure) => {
-    setSelectedBrochure(brochure);
-    setIsSelectTargetOpen(true);
-    setSelectedTarget(null);
-    setTargetSearch('');
+    if (selectedTarget) {
+      // If a target session is active, start detailing directly!
+      setActivePresentation({
+        brochure,
+        target: selectedTarget
+      });
+    } else {
+      setSelectedBrochure(brochure);
+      setIsSelectTargetOpen(true);
+      setSelectedTarget(null);
+      setTargetSearch('');
+    }
   };
 
   const launchViewer = (withTarget = true) => {
@@ -85,12 +218,97 @@ export default function MRVisualAidPage() {
   };
 
   const filteredContacts = contacts.filter(c => {
-    const term = targetSearch.toLowerCase();
-    return (
-      c.fullName.toLowerCase().includes(term) ||
-      (c.speciality && c.speciality.toLowerCase().includes(term)) ||
-      c.type.toLowerCase().includes(term)
-    );
+    if (!targetSearch.trim()) return true;
+    const term = targetSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    
+    const fullName = (c.fullName || '').toLowerCase();
+    const speciality = (c.speciality || '').toLowerCase();
+    const type = (c.type || '').toLowerCase();
+    const clinicName = (c.clinicName || '').toLowerCase();
+
+    return tokens.every(token => {
+      const isSpecMatch = matchSpeciality(speciality, token);
+      return (
+        fullName.includes(token) ||
+        isSpecMatch ||
+        type.includes(token) ||
+        clinicName.includes(token)
+      );
+    });
+  });
+
+  const filteredMainContacts = contacts.filter(c => {
+    if (!mainTargetSearch.trim()) return false;
+    const term = mainTargetSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    
+    const fullName = (c.fullName || '').toLowerCase();
+    const speciality = (c.speciality || '').toLowerCase();
+    const type = (c.type || '').toLowerCase();
+    const clinicName = (c.clinicName || '').toLowerCase();
+
+    return tokens.every(token => {
+      const isSpecMatch = matchSpeciality(speciality, token);
+      return (
+        fullName.includes(token) ||
+        isSpecMatch ||
+        type.includes(token) ||
+        clinicName.includes(token)
+      );
+    });
+  });
+
+  const filteredBrochures = brochures.filter(b => {
+    if (!brochureSearch.trim()) return true;
+    const term = brochureSearch.toLowerCase().trim();
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+
+    const title = (b.title || '').toLowerCase();
+    const desc = (b.description || '').toLowerCase();
+
+    // Check custom page keywords/titles if available
+    const hasCustomMatch = b.custom && b.pages && b.pages.some(p => {
+      const pageTitle = (p.title || '').toLowerCase();
+      const pageDesc = (p.description || '').toLowerCase();
+      const pageKws = (p.keywords || '').toLowerCase();
+      return tokens.every(token => 
+        pageTitle.includes(token) || 
+        pageDesc.includes(token) || 
+        pageKws.includes(token)
+      );
+    });
+
+    // Check global PDF texts if available
+    const pdfPagesTexts = globalPdfTexts[b.id] || [];
+    const hasPdfMatch = !b.custom && pdfPagesTexts.some(pageText => {
+      return tokens.every(token => {
+        const isDermMatch = (token.includes('dermat') || token.includes('skin')) && 
+          (pageText.includes('dermat') || pageText.includes('skin'));
+        const isBabyMatch = (token.includes('baby') || token.includes('child') || token.includes('pediatr')) &&
+          (pageText.includes('baby') || pageText.includes('child') || pageText.includes('pediatr'));
+        
+        return (
+          pageText.includes(token) ||
+          isDermMatch ||
+          isBabyMatch
+        );
+      });
+    });
+
+    return tokens.every(token => {
+      const isDermMatch = (token.includes('dermat') || token.includes('skin')) && 
+        (title.includes('dermat') || desc.includes('dermat') || title.includes('skin') || desc.includes('skin'));
+      const isBabyMatch = (token.includes('baby') || token.includes('child') || token.includes('pediatr')) &&
+        (title.includes('baby') || desc.includes('baby') || title.includes('child') || desc.includes('child') || title.includes('pediatr') || desc.includes('pediatr'));
+      
+      return (
+        title.includes(token) || 
+        desc.includes(token) ||
+        isDermMatch ||
+        isBabyMatch
+      );
+    }) || hasCustomMatch || hasPdfMatch;
   });
 
   return (
@@ -99,6 +317,109 @@ export default function MRVisualAidPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Product Visual Aids</h1>
         <p className="text-gray-500 text-sm">Select a catalog to detail and present pharmaceutical product cards to doctors or chemists.</p>
+      </div>
+
+      {/* Detailing Target Session Selection Panel */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Users size={16} className="text-indigo-650" />
+              Active Detailing Target
+            </h3>
+            <p className="text-gray-500 text-xs">
+              Select the doctor or chemist you are visiting to log detailing actions directly.
+            </p>
+          </div>
+          {selectedTarget ? (
+            <div className="flex items-center gap-3 bg-indigo-50/70 border border-indigo-150 px-4 py-2 rounded-xl">
+              <div className="text-xs">
+                <span className="font-bold text-indigo-900">{selectedTarget.fullName}</span>
+                <span className="text-indigo-650 ml-1.5 uppercase font-extrabold text-[10px] bg-indigo-100 px-1.5 py-0.5 rounded">
+                  {selectedTarget.speciality || selectedTarget.type}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedTarget(null);
+                  setMainTargetSearch('');
+                }}
+                className="p-1 text-indigo-400 hover:text-indigo-700 bg-transparent border-none cursor-pointer flex items-center"
+                title="Clear detailing session"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="relative w-80 max-w-full">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={14} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search doctor name or speciality..."
+                  value={mainTargetSearch}
+                  onChange={(e) => {
+                    setMainTargetSearch(e.target.value);
+                    setIsMainDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsMainDropdownOpen(true)}
+                  className="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 bg-gray-50/50"
+                />
+              </div>
+
+              {/* Main Search Dropdown */}
+              {isMainDropdownOpen && mainTargetSearch.trim() && (
+                <>
+                  <div className="fixed inset-0 z-[40]" onClick={() => setIsMainDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-150 rounded-xl shadow-lg max-h-60 overflow-y-auto z-[50]">
+                    {filteredMainContacts.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-gray-400">No doctors or chemists found</div>
+                    ) : (
+                      filteredMainContacts.map(contact => (
+                        <div
+                          key={`${contact.type}_${contact.id}`}
+                          onClick={() => {
+                            setSelectedTarget(contact);
+                            setIsMainDropdownOpen(false);
+                            setMainTargetSearch('');
+                            showToast(`Detailing session started for ${contact.fullName}`, 'success');
+                          }}
+                          className="p-2.5 hover:bg-indigo-50/40 cursor-pointer flex items-center justify-between border-b border-gray-50 last:border-none text-left"
+                        >
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-xs">{contact.fullName}</h4>
+                            <span className="text-[10px] text-gray-400">{contact.speciality || 'Chemist'}</span>
+                          </div>
+                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                            contact.type === 'CHEMIST' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+                          }`}>
+                            {contact.type}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Brochure Search Input Bar */}
+      <div className="relative max-w-md">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+          <Search size={16} />
+        </span>
+        <input
+          type="text"
+          placeholder="Search brochures by name, product, or category..."
+          value={brochureSearch}
+          onChange={(e) => setBrochureSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-indigo-500 shadow-sm"
+        />
       </div>
 
       {loading ? (
@@ -111,9 +432,15 @@ export default function MRVisualAidPage() {
           <h3 className="text-lg font-bold text-gray-800">No Brochures Uploaded</h3>
           <p className="text-gray-500 text-sm mt-1">Please ask your manager or admin to upload visual aids for presentation.</p>
         </div>
+      ) : filteredBrochures.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <Search className="text-gray-300 mb-4" size={48} />
+          <h3 className="text-lg font-bold text-gray-800">No Matching Catalogs Found</h3>
+          <p className="text-gray-500 text-sm mt-1">Try searching for other keywords, categories, or names.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {brochures.map((b) => (
+          {filteredBrochures.map((b) => (
             <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex items-start justify-between">

@@ -797,26 +797,40 @@ axios.interceptors.request.use(
                 const body = JSON.parse(cfg.data || '{}');
                 statusFilter = body.status || '';
               } catch (e) {}
-              const list = statusFilter
-                ? requests.filter((r) => String(r.status).toUpperCase() === statusFilter.toUpperCase())
-                : requests;
+              const isAll = !statusFilter || statusFilter.toUpperCase() === 'ALL';
+              const list = isAll
+                ? requests
+                : requests.filter((r) => String(r.status).toUpperCase() === statusFilter.toUpperCase());
               mockData = { success: true, status: 200, data: list };
             } else if (cfg.url.includes('/requests/pending') && cfg.method === 'post') {
               const requests = getOrInitializeOnboardingRequests();
               let statusFilter = 'PENDING';
+              let search = '';
               let page = 0;
               let size = 10;
               try {
                 const body = JSON.parse(cfg.data || '{}');
                 const raw = (body.status || 'PENDING').toUpperCase();
                 statusFilter = raw === 'ALL' ? 'ALL' : raw;
+                search = (body.search || '').toLowerCase().trim();
                 page = parseInt(body.page || '0', 10);
                 size = parseInt(body.size || '10', 10);
               } catch (e) {}
-              const filteredList =
+              let filteredList =
                 statusFilter === 'ALL'
                   ? requests
                   : requests.filter((r) => String(r.status).toUpperCase() === statusFilter);
+
+              if (search) {
+                filteredList = filteredList.filter((r) =>
+                  (r.name || '').toLowerCase().includes(search) ||
+                  (r.email || '').toLowerCase().includes(search) ||
+                  (r.phone || '').includes(search) ||
+                  (r.type || '').toLowerCase().includes(search) ||
+                  (r.city || '').toLowerCase().includes(search) ||
+                  (r.submittedBy || '').toLowerCase().includes(search)
+                );
+              }
 
               const totalElements = filteredList.length;
               const totalPages = Math.ceil(totalElements / size);

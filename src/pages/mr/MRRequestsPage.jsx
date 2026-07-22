@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, CheckCircle2, AlertCircle, Clock, FileText, Loader2, RefreshCw, Search, Check, X } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,70 +18,68 @@ const MRRequestsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
 
-  const isSearchActive = searchQuery || activeTab !== 'All';
+  // Trigger data fetch on mount and refresh
+  const fetchRequests = useCallback(() => {
+    dispatch(fetchMeRequestsAction(0, 1000));
+  }, [dispatch]);
 
-  // Trigger data fetch when page or search changes
   useEffect(() => {
-    if (isSearchActive) {
-      dispatch(fetchMeRequestsAction(0, 100000));
-    } else {
-      dispatch(fetchMeRequestsAction(currentPage, pageSize));
-    }
-  }, [dispatch, currentPage, pageSize, isSearchActive]);
+    fetchRequests();
+  }, [fetchRequests]);
 
   // Reset page when search query or tab changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(0);
   }, [searchQuery, activeTab]);
 
   const filteredRequests = useMemo(() => {
-    return requests.filter((req) => {
-      const q = searchQuery.toLowerCase();
+    const list = Array.isArray(requests) ? requests : [];
+    return list.filter((req) => {
+      const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
         req.name?.toLowerCase().includes(q) ||
         req.email?.toLowerCase().includes(q) ||
         req.phone?.includes(q) ||
-        req.type?.toLowerCase().includes(q);
+        req.type?.toLowerCase().includes(q) ||
+        req.city?.toLowerCase().includes(q) ||
+        req.submittedBy?.toLowerCase().includes(q);
+
+      const reqStatus = (req.status || '').toUpperCase();
+      const targetStatus = activeTab.toUpperCase();
       const matchesTab =
-        activeTab === 'All' ||
-        req.status?.toUpperCase() === activeTab.toUpperCase();
+        targetStatus === 'ALL' || reqStatus === targetStatus;
+
       return matchesSearch && matchesTab;
     });
   }, [requests, searchQuery, activeTab]);
 
   const counts = useMemo(() => {
-    const isFull = requests.length > pageSize;
+    const list = Array.isArray(requests) ? requests : [];
     return {
-      All: isFull ? requests.length : (pagination?.totalElements || requests.length),
-      Pending: requests.filter(r => r.status === 'PENDING').length,
-      Approved: requests.filter(r => r.status === 'APPROVED').length,
-      Rejected: requests.filter(r => r.status === 'REJECTED').length,
+      All: list.length,
+      Pending: list.filter(r => (r.status || '').toUpperCase() === 'PENDING').length,
+      Approved: list.filter(r => (r.status || '').toUpperCase() === 'APPROVED').length,
+      Rejected: list.filter(r => (r.status || '').toUpperCase() === 'REJECTED').length,
     };
-  }, [requests, pagination]);
-
-  // If search is active or requests already contains full list, do local slicing
-  const useLocalPagination = isSearchActive || (requests && requests.length > pageSize);
+  }, [requests]);
 
   const displayedRequests = useMemo(() => {
-    if (useLocalPagination) {
-      return filteredRequests.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
-    }
-    return filteredRequests;
-  }, [filteredRequests, currentPage, pageSize, useLocalPagination]);
+    const start = currentPage * pageSize;
+    return filteredRequests.slice(start, start + pageSize);
+  }, [filteredRequests, currentPage, pageSize]);
 
-  const totalElements = useLocalPagination ? filteredRequests.length : (pagination?.totalElements || 0);
-  const totalPages = useLocalPagination ? Math.ceil(totalElements / pageSize) : (pagination?.totalPages || 0);
+  const totalElements = filteredRequests.length;
+  const totalPages = Math.ceil(totalElements / pageSize) || 1;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    if (!useLocalPagination) {
-      dispatch(fetchMeRequestsAction(page, pageSize));
-    }
   };
 
   const getStatusBadgeClass = (status) => {
-    switch (status) {
+    const s = (status || '').toUpperCase();
+    switch (s) {
       case 'APPROVED':
         return 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]';
       case 'REJECTED':
@@ -102,7 +100,7 @@ const MRRequestsPage = () => {
         <div className="bg-[#FEF2F2] border border-[#FECACA] px-[18px] py-3 rounded-xl flex items-center gap-2 text-[#B91C1C] text-[13px] font-semibold mb-5 shrink-0">
           <AlertCircle size={16} />
           {error}
-          <button onClick={() => fetchRequests(currentPage)} className="ml-auto bg-transparent border-none text-[#B91C1C] font-bold underline cursor-pointer flex items-center gap-1">
+          <button onClick={fetchRequests} className="ml-auto bg-transparent border-none text-[#B91C1C] font-bold underline cursor-pointer flex items-center gap-1">
             <RefreshCw size={12} /> Retry
           </button>
         </div>
@@ -142,7 +140,7 @@ const MRRequestsPage = () => {
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <button
-            onClick={() => fetchRequests(currentPage)}
+            onClick={fetchRequests}
             className="p-2 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#C8F04A] cursor-pointer transition-all duration-150 flex items-center gap-1.5 text-[12.5px] font-semibold"
             title="Refresh"
           >

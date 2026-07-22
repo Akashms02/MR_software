@@ -52,6 +52,16 @@ const AdminRequestsPage = () => {
 
   const searchTimerRef = useRef(null);
 
+  const extractTotalCount = (data) => {
+    if (!data) return 0;
+    if (typeof data.totalElements === 'number') return data.totalElements;
+    if (typeof data.total === 'number') return data.total;
+    if (data.paginator && typeof data.paginator.itemCount === 'number') return data.paginator.itemCount;
+    if (Array.isArray(data)) return data.length;
+    if (Array.isArray(data.content)) return data.content.length;
+    return 0;
+  };
+
   const fetchRequests = (tab = activeTab, page = currentPage, search = searchQuery) => {
     dispatch(fetchPendingRequestsAction(requestStatusFromTab(tab), page, pageSize, search));
   };
@@ -67,7 +77,7 @@ const AdminRequestsPage = () => {
           size: 1,
         });
         const data = response.data?.data ?? response.data;
-        return { tab, count: data?.totalElements || 0 };
+        return { tab, count: extractTotalCount(data) };
       });
       const results = await Promise.all(requestsPromises);
       const newCounts = {};
@@ -115,8 +125,27 @@ const AdminRequestsPage = () => {
 
   const counts = tabCounts;
 
-  // Search is now server-side — no client filtering needed
-  const filteredRequests = requests;
+  const filteredRequests = useMemo(() => {
+    const list = Array.isArray(requests) ? requests : [];
+    return list.filter((req) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        req.name?.toLowerCase().includes(q) ||
+        req.email?.toLowerCase().includes(q) ||
+        req.phone?.includes(q) ||
+        req.type?.toLowerCase().includes(q) ||
+        req.submittedBy?.toLowerCase().includes(q) ||
+        req.address?.toLowerCase().includes(q);
+
+      const reqStatus = (req.status || '').toUpperCase();
+      const targetStatus = requestStatusFromTab(activeTab);
+      const matchesTab =
+        targetStatus === 'ALL' || reqStatus === targetStatus;
+
+      return matchesSearch && matchesTab;
+    });
+  }, [requests, searchQuery, activeTab]);
 
   const handleOpenReview = (request, status) => {
     setSelectedRequest(request);
