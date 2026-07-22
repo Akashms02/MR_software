@@ -7,7 +7,35 @@ import {
   X, ChevronLeft, ChevronRight, Search, ZoomIn, ZoomOut, 
   Loader2, Save, FileText, CheckSquare, Square
 } from 'lucide-react';
-
+const matchSpeciality = (text, query) => {
+  if (!text) return false;
+  const txt = text.toLowerCase();
+  const q = query.toLowerCase().trim();
+  
+  if (txt.includes(q)) return true;
+  
+  // Stemming / Synonym mapping for medical specialities
+  const mappings = [
+    { stems: ['dermat', 'skin', 'dermatolof'], label: 'dermatology' },
+    { stems: ['pediatr', 'child'], label: 'pediatrics' },
+    { stems: ['cardio', 'heart'], label: 'cardiology' },
+    { stems: ['gyneco', 'women', 'obgyn'], label: 'gynecology' },
+    { stems: ['ortho', 'bone'], label: 'orthopedics' },
+    { stems: ['ophthal', 'eye'], label: 'ophthalmology' },
+    { stems: ['neuro', 'brain'], label: 'neurology' },
+    { stems: ['gastro', 'stomach'], label: 'gastroenterology' },
+    { stems: ['dent', 'tooth', 'teeth'], label: 'dentist' },
+    { stems: ['general', 'gp', 'physician'], label: 'general medicine' }
+  ];
+  
+  for (const map of mappings) {
+    const qMatches = map.stems.some(stem => q.includes(stem));
+    const txtMatches = map.stems.some(stem => txt.includes(stem));
+    if (qMatches && txtMatches) return true;
+  }
+  
+  return false;
+};
 export default function DvaFlipbookModal({ brochure, target, onClose }) {
   const { showToast } = useToast();
   
@@ -235,7 +263,10 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
         return tokens.every(token => 
           title.includes(token) || 
           desc.includes(token) || 
-          kws.includes(token)
+          kws.includes(token) ||
+          matchSpeciality(title, token) ||
+          matchSpeciality(desc, token) ||
+          matchSpeciality(kws, token)
         );
       });
       setVisiblePages(filtered);
@@ -250,10 +281,12 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
 
         return tokens.every(token => {
           const tokenNoSpaces = token.replace(/\s+/g, '');
+          const isSpecMatch = matchSpeciality(pageText, token);
           return (
             pageText.includes(token) ||
             pageTextNoSpaces.includes(tokenNoSpaces) ||
             title.includes(token) ||
+            isSpecMatch ||
             brochureTitle.includes(token) ||
             brochureDesc.includes(token)
           );

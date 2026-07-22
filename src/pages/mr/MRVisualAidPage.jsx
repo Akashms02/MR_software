@@ -58,6 +58,94 @@ export default function MRVisualAidPage() {
 
   // Brochure Search Filter
   const [brochureSearch, setBrochureSearch] = useState('');
+  const [globalPdfTexts, setGlobalPdfTexts] = useState({}); // { [brochureId]: Array of page texts }
+
+  // Helper to dynamically load pdf.js from CDN
+  const loadPdfJs = () => {
+    return new Promise((resolve, reject) => {
+      if (window.pdfjsLib) {
+        resolve(window.pdfjsLib);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+      script.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      script.onerror = () => reject(new Error('Failed to load PDF loader script'));
+      document.head.appendChild(script);
+    });
+  };
+
+  // Asynchronously index all PDF brochures in the background with local caching
+  useEffect(() => {
+    const indexAllPdfs = async () => {
+      if (brochures.length === 0) return;
+      
+      const pdfBrochures = brochures.filter(b => !b.custom && b.pdfUrl);
+      const cached = {};
+      const pending = [];
+      
+      for (const b of pdfBrochures) {
+        try {
+          const cacheKey = `pdf_texts_cache_${b.id}`;
+          const cachedVal = localStorage.getItem(cacheKey);
+          if (cachedVal) {
+            cached[b.id] = JSON.parse(cachedVal);
+          } else {
+            pending.push(b);
+          }
+        } catch (e) {
+          pending.push(b);
+        }
+      }
+      
+      if (Object.keys(cached).length > 0) {
+        setGlobalPdfTexts(prev => ({ ...prev, ...cached }));
+      }
+      
+      if (pending.length === 0) return;
+
+      try {
+        const pdfjs = await loadPdfJs();
+        for (const b of pending) {
+          try {
+            const url = getFullAssetUrl(b.pdfUrl);
+            const doc = await pdfjs.getDocument(url).promise;
+            const texts = [];
+            
+            for (let i = 1; i <= doc.numPages; i++) {
+              const page = await doc.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items
+                .map(item => (typeof item === 'string' ? item : item?.str || ''))
+                .join(' ')
+                .toLowerCase();
+              texts.push(pageText);
+            }
+            
+            try {
+              localStorage.setItem(`pdf_texts_cache_${b.id}`, JSON.stringify(texts));
+            } catch (e) {
+              console.warn('Storage quota exceeded, text not cached locally', e);
+            }
+            
+            setGlobalPdfTexts(prev => ({
+              ...prev,
+              [b.id]: texts
+            }));
+          } catch (err) {
+            console.error(`Failed to globally index PDF brochure ${b.title}`, err);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load PDF.js for global indexing', err);
+      }
+    };
+
+    indexAllPdfs();
+  }, [brochures]);
 
   // Active Presentation Flipbook
   const [activePresentation, setActivePresentation] = useState(null); // { brochure, target }
@@ -191,16 +279,36 @@ export default function MRVisualAidPage() {
       );
     });
 
+    // Check global PDF texts if available
+    const pdfPagesTexts = globalPdfTexts[b.id] || [];
+    const hasPdfMatch = !b.custom && pdfPagesTexts.some(pageText => {
+      return tokens.every(token => {
+        const isDermMatch = (token.includes('dermat') || token.includes('skin')) && 
+          (pageText.includes('dermat') || pageText.includes('skin'));
+        const isBabyMatch = (token.includes('baby') || token.includes('child') || token.includes('pediatr')) &&
+          (pageText.includes('baby') || pageText.includes('child') || pageText.includes('pediatr'));
+        
+        return (
+          pageText.includes(token) ||
+          isDermMatch ||
+          isBabyMatch
+        );
+      });
+    });
+
     return tokens.every(token => {
       const isDermMatch = (token.includes('dermat') || token.includes('skin')) && 
         (title.includes('dermat') || desc.includes('dermat') || title.includes('skin') || desc.includes('skin'));
+      const isBabyMatch = (token.includes('baby') || token.includes('child') || token.includes('pediatr')) &&
+        (title.includes('baby') || desc.includes('baby') || title.includes('child') || desc.includes('child') || title.includes('pediatr') || desc.includes('pediatr'));
       
       return (
         title.includes(token) || 
         desc.includes(token) ||
-        isDermMatch
+        isDermMatch ||
+        isBabyMatch
       );
-    }) || hasCustomMatch;
+    }) || hasCustomMatch || hasPdfMatch;
   });
 
   return (
