@@ -10,6 +10,8 @@ import ForgotPasswordPage from './login/ForgotPasswordPage';
 import CreatePasswordPage from './login/CreatePasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import AccountDeletionPage from './pages/AccountDeletionPage';
+import DeleteAccountPolicyPage from './pages/DeleteAccountPolicyPage';
 
 // Layout Routers for Roles
 import SuperAdminLayoutRouter from './layouts/superadmin';
@@ -24,7 +26,7 @@ import PatientLayoutRouter from './layouts/patient';
 
 function DashboardRedirect() {
   const { user } = useSelector((state) => state.auth);
-  
+
   let role = 'employee';
   if (user && user.role) {
     role = user.role;
@@ -32,9 +34,9 @@ function DashboardRedirect() {
     try {
       const localUser = JSON.parse(localStorage.getItem('user'));
       if (localUser && localUser.role) role = localUser.role;
-    } catch (e) {}
+    } catch (e) { }
   }
-  
+
   if (isFieldSalesRole(role)) {
     return <Navigate to="/mr/dashboard" replace />;
   }
@@ -43,7 +45,7 @@ function DashboardRedirect() {
   }
 
   const normalizedRole = (role || '').toUpperCase().trim();
-  
+
   switch (normalizedRole) {
     case 'SUPER_ADMIN':
     case 'SUPERADMIN':
@@ -87,7 +89,7 @@ export default function App() {
     let refreshTimer;
 
     const runRefresh = async () => {
-      const rToken = localStorage.getItem("refreshToken");      
+      const rToken = localStorage.getItem("refreshToken");
       if (rToken) {
         const success = await dispatch(refreshToken({ refreshToken: rToken }));
         if (!success) {
@@ -119,7 +121,7 @@ export default function App() {
       import('./utils/firebase')
         .then(({ requestForToken, onMessageListener }) => {
           requestForToken();
-          
+
           unsubscribe = onMessageListener((payload) => {
             console.log('%c[FCM] Notification Received in Foreground:', 'color: #00ff00; font-weight: bold;', payload);
             if (payload.notification) {
@@ -172,7 +174,7 @@ export default function App() {
               const notification = JSON.parse(event.data);
               console.log('%c[WebSocket] Received notification:', 'color: #00ff00; font-weight: bold;', notification);
               dispatch(receiveNotification(notification));
-              
+
               if (notification.title || notification.message || notification.description) {
                 const title = notification.title || 'New Alert';
                 const msg = notification.message || notification.description || 'You have a new notification';
@@ -244,11 +246,13 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/account-deletion" element={<AccountDeletionPage />} />
+      <Route path="/delete-account-policy" element={<DeleteAccountPolicyPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/create-password" element={<CreatePasswordPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      
+
       {/* Role-Specific Layout Routers */}
       <Route
         path="/superadmin/*"

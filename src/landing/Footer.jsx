@@ -7,7 +7,7 @@ const NAV_GROUPS = [
   },
   {
     title: 'Company',
-    links: ['Privacy Policy', 'Terms & Conditions']
+    links: ['Privacy Policy', 'Delete Account Policy', 'Account Deletion', 'Terms & Conditions']
   }
 ]
 
@@ -126,11 +126,14 @@ export default function Footer() {
                 </div>
                 <div className="space-y-2.5">
                   {group.links.map(link => {
-                    if (link === 'Privacy Policy') {
+                    if (link === 'Privacy Policy' || link === 'Delete Account Policy' || link === 'Account Deletion') {
+                      let toPath = '/privacy-policy';
+                      if (link === 'Delete Account Policy') toPath = '/delete-account-policy';
+                      if (link === 'Account Deletion') toPath = '/account-deletion';
                       return (
                         <Link
                           key={link}
-                          to="/privacy-policy"
+                          to={toPath}
                           className="block text-[13px] sm:text-[14px] text-gray-400 hover:text-[#28823A] transition-colors duration-150 font-normal no-underline"
                         >
                           {link}
@@ -144,10 +147,6 @@ export default function Footer() {
                         onClick={(e) => {
                           if (group.title === 'Product') {
                             e.preventDefault();
-                            if (window.location.pathname !== '/') {
-                              window.location.href = '/#' + TARGET_MAP[link];
-                              return;
-                            }
                             const el = document.getElementById(TARGET_MAP[link]);
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
                           }
