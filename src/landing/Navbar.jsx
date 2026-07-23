@@ -57,6 +57,11 @@ export default function Navbar({ onBookDemoClick }) {
   }, [activeSection])
 
   const handleNavClick = (targetId) => {
+    if (window.location.pathname !== '/') {
+      window.location.href = '/' + (targetId === 'home' ? '' : '#' + targetId);
+      return;
+    }
+
     setActiveSection(targetId)
 
     window.history.pushState(null, null, targetId === 'home' ? '/' : `/${targetId}`)

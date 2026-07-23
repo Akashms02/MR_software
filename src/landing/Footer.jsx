@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const NAV_GROUPS = [
   {
     title: 'Product',
@@ -123,22 +125,39 @@ export default function Footer() {
                   {group.title}
                 </div>
                 <div className="space-y-2.5">
-                  {group.links.map(link => (
-                    <a
-                      key={link}
-                      href={group.title === 'Product' ? `#${TARGET_MAP[link]}` : '#'}
-                      onClick={(e) => {
-                        if (group.title === 'Product') {
-                          e.preventDefault();
-                          const el = document.getElementById(TARGET_MAP[link]);
-                          if (el) el.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      }}
-                      className="block text-[13px] sm:text-[14px] text-gray-400 hover:text-[#28823A] transition-colors duration-150 font-normal no-underline"
-                    >
-                      {link}
-                    </a>
-                  ))}
+                  {group.links.map(link => {
+                    if (link === 'Privacy Policy') {
+                      return (
+                        <Link
+                          key={link}
+                          to="/privacy-policy"
+                          className="block text-[13px] sm:text-[14px] text-gray-400 hover:text-[#28823A] transition-colors duration-150 font-normal no-underline"
+                        >
+                          {link}
+                        </Link>
+                      );
+                    }
+                    return (
+                      <a
+                        key={link}
+                        href={group.title === 'Product' ? `#${TARGET_MAP[link]}` : '#'}
+                        onClick={(e) => {
+                          if (group.title === 'Product') {
+                            e.preventDefault();
+                            if (window.location.pathname !== '/') {
+                              window.location.href = '/#' + TARGET_MAP[link];
+                              return;
+                            }
+                            const el = document.getElementById(TARGET_MAP[link]);
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                        className="block text-[13px] sm:text-[14px] text-gray-400 hover:text-[#28823A] transition-colors duration-150 font-normal no-underline"
+                      >
+                        {link}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             ))}
