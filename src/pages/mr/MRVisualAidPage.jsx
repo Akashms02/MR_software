@@ -46,7 +46,7 @@ export default function MRVisualAidPage() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Selector Modal
+  // Selector Modall
   const [selectedBrochure, setSelectedBrochure] = useState(null);
   const [isSelectTargetOpen, setIsSelectTargetOpen] = useState(false);
   const [targetSearch, setTargetSearch] = useState('');
