@@ -193,6 +193,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
   const [showPhoto, setShowPhoto] = useState(false);
   const [managers, setManagers] = useState([]);
   const [jfwManagerId, setJfwManagerId] = useState('');
+  const [jfwManagerIds, setJfwManagerIds] = useState([]);
 
   useEffect(() => {
     const fetchManagers = async () => {
@@ -372,24 +373,38 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
               required />
           </div>
 
-          {/* Accompanying JFW Manager Dropdown */}
+          {/* Accompanying JFW Managers */}
           {selectedId && selectedTarget && isDoctor && (
             <div>
               <label className="block text-[12px] font-bold text-gray-755 mb-1.5 font-sans">
-                Accompanying JFW Manager <span className="text-gray-400 font-medium">(optional)</span>
+                Accompanying JFW Managers <span className="text-gray-400 font-medium">(optional)</span>
               </label>
-              <select
-                value={jfwManagerId}
-                onChange={e => setJfwManagerId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 bg-white outline-none box-border cursor-pointer font-medium"
-              >
-                <option value="">Select Accompanying Manager (JFW)...</option>
-                {managers.map(mgr => (
-                  <option key={mgr.id} value={mgr.id}>
-                    👤 {mgr.fullName} ({mgr.role})
-                  </option>
-                ))}
-              </select>
+              <div className="border border-gray-200 rounded-xl p-3.5 max-h-[150px] overflow-y-auto bg-white space-y-2 box-border">
+                {managers.length === 0 ? (
+                  <p className="text-[12px] text-gray-400">No managers available</p>
+                ) : (
+                  managers.map(mgr => {
+                    const isChecked = jfwManagerIds.includes(mgr.id);
+                    return (
+                      <label key={mgr.id} className="flex items-center gap-2.5 text-[13px] font-sans text-gray-800 cursor-pointer hover:bg-gray-50 p-1 rounded select-none">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setJfwManagerIds(jfwManagerIds.filter(id => id !== mgr.id));
+                            } else {
+                              setJfwManagerIds([...jfwManagerIds, mgr.id]);
+                            }
+                          }}
+                          className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span>👤 {mgr.fullName} ({mgr.role})</span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
             </div>
           )}
 
@@ -410,7 +425,7 @@ function VisitCheckInModal({ onSubmit, onClose, gpsLoading, gpsMessage, visitTar
 
           {/* Submit */}
           <button
-            onClick={() => onSubmit({ target: selectedTarget, notes, photo, jfwManagerId })}
+            onClick={() => onSubmit({ target: selectedTarget, notes, photo, jfwManagerId, jfwManagerIds })}
             disabled={!canSubmit || gpsLoading}
             className={`w-full p-3.5 rounded-2xl border-none text-[15px] font-extrabold transition-all duration-200 ${
               (!canSubmit || gpsLoading) 
@@ -853,7 +868,7 @@ export default function MRDashboard() {
     }
   };
 
-  const handleVisitCheckIn = async ({ target, notes, photo, jfwManagerId }) => {
+  const handleVisitCheckIn = async ({ target, notes, photo, jfwManagerId, jfwManagerIds = [] }) => {
     const coords = await getGps('visitIn');
     try {
       await dispatch(
@@ -863,6 +878,7 @@ export default function MRDashboard() {
           latitude: coords.lat,
           longitude: coords.lng,
           jfwManagerId: jfwManagerId ? Number(jfwManagerId) : null,
+          jfwManagerIds: jfwManagerIds.map(Number),
         })
       );
       

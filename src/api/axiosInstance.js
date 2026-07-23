@@ -622,6 +622,73 @@ axios.interceptors.request.use(
               }
             } catch (e) {}
             mockData = { success: true, status: 200, data: dcrs };
+          } else if (cfg.url.includes('/jfw/team-visits') && cfg.method === 'get') {
+            mockData = {
+              success: true,
+              status: 200,
+              message: "Fetched team JFW visits successfully",
+              data: [
+                {
+                  visitId: 201,
+                  dcrId: 101,
+                  reportDate: new Date().toISOString().split('T')[0],
+                  mrId: 10,
+                  mrName: "Marcus Rep",
+                  doctorId: 1,
+                  doctorName: "Dr. Ramesh Sharma",
+                  speciality: "CARDIOLOGY",
+                  visitTime: "10:30:00",
+                  productsDiscussed: "Cardiace-M",
+                  samplesGiven: "2 strips",
+                  feedback: "Discussed renewal and prescription behavior",
+                  gpsVerified: true,
+                  jfwManagerId: 1,
+                  jfwManagerName: "Admin User"
+                },
+                {
+                  visitId: 202,
+                  dcrId: 102,
+                  reportDate: new Date().toISOString().split('T')[0],
+                  mrId: 11,
+                  mrName: "Sarah Connor",
+                  doctorId: 3,
+                  doctorName: "Dr. Vivek Verma",
+                  speciality: "ORTHOPEDICS",
+                  visitTime: "12:15:00",
+                  productsDiscussed: "Osteoshield",
+                  samplesGiven: "5 boxes",
+                  feedback: "Requested new medical brochure",
+                  gpsVerified: false,
+                  jfwManagerId: 2,
+                  jfwManagerName: "Sam Manager"
+                }
+              ]
+            };
+          } else if (cfg.url.includes('/jfw/my-visits') && cfg.method === 'get') {
+            mockData = {
+              success: true,
+              status: 200,
+              message: "Fetched your JFW visits successfully",
+              data: [
+                {
+                  visitId: 201,
+                  dcrId: 101,
+                  reportDate: new Date().toISOString().split('T')[0],
+                  mrId: 10,
+                  mrName: "Marcus Rep",
+                  doctorId: 1,
+                  doctorName: "Dr. Ramesh Sharma",
+                  speciality: "CARDIOLOGY",
+                  visitTime: "10:30:00",
+                  productsDiscussed: "Cardiace-M",
+                  samplesGiven: "2 strips",
+                  feedback: "Discussed renewal and prescription behavior",
+                  gpsVerified: true,
+                  jfwManagerId: 1,
+                  jfwManagerName: "Admin User"
+                }
+              ]
+            };
           } else if (cfg.url.includes('/dcr/') && cfg.url.includes('/review') && cfg.method === 'put') {
             const urlWithoutParams = cfg.url.split('?')[0];
             const parts = urlWithoutParams.split('/');

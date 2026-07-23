@@ -368,8 +368,16 @@ const DcrReviewPage = () => {
                             ) : (
                               <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded block mt-1">⚠ No GPS match</span>
                             )}
-                            {vis.jfwManagerName && (
-                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded block mt-1" title="Joint Field Work Accompaniment">🤝 JFW: {vis.jfwManagerName}</span>
+                            {vis.jfwManagers && vis.jfwManagers.length > 0 ? (
+                              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded block mt-1" title="Joint Field Work Accompaniment">
+                                🤝 JFW: {vis.jfwManagers.map(m => m.fullName).join(', ')}
+                              </span>
+                            ) : (
+                              vis.jfwManagerName && (
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded block mt-1" title="Joint Field Work Accompaniment">
+                                  🤝 JFW: {vis.jfwManagerName}
+                                </span>
+                              )
                             )}
                           </div>
                         </div>

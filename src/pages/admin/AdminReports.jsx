@@ -13,6 +13,7 @@ import { getMyTeam } from '../../redux/actions/teamActions';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
 import { Card, TableWrap, Th, Td } from '../../components/ui';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { 
   Calendar, MapPin, Award, CheckCircle2, AlertCircle, ChevronRight, BarChart3, 
   RefreshCw, ShieldAlert
@@ -141,7 +142,7 @@ export default function AdminReports() {
       const endpoint = jfwType === 'team' ? '/jfw/team-visits' : '/jfw/my-visits';
       const response = await axios.get(`${API_ROUTE}${endpoint}`);
       const resData = response.data;
-      if (resData && (resData.status === 200 || resData.status === 'SUCCESS' || resData.success)) {
+      if (resData && (resData.status === 200 || resData.status === 'SUCCESS' || resData.success || resData.status === true)) {
         setJfwData(resData.data || []);
       } else {
         setJfwError(resData?.message || 'Failed to fetch Joint Work Reports');
@@ -554,6 +555,7 @@ export default function AdminReports() {
                     <Th>Doctor Name</Th>
                     <Th>Speciality</Th>
                     <Th>Products Discussed</Th>
+                    <Th>Visual Aids Shown</Th>
                     <Th>Feedback</Th>
                     <Th>GPS Status</Th>
                   </tr>
@@ -566,6 +568,29 @@ export default function AdminReports() {
                       <Td className="font-semibold text-[#1F2937]">{row.doctorName}</Td>
                       <Td>{row.speciality || '—'}</Td>
                       <Td>{row.products || '—'}</Td>
+                      <Td>
+                        {row.shownImages ? (
+                          <div className="flex gap-1.5 overflow-x-auto max-w-[150px] py-1">
+                            {row.shownImages.split(',').map((imgUrl, i) => (
+                              <a 
+                                key={i} 
+                                href={getFullAssetUrl(imgUrl.trim())} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="relative shrink-0 w-10 h-7 rounded border border-gray-200 overflow-hidden bg-white shadow-sm hover:scale-105 transition-transform"
+                              >
+                                <img 
+                                  src={getFullAssetUrl(imgUrl.trim())} 
+                                  alt="Slide" 
+                                  className="object-cover w-full h-full" 
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
+                      </Td>
                       <Td className="italic">{row.feedback || '—'}</Td>
                       <Td>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${row.gpsVerified ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FEF2F2] text-[#B91C1C]'}`}>
@@ -865,9 +890,11 @@ export default function AdminReports() {
                     <Th>Doctor</Th>
                     <Th>Accompanied Manager</Th>
                     <Th>Products Discussed</Th>
+                    <Th>Visual Aids Shown</Th>
                     <Th>Samples Given</Th>
                     <Th>Feedback</Th>
                     <Th>GPS Status</Th>
+                    <Th>Photos/Selfies</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -883,17 +910,81 @@ export default function AdminReports() {
                         <div className="text-[11px] text-[#6B7280]">{row.speciality}</div>
                       </Td>
                       <Td>
-                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
-                          👤 {row.jfwManagerName || `Manager #${row.jfwManagerId}`}
-                        </span>
+                        {row.jfwManagers && row.jfwManagers.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {row.jfwManagers.map((m, i) => (
+                              <span key={i} className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded inline-block w-max">
+                                👤 {m.fullName}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
+                            👤 {row.jfwManagerName || `Manager #${row.jfwManagerId}`}
+                          </span>
+                        )}
                       </Td>
                       <Td>{row.productsDiscussed || '—'}</Td>
+                      <Td>
+                        {row.shownImages ? (
+                          <div className="flex gap-1.5 overflow-x-auto max-w-[150px] py-1">
+                            {row.shownImages.split(',').map((imgUrl, i) => (
+                              <a 
+                                key={i} 
+                                href={getFullAssetUrl(imgUrl.trim())} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="relative shrink-0 w-10 h-7 rounded border border-gray-200 overflow-hidden bg-white shadow-sm hover:scale-105 transition-transform"
+                              >
+                                <img 
+                                  src={getFullAssetUrl(imgUrl.trim())} 
+                                  alt="Slide" 
+                                  className="object-cover w-full h-full" 
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
+                      </Td>
                       <Td>{row.samplesGiven || '—'}</Td>
                       <Td className="italic text-gray-500 max-w-[200px] truncate" title={row.feedback}>{row.feedback || '—'}</Td>
                       <Td>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${row.gpsVerified ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FEF2F2] text-[#B91C1C]'}`}>
                           {row.gpsVerified ? 'GPS VERIFIED' : 'UNVERIFIED'}
                         </span>
+                      </Td>
+                      <Td>
+                        <div className="flex gap-2 flex-wrap items-center">
+                          {row.checkInPhoto ? (
+                            <div className="flex flex-col items-center">
+                              <span className="text-[9px] text-[#6B7280] font-bold mb-0.5">IN</span>
+                              <img
+                                src={getFullAssetUrl(row.checkInPhoto)}
+                                alt="Check In"
+                                className="w-[45px] h-[35px] object-cover rounded border border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                                onClick={() => window.open(getFullAssetUrl(row.checkInPhoto), '_blank')}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            </div>
+                          ) : null}
+                          {row.checkOutPhoto ? (
+                            <div className="flex flex-col items-center">
+                              <span className="text-[9px] text-[#6B7280] font-bold mb-0.5">OUT</span>
+                              <img
+                                src={getFullAssetUrl(row.checkOutPhoto)}
+                                alt="Check Out"
+                                className="w-[45px] h-[35px] object-cover rounded border border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                                onClick={() => window.open(getFullAssetUrl(row.checkOutPhoto), '_blank')}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            </div>
+                          ) : null}
+                          {!row.checkInPhoto && !row.checkOutPhoto ? (
+                            <span className="text-gray-400 text-xs">—</span>
+                          ) : null}
+                        </div>
                       </Td>
                     </tr>
                   ))}
