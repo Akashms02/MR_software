@@ -9,6 +9,7 @@ import LoginPage from './login/LoginPage';
 import ForgotPasswordPage from './login/ForgotPasswordPage';
 import CreatePasswordPage from './login/CreatePasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 // Layout Routers for Roles
 import SuperAdminLayoutRouter from './layouts/superadmin';
@@ -246,6 +247,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/create-password" element={<CreatePasswordPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       
       {/* Role-Specific Layout Routers */}
       <Route
