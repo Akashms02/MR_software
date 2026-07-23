@@ -45,6 +45,21 @@ const getFirstOfMonthString = () => {
   return `${d.getFullYear()}-${month}-01`;
 };
 
+const calculateDuration = (inTime, outTime) => {
+  if (!inTime || !outTime || inTime === '—' || outTime === '—') return null;
+  try {
+    const [inH, inM] = inTime.split(':').map(Number);
+    const [outH, outM] = outTime.split(':').map(Number);
+    if (isNaN(inH) || isNaN(inM) || isNaN(outH) || isNaN(outM)) return null;
+    const inMinutes = inH * 60 + inM;
+    const outMinutes = outH * 60 + outM;
+    const diff = outMinutes - inMinutes;
+    return diff > 0 ? diff : 0;
+  } catch (e) {
+    return null;
+  }
+};
+
 // Recharts Custom Tooltip
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -564,7 +579,14 @@ export default function AdminReports() {
                   {currentData.list.map((row, idx) => (
                     <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors">
                       <Td className="font-bold text-[#1F2937]">{row.date}</Td>
-                      <Td>{row.time || '—'}</Td>
+                      <Td>
+                        <div className="font-semibold text-gray-800">In: {row.time || '—'}</div>
+                        {row.checkOutTime && (
+                          <div className="text-[11px] text-[#28823A] font-bold mt-1">
+                            Out: {row.checkOutTime} ({calculateDuration(row.time, row.checkOutTime)} min)
+                          </div>
+                        )}
+                      </Td>
                       <Td className="font-semibold text-[#1F2937]">{row.doctorName}</Td>
                       <Td>{row.speciality || '—'}</Td>
                       <Td>{row.products || '—'}</Td>
@@ -655,42 +677,56 @@ export default function AdminReports() {
               </div>
             </Card>
 
-            {/* Doctors detailed logs fallback - hidden dynamically if empty */}
-            {currentData.doctorsMet && currentData.doctorsMet.length > 0 && (
-              <Card className="p-6">
-                <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Doctor Records</h3>
-                <div className="flex flex-col gap-3">
-                  {currentData.doctorsMet.map((doc, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border-[1.5px] border-[#F3F4F6] bg-[#FAFAFA] flex justify-between items-center">
-                      <div>
-                        <div className="font-extrabold text-[#1F2937] text-sm">{doc.name}</div>
-                        <div className="text-xs text-[#6B7280] mt-0.5">{doc.clinic} · <span className="font-semibold">{doc.time}</span></div>
-                        <div className="text-xs text-[#0369A1] mt-1.5 bg-[#E0F2FE] inline-block px-2 py-0.5 rounded-md font-semibold">
-                          Samples: {doc.samples}
-                        </div>
-                      </div>
-                      <div className="text-right max-w-[250px]">
-                        <div className="text-[11px] text-[#9CA3AF] font-bold">VISIT DETAIL FEEDBACK</div>
-                        <div className="text-[12.5px] text-[#4B5563] mt-1 italic">{doc.feedback}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Chemists detailed logs - highlighted */}
-            {currentData.chemistsMet && currentData.chemistsMet.length > 0 && (
-              <Card className="p-6">
-                <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Chemist Records</h3>
-                <div className="flex flex-col gap-3">
-                  {currentData.chemistsMet.map((chem, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border-[1.5px] border-blue-200 bg-blue-50/20 flex justify-between items-center shadow-[0_2px_8px_rgba(59,130,246,0.04)]">
-                      <div>
-                        <span className="mb-1.5 inline-block rounded bg-blue-105 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">Chemist / Pharmacy</span>
-                        <div className="font-extrabold text-[#1F2937] text-sm">{chem.name}</div>
-                        <div className="text-xs text-[#6B7280] mt-0.5">{chem.clinic} · <span className="font-semibold">{chem.time}</span></div>
-                      </div>
+             {/* Doctors detailed logs fallback - hidden dynamically if empty */}
+             {currentData.doctorsMet && currentData.doctorsMet.length > 0 && (
+               <Card className="p-6">
+                 <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Doctor Records</h3>
+                 <div className="flex flex-col gap-3">
+                   {currentData.doctorsMet.map((doc, idx) => (
+                     <div key={idx} className="p-4 rounded-xl border-[1.5px] border-[#F3F4F6] bg-[#FAFAFA] flex justify-between items-center">
+                       <div>
+                         <div className="font-extrabold text-[#1F2937] text-sm">{doc.name}</div>
+                         <div className="text-xs text-[#6B7280] mt-0.5">
+                           {doc.clinic} · <span className="font-semibold">In: {doc.time}</span>
+                           {doc.checkOutTime && (
+                             <span className="ml-2 font-bold text-[#28823A]">
+                               Out: {doc.checkOutTime} ({calculateDuration(doc.time, doc.checkOutTime)} min)
+                             </span>
+                           )}
+                         </div>
+                         <div className="text-xs text-[#0369A1] mt-1.5 bg-[#E0F2FE] inline-block px-2 py-0.5 rounded-md font-semibold">
+                           Samples: {doc.samples}
+                         </div>
+                       </div>
+                       <div className="text-right max-w-[250px]">
+                         <div className="text-[11px] text-[#9CA3AF] font-bold">VISIT DETAIL FEEDBACK</div>
+                         <div className="text-[12.5px] text-[#4B5563] mt-1 italic">{doc.feedback}</div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </Card>
+             )}
+ 
+             {/* Chemists detailed logs - highlighted */}
+             {currentData.chemistsMet && currentData.chemistsMet.length > 0 && (
+               <Card className="p-6">
+                 <h3 className="mt-0 mb-4 text-[14.5px] font-extrabold text-[#1F2937]">Visited Chemist Records</h3>
+                 <div className="flex flex-col gap-3">
+                   {currentData.chemistsMet.map((chem, idx) => (
+                     <div key={idx} className="p-4 rounded-xl border-[1.5px] border-blue-200 bg-blue-50/20 flex justify-between items-center shadow-[0_2px_8px_rgba(59,130,246,0.04)]">
+                       <div>
+                         <span className="mb-1.5 inline-block rounded bg-blue-105 px-2.5 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">Chemist / Pharmacy</span>
+                         <div className="font-extrabold text-[#1F2937] text-sm">{chem.name}</div>
+                         <div className="text-xs text-[#6B7280] mt-0.5">
+                           {chem.clinic} · <span className="font-semibold">In: {chem.time}</span>
+                           {chem.checkOutTime && (
+                             <span className="ml-2 font-bold text-blue-600">
+                               Out: {chem.checkOutTime} ({calculateDuration(chem.time, chem.checkOutTime)} min)
+                             </span>
+                           )}
+                         </div>
+                       </div>
                       <div className="text-right max-w-[250px]">
                         <div className="text-[11px] text-blue-600 font-bold">VISIT DETAIL FEEDBACK</div>
                         <div className="text-[12.5px] text-[#4B5563] mt-1 italic">{chem.feedback}</div>
@@ -902,7 +938,19 @@ export default function AdminReports() {
                     <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors">
                       <Td className="font-bold text-[#1F2937]">
                         <div>{row.reportDate}</div>
-                        <div className="text-[11px] text-[#6B7280] font-normal mt-0.5">{row.visitTime || '—'}</div>
+                        <div className="text-[11px] text-[#6B7280] font-normal mt-1">
+                          In: {row.visitTime || '—'}
+                          {row.checkOutTime && (
+                            <>
+                              <br />
+                              Out: {row.checkOutTime}
+                              <br />
+                              <span className="text-indigo-600 font-bold">
+                                ⏱️ {calculateDuration(row.visitTime, row.checkOutTime)} min
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </Td>
                       <Td className="font-bold text-[#1F2937]">{row.mrName || `MR #${row.mrId}`}</Td>
                       <Td>
