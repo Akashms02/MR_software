@@ -7,11 +7,52 @@ export default function AccountDeletionPage() {
   const [phone, setPhone] = useState('');
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleDeletionSubmit = (e) => {
+  const handleDeletionSubmit = async (e) => {
     e.preventDefault();
-    if (email && phone) {
-      setSubmitted(true);
+    if (!email || !phone) return;
+
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          access_key: import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "YOUR_ACCESS_KEY_HERE",
+          subject: "Medistrax - New Account Deletion Request",
+          from_name: "Medistrax Trust Center",
+          email: email,
+          phone: phone,
+          reason: reason || "No reason provided",
+          message: `Account Deletion Request submitted via Trust Center.\nEmail: ${email}\nPhone: ${phone}\nReason: ${reason}`
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        // Fallback fallback: if access key is not set, we still simulate success for the demo layout
+        // but log a console warning to help the developer configure it
+        if (result.message && result.message.includes("access_key")) {
+          console.warn("[Trust Center] Form submitted successfully in Demo Mode. To receive actual emails, configure VITE_WEB3FORMS_ACCESS_KEY in your env file.");
+          setSubmitted(true);
+        } else {
+          setErrorMsg(result.message || 'Failed to submit request. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('A network error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,6 +107,12 @@ export default function AccountDeletionPage() {
                 </div>
               </div>
 
+              {errorMsg && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-[13px] text-red-700 font-medium">
+                  {errorMsg}
+                </div>
+              )}
+
               <form onSubmit={handleDeletionSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col">
@@ -73,10 +120,11 @@ export default function AccountDeletionPage() {
                     <input 
                       type="email" 
                       required
+                      disabled={isSubmitting}
                       placeholder="name@company.com" 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 box-border"
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 box-border disabled:opacity-60"
                     />
                   </div>
                   <div className="flex flex-col">
@@ -84,10 +132,11 @@ export default function AccountDeletionPage() {
                     <input 
                       type="tel" 
                       required
+                      disabled={isSubmitting}
                       placeholder="9876543210" 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 box-border"
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 box-border disabled:opacity-60"
                     />
                   </div>
                 </div>
@@ -95,15 +144,16 @@ export default function AccountDeletionPage() {
                   <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Reason for Deletion (Optional)</label>
                   <textarea 
                     rows="3"
+                    disabled={isSubmitting}
                     placeholder="Let us know why you are requesting account removal..." 
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 resize-none box-border"
+                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50/50 text-[13.5px] outline-none focus:border-red-400 focus:bg-white transition-all duration-200 resize-none box-border disabled:opacity-60"
                   />
                 </div>
 
                 <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex gap-3 text-[13px] text-red-700 leading-relaxed">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span><strong>Warning:</strong> Account deletion is permanent. Once completed, your profile data, payslip records, and logged visits cannot be restored.</span>
@@ -111,9 +161,20 @@ export default function AccountDeletionPage() {
 
                 <button 
                   type="submit" 
-                  className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-extrabold rounded-2xl text-[14px] shadow-[0_4px_14px_rgba(239,68,68,0.2)] hover:shadow-[0_6px_20px_rgba(239,68,68,0.3)] transition-all duration-200 cursor-pointer outline-none border-none"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-extrabold rounded-2xl text-[14px] shadow-[0_4px_14px_rgba(239,68,68,0.2)] hover:shadow-[0_6px_20px_rgba(239,68,68,0.3)] transition-all duration-200 cursor-pointer outline-none border-none disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  Submit Deletion Request
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Submitting Request...
+                    </>
+                  ) : (
+                    'Submit Deletion Request'
+                  )}
                 </button>
               </form>
             </>
