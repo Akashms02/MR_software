@@ -9,6 +9,28 @@ import {
   Upload, Tag, List, Calendar, User, Info, Loader2, Eye, X
 } from 'lucide-react';
 
+const SPECIALITIES = [
+  { value: 'GENERAL_PHYSICIAN', label: 'General Physician' },
+  { value: 'CARDIOLOGIST', label: 'Cardiologist' },
+  { value: 'NEUROLOGIST', label: 'Neurologist' },
+  { value: 'ORTHOPEDIC', label: 'Orthopedic' },
+  { value: 'PEDIATRICIAN', label: 'Pediatrician' },
+  { value: 'GYNECOLOGIST', label: 'Gynecologist' },
+  { value: 'DERMATOLOGIST', label: 'Dermatologist' },
+  { value: 'PSYCHIATRIST', label: 'Psychiatrist' },
+  { value: 'ONCOLOGIST', label: 'Oncologist' },
+  { value: 'DIABETOLOGIST', label: 'Diabetologist' },
+  { value: 'ENT_SPECIALIST', label: 'ENT Specialist' },
+  { value: 'OPHTHALMOLOGIST', label: 'Ophthalmologist' },
+  { value: 'PULMONOLOGIST', label: 'Pulmonologist' },
+  { value: 'GASTROENTEROLOGIST', label: 'Gastroenterologist' },
+  { value: 'NEPHROLOGIST', label: 'Nephrologist' },
+  { value: 'UROLOGIST', label: 'Urologist' },
+  { value: 'ENDOCRINOLOGIST', label: 'Endocrinologist' },
+  { value: 'RHEUMATOLOGIST', label: 'Rheumatologist' },
+  { value: 'OTHER', label: 'Other' }
+];
+
 export default function AdminVisualAidPage() {
   const { user } = useSelector(state => state.auth);
   const { showToast } = useToast();
@@ -20,13 +42,17 @@ export default function AdminVisualAidPage() {
   // Custom builder state
   const [builderBrochure, setBuilderBrochure] = useState(null); // When not null, show the builder screen
 
-  // Upload/Create Brochure Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createMode, setCreateMode] = useState('pdf'); // 'pdf' | 'custom'
-  const [newTitle, setNewTitle] = useState('');
+  // Upload/Create Brochure Form inline state
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [newDesc, setNewDesc] = useState('');
+  const [selectedSpecialities, setSelectedSpecialities] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [otherSpecialityText, setOtherSpecialityText] = useState('');
+
+  // Delete confirm state
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleteConfirmTitle, setDeleteConfirmTitle] = useState('');
 
   // Add custom page state
   const [isAddPageOpen, setIsAddPageOpen] = useState(false);
@@ -79,8 +105,13 @@ export default function AdminVisualAidPage() {
 
   const handleCreateBrochure = async (e) => {
     e.preventDefault();
-    if (!newTitle.trim()) {
-      showToast('Title is required', 'error');
+    if (selectedSpecialities.length === 0) {
+      showToast('Please select at least one doctor specialty', 'error');
+      return;
+    }
+
+    if (selectedSpecialities.includes('OTHER') && !otherSpecialityText.trim()) {
+      showToast('Please specify the custom doctor specialty', 'error');
       return;
     }
 
@@ -88,37 +119,50 @@ export default function AdminVisualAidPage() {
     showToast('Creating brochure...', 'loading');
 
     try {
-      if (createMode === 'pdf') {
-        if (!selectedFile) {
-          showToast('Please select a PDF file', 'error');
-          setSubmitting(false);
-          return;
+      const formattedTitle = selectedSpecialities.map(spec => {
+        if (spec === 'OTHER') {
+          return otherSpecialityText.trim();
         }
-        const formData = new FormData();
-        formData.append('title', newTitle);
-        formData.append('description', newDesc);
-        formData.append('file', selectedFile);
+        const found = SPECIALITIES.find(s => s.value === spec);
+        return found ? found.label : spec;
+      }).join(', ') + ' Catalog';
 
-        const res = await axios.post(`${API_ROUTE}/visual-aids/pdf`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        showToast('PDF brochure uploaded successfully!', 'success');
-      } else {
-        const res = await axios.post(`${API_ROUTE}/visual-aids/custom`, {
-          title: newTitle,
-          description: newDesc
-        });
-        showToast('Custom brochure created! Now add pages.', 'success');
-        setBuilderBrochure(res.data.data); // Switch to builder
+      const targetSpecValue = selectedSpecialities.map(spec => {
+        if (spec === 'OTHER') {
+          return otherSpecialityText.trim();
+        }
+        return spec;
+      }).join(', ');
+
+      const formData = new FormData();
+      formData.append('title', formattedTitle);
+      formData.append('description', newDesc);
+      formData.append('targetSpeciality', targetSpecValue);
+      if (selectedFile) {
+        formData.append('file', selectedFile);
       }
 
-      setIsCreateModalOpen(false);
+      const res = await axios.post(`${API_ROUTE}/visual-aids/custom`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      showToast('Custom brochure created! Now add pages.', 'success');
+      setBuilderBrochure(res.data.data); // Switch to builder
+
+      setShowCreateForm(false);
       resetCreateForm();
       fetchBrochures();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to create brochure', 'error');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const toggleSpeciality = (val) => {
+    if (selectedSpecialities.includes(val)) {
+      setSelectedSpecialities(selectedSpecialities.filter(s => s !== val));
+    } else {
+      setSelectedSpecialities([...selectedSpecialities, val]);
     }
   };
 
@@ -158,25 +202,31 @@ export default function AdminVisualAidPage() {
     }
   };
 
-  const handleDeleteBrochure = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this brochure?')) return;
+  const handleDeleteBrochure = async () => {
+    if (!deleteConfirmId) return;
+    setSubmitting(true);
     showToast('Deleting brochure...', 'loading');
     try {
-      await axios.delete(`${API_ROUTE}/visual-aids/${id}`);
+      await axios.delete(`${API_ROUTE}/visual-aids/${deleteConfirmId}`);
       showToast('Brochure deleted successfully', 'success');
       fetchBrochures();
-      if (builderBrochure?.id === id) {
+      if (builderBrochure?.id === deleteConfirmId) {
         setBuilderBrochure(null);
       }
+      setDeleteConfirmId(null);
+      setDeleteConfirmTitle('');
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete brochure', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const resetCreateForm = () => {
-    setNewTitle('');
     setNewDesc('');
     setSelectedFile(null);
+    setSelectedSpecialities([]);
+    setOtherSpecialityText('');
   };
 
   const resetPageForm = () => {
@@ -218,9 +268,9 @@ export default function AdminVisualAidPage() {
           <h1 className="text-2xl font-bold text-gray-900">Product Visual Aids Manager</h1>
           <p className="text-gray-500 text-sm">Upload and manage visual aid brochures presented by representatives to doctors and chemists.</p>
         </div>
-        {!builderBrochure && (
+        {!builderBrochure && !showCreateForm && (
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => setShowCreateForm(true)}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4F46E5] text-white rounded-xl hover:bg-[#4338CA] transition-colors font-semibold shadow-sm"
           >
             <Plus size={18} />
@@ -250,7 +300,7 @@ export default function AdminVisualAidPage() {
                 Add Page Image
               </button>
               <button
-                onClick={() => handleDeleteBrochure(builderBrochure.id)}
+                onClick={() => { setDeleteConfirmId(builderBrochure.id); setDeleteConfirmTitle(builderBrochure.title); }}
                 className="flex items-center justify-center p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
                 title="Delete Brochure"
               >
@@ -317,6 +367,116 @@ export default function AdminVisualAidPage() {
             )}
           </div>
         </div>
+      ) : showCreateForm ? (
+        // INLINE CREATE FORM
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <button
+              onClick={() => { setShowCreateForm(false); resetCreateForm(); }}
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium border-none bg-transparent cursor-pointer animate-in slide-in-from-left duration-200"
+            >
+              <ChevronLeft size={20} />
+              Back to Catalog list
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-900">Add Brochure Catalog</h2>
+            <p className="text-gray-500 text-sm">Create a new custom brochure catalog and specify target specialties.</p>
+          </div>
+
+          <form onSubmit={handleCreateBrochure} className="space-y-6 max-w-2xl">
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Target Doctors / Specialities</label>
+              <p className="text-xs text-gray-400">Select which doctor specialties this brochure catalog is targeted for.</p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {SPECIALITIES.map((spec) => {
+                  const isSelected = selectedSpecialities.includes(spec.value);
+                  return (
+                    <button
+                      key={spec.value}
+                      type="button"
+                      onClick={() => toggleSpeciality(spec.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-sm' 
+                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {spec.label}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {selectedSpecialities.includes('OTHER') && (
+                <div className="space-y-2 mt-4 animate-in fade-in duration-200">
+                  <label className="block text-xs font-bold text-gray-600">Please Specify Doctor Specialty / Role</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dentist, Ayurvedic Physician, General Surgeon"
+                    value={otherSpecialityText}
+                    onChange={(e) => setOtherSpecialityText(e.target.value)}
+                    className="w-full max-w-md px-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#4F46E5] shadow-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Upload Cover Image (Optional)</label>
+              <label className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors cursor-pointer bg-gray-50/50">
+                <Upload className="mx-auto text-gray-400 mb-2" size={32} />
+                <span className="text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA]">
+                  {selectedFile ? 'Change cover image' : 'Upload cover image'}
+                </span>
+                <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WEBP up to 50MB</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                />
+              </label>
+              {selectedFile && (
+                <div className="mt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg p-2 flex items-center gap-1.5 w-fit">
+                  <Image size={14} /> {selectedFile.name}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Description</label>
+              <textarea
+                rows={3}
+                placeholder="Briefly describe what products or therapeutic segment this catalog covers."
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#4F46E5] resize-none shadow-sm"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => { setShowCreateForm(false); resetCreateForm(); }}
+                className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 bg-white cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-5 py-2.5 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338CA] transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                {submitting && <Loader2 className="animate-spin" size={14} />}
+                Create Catalog
+              </button>
+            </div>
+          </form>
+        </div>
       ) : (
         // MAIN CATALOGS LIST & LOGS TABS
         <div className="space-y-6">
@@ -350,7 +510,7 @@ export default function AdminVisualAidPage() {
                 <h3 className="text-lg font-bold text-gray-800">No Brochures Available</h3>
                 <p className="text-gray-500 text-sm mt-1 max-w-sm text-center">Add product brochures for medical representatives to detail during field visits.</p>
                 <button
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={() => setShowCreateForm(true)}
                   className="mt-4 px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338CA] transition-colors"
                 >
                   Upload Your First Catalog
@@ -359,51 +519,60 @@ export default function AdminVisualAidPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {brochures.map((b) => (
-                  <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-md truncate pr-2" title={b.title}>{b.title}</h3>
-                          <p className="text-gray-500 text-xs mt-1">Uploaded {new Date(b.createdAt).toLocaleDateString()}</p>
+                  <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between">
+                    {/* Catalog Cover Photo */}
+                    <div className="aspect-[16/9] w-full bg-gray-50 border-b border-gray-100 relative overflow-hidden flex items-center justify-center">
+                      {b.pdfUrl ? (
+                        <img 
+                          src={getFullAssetUrl(b.pdfUrl)} 
+                          alt={b.title} 
+                          className="object-cover w-full h-full hover:scale-105 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-gray-400">
+                          <Image size={32} />
+                          <span className="text-xs mt-1 font-semibold">No Cover Photo</span>
                         </div>
-                        {b.custom ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            <Image size={11} /> Custom
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                            <FileText size={11} /> PDF
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm line-clamp-3">{b.description || 'No description provided.'}</p>
+                      )}
+                      <span className="absolute top-2 right-2 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+                        <Image size={11} /> Custom Catalog
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                      {b.custom ? (
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-gray-900 text-md truncate" title={b.title}>{b.title}</h3>
+                        <p className="text-gray-400 text-xs">Uploaded {new Date(b.createdAt).toLocaleDateString()}</p>
+                        
+                        {/* Target Specialty Tags */}
+                        {b.targetSpeciality && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {b.targetSpeciality.split(',').map((spec, i) => (
+                              <span key={i} className="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded border border-indigo-100/50">
+                                🎯 {spec.trim().replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <p className="text-gray-600 text-sm line-clamp-2 mt-2">{b.description || 'No description provided.'}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-auto">
                         <button
                           onClick={() => openBuilder(b)}
                           className="flex items-center gap-1 text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] bg-transparent border-none cursor-pointer"
                         >
                           <Image size={14} /> Edit Pages ({b.pages?.length || 0})
                         </button>
-                      ) : (
-                        <a
-                          href={getFullAssetUrl(b.pdfUrl)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 no-underline"
+                        <button
+                          onClick={() => { setDeleteConfirmId(b.id); setDeleteConfirmTitle(b.title); }}
+                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
+                          title="Delete brochure"
                         >
-                          <Eye size={14} /> View File
-                        </a>
-                      )}
-                      <button
-                        onClick={() => handleDeleteBrochure(b.id)}
-                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
-                        title="Delete brochure"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -447,6 +616,7 @@ export default function AdminVisualAidPage() {
                         <th className="p-4">Target (Doctor/Chemist)</th>
                         <th className="p-4">Brochure Catalog</th>
                         <th className="p-4">Presented Products</th>
+                        <th className="p-4">Images Shown</th>
                         <th className="p-4">Date & Time</th>
                       </tr>
                     </thead>
@@ -480,6 +650,29 @@ export default function AdminVisualAidPage() {
                               <span className="text-gray-400 italic">None logged</span>
                             )}
                           </td>
+                          <td className="p-4">
+                            {log.shownImages ? (
+                              <div className="flex gap-1.5 overflow-x-auto max-w-[155px] py-1">
+                                {log.shownImages.split(',').map((imgUrl, i) => (
+                                  <a 
+                                    key={i} 
+                                    href={getFullAssetUrl(imgUrl.trim())} 
+                                    target="_blank" 
+                                    rel="noreferrer" 
+                                    className="relative shrink-0 w-10 h-7 rounded border border-gray-200 overflow-hidden bg-white shadow-sm hover:scale-105 transition-transform"
+                                  >
+                                    <img 
+                                      src={getFullAssetUrl(imgUrl.trim())} 
+                                      alt="Slide" 
+                                      className="object-cover w-full h-full" 
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">—</span>
+                            )}
+                          </td>
                           <td className="p-4 text-gray-500 text-xs">
                             {new Date(log.presentedAt).toLocaleString()}
                           </td>
@@ -494,107 +687,37 @@ export default function AdminVisualAidPage() {
         </div>
       )}
 
-      {/* CREATE BROCHURE MODAL */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-[150] p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 shrink-0">
-              <h3 className="text-lg font-bold text-gray-900">Add Brochure Catalog</h3>
+
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-[160] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200 text-center space-y-4">
+            <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mx-auto text-rose-600">
+              <Trash2 size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-gray-900">Delete Brochure Catalog?</h3>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                Are you sure you want to delete <span className="font-semibold text-gray-800">"{deleteConfirmTitle}"</span>? This will permanently remove the catalog and all its pages.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
               <button
-                onClick={() => { setIsCreateModalOpen(false); resetCreateForm(); }}
-                className="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer"
+                onClick={() => { setDeleteConfirmId(null); setDeleteConfirmTitle(''); }}
+                className="flex-1 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 bg-white cursor-pointer"
               >
-                <X size={20} />
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteBrochure}
+                disabled={submitting}
+                className="flex-1 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer animate-pulse-once"
+              >
+                {submitting && <Loader2 className="animate-spin" size={12} />}
+                Yes, Delete
               </button>
             </div>
-
-            <form onSubmit={handleCreateBrochure} className="space-y-4 flex-1 overflow-y-auto pr-1">
-              {/* Type Switcher */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Brochure Type</label>
-                <div className="grid grid-cols-2 gap-3 bg-gray-50 p-1 rounded-xl border border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setCreateMode('pdf')}
-                    className={`py-2 text-sm font-bold rounded-lg transition-all border-none cursor-pointer ${createMode === 'pdf' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-800'}`}
-                  >
-                    Upload PDF Catalog
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCreateMode('custom')}
-                    className={`py-2 text-sm font-bold rounded-lg transition-all border-none cursor-pointer ${createMode === 'custom' ? 'bg-white text-emerald-600 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-800'}`}
-                  >
-                    Custom Page Builder
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Catalog Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Products Visual Aid v2"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#4F46E5]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  placeholder="Briefly describe what products this catalog covers."
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#4F46E5] resize-none"
-                />
-              </div>
-
-              {createMode === 'pdf' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Upload PDF File</label>
-                  <label className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#4F46E5] transition-colors cursor-pointer bg-gray-50/50">
-                    <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-                    <span className="text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA]">
-                      {selectedFile ? 'Change PDF file' : 'Upload a PDF file'}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">PDF up to 50MB</p>
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      className="hidden"
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <div className="mt-2 text-xs font-semibold text-[#4F46E5] bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex items-center gap-1.5">
-                      <FileText size={14} /> {selectedFile.name}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-gray-100 mt-4">
-                <button
-                  type="button"
-                  onClick={() => { setIsCreateModalOpen(false); resetCreateForm(); }}
-                  className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 bg-white cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338CA] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  {submitting && <Loader2 className="animate-spin" size={14} />}
-                  Create Catalog
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

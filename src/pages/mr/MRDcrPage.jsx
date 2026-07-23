@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { ClipboardList, Plus, Trash2, CheckCircle2, AlertCircle, Calendar, Clock, MapPin, Eye, Send, Loader2 } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, CheckCircle2, AlertCircle, Calendar, Clock, MapPin, Eye, Send, Loader2, BookOpen, FileText } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import {
   fetchMyDcrsAction,
@@ -14,6 +14,7 @@ import {
   clearDcrSuccessAction,
 } from '../../redux/actions/dcrActions';
 import Pagination from '../../components/common/Pagination';
+import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 
 // Searchable target selector component (Doctors and Chemists)
 const SearchableTargetDropdown = ({ value, onChange, options, placeholder }) => {
@@ -139,6 +140,7 @@ const MRDcrPage = () => {
 
   const [doctors, setDoctors] = useState([]);
   const [managers, setManagers] = useState([]);
+  const [brochures, setBrochures] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   
   // Local notification triggers routed to global useToast hook
@@ -163,7 +165,7 @@ const MRDcrPage = () => {
   // Form State for logging new DCR
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [visits, setVisits] = useState([
-    { doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
+    { doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '', jfwManagerIds: [], shownImages: '', lastVisitImages: [] }
   ]);
 
   // Synchronize Redux Success Notifications
@@ -193,9 +195,7 @@ const MRDcrPage = () => {
   // Fetch all MR's logged DCRs on mount
   useEffect(() => {
     dispatch(fetchMyDcrsAction());
-    
-    // Fetch onboarding approved doctors and chemists list
-    const fetchDoctors = async () => {
+        const fetchDoctors = async () => {
       try {
         const res = await axios.get(`${API_ROUTE}/doctor/unified-contacts`);
         if (res.data && (res.data.success || res.data.status === true) && res.data.data) {
@@ -236,8 +236,20 @@ const MRDcrPage = () => {
       }
     };
 
+    const fetchBrochures = async () => {
+      try {
+        const res = await axios.get(`${API_ROUTE}/visual-aids`);
+        if (res.data && res.data.data) {
+          setBrochures(res.data.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load visual aid brochures.');
+      }
+    };
+ 
     fetchDoctors();
     fetchManagers();
+    fetchBrochures();
   }, [dispatch]);
 
   // Set local timeout helper to clear notices (for local validation errors)
@@ -255,7 +267,7 @@ const MRDcrPage = () => {
   const addVisitField = () => {
     setVisits([
       ...visits,
-      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
+      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '', jfwManagerIds: [] }
     ]);
   };
 
@@ -269,9 +281,60 @@ const MRDcrPage = () => {
   };
 
   // Form: Field change handler
-  const handleVisitChange = (idx, field, value) => {
+  const handleVisitChange = async (idx, field, value) => {
     const updated = [...visits];
     updated[idx][field] = value;
+    
+    if (field === 'doctorId') {
+      updated[idx].shownImages = '';
+      updated[idx].lastVisitImages = [];
+      updated[idx].productsDiscussed = '';
+      
+      if (value) {
+        const [type, idStr] = value.split('_');
+        const id = parseInt(idStr);
+        if (type === 'DOCTOR') {
+          try {
+            const res = await axios.get(`${API_ROUTE}/dcr/doctor/${id}/last-visit`);
+            if (res.data && res.data.data) {
+              const lastVis = res.data.data;
+              if (lastVis.shownImages) {
+                updated[idx].lastVisitImages = lastVis.shownImages.split(',').map(s => s.trim()).filter(Boolean);
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to fetch last visit for doctor:', id);
+          }
+        }
+      }
+    }
+    
+    setVisits(updated);
+  };
+
+  const toggleSlideSelection = (idx, imageUrl, pageTitle) => {
+    const updated = [...visits];
+    
+    let currentImages = updated[idx].shownImages 
+      ? updated[idx].shownImages.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+      
+    let currentProducts = updated[idx].productsDiscussed
+      ? updated[idx].productsDiscussed.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    if (currentImages.includes(imageUrl)) {
+      currentImages = currentImages.filter(img => img !== imageUrl);
+      currentProducts = currentProducts.filter(p => p.toLowerCase() !== pageTitle.toLowerCase());
+    } else {
+      currentImages.push(imageUrl);
+      if (!currentProducts.some(p => p.toLowerCase() === pageTitle.toLowerCase())) {
+        currentProducts.push(pageTitle);
+      }
+    }
+
+    updated[idx].shownImages = currentImages.join(', ');
+    updated[idx].productsDiscussed = currentProducts.join(', ');
     setVisits(updated);
   };
 
@@ -314,7 +377,9 @@ const MRDcrPage = () => {
             samplesGiven: v.samplesGiven,
             feedback: v.feedback,
             isGpsVerified: v.isGpsVerified !== false,
-            jfwManagerId: v.jfwManagerId ? Number(v.jfwManagerId) : null
+            jfwManagerId: v.jfwManagerIds && v.jfwManagerIds.length > 0 ? Number(v.jfwManagerIds[0]) : (v.jfwManagerId ? Number(v.jfwManagerId) : null),
+            jfwManagerIds: v.jfwManagerIds ? v.jfwManagerIds.map(Number) : (v.jfwManagerId ? [Number(v.jfwManagerId)] : []),
+            shownImages: v.shownImages
           });
         }
       });
@@ -342,7 +407,7 @@ const MRDcrPage = () => {
 
         // Reset form
         setReportDate(new Date().toISOString().split('T')[0]);
-        setVisits([{ doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }]);
+        setVisits([{ doctorId: '', visitTime: '10:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '', jfwManagerIds: [], shownImages: '', lastVisitImages: [] }]);
         setActiveTab('list');
       }
     } catch (err) {
@@ -385,7 +450,8 @@ const MRDcrPage = () => {
       samplesGiven: v.samplesGiven || '',
       feedback: v.feedback || '',
       isGpsVerified: v.isGpsVerified !== false,
-      jfwManagerId: v.jfwManagerId || ''
+      jfwManagerId: v.jfwManagerId || '',
+      jfwManagerIds: v.jfwManagers ? v.jfwManagers.map(m => m.id) : (v.jfwManagerId ? [v.jfwManagerId] : [])
     }));
 
     const mappedChemistVisits = (currentDcr.chemistVisits || []).map(v => ({
@@ -396,7 +462,8 @@ const MRDcrPage = () => {
       samplesGiven: '',
       feedback: v.feedback || '',
       isGpsVerified: v.isGpsVerified !== false,
-      jfwManagerId: ''
+      jfwManagerId: '',
+      jfwManagerIds: []
     }));
 
     setModalVisits([...mappedDocVisits, ...mappedChemistVisits]);
@@ -412,7 +479,7 @@ const MRDcrPage = () => {
   const addModalVisitField = () => {
     setModalVisits([
       ...modalVisits,
-      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '' }
+      { doctorId: '', visitTime: '12:00', productsDiscussed: '', samplesGiven: '', feedback: '', isGpsVerified: true, jfwManagerId: '', jfwManagerIds: [] }
     ]);
   };
 
@@ -461,7 +528,8 @@ const MRDcrPage = () => {
             samplesGiven: v.samplesGiven,
             feedback: v.feedback,
             isGpsVerified: v.isGpsVerified !== false,
-            jfwManagerId: v.jfwManagerId ? Number(v.jfwManagerId) : null
+            jfwManagerId: v.jfwManagerIds && v.jfwManagerIds.length > 0 ? Number(v.jfwManagerIds[0]) : (v.jfwManagerId ? Number(v.jfwManagerId) : null),
+            jfwManagerIds: v.jfwManagerIds ? v.jfwManagerIds.map(Number) : (v.jfwManagerId ? [Number(v.jfwManagerId)] : [])
           });
         }
       });
@@ -737,19 +805,149 @@ const MRDcrPage = () => {
                     )}
                   </div>
 
+                  {/* Visual Aid Slide Selector & Detailing History */}
+                  {visit.doctorId && (
+                    <div className="col-span-2 border-t border-gray-200 pt-4 mt-2 mb-4 space-y-4">
+                      <label className="block text-[12.5px] font-bold text-[#374151] flex items-center gap-1.5">
+                        <BookOpen size={15} className="text-[#4F46E5]" /> 
+                        Select Visual Aid Slides Promoted (Click to Toggle)
+                      </label>
+                      
+                      {/* Render Detailing History (Shown Last Visit) if any */}
+                      {visit.lastVisitImages && visit.lastVisitImages.length > 0 && (
+                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3.5 space-y-2">
+                          <h5 className="text-[11px] font-extrabold text-indigo-800 tracking-wider uppercase flex items-center gap-1">
+                            ⭐ Shown Last Visit
+                          </h5>
+                          <div className="flex gap-3 overflow-x-auto py-1">
+                            {visit.lastVisitImages.map((imgUrl, i) => (
+                              <a 
+                                key={i} 
+                                href={getFullAssetUrl(imgUrl)} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="relative shrink-0 w-24 aspect-[4/3] rounded-lg border border-indigo-200 overflow-hidden bg-white group shadow-sm cursor-pointer"
+                              >
+                                <img 
+                                  src={getFullAssetUrl(imgUrl)} 
+                                  alt={`Last Visit Slide ${i + 1}`} 
+                                  className="object-cover w-full h-full" 
+                                />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <span className="text-[10px] text-white font-bold">Zoom</span>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Render Specialty Matched Slides Checklist */}
+                      {(() => {
+                        const [type, idStr] = visit.doctorId.split('_');
+                        const target = doctors.find(d => `${d.type}_${d.id}` === visit.doctorId);
+                        const speciality = target?.speciality || '';
+                        
+                        // Filter brochures
+                        const matchedBrochures = brochures.filter(b => {
+                          if (type === 'CHEMIST') return true; // Show all to chemist
+                          if (!b.targetSpeciality) return false;
+                          return b.targetSpeciality.toUpperCase().includes(speciality.toUpperCase());
+                        });
+
+                        if (matchedBrochures.length === 0) {
+                          return (
+                            <div className="text-xs text-gray-500 bg-gray-50 rounded-xl p-3 text-center border border-dashed border-gray-200">
+                              No brochure catalogs targeting this specialty ({speciality || 'General'}) are available. 
+                              You can manually type products in the field above.
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-4">
+                            {matchedBrochures.map(b => (
+                              <div key={b.id} className="border border-gray-200 rounded-xl p-3 bg-white space-y-2.5 shadow-sm">
+                                <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                                  <h5 className="text-[12px] font-bold text-gray-800">{b.title}</h5>
+                                  <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                    {b.pages?.length || 0} pages
+                                  </span>
+                                </div>
+                                
+                                {b.pages && b.pages.length > 0 ? (
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {b.pages.map(page => {
+                                      const isChecked = (visit.shownImages || '').split(',').map(s => s.trim()).includes(page.imageUrl);
+                                      return (
+                                        <div 
+                                          key={page.id} 
+                                          onClick={() => toggleSlideSelection(idx, page.imageUrl, page.title)}
+                                          className={`border rounded-xl p-2 flex flex-col gap-1.5 cursor-pointer transition-all select-none hover:border-[#4F46E5] ${
+                                            isChecked 
+                                              ? 'bg-indigo-50/30 border-[#4F46E5] shadow-sm font-semibold' 
+                                              : 'bg-white border-gray-200'
+                                          }`}
+                                        >
+                                          <div className="aspect-[4/3] w-full bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
+                                            <img 
+                                              src={getFullAssetUrl(page.imageUrl)} 
+                                              alt={page.title} 
+                                              className="object-cover w-full h-full" 
+                                            />
+                                            <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full border flex items-center justify-center bg-white border-gray-300">
+                                              {isChecked && <div className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]" />}
+                                            </div>
+                                          </div>
+                                          <span className="text-[10px] font-bold text-gray-700 truncate" title={page.title}>
+                                            {page.title}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] text-gray-400">No pages added to this catalog yet.</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
                   {!String(visit.doctorId || '').startsWith('CHEMIST_') && visit.doctorId && (
                     <div className="mb-4">
-                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Joint Field Work (JFW Accompanying Manager)</label>
-                      <select
-                        value={visit.jfwManagerId || ''}
-                        onChange={(e) => handleVisitChange(idx, 'jfwManagerId', e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-[13.5px] outline-none font-sans"
-                      >
-                        <option value="">No manager accompanied (Independent Visit)</option>
-                        {managers.map(m => (
-                          <option key={m.id} value={m.id}>{m.fullName} ({m.role})</option>
-                        ))}
-                      </select>
+                      <label className="block text-[12px] font-bold text-[#374151] mb-1.5 font-sans">
+                        Joint Field Work (JFW Accompanying Managers)
+                      </label>
+                      <div className="border border-gray-200 rounded-xl p-3.5 max-h-[150px] overflow-y-auto bg-white space-y-2 box-border">
+                        {managers.length === 0 ? (
+                          <p className="text-[12px] text-gray-400">No managers available</p>
+                        ) : (
+                          managers.map(m => {
+                            const isChecked = (visit.jfwManagerIds || []).includes(m.id);
+                            return (
+                              <label key={m.id} className="flex items-center gap-2.5 text-[13px] font-sans text-gray-800 cursor-pointer hover:bg-gray-50 p-1 rounded select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    const currentIds = visit.jfwManagerIds || [];
+                                    const newIds = isChecked
+                                      ? currentIds.filter(id => id !== m.id)
+                                      : [...currentIds, m.id];
+                                    handleVisitChange(idx, 'jfwManagerIds', newIds);
+                                  }}
+                                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                                />
+                                <span>👤 {m.fullName} ({m.role})</span>
+                              </label>
+                            );
+                          })
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -904,17 +1102,35 @@ const MRDcrPage = () => {
                       </div>
                       {!String(visit.doctorId || '').startsWith('CHEMIST_') && visit.doctorId && (
                         <div className="mb-1">
-                          <label className="block text-[11px] font-bold text-[#374151] mb-1">Joint Field Work (JFW Manager)</label>
-                          <select
-                            value={visit.jfwManagerId || ''}
-                            onChange={(e) => handleModalVisitChange(idx, 'jfwManagerId', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-gray-200 bg-white text-[12.5px] outline-none font-sans"
-                          >
-                            <option value="">No manager accompanied</option>
-                            {managers.map(m => (
-                              <option key={m.id} value={m.id}>{m.fullName} ({m.role})</option>
-                            ))}
-                          </select>
+                          <label className="block text-[11px] font-bold text-[#374151] mb-1 font-sans">
+                            Joint Field Work (JFW Managers)
+                          </label>
+                          <div className="border border-gray-200 rounded-lg p-2 max-h-[100px] overflow-y-auto bg-white space-y-1">
+                            {managers.length === 0 ? (
+                              <p className="text-[11px] text-gray-400">No managers available</p>
+                            ) : (
+                              managers.map(m => {
+                                const isChecked = (visit.jfwManagerIds || []).includes(m.id);
+                                return (
+                                  <label key={m.id} className="flex items-center gap-1.5 text-[11.5px] font-sans text-gray-800 cursor-pointer hover:bg-gray-50 p-0.5 rounded select-none">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        const currentIds = visit.jfwManagerIds || [];
+                                        const newIds = isChecked
+                                          ? currentIds.filter(id => id !== m.id)
+                                          : [...currentIds, m.id];
+                                        handleModalVisitChange(idx, 'jfwManagerIds', newIds);
+                                      }}
+                                      className="rounded text-blue-600 focus:ring-blue-500 w-3 h-3 cursor-pointer"
+                                    />
+                                    <span>👤 {m.fullName} ({m.role})</span>
+                                  </label>
+                                );
+                              })
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -966,10 +1182,16 @@ const MRDcrPage = () => {
                                 <MapPin size={10} /> GPS COORDINATES RECORDED
                               </div>
                             )}
-                            {visit.jfwManagerName && (
+                            {visit.jfwManagers && visit.jfwManagers.length > 0 ? (
                               <div className="inline-flex items-center gap-1 bg-[#EFF6FF] text-[#1E40AF] px-2 py-1 rounded text-[10.5px] font-extrabold">
-                                JFW ACCOMPANIED BY: {visit.jfwManagerName.toUpperCase()}
+                                JFW ACCOMPANIED BY: {visit.jfwManagers.map(m => m.fullName.toUpperCase()).join(', ')}
                               </div>
+                            ) : (
+                              visit.jfwManagerName && (
+                                <div className="inline-flex items-center gap-1 bg-[#EFF6FF] text-[#1E40AF] px-2 py-1 rounded text-[10.5px] font-extrabold">
+                                  JFW ACCOMPANIED BY: {visit.jfwManagerName.toUpperCase()}
+                                </div>
+                              )
                             )}
                            </div>
                         </div>

@@ -382,12 +382,29 @@ export default function DvaFlipbookModal({ brochure, target, onClose }) {
     showToast('Submitting presentation report...', 'loading');
 
     try {
+      const isFiltered = searchQuery.trim() !== '';
+      const presentedPages = isFiltered ? visiblePages : allPages;
+
+      let pageImages = '';
+      let pageProducts = '';
+
+      if (brochure.custom || brochure.isCustom) {
+        pageImages = presentedPages.map(p => p.imgUrl).filter(Boolean).join(', ');
+        pageProducts = presentedPages.map(p => p.title).filter(Boolean).join(', ');
+      } else {
+        pageImages = brochure.pdfUrl || '';
+        pageProducts = presentedPages.map(p => p.title).filter(Boolean).join(', ');
+      }
+
+      const finalProducts = productsShown.trim() ? productsShown.trim() : (pageProducts || brochure.title);
+
       await axios.post(`${API_ROUTE}/visual-aids/presentations`, {
         visualAidId: brochure.id,
         clientType: target.type, // 'DOCTOR' or 'CHEMIST'
         clientId: target.id,
         clientName: target.fullName,
-        presentedProducts: productsShown || brochure.title
+        presentedProducts: finalProducts,
+        shownImages: pageImages
       });
 
       showToast('Presentation successfully logged for your manager!', 'success');
