@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { getMyTeam } from '../../redux/actions/teamActions';
+import { getMyTeam, deleteMemberAction } from '../../redux/actions/teamActions';
 import {
   Plus,
   Search,
@@ -14,7 +14,8 @@ import {
   Trash2,
   CheckCircle2,
   Building,
-  UserCheck
+  UserCheck,
+  AlertCircle
 } from 'lucide-react';
 import EditEmployeeModal from './EditEmployeeModal';
 import Pagination from '../../components/common/Pagination';
@@ -63,6 +64,7 @@ const TeamManagement = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleEditClick = (employeeId) => {
     setSelectedEmployeeId(employeeId);
@@ -74,13 +76,30 @@ const TeamManagement = () => {
     setDeleteConfirmName(name);
   };
 
-  const confirmDelete = () => {
-    setSuccessMessage(`Employee ${deleteConfirmName} (${deleteConfirmId}) delete confirmed (API pending)`);
+  const confirmDelete = async () => {
+    const targetId = deleteConfirmId;
+    const targetName = deleteConfirmName;
     setDeleteConfirmId(null);
     setDeleteConfirmName(null);
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 4000);
+    try {
+      const res = await dispatch(deleteMemberAction(targetId));
+      if (res && res.status === 'SUCCESS') {
+        setSuccessMessage(`Employee ${targetName} was successfully deleted.`);
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 4000);
+      } else {
+        setErrorMessage(res?.message || 'Failed to delete employee.');
+        setTimeout(() => {
+          setErrorMessage('');
+        }, 4000);
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'An error occurred during deletion.');
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 4000);
+    }
   };
 
   useEffect(() => {
@@ -333,6 +352,14 @@ const TeamManagement = () => {
         <div className="fixed bottom-6 right-6 bg-emerald-50 border border-emerald-200 px-5 py-4 rounded-xl flex items-center gap-2.5 text-emerald-700 text-[13px] font-bold shadow-lg z-[1200] animate-in slide-in-from-bottom duration-300">
           <CheckCircle2 size={18} />
           {successMessage}
+        </div>
+      )}
+
+      {/* Error Notification */}
+      {errorMessage && (
+        <div className="fixed bottom-6 right-6 bg-rose-50 border border-rose-200 px-5 py-4 rounded-xl flex items-center gap-2.5 text-rose-700 text-[13px] font-bold shadow-lg z-[1200] animate-in slide-in-from-bottom duration-300">
+          <AlertCircle size={18} />
+          {errorMessage}
         </div>
       )}
     </div>
