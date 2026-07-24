@@ -395,3 +395,27 @@ export const fetchDepartments = () => async (dispatch) => {
     dispatch({ type: LOADING_END });
   }
 };
+
+/* =======================
+   DELETE TEAM MEMBER (Soft Delete)
+   DELETE /api/v1/admin/employee/{employeeId}
+   ======================= */
+export const deleteMemberAction = (employeeId) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.delete(`${API_ROUTE}/admin/employee/${employeeId}`);
+    const { status, message } = response.data ?? {};
+
+    if (isSuccess(status) || response.status === 200) {
+      // Refresh the team list after deletion
+      dispatch(getMyTeam());
+      return { status: 'SUCCESS', message: message || "Employee deleted successfully." };
+    }
+    return { status: 'FAILURE', message: message || commonError };
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || commonError;
+    return { status: 'FAILURE', message };
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
