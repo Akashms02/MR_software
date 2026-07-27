@@ -41,6 +41,16 @@ const TeamManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { team, loading } = useSelector((state) => state.team);
+  const { user } = useSelector((state) => state.auth || {});
+
+  // Only Admin and ZBM are allowed to view or edit Employee Profile Cards
+  const canManageEmployeeProfile = React.useMemo(() => {
+    if (!user || !user.role) return false;
+    const norm = (user.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+    const isSuperAdminOrAdmin = norm.includes('ADMIN');
+    const isZBM = norm === 'ZBM' || norm.includes('ZONE') || norm.includes('ZONAL');
+    return isSuperAdminOrAdmin || isZBM;
+  }, [user]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [resumeId, setResumeId] = useState('');
@@ -264,20 +274,24 @@ const TeamManagement = () => {
                           <span className="font-bold text-emerald-600">Active</span>
                         </div>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditClick(member.id)}
-                            title="View Employee Profile"
-                            className="w-8 h-8 rounded-lg bg-teal-50 text-[#0F766E] border-none cursor-pointer flex items-center justify-center hover:bg-[#0F766E] hover:text-white transition-all duration-200"
-                          >
-                            <Eye size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(member.id, member.fullName)}
-                            title="Remove Team Member"
-                            className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border-none cursor-pointer flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all duration-200"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {canManageEmployeeProfile && (
+                            <>
+                              <button
+                                onClick={() => handleEditClick(member.id)}
+                                title="View & Edit Employee Profile"
+                                className="w-8 h-8 rounded-lg bg-teal-50 text-[#0F766E] border-none cursor-pointer flex items-center justify-center hover:bg-[#0F766E] hover:text-white transition-all duration-200"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(member.id, member.fullName)}
+                                title="Remove Team Member"
+                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border-none cursor-pointer flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all duration-200"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
