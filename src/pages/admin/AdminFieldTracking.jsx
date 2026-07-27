@@ -212,7 +212,7 @@ export default function AdminFieldTracking() {
   const routeLineRef = useRef(null);
   const markersRef = useRef([]);
 
-  // Extract trackable employees list from team list (MRs, MEs, MSEs)
+  // Extract trackable employees list from team list (MRs, MEs, MSEs, ZBM, RBM, ABM)
   const mrList = useMemo(() => {
     return (team || []).filter((member) => {
       const role = (member.role || '').toUpperCase().trim();
@@ -223,7 +223,16 @@ export default function AdminFieldTracking() {
                           role === 'ME' || 
                           role === 'MEDICAL_EXECUTIVE' || 
                           role === 'MSE' || 
-                          role === 'MEDICAL_SALES_EXECUTIVE';
+                          role === 'MEDICAL_SALES_EXECUTIVE' ||
+                          role === 'ABM' ||
+                          role === 'AREA_MANAGER' ||
+                          role === 'AREA_SALES_MANAGER' ||
+                          role === 'RBM' ||
+                          role === 'REGIONAL_MANAGER' ||
+                          role === 'REGIONAL_SALES_MANAGER' ||
+                          role === 'ZBM' ||
+                          role === 'ZONE_MANAGER' ||
+                          role === 'ZONAL_BUSINESS_MANAGER';
       return isTrackable && !isSuperAdmin;
     });
   }, [team]);

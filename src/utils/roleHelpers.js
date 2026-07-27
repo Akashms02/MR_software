@@ -97,3 +97,29 @@ export const getDisplayRole = (role) => {
     .toLowerCase()
     .replace(/\b\w/g, char => char.toUpperCase());
 };
+
+/**
+ * Broad "Field Representative" check — includes MRs, MEs, MSEs AND managers (ZBM, RBM, ABM).
+ * Use this for dropdowns/filters labeled "Field Representative" that should show all staff
+ * (MR level up through ZBM) excluding pure admin/HR/Super Admin roles.
+ */
+export const isFieldRepresentative = (role) => {
+  if (!role) return false;
+  const normalized = role.toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').trim();
+
+  // Exclude only super-admin, admin, HR, external roles
+  const excludedRoles = ['SUPER ADMIN', 'SUPERADMIN', 'ADMIN', 'HR', 'DOCTOR', 'PHARMACIST', 'DISTRIBUTOR', 'PATIENT'];
+  if (excludedRoles.includes(normalized)) return false;
+
+  // All field staff including managers
+  const fieldRoles = [
+    'MR', 'MEDICAL REPRESENTATIVE',
+    'ME', 'MEDICAL EXECUTIVE',
+    'MSE', 'MEDICAL SALES EXECUTIVE',
+    'ABM', 'AREA MANAGER', 'AREA SALES MANAGER', 'AREA BUSINESS MANAGER',
+    'RBM', 'REGIONAL MANAGER', 'REGIONAL SALES MANAGER', 'REGIONAL BUSINESS MANAGER',
+    'ZBM', 'ZONE MANAGER', 'ZONAL MANAGER', 'ZONAL BUSINESS MANAGER', 'ZONAL SALES MANAGER',
+    'ASM', 'RSM', 'ZSM',
+  ];
+  return fieldRoles.includes(normalized);
+};

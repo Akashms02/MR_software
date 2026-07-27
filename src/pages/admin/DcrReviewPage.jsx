@@ -362,7 +362,14 @@ const DcrReviewPage = () => {
                             <span className="text-[11px] font-semibold text-gray-400 block">{vis.speciality}</span>
                           </div>
                           <div className="text-right">
-                            <span className="text-[11px] font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{vis.visitTime || 'N/A'}</span>
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-emerald-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
                             {vis.isGpsVerified ? (
                               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded block mt-1">✓ GPS Verified</span>
                             ) : (
@@ -429,7 +436,14 @@ const DcrReviewPage = () => {
                             <span className="text-[11px] font-semibold text-gray-400 block">{vis.address}</span>
                           </div>
                           <div className="text-right">
-                            <span className="text-[11px] font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{vis.visitTime || 'N/A'}</span>
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-blue-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
                             {vis.isGpsVerified ? (
                               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded block mt-1">✓ GPS Verified</span>
                             ) : (

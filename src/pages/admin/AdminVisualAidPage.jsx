@@ -35,6 +35,16 @@ export default function AdminVisualAidPage() {
   const { user } = useSelector(state => state.auth);
   const { showToast } = useToast();
 
+  // Only Admin and ZBM are allowed to create/edit/delete brochure catalogs and pages.
+  // ABM, RBM, MR, etc. have View-Only access.
+  const canManageVisualAids = React.useMemo(() => {
+    if (!user || !user.role) return false;
+    const norm = (user.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+    const isSuperAdminOrAdmin = norm.includes('ADMIN');
+    const isZBM = norm === 'ZBM' || norm.includes('ZONE') || norm.includes('ZONAL');
+    return isSuperAdminOrAdmin || isZBM;
+  }, [user]);
+
   const [activeTab, setActiveTab] = useState('catalogs'); // 'catalogs' | 'logs'
   const [brochures, setBrochures] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -268,7 +278,7 @@ export default function AdminVisualAidPage() {
           <h1 className="text-2xl font-bold text-gray-900">Product Visual Aids Manager</h1>
           <p className="text-gray-500 text-sm">Upload and manage visual aid brochures presented by representatives to doctors and chemists.</p>
         </div>
-        {!builderBrochure && !showCreateForm && (
+        {!builderBrochure && !showCreateForm && canManageVisualAids && (
           <button
             onClick={() => setShowCreateForm(true)}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4F46E5] text-white rounded-xl hover:bg-[#4338CA] transition-colors font-semibold shadow-sm"
@@ -291,22 +301,24 @@ export default function AdminVisualAidPage() {
               <ChevronLeft size={20} />
               Back to Catalog list
             </button>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsAddPageOpen(true)}
-                className="flex items-center gap-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-colors shadow-sm"
-              >
-                <Plus size={16} />
-                Add Page Image
-              </button>
-              <button
-                onClick={() => { setDeleteConfirmId(builderBrochure.id); setDeleteConfirmTitle(builderBrochure.title); }}
-                className="flex items-center justify-center p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
-                title="Delete Brochure"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
+            {canManageVisualAids && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsAddPageOpen(true)}
+                  className="flex items-center gap-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-colors shadow-sm"
+                >
+                  <Plus size={16} />
+                  Add Page Image
+                </button>
+                <button
+                  onClick={() => { setDeleteConfirmId(builderBrochure.id); setDeleteConfirmTitle(builderBrochure.title); }}
+                  className="flex items-center justify-center p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
+                  title="Delete Brochure"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -325,12 +337,14 @@ export default function AdminVisualAidPage() {
               <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
                 <Image className="text-gray-300 mb-3" size={40} />
                 <p className="text-gray-500 font-medium text-sm">No page slides added yet.</p>
-                <button
-                  onClick={() => setIsAddPageOpen(true)}
-                  className="mt-3 text-sm text-[#4F46E5] font-semibold hover:underline bg-transparent border-none cursor-pointer"
-                >
-                  Click here to upload your first page image
-                </button>
+                {canManageVisualAids && (
+                  <button
+                    onClick={() => setIsAddPageOpen(true)}
+                    className="mt-3 text-sm text-[#4F46E5] font-semibold hover:underline bg-transparent border-none cursor-pointer"
+                  >
+                    Click here to upload your first page image
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -508,13 +522,19 @@ export default function AdminVisualAidPage() {
               <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <FileText className="text-gray-300 mb-4" size={48} />
                 <h3 className="text-lg font-bold text-gray-800">No Brochures Available</h3>
-                <p className="text-gray-500 text-sm mt-1 max-w-sm text-center">Add product brochures for medical representatives to detail during field visits.</p>
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="mt-4 px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338CA] transition-colors"
-                >
-                  Upload Your First Catalog
-                </button>
+                <p className="text-gray-500 text-sm mt-1 max-w-sm text-center">
+                  {canManageVisualAids 
+                    ? 'Add product brochures for medical representatives to detail during field visits.' 
+                    : 'Product brochures will appear here once uploaded by Admin or ZBM.'}
+                </p>
+                {canManageVisualAids && (
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="mt-4 px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338CA] transition-colors"
+                  >
+                    Upload Your First Catalog
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -563,15 +583,25 @@ export default function AdminVisualAidPage() {
                           onClick={() => openBuilder(b)}
                           className="flex items-center gap-1 text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] bg-transparent border-none cursor-pointer"
                         >
-                          <Image size={14} /> Edit Pages ({b.pages?.length || 0})
+                          {canManageVisualAids ? (
+                            <>
+                              <Image size={14} /> Edit Pages ({b.pages?.length || 0})
+                            </>
+                          ) : (
+                            <>
+                              <Eye size={14} /> View Pages ({b.pages?.length || 0})
+                            </>
+                          )}
                         </button>
-                        <button
-                          onClick={() => { setDeleteConfirmId(b.id); setDeleteConfirmTitle(b.title); }}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
-                          title="Delete brochure"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {canManageVisualAids && (
+                          <button
+                            onClick={() => { setDeleteConfirmId(b.id); setDeleteConfirmTitle(b.title); }}
+                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors border-none bg-transparent cursor-pointer"
+                            title="Delete brochure"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

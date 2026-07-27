@@ -32,7 +32,8 @@ const STEP_LABELS = [
   'Experience',
   'Bank Details',
   'Statutory',
-  'Verification',
+  'Emergency Contact',
+  'Documents',
 ];
 
 // Sub-component for input fields to keep JSX dry and use premium Tailwind classes
@@ -524,7 +525,7 @@ const OnboardingWizard = () => {
 
     // ── Skip API for steps already completed on the backend ──────────
     if (isStepAlreadyDone(activeStep)) {
-      if (activeStep < 7) {
+      if (activeStep < 8) {
         setActiveStep((prev) => prev + 1);
       } else {
         navigate('/admin/myteam');
@@ -634,6 +635,11 @@ const OnboardingWizard = () => {
       if (formData.alternateContactNumber && !/^[6-9]\d{9}$/.test(formData.alternateContactNumber.trim())) {
         return setFormError("Alternate contact number must start with 6, 7, 8, or 9 and be exactly 10 digits.");
       }
+    } else if (activeStep === 8) {
+      if (!profilePhoto) return setFormError("Profile Photo is required to complete onboarding.");
+      if (!aadharDoc) return setFormError("Aadhaar Card document is required.");
+      if (!panDoc) return setFormError("PAN Card document is required.");
+      if (!resumeDoc) return setFormError("Resume / CV is required.");
     }
 
     try {
@@ -705,18 +711,24 @@ const OnboardingWizard = () => {
           esiNumber: formData.esiNumber,
         };
       } else if (activeStep === 7) {
+        // Step 7: Emergency Contact — save in local state, advance without API call
+        // The data will be submitted together with documents in step 8 to backend step7
+        setFormSuccess(`Step 7 saved!`);
+        setIsResumed(true);
+        setResumedFromStep((prev) => Math.max(prev, 8));
+        setTimeout(() => {
+          setFormSuccess(null);
+          setActiveStep(8);
+        }, 600);
+        return; // Skip the API dispatch below
+      } else if (activeStep === 8) {
+        // Step 8: sends all emergency contact + documents to backend /step7 (multipart)
         isMultipart = true;
         const form = new FormData();
         form.append('emergencyContactName', formData.emergencyContactName || '');
         form.append('relationship', formData.relationship || '');
-        form.append(
-          'emergencyContactNumber',
-          formData.emergencyContactNumber || ''
-        );
-        form.append(
-          'alternateContactNumber',
-          formData.alternateContactNumber || ''
-        );
+        form.append('emergencyContactNumber', formData.emergencyContactNumber || '');
+        form.append('alternateContactNumber', formData.alternateContactNumber || '');
         if (profilePhoto) form.append('profilePhoto', profilePhoto);
         if (aadharDoc) form.append('aadharDoc', aadharDoc);
         if (panDoc) form.append('panDoc', panDoc);
@@ -724,15 +736,17 @@ const OnboardingWizard = () => {
         payload = form;
       }
 
+      // For step 8 (frontend), call backend step7 endpoint
+      const backendStep = activeStep === 8 ? 7 : activeStep;
       const response = await dispatch(
-        saveOnboardingStep(activeStep, employeeId, payload, isMultipart)
+        saveOnboardingStep(backendStep, employeeId, payload, isMultipart)
       );
 
       if (activeStep === 1 && response?.data?.employeeId) {
         setEmployeeId(response.data.employeeId);
       }
 
-      if (activeStep < 7) {
+      if (activeStep < 8) {
         setFormSuccess(`Step ${activeStep} saved!`);
         setIsResumed(true);
         setResumedFromStep((prev) => Math.max(prev, activeStep + 1));
@@ -768,7 +782,7 @@ const OnboardingWizard = () => {
             Employee Onboarding
           </h2>
           <p className="text-[13px] text-gray-500 mt-0.5 mb-0 mx-0">
-            Follow the 7-step wizard to complete employee registration.
+            Follow the 8-step wizard to complete employee registration.
           </p>
         </div>
         {employeeId && (
@@ -779,18 +793,17 @@ const OnboardingWizard = () => {
       </div>
 
       {/* ── Step Progress Bar ─────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl px-6 py-4.5 mb-5 shadow-sm flex items-center gap-1.5 overflow-x-auto">
+      <div className="bg-white rounded-2xl px-5 py-3.5 mb-5 shadow-sm flex items-center flex-nowrap gap-1 overflow-hidden w-full">
         {STEP_LABELS.map((name, i) => {
           const n = i + 1;
           const done = n < activeStep;
           const active = n === activeStep;
-          // Steps below resumedFromStep were completed on the backend before this session
           const preCompleted = n < resumedFromStep;
           return (
             <React.Fragment key={n}>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] transition-all duration-300 ${done
+                  className={`w-6 h-6 rounded-full flex items-center justify-center font-extrabold text-[11px] shrink-0 transition-all duration-300 ${done
                       ? preCompleted
                         ? 'bg-indigo-500 text-white'
                         : 'bg-emerald-500 text-white'
@@ -803,7 +816,7 @@ const OnboardingWizard = () => {
                   {done ? '✓' : n}
                 </div>
                 <span
-                  className={`text-xs white-space-nowrap ${active
+                  className={`text-[10px] whitespace-nowrap ${active
                       ? 'font-extrabold text-gray-900'
                       : done
                         ? preCompleted
@@ -814,16 +827,16 @@ const OnboardingWizard = () => {
                 >
                   {name}
                   {preCompleted && done && (
-                    <span className="text-[10px] ml-1 opacity-70">✦</span>
+                    <span className="text-[9px] ml-0.5 opacity-70">✦</span>
                   )}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div
-                  className={`flex-1 h-[2px] min-w-4 transition-colors duration-300 ${done
+                  className={`flex-1 h-[2px] min-w-[8px] transition-colors duration-300 ${done
                       ? preCompleted
-                        ? 'bg-indigo-500'
-                        : 'bg-emerald-500'
+                        ? 'bg-indigo-400'
+                        : 'bg-emerald-400'
                       : 'bg-gray-100'
                     }`}
                 />
@@ -1339,10 +1352,10 @@ const OnboardingWizard = () => {
             </div>
           )}
 
-          {/* ═══ STEP 7: Verification & Emergency ══════════════════ */}
+          {/* ═══ STEP 7: Emergency Contact ══════════════════════════ */}
           {activeStep === 7 && (
             <div className="flex flex-col gap-6">
-              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 7: Verification Documents & Emergency Contact</h4>
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 7: Emergency Contact</h4>
               <div className="grid grid-cols-2 gap-5">
                 <FormField
                   label="Emergency Contact Name"
@@ -1378,13 +1391,21 @@ const OnboardingWizard = () => {
                   placeholder="Secondary Phone"
                 />
               </div>
+            </div>
+          )}
+
+          {/* ═══ STEP 8: Verification Documents ════════════════════ */}
+          {activeStep === 8 && (
+            <div className="flex flex-col gap-6">
+              <h4 className="text-lg font-extrabold text-gray-900 mt-0 mb-1 mx-0">Step 8: Verification Documents</h4>
+              <p className="text-[13px] text-gray-500 mt-0 mb-1">Upload the employee's identity and professional documents. Profile Photo, Aadhaar, PAN and Resume are mandatory.</p>
               <div className="grid grid-cols-2 gap-5">
                 <FileDropzone label="Profile Photo (Passport size)" file={profilePhoto} onChange={setProfilePhoto} required />
-                <FileDropzone label="Aadhaar Card Document" file={aadharDoc} onChange={setAadharDoc} />
+                <FileDropzone label="Aadhaar Card Document" file={aadharDoc} onChange={setAadharDoc} required />
               </div>
               <div className="grid grid-cols-2 gap-5">
-                <FileDropzone label="PAN Card Document" file={panDoc} onChange={setPanDoc} />
-                <FileDropzone label="Resume / CV" file={resumeDoc} onChange={setResumeDoc} />
+                <FileDropzone label="PAN Card Document" file={panDoc} onChange={setPanDoc} required />
+                <FileDropzone label="Resume / CV" file={resumeDoc} onChange={setResumeDoc} required />
               </div>
             </div>
           )}
@@ -1416,12 +1437,12 @@ const OnboardingWizard = () => {
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : null}
-              {activeStep === 7
+              {activeStep === 8
                 ? 'Complete Onboarding'
                 : isStepAlreadyDone(activeStep)
                   ? 'Next'
                   : 'Save & Continue'}
-              {!loading && activeStep < 7 && <ArrowRight size={16} />}
+              {!loading && activeStep < 8 && <ArrowRight size={16} />}
             </button>
           </div>
         </form>

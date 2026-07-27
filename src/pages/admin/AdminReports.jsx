@@ -16,7 +16,7 @@ import { Card, TableWrap, Th, Td } from '../../components/ui';
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl';
 import { 
   Calendar, MapPin, Award, CheckCircle2, AlertCircle, ChevronRight, BarChart3, 
-  RefreshCw, ShieldAlert
+  RefreshCw, ShieldAlert, X
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -108,7 +108,7 @@ export default function AdminReports() {
   // Team state from Redux
   const { team = [], loading: teamLoading } = useSelector(state => state.team || {});
 
-  // Derived MR List from team list (MR, ME, MSE, etc.)
+  // Derived MR List from team list (MR, ME, MSE, etc.) including ZBM, RBM, ABM managers
   const mrList = (team || []).filter((member) => {
     const role = (member.role || '').toUpperCase().trim();
     return role === 'MR' ||
@@ -116,12 +116,22 @@ export default function AdminReports() {
            role === 'ME' ||
            role === 'MEDICAL_EXECUTIVE' ||
            role === 'MSE' ||
-           role === 'MEDICAL_SALES_EXECUTIVE';
+           role === 'MEDICAL_SALES_EXECUTIVE' ||
+           role === 'ABM' ||
+           role === 'AREA_MANAGER' ||
+           role === 'AREA_SALES_MANAGER' ||
+           role === 'RBM' ||
+           role === 'REGIONAL_MANAGER' ||
+           role === 'REGIONAL_SALES_MANAGER' ||
+           role === 'ZBM' ||
+           role === 'ZONE_MANAGER' ||
+           role === 'ZONAL_BUSINESS_MANAGER';
   });
   const mrLoading = teamLoading;
 
   const [selectedMrId, setSelectedMrId] = useState('');
   const [activeReport, setActiveReport] = useState('visit-summary');
+  const [selectedDcrForModal, setSelectedDcrForModal] = useState(null);
 
   // Local state for JFW Report
   const [jfwData, setJfwData] = useState([]);
@@ -155,9 +165,13 @@ export default function AdminReports() {
     setJfwError(null);
     try {
       const endpoint = jfwType === 'team' ? '/jfw/team-visits' : '/jfw/my-visits';
-      const response = await axios.get(`${API_ROUTE}${endpoint}`);
+      const params = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      const response = await axios.get(`${API_ROUTE}${endpoint}`, { params });
       const resData = response.data;
-      if (resData && (resData.status === 200 || resData.status === 'SUCCESS' || resData.success || resData.status === true)) {
+      // Handle both boolean true and numeric 200 status responses
+      if (resData && (resData.status === true || resData.status === 200 || resData.status === 'SUCCESS' || resData.success === true)) {
         setJfwData(resData.data || []);
       } else {
         setJfwError(resData?.message || 'Failed to fetch Joint Work Reports');
@@ -234,12 +248,11 @@ export default function AdminReports() {
 
   const currentData = getActiveData();
 
-  // Local JFW filtering
+  // Local JFW filtering — only filter by MR when checkbox is checked
+  // Date filtering is handled server-side via query params
   const filteredJfwData = (jfwData || []).filter(visit => {
-    const vDate = visit.reportDate;
-    const matchDate = !vDate || (vDate >= startDate && vDate <= endDate);
     const matchMr = !jfwFilterMrOnly || !selectedMrId || String(visit.mrId) === selectedMrId;
-    return matchDate && matchMr;
+    return matchMr;
   });
 
   // Check if data holds valid results
@@ -333,7 +346,7 @@ export default function AdminReports() {
               >
                 {mrList.map(mr => (
                   <option key={mr.id} value={String(mr.id)}>
-                    {mr.fullName || mr.name || `MR #${mr.id}`}
+                    {mr.fullName || mr.name || `Rep #${mr.id}`}{mr.role ? ` (${mr.role})` : ''}
                   </option>
                 ))}
               </select>
@@ -449,6 +462,7 @@ export default function AdminReports() {
                         <Th>Doctor Visit Count</Th>
                         <Th>Chemist Visit Count</Th>
                         <Th>DCR Verification Status</Th>
+                        <Th className="text-right">Actions</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -461,6 +475,15 @@ export default function AdminReports() {
                             <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[12px] uppercase ${dcr.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                               {dcr.status || 'SUBMITTED'}
                             </span>
+                          </Td>
+                          <Td className="text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDcrForModal(dcr)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C8F04A] text-[#1A1A1A] border border-[#A5CE39] hover:bg-[#b5db38] transition-all duration-150 cursor-pointer"
+                            >
+                              View Details
+                            </button>
                           </Td>
                         </tr>
                       ))}
@@ -690,7 +713,7 @@ export default function AdminReports() {
                            {doc.clinic} · <span className="font-semibold">In: {doc.time}</span>
                            {doc.checkOutTime && (
                              <span className="ml-2 font-bold text-[#28823A]">
-                               Out: {doc.checkOutTime} ({calculateDuration(doc.time, doc.checkOutTime)} min)
+                               Out: {doc.checkOutTime} ({doc.duration || `${calculateDuration(doc.time, doc.checkOutTime)} min`})
                              </span>
                            )}
                          </div>
@@ -722,7 +745,7 @@ export default function AdminReports() {
                            {chem.clinic} · <span className="font-semibold">In: {chem.time}</span>
                            {chem.checkOutTime && (
                              <span className="ml-2 font-bold text-blue-600">
-                               Out: {chem.checkOutTime} ({calculateDuration(chem.time, chem.checkOutTime)} min)
+                               Out: {chem.checkOutTime} ({chem.duration || `${calculateDuration(chem.time, chem.checkOutTime)} min`})
                              </span>
                            )}
                          </div>
@@ -946,7 +969,7 @@ export default function AdminReports() {
                               Out: {row.checkOutTime}
                               <br />
                               <span className="text-indigo-600 font-bold">
-                                ⏱️ {calculateDuration(row.visitTime, row.checkOutTime)} min
+                                ⏱️ {row.duration || `${calculateDuration(row.visitTime, row.checkOutTime)} min`}
                               </span>
                             </>
                           )}
@@ -1055,6 +1078,130 @@ export default function AdminReports() {
 
       </div>
 
+      {/* Details Popup Modal */}
+      {selectedDcrForModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 font-sans">
+          <div className="bg-white rounded-3xl w-full max-w-[650px] shadow-2xl flex flex-col h-[80vh] max-h-[680px] overflow-hidden animate-[scaleIn_0.2s_ease-out]">
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
+              <div>
+                <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">DCR Visit Details</h3>
+                <span className="text-[11.5px] font-bold text-[#9CA3AF] block mt-0.5">Log Date: {selectedDcrForModal.date}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDcrForModal(null)}
+                className="w-8 h-8 rounded-full border border-gray-205 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <X size={14} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Doctor Visits Section */}
+              <div>
+                <h4 className="text-[13px] font-extrabold text-[#1F2937] uppercase tracking-[0.5px] border-b border-gray-100 pb-2 mb-3">
+                  🩺 Doctor Calls ({selectedDcrForModal.visits?.length || 0})
+                </h4>
+                {(!selectedDcrForModal.visits || selectedDcrForModal.visits.length === 0) ? (
+                  <span className="text-xs font-semibold text-gray-400 italic">No doctor visits logged for this day.</span>
+                ) : (
+                  <div className="space-y-3.5">
+                    {selectedDcrForModal.visits.map((vis, index) => (
+                      <div key={index} className="border border-gray-100 rounded-xl p-3.5 bg-slate-50/50 shadow-sm relative">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[13.5px] font-extrabold text-[#1F2937]">{vis.doctorName}</span>
+                            <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">{vis.speciality}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-emerald-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2.5 grid grid-cols-2 gap-3 text-xs border-t border-gray-100 pt-2.5">
+                          <div>
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Products Discussed</span>
+                            <span className="font-semibold text-gray-700">{vis.productsDiscussed || 'None'}</span>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Samples Given</span>
+                            <span className="font-semibold text-gray-700">{vis.samplesGiven || 'None'}</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-xs">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Doctor Feedback</span>
+                          <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Chemist Visits Section */}
+              <div>
+                <h4 className="text-[13px] font-extrabold text-[#1F2937] uppercase tracking-[0.5px] border-b border-gray-100 pb-2 mb-3">
+                  🏪 Chemist Calls ({selectedDcrForModal.chemistVisits?.length || 0})
+                </h4>
+                {(!selectedDcrForModal.chemistVisits || selectedDcrForModal.chemistVisits.length === 0) ? (
+                  <span className="text-xs font-semibold text-gray-400 italic">No chemist visits logged for this day.</span>
+                ) : (
+                  <div className="space-y-3.5">
+                    {selectedDcrForModal.chemistVisits.map((vis, index) => (
+                      <div key={index} className="border border-gray-100 rounded-xl p-3.5 bg-slate-50/50 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[13.5px] font-extrabold text-[#1F2937]">{vis.chemistName}</span>
+                            <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">{vis.address}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-blue-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2.5 text-xs border-t border-gray-100 pt-2.5">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Products Discussed</span>
+                          <span className="font-semibold text-gray-700">{vis.productsDiscussed || 'None'}</span>
+                        </div>
+                        <div className="mt-2 text-xs">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Chemist Feedback</span>
+                          <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedDcrForModal(null)}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-gray-900 text-white hover:bg-black transition-all cursor-pointer border-0"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -1066,6 +1213,10 @@ export default function AdminReports() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
 
