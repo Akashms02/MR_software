@@ -467,13 +467,16 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         setFormData(initialFormValues);
         setOriginalData(initialFormValues);
 
-        // Track if files are present
+        // Track if files are present (with fallbacks for various API response shapes)
+        const rawDocs = data.documents || data.profile?.documents || data;
+        const rawEmp = data.employment || data.profile?.employment || data;
+
         setExistingDocs({
-          experienceLetter: data.employment?.experienceLetterUrl || null,
-          profilePhoto: data.documents?.profilePhotoPath || null,
-          aadharDoc: data.documents?.aadharDocPath || null,
-          panDoc: data.documents?.panDocPath || null,
-          resumeDoc: data.documents?.resumePath || null,
+          experienceLetter: rawEmp?.experienceLetterUrl || data.experienceLetterUrl || data.experienceLetterPath || null,
+          profilePhoto: rawDocs?.profilePhotoPath || rawDocs?.profilePhotoUrl || data.profilePhotoPath || data.profilePhotoUrl || null,
+          aadharDoc: rawDocs?.aadharDocPath || rawDocs?.aadharDocUrl || data.aadharDocPath || data.aadharDocUrl || null,
+          panDoc: rawDocs?.panDocPath || rawDocs?.panDocUrl || data.panDocPath || data.panDocUrl || null,
+          resumeDoc: rawDocs?.resumePath || rawDocs?.resumeUrl || rawDocs?.resumeDocPath || data.resumePath || data.resumeUrl || null,
         });
 
       } catch (err) {

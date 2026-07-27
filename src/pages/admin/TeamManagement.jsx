@@ -265,14 +265,14 @@ const TeamManagement = () => {
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditClick(member.employeeId || member.id)}
+                            onClick={() => handleEditClick(member.id)}
                             title="View Employee Profile"
                             className="w-8 h-8 rounded-lg bg-teal-50 text-[#0F766E] border-none cursor-pointer flex items-center justify-center hover:bg-[#0F766E] hover:text-white transition-all duration-200"
                           >
                             <Eye size={14} />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(member.employeeId || member.id, member.fullName)}
+                            onClick={() => handleDeleteClick(member.id, member.fullName)}
                             title="Remove Team Member"
                             className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border-none cursor-pointer flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all duration-200"
                           >

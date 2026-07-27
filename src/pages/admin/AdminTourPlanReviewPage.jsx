@@ -81,7 +81,13 @@ const AdminTourPlanReviewPage = () => {
   const isMRRole = (role) => {
     if (!role) return false;
     const norm = role.toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
-    return norm.includes('MR') || norm.includes('REPRESENTATIVE') || norm.includes('EXECUTIVE') || norm.includes('SALES EXECUTIVE');
+    return norm.includes('MR') || 
+           norm.includes('REPRESENTATIVE') || 
+           norm.includes('EXECUTIVE') || 
+           norm.includes('SALES EXECUTIVE') ||
+           norm === 'ABM' || norm.includes('AREA MANAGER') || norm.includes('AREA SALES MANAGER') ||
+           norm === 'RBM' || norm.includes('REGIONAL MANAGER') || norm.includes('REGIONAL SALES MANAGER') ||
+           norm === 'ZBM' || norm.includes('ZONE MANAGER') || norm.includes('ZONAL BUSINESS MANAGER');
   };
 
   const mrMembers = useMemo(() => {

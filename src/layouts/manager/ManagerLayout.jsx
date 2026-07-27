@@ -16,7 +16,8 @@ import {
   X, 
   Trash2, 
   Check,
-  BookOpen
+  BookOpen,
+  BarChart2
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -112,6 +113,7 @@ export default function ManagerLayout({ children }) {
 
   const navItems = [
     { id: 'dashboard',     icon: LayoutDashboard, label: 'Dashboard',       path: '/manager/dashboard' },
+    { id: 'reports',       icon: BarChart2,       label: 'Reports & Analytics', path: '/manager/reports' },
     { id: 'myteam',        icon: UsersRound,      label: 'My Team',         path: '/manager/myteam' },
     { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking',  path: '/manager/fieldtracking' },
     { id: 'dcr-approvals', icon: FileText,        label: 'DCR Approvals',   path: '/manager/dcr-approvals' },
@@ -125,7 +127,7 @@ export default function ManagerLayout({ children }) {
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
+    if (item.id === 'dashboard' || item.id === 'reports' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

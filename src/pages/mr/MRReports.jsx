@@ -12,7 +12,7 @@ import {
 import { Card, TableWrap, Th, Td } from '../../components/ui';
 import { 
    Calendar, MapPin, CheckCircle2, AlertCircle, ChevronRight, 
-   RefreshCw, ShieldAlert
+   RefreshCw, ShieldAlert, X
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -39,6 +39,21 @@ const getFirstOfMonthString = () => {
   const d = new Date();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   return `${d.getFullYear()}-${month}-01`;
+};
+
+const calculateDuration = (inTime, outTime) => {
+  if (!inTime || !outTime || inTime === '—' || outTime === '—') return null;
+  try {
+    const [inH, inM] = inTime.split(':').map(Number);
+    const [outH, outM] = outTime.split(':').map(Number);
+    if (isNaN(inH) || isNaN(inM) || isNaN(outH) || isNaN(outM)) return null;
+    const inMinutes = inH * 60 + inM;
+    const outMinutes = outH * 60 + outM;
+    const diff = outMinutes - inMinutes;
+    return diff > 0 ? diff : 0;
+  } catch (e) {
+    return null;
+  }
 };
 
 // Recharts Custom Tooltip
@@ -88,6 +103,7 @@ export default function MRReports() {
 
   const selectedMrId = String(user?.id || '1');
   const [activeReport, setActiveReport] = useState('visit-summary');
+  const [selectedDcrForModal, setSelectedDcrForModal] = useState(null);
 
   // Filters State
   const [startDate, setStartDate] = useState(getFirstOfMonthString());
@@ -334,6 +350,7 @@ export default function MRReports() {
                         <Th>Doctor Visit Count</Th>
                         <Th>Chemist Visit Count</Th>
                         <Th>DCR Verification Status</Th>
+                        <Th className="text-right">Actions</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -346,6 +363,15 @@ export default function MRReports() {
                             <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[12px] uppercase ${dcr.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                               {dcr.status || 'SUBMITTED'}
                             </span>
+                          </Td>
+                          <Td className="text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDcrForModal(dcr)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C8F04A] text-[#1A1A1A] border border-[#A5CE39] hover:bg-[#b5db38] transition-all duration-150 cursor-pointer"
+                            >
+                              View Details
+                            </button>
                           </Td>
                         </tr>
                       ))}
@@ -542,7 +568,14 @@ export default function MRReports() {
                     <div key={idx} className="flex items-center justify-between rounded-xl border-[1.5px] border-gray-100 bg-gray-50 p-4">
                       <div>
                         <div className="text-sm font-extrabold text-gray-800">{doc.name}</div>
-                        <div className="mt-0.5 text-xs text-gray-500">{doc.clinic} · <span className="font-semibold">{doc.time}</span></div>
+                        <div className="mt-0.5 text-xs text-gray-500">
+                          {doc.clinic} · <span className="font-semibold">In: {doc.time}</span>
+                          {doc.checkOutTime && (
+                            <span className="ml-2 font-bold text-emerald-600">
+                              Out: {doc.checkOutTime} ({doc.duration || `${calculateDuration(doc.time, doc.checkOutTime)} min`})
+                            </span>
+                          )}
+                        </div>
                         <div className="mt-1.5 inline-block rounded bg-teal-50 px-2.5 py-0.5 text-xs font-semibold text-teal-700">
                           Samples: {doc.samples}
                         </div>
@@ -567,7 +600,14 @@ export default function MRReports() {
                       <div>
                         <span className="mb-1.5 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-800 uppercase">Chemist / Pharmacy</span>
                         <div className="text-sm font-extrabold text-gray-800">{chem.name}</div>
-                        <div className="mt-0.5 text-xs text-gray-500">{chem.clinic} · <span className="font-semibold">{chem.time}</span></div>
+                        <div className="mt-0.5 text-xs text-gray-500">
+                          {chem.clinic} · <span className="font-semibold">In: {chem.time}</span>
+                          {chem.checkOutTime && (
+                            <span className="ml-2 font-bold text-blue-600">
+                              Out: {chem.checkOutTime} ({chem.duration || `${calculateDuration(chem.time, chem.checkOutTime)} min`})
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="max-w-[250px] text-right">
                         <div className="text-[11px] font-bold uppercase text-blue-600">VISIT DETAIL FEEDBACK</div>
@@ -721,6 +761,130 @@ export default function MRReports() {
 
       </div>
 
+      {/* Details Popup Modal */}
+      {selectedDcrForModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 font-sans">
+          <div className="bg-white rounded-3xl w-full max-w-[650px] shadow-2xl flex flex-col h-[80vh] max-h-[680px] overflow-hidden animate-[scaleIn_0.2s_ease-out]">
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
+              <div>
+                <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">DCR Visit Details</h3>
+                <span className="text-[11.5px] font-bold text-[#9CA3AF] block mt-0.5">Log Date: {selectedDcrForModal.date}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDcrForModal(null)}
+                className="w-8 h-8 rounded-full border border-gray-205 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <X size={14} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Doctor Visits Section */}
+              <div>
+                <h4 className="text-[13px] font-extrabold text-[#1F2937] uppercase tracking-[0.5px] border-b border-gray-100 pb-2 mb-3">
+                  🩺 Doctor Calls ({selectedDcrForModal.visits?.length || 0})
+                </h4>
+                {(!selectedDcrForModal.visits || selectedDcrForModal.visits.length === 0) ? (
+                  <span className="text-xs font-semibold text-gray-400 italic">No doctor visits logged for this day.</span>
+                ) : (
+                  <div className="space-y-3.5">
+                    {selectedDcrForModal.visits.map((vis, index) => (
+                      <div key={index} className="border border-gray-100 rounded-xl p-3.5 bg-slate-50/50 shadow-sm relative">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[13.5px] font-extrabold text-[#1F2937]">{vis.doctorName}</span>
+                            <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">{vis.speciality}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-emerald-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2.5 grid grid-cols-2 gap-3 text-xs border-t border-gray-100 pt-2.5">
+                          <div>
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Products Discussed</span>
+                            <span className="font-semibold text-gray-700">{vis.productsDiscussed || 'None'}</span>
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Samples Given</span>
+                            <span className="font-semibold text-gray-700">{vis.samplesGiven || 'None'}</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-xs">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Doctor Feedback</span>
+                          <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Chemist Visits Section */}
+              <div>
+                <h4 className="text-[13px] font-extrabold text-[#1F2937] uppercase tracking-[0.5px] border-b border-gray-100 pb-2 mb-3">
+                  🏪 Chemist Calls ({selectedDcrForModal.chemistVisits?.length || 0})
+                </h4>
+                {(!selectedDcrForModal.chemistVisits || selectedDcrForModal.chemistVisits.length === 0) ? (
+                  <span className="text-xs font-semibold text-gray-400 italic">No chemist visits logged for this day.</span>
+                ) : (
+                  <div className="space-y-3.5">
+                    {selectedDcrForModal.chemistVisits.map((vis, index) => (
+                      <div key={index} className="border border-gray-100 rounded-xl p-3.5 bg-slate-50/50 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[13.5px] font-extrabold text-[#1F2937]">{vis.chemistName}</span>
+                            <span className="text-[11px] font-semibold text-gray-400 block mt-0.5">{vis.address}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[11.5px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+                              <span>In: {vis.visitTime ? vis.visitTime.slice(0, 5) : '—'}</span>
+                              {vis.checkOutTime && (
+                                <span className="pl-1.5 border-l border-gray-300 text-blue-600 font-extrabold">
+                                  Out: {vis.checkOutTime.slice(0, 5)} {vis.duration && `(${vis.duration})`}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2.5 text-xs border-t border-gray-100 pt-2.5">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Products Discussed</span>
+                          <span className="font-semibold text-gray-700">{vis.productsDiscussed || 'None'}</span>
+                        </div>
+                        <div className="mt-2 text-xs">
+                          <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Chemist Feedback</span>
+                          <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedDcrForModal(null)}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-gray-900 text-white hover:bg-black transition-all cursor-pointer border-0"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -732,6 +896,10 @@ export default function MRReports() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

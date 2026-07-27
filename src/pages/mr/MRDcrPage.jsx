@@ -1148,7 +1148,12 @@ const MRDcrPage = () => {
                             <span className="text-[14px] font-bold text-[#1F2937]">{doc.fullName}</span>
                             <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
                               <Clock size={12} className="text-[#9CA3AF]" />
-                              {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                              In: {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                              {visit.checkOutTime && (
+                                <span className="ml-1.5 pl-1.5 border-l border-gray-200 text-emerald-600 font-bold">
+                                  Out: {visit.checkOutTime.slice(0, 5)} {visit.duration && `(${visit.duration})`}
+                                </span>
+                              )}
                             </span>
                           </div>
                           
@@ -1211,7 +1216,12 @@ const MRDcrPage = () => {
                               <span className="text-[14px] font-bold text-[#1F2937]">{chem.fullName}</span>
                               <span className="flex items-center gap-1 text-[12px] text-[#6B7280] font-semibold">
                                 <Clock size={12} className="text-[#9CA3AF]" />
-                                {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                                In: {visit.visitTime ? visit.visitTime.slice(0, 5) : '—'}
+                                {visit.checkOutTime && (
+                                  <span className="ml-1.5 pl-1.5 border-l border-gray-200 text-blue-600 font-bold">
+                                    Out: {visit.checkOutTime.slice(0, 5)} {visit.duration && `(${visit.duration})`}
+                                  </span>
+                                )}
                               </span>
                             </div>
                             
