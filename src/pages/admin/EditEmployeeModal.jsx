@@ -216,6 +216,16 @@ const FileDropzone = ({ label, file, onChange, required = false, existingFileUrl
 const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.team);
+  const { user } = useSelector((state) => state.auth || {});
+
+  // Only Admin and ZBM are allowed to view or edit Employee Profile Cards
+  const canManageEmployeeProfile = React.useMemo(() => {
+    if (!user || !user.role) return false;
+    const norm = (user.role || '').toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+    const isSuperAdminOrAdmin = norm.includes('ADMIN');
+    const isZBM = norm === 'ZBM' || norm.includes('ZONE') || norm.includes('ZONAL');
+    return isSuperAdminOrAdmin || isZBM;
+  }, [user]);
 
   const [activeTab, setActiveTab] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
@@ -775,7 +785,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !canManageEmployeeProfile) return null;
 
   return (
     <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center z-[1000] p-5 animate-[fadeIn_0.25s_ease-out]">
