@@ -147,17 +147,24 @@ export default function AdminReports() {
   const [dateInWeek, setDateInWeek] = useState(getTodayDateString());
   const [page, setPage] = useState(1);
 
+  const { user: loggedInUser } = useSelector(state => state.auth || {});
+
   // Fetch team on mount
   useEffect(() => {
     dispatch(getMyTeam());
   }, [dispatch]);
 
-  // Automatically select the first MR in the team when loaded
+  // Automatically select logged-in user if present in list, otherwise first member
   useEffect(() => {
     if (mrList.length > 0 && !selectedMrId) {
-      setSelectedMrId(String(mrList[0].id));
+      const me = loggedInUser?.id ? mrList.find(m => String(m.id) === String(loggedInUser.id)) : null;
+      if (me) {
+        setSelectedMrId(String(me.id));
+      } else {
+        setSelectedMrId(String(mrList[0].id));
+      }
     }
-  }, [mrList, selectedMrId]);
+  }, [mrList, selectedMrId, loggedInUser]);
 
   // Fetch JFW report via local axios call
   const fetchJfwReport = async () => {
@@ -1140,6 +1147,45 @@ export default function AdminReports() {
                           <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Doctor Feedback</span>
                           <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
                         </div>
+                        {(vis.latitude != null || vis.checkOutLatitude != null || vis.targetLatitude != null || !vis.isGpsVerified) && (
+                          <div className="mt-2.5 bg-amber-50/70 border border-amber-200/70 rounded-lg p-2.5 text-[11px] font-sans">
+                            <div className="font-extrabold text-amber-800 uppercase text-[9.5px] tracking-wider mb-1.5 flex items-center justify-between">
+                              <span>📍 GPS Location Coordinates</span>
+                              {!vis.isGpsVerified && <span className="text-amber-700 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase">Mismatch Analysis</span>}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-gray-700">
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">MR Visit In:</span>
+                                <span className="font-mono text-[10.5px] font-bold text-gray-800">
+                                  {vis.latitude != null ? `${Number(vis.latitude).toFixed(4)}, ${Number(vis.longitude).toFixed(4)}` : 'Visit In Lat/Lng Not Captured'}
+                                </span>
+                              </div>
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">MR Visit Out:</span>
+                                <span className="font-mono text-[10.5px] font-bold text-gray-800">
+                                  {vis.checkOutLatitude != null ? `${Number(vis.checkOutLatitude).toFixed(4)}, ${Number(vis.checkOutLongitude).toFixed(4)}` : 'Visit Out Lat/Lng Not Captured'}
+                                </span>
+                              </div>
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">Doctor Registered:</span>
+                                <span className={`font-mono text-[10.5px] font-bold ${vis.targetLatitude != null ? 'text-gray-800' : 'text-rose-600'}`}>
+                                  {vis.targetLatitude != null ? `${Number(vis.targetLatitude).toFixed(4)}, ${Number(vis.targetLongitude).toFixed(4)}` : 'Doctor Lat/Lng Not Found'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {vis.checkOutPhoto && (
+                          <div className="mt-2.5 border-t border-gray-100 pt-2.5">
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px] mb-1">Prescription / Visiting Card Photo</span>
+                            <img 
+                              src={getFullAssetUrl(vis.checkOutPhoto)} 
+                              alt="Prescription or Visiting Card" 
+                              className="w-[100px] h-[75px] object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 animate-[fadeIn_0.2s_ease-out]"
+                              onClick={() => window.open(getFullAssetUrl(vis.checkOutPhoto), '_blank')}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1181,6 +1227,45 @@ export default function AdminReports() {
                           <span className="font-bold text-[#9CA3AF] block uppercase text-[10px]">Chemist Feedback</span>
                           <span className="font-medium text-gray-600 italic">"{vis.feedback || 'No feedback logged.'}"</span>
                         </div>
+                        {(vis.latitude != null || vis.checkOutLatitude != null || vis.targetLatitude != null || !vis.isGpsVerified) && (
+                          <div className="mt-2.5 bg-amber-50/70 border border-amber-200/70 rounded-lg p-2.5 text-[11px] font-sans">
+                            <div className="font-extrabold text-amber-800 uppercase text-[9.5px] tracking-wider mb-1.5 flex items-center justify-between">
+                              <span>📍 GPS Location Coordinates</span>
+                              {!vis.isGpsVerified && <span className="text-amber-700 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase">Mismatch Analysis</span>}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-gray-700">
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">MR Visit In:</span>
+                                <span className="font-mono text-[10.5px] font-bold text-gray-800">
+                                  {vis.latitude != null ? `${Number(vis.latitude).toFixed(4)}, ${Number(vis.longitude).toFixed(4)}` : 'Visit In Lat/Lng Not Captured'}
+                                </span>
+                              </div>
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">MR Visit Out:</span>
+                                <span className="font-mono text-[10.5px] font-bold text-gray-800">
+                                  {vis.checkOutLatitude != null ? `${Number(vis.checkOutLatitude).toFixed(4)}, ${Number(vis.checkOutLongitude).toFixed(4)}` : 'Visit Out Lat/Lng Not Captured'}
+                                </span>
+                              </div>
+                              <div className="bg-white/80 p-2 rounded border border-amber-100">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase">Chemist Registered:</span>
+                                <span className={`font-mono text-[10.5px] font-bold ${vis.targetLatitude != null ? 'text-gray-800' : 'text-rose-600'}`}>
+                                  {vis.targetLatitude != null ? `${Number(vis.targetLatitude).toFixed(4)}, ${Number(vis.targetLongitude).toFixed(4)}` : 'Chemist Lat/Lng Not Found'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {vis.checkOutPhoto && (
+                          <div className="mt-2.5 border-t border-gray-100 pt-2.5">
+                            <span className="font-bold text-[#9CA3AF] block uppercase text-[10px] mb-1">Prescription / Visiting Card Photo</span>
+                            <img 
+                              src={getFullAssetUrl(vis.checkOutPhoto)} 
+                              alt="Prescription or Visiting Card" 
+                              className="w-[100px] h-[75px] object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 animate-[fadeIn_0.2s_ease-out]"
+                              onClick={() => window.open(getFullAssetUrl(vis.checkOutPhoto), '_blank')}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
