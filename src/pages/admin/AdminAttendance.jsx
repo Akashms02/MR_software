@@ -231,10 +231,23 @@ export default function AdminAttendance() {
     return t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) || 'Leave';
   };
 
-  // Filter approved team leaves
-  const approvedTeamLeaves = (teamLeaves || [])
-    .filter(item => item.status?.toUpperCase() === 'APPROVED')
-    .slice(0, 5);
+  // Filter approved team leaves: prioritize team members actively on leave/absent ON THE CURRENT DATE (today), fallback to approved team leaves
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const todayActiveLeaves = (teamLeaves || [])
+    .filter(item => {
+      const isApproved = item.status?.toUpperCase() === 'APPROVED';
+      if (!isApproved) return false;
+
+      const start = (item.startDate || item.fromDate || '').toString();
+      const end = (item.endDate || item.toDate || start).toString();
+
+      return start <= todayStr && end >= todayStr;
+    });
+
+  const approvedTeamLeaves = todayActiveLeaves.length > 0
+    ? todayActiveLeaves
+    : (teamLeaves || []).filter(item => item.status?.toUpperCase() === 'APPROVED');
 
   const upcomingHolidays = (activeUpcomingHolidays || []).slice(0, 4);
   const myLeavesHistory = (leaves || []).slice(0, 4);
@@ -296,15 +309,22 @@ export default function AdminAttendance() {
 
             {myLeavesHistory.length > 0 ? (
               <div className="space-y-1">
-                {myLeavesHistory.map((leave, idx) => (
-                  <LeaveHistoryRow
-                    key={leave.id || leave.leaveId || idx}
-                    type={formatLeaveTypeName(leave.leaveName || leave.leaveCode || leave.leaveType)}
-                    sub={leave.reason || "No reason specified"}
-                    date={leave.startDate || leave.fromDate || "—"}
-                    status={leave.status}
-                  />
-                ))}
+                {myLeavesHistory.map((leave, idx) => {
+                  const resolvedType = leave.leaveTypeName || leave.leaveName || leave.leaveCode ||
+                    (leaveTypes?.find(lt => lt.id === leave.leaveTypeId || lt.leaveTypeId === leave.leaveTypeId)?.name) ||
+                    'Leave';
+                  const dateVal = leave.fromDate || leave.startDate || "—";
+
+                  return (
+                    <LeaveHistoryRow
+                      key={leave.id || leave.leaveId || idx}
+                      type={formatLeaveTypeName(resolvedType)}
+                      sub={leave.reason || "No reason specified"}
+                      date={typeof dateVal === 'string' ? dateVal : String(dateVal)}
+                      status={leave.status}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center text-gray-400">
@@ -345,38 +365,52 @@ export default function AdminAttendance() {
         </div>
       </div>
 
-      {/* ── Team Leave Calendar (only for supervisors/managers) ── */}
+      {/* ── Team Leave & Absence Calendar (only for supervisors/managers) ── */}
       {isSupervisor && (
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5">
-          <div className="text-sm font-extrabold text-[#111827] mb-3">Team On Leave</div>
+          <div className="text-sm font-extrabold text-[#111827] mb-3">Team On Leave / Absent</div>
           {approvedTeamLeaves.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {approvedTeamLeaves.map((leave, idx) => {
-                const name = leave.employeeName || leave.fullName || "Team Member";
-                const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                const fromDate = leave.startDate || leave.fromDate || "";
-                const toDate = leave.endDate || leave.toDate || "";
+            <div className="max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {approvedTeamLeaves.map((leave, idx) => {
+                  const name = leave.employeeName || leave.fullName || "Team Member";
+                  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                  const fromDate = (leave.startDate || leave.fromDate || "").toString();
+                  const toDate = (leave.endDate || leave.toDate || "").toString();
+                  const leaveTypeName = leave.leaveTypeName || leave.leaveType || "";
+                  const isAbsent = leaveTypeName.toLowerCase().includes('absent');
 
-                return (
-                  <div key={leave.id || idx} className="bg-[#FFF8F0] border border-[#FEF3C7] rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-xs font-bold text-amber-800 shrink-0">
-                      {initials}
+                  return (
+                    <div key={leave.id || leave.leaveId || idx} className={`rounded-xl px-4 py-3 flex items-center gap-3 border ${
+                      isAbsent ? 'bg-rose-50/60 border-rose-200' : 'bg-[#FFF8F0] border-[#FEF3C7]'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        isAbsent ? 'bg-rose-200 text-rose-800' : 'bg-amber-200 text-amber-800'
+                      }`}>
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-extrabold text-[#374151] truncate">{name}</div>
+                        <div className={`text-[10px] mt-0.5 ${isAbsent ? 'text-rose-600 font-extrabold' : 'text-[#9CA3AF] font-medium'}`}>
+                          {formatLeaveTypeName(leaveTypeName)}
+                        </div>
+                      </div>
+                      <div className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md whitespace-nowrap border ${
+                        isAbsent 
+                          ? 'text-rose-700 bg-rose-100/60 border-rose-200/50' 
+                          : 'text-amber-700 bg-amber-100/60 border-amber-200/50'
+                      }`}>
+                        {fromDate ? fromDate.substring(5) : ''}{toDate && toDate !== fromDate ? ` to ${toDate.substring(5)}` : ' (Today)'}
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-extrabold text-[#374151] truncate">{name}</div>
-                      <div className="text-[10px] text-[#9CA3AF] mt-0.5">{formatLeaveTypeName(leave.leaveTypeName || leave.leaveType)}</div>
-                    </div>
-                    <div className="text-[9px] font-extrabold text-amber-700 bg-amber-100/60 border border-amber-200/50 px-2 py-0.5 rounded-md whitespace-nowrap">
-                      {fromDate.substring(5)} to {toDate.substring(5)}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-6 text-center text-gray-400">
               <Clock size={24} className="mb-1.5 text-gray-300" />
-              <span className="text-xs font-semibold">No team members are currently on leave</span>
+              <span className="text-xs font-semibold">No team members are currently on leave or absent today</span>
             </div>
           )}
         </div>
