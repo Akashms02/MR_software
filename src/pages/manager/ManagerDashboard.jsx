@@ -251,24 +251,49 @@ const ManagerDashboard = () => {
                 <p className="text-[11px] text-gray-400 m-0 mt-0.5">Use the onboarding wizard to add members.</p>
               </div>
             ) : (
-              team.map((member, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                  <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 font-bold text-sm">
-                    {member.fullName?.slice(0,2).toUpperCase() || 'MR'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-[13px] font-bold text-gray-900 truncate">{member.fullName}</span>
-                      <span className="text-[11px] text-[#0D9488] font-bold shrink-0 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        {member.role === 'MR' ? 'MR' : 'Rep'}
-                      </span>
+              team.map((member, idx) => {
+                const roleName = member.role || '';
+                const normRole = roleName.toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').trim();
+                let badgeLabel = 'MR';
+                let badgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+
+                if (normRole.includes('AREA') || normRole === 'ABM' || normRole === 'ASM') {
+                  badgeLabel = 'ABM';
+                  badgeStyle = 'bg-orange-50 text-orange-700 border-orange-100';
+                } else if (normRole.includes('REGIONAL') || normRole === 'RBM' || normRole === 'RSM') {
+                  badgeLabel = 'RBM';
+                  badgeStyle = 'bg-purple-50 text-purple-700 border-purple-100';
+                } else if (normRole.includes('ZONE') || normRole.includes('ZONAL') || normRole === 'ZBM' || normRole === 'ZSM') {
+                  badgeLabel = 'ZBM';
+                  badgeStyle = 'bg-indigo-50 text-indigo-700 border-indigo-100';
+                } else if (normRole.includes('VICE') || normRole === 'VP') {
+                  badgeLabel = 'VP';
+                  badgeStyle = 'bg-rose-50 text-rose-700 border-rose-100';
+                }
+
+                const initials = member.fullName
+                  ? member.fullName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+                  : badgeLabel;
+
+                return (
+                  <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                      {initials}
                     </div>
-                    <div className="text-[11px] text-gray-500 mt-1 truncate">
-                      {member.email} • {member.phone}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[13px] font-bold text-gray-900 truncate">{member.fullName}</span>
+                        <span className={`text-[11px] font-bold shrink-0 px-2.5 py-0.5 rounded-full border ${badgeStyle}`}>
+                          {badgeLabel}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-500 mt-1 truncate">
+                        {member.email}{member.phone ? ` • ${member.phone}` : ''}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

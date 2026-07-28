@@ -1,5 +1,6 @@
 import { Bell, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { ADMIN_NAV, SUPER_ADMIN_NAV, EMPLOYEE_NAV } from './navConfig'
 
 /* ── Page Title  ───────────────────────────────────────────── */
@@ -38,10 +39,15 @@ function getPageSub(activePage, role) {
 
 export default function Header({ role }) {
   const location = useLocation()
+  const { user } = useSelector(state => state.auth || {})
   const pathParts = location.pathname.split('/')
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
   const showApplyLeave = activePage === 'me'
+
+  const normUserRole = ((user?.role || role || '').toString()).toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').trim()
+  const isZBM = normUserRole.includes('ZBM') || normUserRole.includes('ZONE') || normUserRole.includes('ZONAL')
+  const isManagerOrAdmin = normUserRole.includes('MANAGER') || normUserRole.includes('ADMIN') || isZBM || role === 'MANAGER'
 
   return (
     <header className="h-[72px] bg-transparent flex items-center px-8 gap-4 shrink-0">
@@ -70,8 +76,8 @@ export default function Header({ role }) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search Bar */}
-      {role !== 'ADMIN' && role !== 'EMPLOYEE' && role !== 'SUPER_ADMIN' && role !== 'SUPER ADMIN' && (
+      {/* Search Bar (Hidden for ZBM, Managers, Admins, Super Admins) */}
+      {!isZBM && !isManagerOrAdmin && role !== 'ADMIN' && role !== 'MANAGER' && role !== 'EMPLOYEE' && role !== 'SUPER_ADMIN' && role !== 'SUPER ADMIN' && (
         <div className="relative w-60 shrink-0">
           <Search
             size={15}
