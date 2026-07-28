@@ -8,6 +8,7 @@ import { API_ROUTE } from '../../data/env';
 import { Loader2, Gift, ExternalLink, Bell, AlertCircle, Calendar, Coffee, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getActiveNotices } from '../../redux/actions/noticeActions';
+import { getMyTeam } from '../../redux/actions/teamActions';
 import {
   punchInAction,
   punchOutAction,
@@ -621,6 +622,7 @@ export default function MRDashboard() {
   const { requests = [], loading: requestsLoading } = useSelector(state => state.request || {});
   const { activeUpcomingHolidays = [] } = useSelector(state => state.holiday || {});
   const { activeNotices = [] } = useSelector(state => state.notices || {});
+  const { team = [] } = useSelector(state => state.team || {});
   const [assignedTargets, setAssignedTargets] = useState([]);
   const [targetsLoading, setTargetsLoading] = useState(false);
 
@@ -669,8 +671,21 @@ export default function MRDashboard() {
     }
   };
 
+  const [apiBirthdays, setApiBirthdays] = useState([]);
+
   useEffect(() => {
     fetchAssignedTargets();
+    const fetchBirthdays = async () => {
+      try {
+        const res = await axios.get(`${API_ROUTE}/birthdays/this-month`);
+        if (res.data && (res.data.status === true || res.data.success) && Array.isArray(res.data.data)) {
+          setApiBirthdays(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch birthday API:', err);
+      }
+    };
+    fetchBirthdays();
   }, [user]);
 
   const { showToast } = useToast();
@@ -758,6 +773,7 @@ export default function MRDashboard() {
     dispatch(fetchMeRequestsAction());
     dispatch(fetchActiveUpcomingHolidaysAction());
     dispatch(getActiveNotices());
+    dispatch(getMyTeam());
   }, [dispatch]);
 
   // ── Live Timer ─────────────────────────────────────────────────────────────
@@ -946,19 +962,30 @@ export default function MRDashboard() {
 
   // Birthdays dynamic list (Show all colleagues)
   const getUpcomingMRBirthdays = () => {
+    if (apiBirthdays && apiBirthdays.length > 0) {
+      return apiBirthdays.slice(0, 4).map(b => ({
+        name: b.fullName,
+        date: b.formattedDate,
+        role: formatRole(b.role),
+        photoUrl: b.photoUrl
+      }));
+    }
+
     const currentMonth = new Date().getMonth()
-    const allColleagues = []; // Show all colleagues
+    const allColleagues = team || []
 
     const list = allColleagues
-      .filter(emp => emp.dateOfBirth)
+      .filter(emp => emp && (emp.dateOfBirth || emp.personal?.dateOfBirth))
       .filter(emp => {
-        const dob = new Date(emp.dateOfBirth)
-        return dob.getMonth() === currentMonth
+        const dobStr = emp.dateOfBirth || emp.personal?.dateOfBirth
+        const dob = new Date(dobStr)
+        return !isNaN(dob.getTime()) && dob.getMonth() === currentMonth
       })
       .map(emp => {
-        const dob = new Date(emp.dateOfBirth)
+        const dobStr = emp.dateOfBirth || emp.personal?.dateOfBirth
+        const dob = new Date(dobStr)
         return {
-          name: emp.fullName,
+          name: emp.fullName || emp.name,
           date: dob.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
           role: formatRole(emp.role),
           photoUrl: emp.photoUrl

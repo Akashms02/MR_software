@@ -14,6 +14,8 @@ import { fetchAdminLeaveTableAction } from '../../redux/actions/leaveActions'
 import { fetchTeamAttendanceAction } from '../../redux/actions/attendanceActions'
 import { getFullAssetUrl } from '../../utils/getFullAssetUrl'
 import { fetchActiveUpcomingHolidaysAction } from '../../redux/actions/holidayActions'
+import axios from '../../api/axiosInstance'
+import { API_ROUTE } from '../../data/env'
 import Pagination from '../../components/common/Pagination'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts'
 
@@ -119,12 +121,26 @@ export default function AdminDashboard() {
 
   const todayStr = new Date().toISOString().split('T')[0]
 
+  const [apiBirthdays, setApiBirthdays] = useState([])
+
   useEffect(() => {
     dispatch(fetchProfile())
     dispatch(getMyTeam())
     dispatch(fetchAdminLeaveTableAction())
     dispatch(fetchTeamAttendanceAction(todayStr, 0, 1000))
     dispatch(fetchActiveUpcomingHolidaysAction())
+
+    const fetchBirthdays = async () => {
+      try {
+        const res = await axios.get(`${API_ROUTE}/birthdays/this-month`)
+        if (res.data && (res.data.status === true || res.data.success) && Array.isArray(res.data.data)) {
+          setApiBirthdays(res.data.data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch birthday API:', err)
+      }
+    }
+    fetchBirthdays()
   }, [dispatch, todayStr])
 
   const displayName = user?.fullName || 'Company Admin'
@@ -221,17 +237,28 @@ export default function AdminDashboard() {
 
   // Birthdays dynamic list
   const getUpcomingBirthdays = () => {
+    if (apiBirthdays && apiBirthdays.length > 0) {
+      return apiBirthdays.slice(0, 4).map(b => ({
+        name: b.fullName,
+        date: b.formattedDate,
+        role: formatRole(b.role),
+        photoUrl: b.photoUrl
+      }))
+    }
+
     const currentMonth = new Date().getMonth()
     const list = team
-      .filter(emp => emp.dateOfBirth)
+      .filter(emp => emp && (emp.dateOfBirth || emp.personal?.dateOfBirth))
       .filter(emp => {
-        const dob = new Date(emp.dateOfBirth)
-        return dob.getMonth() === currentMonth
+        const dobStr = emp.dateOfBirth || emp.personal?.dateOfBirth
+        const dob = new Date(dobStr)
+        return !isNaN(dob.getTime()) && dob.getMonth() === currentMonth
       })
       .map(emp => {
-        const dob = new Date(emp.dateOfBirth)
+        const dobStr = emp.dateOfBirth || emp.personal?.dateOfBirth
+        const dob = new Date(dobStr)
         return {
-          name: emp.fullName,
+          name: emp.fullName || emp.name,
           date: dob.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
           role: formatRole(emp.role),
           photoUrl: emp.photoUrl
@@ -243,7 +270,7 @@ export default function AdminDashboard() {
       const monthStr = new Date().toLocaleDateString('en-US', { month: 'short' })
       const dates = [`12 ${monthStr}`, `20 ${monthStr}`, `25 ${monthStr}`]
       return team.slice(0, 3).map((emp, i) => ({
-        name: emp.fullName,
+        name: emp.fullName || emp.name,
         date: dates[i % dates.length],
         role: formatRole(emp.role),
         photoUrl: emp.photoUrl

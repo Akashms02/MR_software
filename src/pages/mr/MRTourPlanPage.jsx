@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList, Clock } from 'lucide-react';
+import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList, Clock, Lock } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import {
   fetchMyTourPlansAction,
@@ -22,6 +22,15 @@ const MRTourPlanPage = () => {
 
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'list'); // 'list' or 'new'
   const [doctors, setDoctors] = useState([]);
+  const [requestingUnlock, setRequestingUnlock] = useState({});
+  const [requestedUnlockMonths, setRequestedUnlockMonths] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tour_plan_unlock_requested');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
@@ -45,6 +54,34 @@ const MRTourPlanPage = () => {
     if (msg) showToast(msg, 'error');
   };
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  const handleRequestUnlock = async (monthStr) => {
+    if (!monthStr || requestingUnlock[monthStr] || requestedUnlockMonths[monthStr]) return;
+
+    // Show button loader while API is pending
+    setRequestingUnlock(prev => ({ ...prev, [monthStr]: true }));
+
+    try {
+      const res = await axios.post(`${API_ROUTE}/tour-plan/request-unlock?targetMonth=${monthStr}`);
+      const msg = res.data?.message || res.data?.data || `Unlock request submitted successfully to your manager for ${formatMonthLabel(monthStr)}.`;
+      
+      // On API success response, mark month as requested
+      setRequestedUnlockMonths(prev => {
+        const next = { ...prev, [monthStr]: true };
+        try {
+          localStorage.setItem('tour_plan_unlock_requested', JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      });
+      setSuccessMsg(msg);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || `Failed to submit unlock request for ${formatMonthLabel(monthStr)}.`;
+      setErrorMsg(errMsg);
+    } finally {
+      // Turn off button loader after API call finishes
+      setRequestingUnlock(prev => ({ ...prev, [monthStr]: false }));
+    }
+  };
 
   const isMonthLocked = (monthStr) => {
     if (!monthStr) return false;
@@ -372,6 +409,26 @@ const MRTourPlanPage = () => {
                                   <Send size={11} /> Submit
                                 </button>
                               )}
+                              {plan.locked && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRequestUnlock(plan.targetMonth)}
+                                  disabled={requestingUnlock[plan.targetMonth] || requestedUnlockMonths[plan.targetMonth]}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold transition-colors duration-150 border disabled:opacity-80 disabled:cursor-not-allowed ${
+                                    requestedUnlockMonths[plan.targetMonth]
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                      : 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5] hover:bg-[#FEE2E2]'
+                                  }`}
+                                >
+                                  {requestingUnlock[plan.targetMonth] ? (
+                                    <><Loader2 size={11} className="animate-spin" /> Requesting...</>
+                                  ) : requestedUnlockMonths[plan.targetMonth] ? (
+                                    <><CheckCircle2 size={11} className="text-emerald-600" /> Unlock Requested</>
+                                  ) : (
+                                    <><Lock size={11} /> Request Unlock</>
+                                  )}
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -398,9 +455,29 @@ const MRTourPlanPage = () => {
         {activeTab === 'new' && (
           <form onSubmit={(e) => handleSaveDraft(e, false)} className="flex-1 flex flex-col min-h-0">
             {isMonthLocked(targetMonth) && (
-              <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] p-4 rounded-xl text-xs font-bold flex items-center gap-2 mb-4 shrink-0">
-                <AlertCircle size={16} />
-                <span>This month is locked because the submission deadline (25th of the previous month) has passed. Please contact your Zonal Business Manager (ZBM) to unlock this month.</span>
+              <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] p-4 rounded-xl text-xs font-bold flex items-center justify-between gap-3 mb-4 shrink-0">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0 text-red-600" />
+                  <span>This month is locked because the submission deadline (25th of the previous month) has passed.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRequestUnlock(targetMonth)}
+                  disabled={requestingUnlock[targetMonth] || requestedUnlockMonths[targetMonth]}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer transition-colors whitespace-nowrap disabled:opacity-85 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0 ${
+                    requestedUnlockMonths[targetMonth]
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[#EF4444] text-white hover:bg-[#DC2626]'
+                  }`}
+                >
+                  {requestingUnlock[targetMonth] ? (
+                    <><Loader2 size={12} className="animate-spin" /> Requesting...</>
+                  ) : requestedUnlockMonths[targetMonth] ? (
+                    <><CheckCircle2 size={12} /> Unlock Requested</>
+                  ) : (
+                    'Request Unlock'
+                  )}
+                </button>
               </div>
             )}
             <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#F3F4F6] pb-4 mb-4 shrink-0">

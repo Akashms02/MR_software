@@ -760,6 +760,11 @@ const DoctorOnboarding = () => {
       };
 
       await dispatch(onboardMember(payload));
+      setLocalSuccess(`${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} onboarded successfully!`);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        handleCancel();
+      }, 1500);
     } catch (err) {
       setLocalError(err.message || 'Onboarding request failed.');
       setIsSubmitting(false);

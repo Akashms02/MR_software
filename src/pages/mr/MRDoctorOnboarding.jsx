@@ -685,8 +685,8 @@ const MRDoctorOnboarding = () => {
       localStorage.setItem('last_submitted_payload', JSON.stringify(payload));
       await dispatch(submitOnboardingRequestAction(payload));
       setLocalSuccess(`Approval request to onboard new ${role === 'DOCTOR' ? 'Doctor' : 'Pharmacist'} submitted successfully!`);
-      setIsSubmitting(false);
       setTimeout(() => {
+        setIsSubmitting(false);
         handleCancel();
       }, 1500);
     } catch (err) {

@@ -16,8 +16,9 @@ import { useToast } from '../../context/ToastContext';
 const AdminTourPlanReviewPage = () => {
   const dispatch = useDispatch();
   const { teamTourPlans, loading, error, success } = useSelector((state) => state.tourPlan);
-  const { teamList } = useSelector((state) => state.team || {});
+  const { team: teamList } = useSelector((state) => state.team || {});
   const { user } = useSelector((state) => state.auth || {});
+  const [localTeamList, setLocalTeamList] = useState([]);
 
   const userRole = (user?.role || '').toUpperCase().trim();
   const canLockUnlock = userRole === 'ZONE_MANAGER' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
@@ -74,12 +75,33 @@ const AdminTourPlanReviewPage = () => {
 
   useEffect(() => {
     dispatch(getMyTeam(0, 100000));
+    axios.post(`${API_ROUTE}/admin/my-team`, { page: 0, size: 100000 })
+      .then(res => {
+        const raw = res.data?.data;
+        const list = Array.isArray(raw) ? raw : (raw?.content || []);
+        if (Array.isArray(list) && list.length > 0) {
+          setLocalTeamList(list);
+        }
+      })
+      .catch(err => console.warn('Direct fallback load team list error:', err));
   }, [dispatch]);
 
+  const isOnlyMRRole = (role) => {
+    if (!role) return false;
+    const norm = String(role).toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
+    // Exclude managerial/administrative roles
+    if (norm.includes('AREA') || norm.includes('REGIONAL') || norm.includes('ZONE') || norm.includes('ADMIN') || 
+        norm === 'ABM' || norm === 'RBM' || norm === 'ZBM' || norm === 'HR' || norm.includes('VICE')) {
+      return false;
+    }
+    return norm.includes('MR') || norm.includes('REPRESENTATIVE') || norm.includes('EXECUTIVE');
+  };
+
   const mrMembers = useMemo(() => {
-    if (!teamList || !Array.isArray(teamList)) return [];
-    return teamList;
-  }, [teamList]);
+    const list = (teamList && Array.isArray(teamList) && teamList.length > 0) ? teamList : localTeamList;
+    if (!Array.isArray(list)) return [];
+    return list.filter(m => isOnlyMRRole(m.role || m.roleType || (m.user && m.user.role)));
+  }, [teamList, localTeamList]);
 
   const handleToggleLock = async (plan) => {
     setTogglingLock(true);
