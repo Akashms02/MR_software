@@ -73,26 +73,12 @@ const AdminTourPlanReviewPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (canLockUnlock) {
-      dispatch(getMyTeam());
-    }
-  }, [dispatch, canLockUnlock]);
-
-  const isMRRole = (role) => {
-    if (!role) return false;
-    const norm = role.toUpperCase().replace(/_/g, ' ').replace(/-/g, ' ').replace('ROLE', '').trim();
-    return norm.includes('MR') || 
-           norm.includes('REPRESENTATIVE') || 
-           norm.includes('EXECUTIVE') || 
-           norm.includes('SALES EXECUTIVE') ||
-           norm === 'ABM' || norm.includes('AREA MANAGER') || norm.includes('AREA SALES MANAGER') ||
-           norm === 'RBM' || norm.includes('REGIONAL MANAGER') || norm.includes('REGIONAL SALES MANAGER') ||
-           norm === 'ZBM' || norm.includes('ZONE MANAGER') || norm.includes('ZONAL BUSINESS MANAGER');
-  };
+    dispatch(getMyTeam(0, 100000));
+  }, [dispatch]);
 
   const mrMembers = useMemo(() => {
     if (!teamList || !Array.isArray(teamList)) return [];
-    return teamList.filter(m => isMRRole(m.role));
+    return teamList;
   }, [teamList]);
 
   const handleToggleLock = async (plan) => {
@@ -571,11 +557,16 @@ const AdminTourPlanReviewPage = () => {
                   className="px-3.5 py-2.5 rounded-lg border border-[#E5E7EB] text-[13px] outline-none bg-white w-full cursor-pointer focus:border-[#4F46E5]"
                 >
                   <option value="">-- Choose Representative --</option>
-                  {mrMembers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.fullName || m.name} ({m.employeeId || m.id})
-                    </option>
-                  ))}
+                  {mrMembers.map((m, idx) => {
+                    const empCode = m.employeeId || m.id;
+                    const empName = m.fullName || m.name || m.email || "Representative";
+                    const roleLabel = m.role ? ` - ${m.role}` : "";
+                    return (
+                      <option key={m.id || empCode || idx} value={empCode}>
+                        {empName}{roleLabel} ({empCode})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 

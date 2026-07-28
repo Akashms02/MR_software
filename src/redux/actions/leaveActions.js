@@ -104,7 +104,7 @@ export const fetchTeamLeavesAction = () => async (dispatch) => {
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_TEAM_LEAVES_REQUEST });
   try {
-    const response = await axios.get(`${API_ROUTE}/leaves/requests/team`);
+    const response = await axios.get(`${API_ROUTE}/leaves/requests/team?size=100`);
     let payloadData = response.data?.data || response.data || [];
     if (payloadData && typeof payloadData === 'object' && !Array.isArray(payloadData)) {
       if (Array.isArray(payloadData.content)) {
