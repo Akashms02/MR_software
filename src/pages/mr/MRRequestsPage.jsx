@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle2, AlertCircle, Clock, FileText, Loader2, RefreshCw, Search, Check, X } from 'lucide-react';
+import { Plus, CheckCircle2, AlertCircle, Clock, FileText, Loader2, RefreshCw, Search, Check, X, MapPin } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMeRequestsAction } from '../../redux/actions/requestActions';
 import Pagination from '../../components/common/Pagination';
@@ -11,6 +11,12 @@ const MRRequestsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { requests, loading, error, pagination } = useSelector((state) => state.request);
+
+  const getDoctorThreshold = (reqId) => {
+    if (!reqId) return 200;
+    const saved = localStorage.getItem(`doctor_gps_threshold_${reqId}`);
+    return saved ? Math.min(200, Math.max(1, Number(saved))) : 200;
+  };
   
   // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(0);
@@ -179,7 +185,7 @@ const MRRequestsPage = () => {
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-10">
-                    {['S.No', 'Type', 'Name', 'Email', 'Phone', 'Address', 'Role Specific Details', 'Status', 'Review Remarks'].map((h) => (
+                    {['S.No', 'Type', 'Name', 'Email', 'Phone', 'Address', 'Role Specific Details', 'GPS Radius (m)', 'Status', 'Review Remarks'].map((h) => (
                       <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider bg-white">
                         {h}
                       </th>
@@ -227,6 +233,13 @@ const MRRequestsPage = () => {
                               <div><span className="font-semibold">License:</span> {req.doctorLicenseNumber || '—'}</div>
                             </div>
                           )}
+                        </td>
+                        {/* GPS Radius (m) Column */}
+                        <td className="px-4 py-4 text-[12.5px]">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] text-[11.5px] font-extrabold text-[#059669]">
+                            <MapPin size={11} className="text-[#059669]" />
+                            {getDoctorThreshold(req.id)} m
+                          </span>
                         </td>
                         {/* Status */}
                         <td className="px-4 py-4">

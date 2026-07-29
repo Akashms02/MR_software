@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Check, X, AlertCircle, FileText, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Plus, Check, X, AlertCircle, FileText, Loader2, RefreshCw, Search, Edit2, MapPin } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchPendingRequestsAction,
@@ -21,6 +21,30 @@ const AdminRequestsPage = () => {
   const { requests, loading, error, pagination } = useSelector((state) => state.request);
   const [success, _setSuccess] = useState(null);
 
+  // Per-Doctor Configurable GPS Threshold (Meters) State (Default 200m, Max 200m per doctor)
+  const [perDoctorThresholds, setPerDoctorThresholds] = useState({});
+  const [editingDoctorId, setEditingDoctorId] = useState(null);
+  const [modalDoctorThreshold, setModalDoctorThreshold] = useState('200');
+
+  const getDoctorThreshold = (reqId) => {
+    if (!reqId) return 200;
+    if (perDoctorThresholds[reqId] !== undefined) return perDoctorThresholds[reqId];
+    const saved = localStorage.getItem(`doctor_gps_threshold_${reqId}`);
+    return saved ? Math.min(200, Math.max(1, Number(saved))) : 200;
+  };
+
+  const handleSetDoctorThreshold = (reqId, val) => {
+    const cleanVal = val.replace(/\D/g, '');
+    let num = cleanVal === '' ? 200 : parseInt(cleanVal, 10);
+    if (num > 200) num = 200;
+    if (num <= 0) num = 1;
+    setPerDoctorThresholds((prev) => ({
+      ...prev,
+      [reqId]: num,
+    }));
+    localStorage.setItem(`doctor_gps_threshold_${reqId}`, String(num));
+  };
+
   const setSuccess = (msg) => {
     _setSuccess(msg);
     if (msg) showToast(msg, 'success');
@@ -31,6 +55,55 @@ const AdminRequestsPage = () => {
       showToast(error, 'error');
     }
   }, [error]);
+
+  const fetchGpsThreshold = async () => {
+    try {
+      const res = await axios.get(`${API_ROUTE}/admin/settings/gps-threshold`);
+      const val = res.data?.data?.gpsThresholdMeters ?? res.data?.gpsThresholdMeters ?? 200;
+      const numVal = Math.min(200, Math.max(1, Number(val) || 200));
+      setGpsThreshold(numVal);
+      setThresholdInput(String(numVal));
+    } catch (err) {
+      console.error('Failed to fetch GPS threshold', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchGpsThreshold();
+  }, []);
+
+  const handleThresholdChange = (e) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val === '') {
+      setThresholdInput('');
+      return;
+    }
+    let num = parseInt(val, 10);
+    if (num > 200) num = 200;
+    setThresholdInput(String(num));
+  };
+
+  const handleSaveThreshold = async (e) => {
+    if (e) e.preventDefault();
+    let num = parseInt(thresholdInput, 10);
+    if (isNaN(num) || num <= 0) num = 200;
+    if (num > 200) num = 200;
+
+    setSavingThreshold(true);
+    try {
+      await axios.put(`${API_ROUTE}/admin/settings/gps-threshold`, {
+        gpsThresholdMeters: num,
+      });
+      setGpsThreshold(num);
+      setThresholdInput(String(num));
+      setIsEditingThreshold(false);
+      showToast(`GPS Radius threshold updated to ${num} meters ✅`, 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update GPS threshold', 'error');
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
 
   // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(0);
@@ -151,6 +224,8 @@ const AdminRequestsPage = () => {
     setSelectedRequest(request);
     setReviewStatus(status);
     setRemarks('');
+    const currentVal = getDoctorThreshold(request.id);
+    setModalDoctorThreshold(String(currentVal));
   };
 
   const handleCloseReview = () => {
@@ -164,8 +239,11 @@ const AdminRequestsPage = () => {
     setReviewLoading(true);
     setSuccess(null);
     try {
+      const num = Math.min(200, Math.max(1, Number(modalDoctorThreshold) || 200));
+      handleSetDoctorThreshold(selectedRequest.id, String(num));
+
       await dispatch(reviewOnboardingRequestAction(selectedRequest, reviewStatus, remarks));
-      setSuccess(`Request for "${selectedRequest.name}" has been ${reviewStatus.toLowerCase()} successfully!`);
+      setSuccess(`Request for "${selectedRequest.name}" has been ${reviewStatus.toLowerCase()} successfully with ${num}m GPS radius threshold!`);
       handleCloseReview();
       fetchRequests(activeTab, currentPage);
       initializeTabCounts();
@@ -211,9 +289,19 @@ const AdminRequestsPage = () => {
 
       {/* Content wrapper */}
       <div className="bg-white rounded-[18px] border-[1.5px] border-[#F3F4F6] shadow-[0_4px_12px_rgba(0,0,0,0.02)] pt-6 px-6 pb-2.5 flex flex-col h-[calc(100vh-150px)] min-h-[400px]">
-        {/* Card Header with Filters inside */}
-        <div className="flex justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4">
-          <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Onboarding Requests</h3>
+        {/* Card Header with Filters (Admin/ZBM) */}
+        <div className="flex flex-wrap justify-between items-center mb-5 border-b border-[#F3F4F6] pb-4 gap-3">
+          <div className="flex items-center gap-3">
+            <h3 className="m-0 text-[16px] font-extrabold text-[#1F2937]">Onboarding Requests</h3>
+            
+            {/* Per-Doctor GPS Radius Notice Badge */}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] text-[11.5px] font-bold text-[#374151]">
+              <MapPin size={12} className="text-[#059669]" />
+              <span>Per-Doctor GPS Radius</span>
+              <span className="text-[10.5px] font-extrabold text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded border border-[#A7F3D0]">Max 200m</span>
+            </span>
+          </div>
+
           <div className="flex items-center gap-3">
             {/* Search */}
             <div className="relative w-60">
@@ -276,7 +364,7 @@ const AdminRequestsPage = () => {
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b-[1.5px] border-[#F3F4F6] sticky top-0 bg-white z-[10]">
-                    {['S.No', 'MR Name', 'Type', 'Name', 'Email / Phone', 'Address', 'Details', 'Status', 'Actions'].map(h => (
+                    {['S.No', 'MR Name', 'Type', 'Name', 'Email / Phone', 'Address', 'Details', 'GPS Radius (m)', 'Status', 'Actions'].map(h => (
                       <th key={h} className="px-4 py-3 text-[11.5px] font-extrabold text-[#9CA3AF] uppercase tracking-wider whitespace-nowrap bg-white">{h}</th>
                     ))}
                   </tr>
@@ -319,6 +407,40 @@ const AdminRequestsPage = () => {
                             <div><span className="font-semibold text-xs text-[#6B7280]">Qual: </span>{req.doctorQualification || '—'}</div>
                             <div><span className="font-semibold text-xs text-[#6B7280]">Lic: </span>{req.doctorLicenseNumber || '—'}</div>
                           </div>
+                        )}
+                      </td>
+                      {/* GPS Radius Column (Per Doctor Configurable, Max 200m) */}
+                      <td className="px-4 py-4 text-[12.5px]">
+                        {editingDoctorId === req.id ? (
+                          <div className="flex items-center gap-1 bg-[#F9FAFB] border border-[#C8F04A] p-1 rounded-lg">
+                            <input
+                              type="text"
+                              value={getDoctorThreshold(req.id)}
+                              onChange={(e) => handleSetDoctorThreshold(req.id, e.target.value)}
+                              maxLength={3}
+                              className="w-12 px-1 py-0.5 text-xs font-extrabold border border-[#D1D5DB] rounded text-center outline-none bg-white focus:border-[#059669]"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditingDoctorId(null)}
+                              className="p-1 rounded bg-[#10B981] text-white border-none cursor-pointer flex items-center justify-center"
+                              title="Done"
+                            >
+                              <Check size={11} strokeWidth={3} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setEditingDoctorId(req.id)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] hover:bg-white text-[11.5px] font-bold text-[#374151] cursor-pointer transition-all shadow-2xs hover:border-[#C8F04A]"
+                            title="Click to edit GPS radius meters for this doctor (Max 200m)"
+                          >
+                            <MapPin size={11} className="text-[#059669]" />
+                            <span className="font-extrabold text-[#059669]">{getDoctorThreshold(req.id)} m</span>
+                            <Edit2 size={10} className="text-[#9CA3AF]" />
+                          </button>
                         )}
                       </td>
                       {/* Status Column */}
@@ -386,6 +508,37 @@ const AdminRequestsPage = () => {
               <p className="text-[13px] text-[#6B7280] mt-1 mb-0">
                 Submit review for <span className="font-semibold text-[#111827]">{selectedRequest.name}</span>. You can optionally add review remarks.
               </p>
+            </div>
+
+            {/* Per-Doctor GPS Radius Geofence Input (Admin & ZBM Editable, Max 200m) */}
+            <div className="flex flex-col gap-1.5 bg-[#F9FAFB] border border-[#E5E7EB] p-3.5 rounded-xl">
+              <label className="text-xs font-extrabold text-[#111827] flex items-center gap-1.5">
+                <MapPin size={14} className="text-[#059669]" />
+                GPS Verification Radius for {selectedRequest.name} (Meters, Max 200m)
+              </label>
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="text"
+                  value={modalDoctorThreshold}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val === '') {
+                      setModalDoctorThreshold('');
+                      return;
+                    }
+                    let num = parseInt(val, 10);
+                    if (num > 200) num = 200;
+                    setModalDoctorThreshold(String(num));
+                  }}
+                  placeholder="200"
+                  maxLength={3}
+                  className="w-20 px-3 py-1.5 text-sm font-extrabold border border-gray-300 rounded-lg outline-none bg-white text-center focus:border-[#059669]"
+                />
+                <span className="text-xs font-bold text-[#4B5563]">meters</span>
+              </div>
+              <span className="text-[11px] text-[#6B7280]">
+                MR visit check-ins for this doctor within <strong>{modalDoctorThreshold || '200'}m</strong> radius will be verified.
+              </span>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-[#374151]">Review Remarks / Comments</label>
