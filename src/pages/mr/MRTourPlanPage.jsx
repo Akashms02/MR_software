@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import axios from '../../api/axiosInstance';
 import { API_ROUTE } from '../../data/env';
-import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList, Clock, Lock } from 'lucide-react';
+import { Calendar, MapPin, Plus, Trash2, CheckCircle2, AlertCircle, Eye, Send, Loader2, ClipboardList, Clock, Lock, Edit2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import {
   fetchMyTourPlansAction,
@@ -89,6 +89,7 @@ const MRTourPlanPage = () => {
     const existingPlan = tourPlans.find(p => p.targetMonth === normalizedTarget);
     
     if (existingPlan) {
+      if (existingPlan.unlocked) return false;
       return existingPlan.locked;
     }
     
@@ -262,6 +263,22 @@ const MRTourPlanPage = () => {
     }
   };
 
+  const handleEditExistingPlan = (plan) => {
+    if (!plan) return;
+    const monthStr = plan.targetMonth?.slice(0, 7);
+    if (monthStr) setTargetMonth(monthStr);
+    if (plan.planDays && plan.planDays.length > 0) {
+      setPlanDays(plan.planDays.map(d => ({
+        plannedDate: d.plannedDate,
+        targetTerritory: d.targetTerritory === 'N/A' ? '' : (d.targetTerritory || ''),
+        activityType: d.activityType || 'FIELD_WORK'
+      })));
+    } else {
+      setPlanDays([{ plannedDate: '', targetTerritory: '', activityType: 'FIELD_WORK' }]);
+    }
+    setActiveTab('new');
+  };
+
   const handleViewPlanDetails = async (planId) => {
     try {
       await dispatch(fetchTourPlanDetailsAction(planId));
@@ -399,17 +416,26 @@ const MRTourPlanPage = () => {
                               >
                                 <Eye size={12} /> Details
                               </button>
-                              {plan.status === 'DRAFT' && (
+                              {(plan.unlocked || plan.status === 'DRAFT' || plan.status === 'REJECTED') && (
+                                <button
+                                  onClick={() => handleEditExistingPlan(plan)}
+                                  title="Edit tour plan"
+                                  className="flex items-center gap-1 bg-[#EEF2FF] border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold text-[#4F46E5] hover:bg-[#E0E7FF] transition-colors duration-150"
+                                >
+                                  <Edit2 size={12} /> Edit
+                                </button>
+                              )}
+                              {(plan.status === 'DRAFT' || plan.unlocked) && (
                                 <button
                                   onClick={() => handleSubmitExistingDraft(plan.id)}
-                                  disabled={actionLoading || plan.locked}
-                                  title={plan.locked ? "This plan is locked after the 25th" : "Submit tour plan for review"}
+                                  disabled={actionLoading}
+                                  title="Submit tour plan for review"
                                   className="flex items-center gap-1 border-none px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold bg-[#C8F04A] text-[#111827] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <Send size={11} /> Submit
                                 </button>
                               )}
-                              {plan.locked && (
+                              {plan.locked && !plan.unlocked && (
                                 <button
                                   type="button"
                                   onClick={() => handleRequestUnlock(plan.targetMonth)}
