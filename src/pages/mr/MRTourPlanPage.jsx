@@ -44,9 +44,14 @@ const MRTourPlanPage = () => {
         const next = { ...prev };
         tourPlans.forEach(plan => {
           const monthStr = plan.targetMonth?.slice(0, 7);
-          if (monthStr && (plan.unlocked || plan.unlockUsed)) {
-            if (next[monthStr]) {
+          const rawMonth = plan.targetMonth;
+          if (plan.unlocked || plan.unlockUsed) {
+            if (monthStr && next[monthStr]) {
               delete next[monthStr];
+              changed = true;
+            }
+            if (rawMonth && next[rawMonth]) {
+              delete next[rawMonth];
               changed = true;
             }
           }
@@ -82,10 +87,12 @@ const MRTourPlanPage = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const handleRequestUnlock = async (monthStr) => {
-    if (!monthStr || requestingUnlock[monthStr] || requestedUnlockMonths[monthStr]) return;
+    if (!monthStr) return;
+    const normKey = monthStr.slice(0, 7);
+    if (requestingUnlock[monthStr] || requestingUnlock[normKey] || requestedUnlockMonths[monthStr] || requestedUnlockMonths[normKey]) return;
 
     // Show button loader while API is pending
-    setRequestingUnlock(prev => ({ ...prev, [monthStr]: true }));
+    setRequestingUnlock(prev => ({ ...prev, [monthStr]: true, [normKey]: true }));
 
     try {
       const res = await axios.post(`${API_ROUTE}/tour-plan/request-unlock?targetMonth=${monthStr}`);
@@ -93,7 +100,7 @@ const MRTourPlanPage = () => {
       
       // On API success response, mark month as requested
       setRequestedUnlockMonths(prev => {
-        const next = { ...prev, [monthStr]: true };
+        const next = { ...prev, [monthStr]: true, [normKey]: true };
         try {
           localStorage.setItem('tour_plan_unlock_requested', JSON.stringify(next));
         } catch (e) {}
@@ -105,7 +112,7 @@ const MRTourPlanPage = () => {
       setErrorMsg(errMsg);
     } finally {
       // Turn off button loader after API call finishes
-      setRequestingUnlock(prev => ({ ...prev, [monthStr]: false }));
+      setRequestingUnlock(prev => ({ ...prev, [monthStr]: false, [normKey]: false }));
     }
   };
 
@@ -461,26 +468,35 @@ const MRTourPlanPage = () => {
                                   <Send size={11} /> Submit
                                 </button>
                               )}
-                              {(plan.status === 'APPROVED' || plan.locked) && !plan.unlocked && plan.status !== 'SUBMITTED' && !plan.unlockUsed && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRequestUnlock(plan.targetMonth)}
-                                  disabled={requestingUnlock[plan.targetMonth] || requestedUnlockMonths[plan.targetMonth]}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold transition-colors duration-150 border disabled:opacity-80 disabled:cursor-not-allowed ${
-                                    requestedUnlockMonths[plan.targetMonth]
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                                      : 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5] hover:bg-[#FEE2E2]'
-                                  }`}
-                                >
-                                  {requestingUnlock[plan.targetMonth] ? (
-                                    <><Loader2 size={11} className="animate-spin" /> Requesting...</>
-                                  ) : requestedUnlockMonths[plan.targetMonth] ? (
-                                    <><CheckCircle2 size={11} className="text-emerald-600" /> Unlock Requested</>
-                                  ) : (
-                                    <><Lock size={11} /> Request Unlock</>
-                                  )}
-                                </button>
-                              )}
+                              {(() => {
+                                if (plan.unlockUsed || plan.unlocked || plan.status === 'SUBMITTED') return null;
+                                if (!plan.locked && plan.status !== 'APPROVED') return null;
+                                
+                                const normKey = plan.targetMonth?.slice(0, 7);
+                                const isReq = requestingUnlock[plan.targetMonth] || requestingUnlock[normKey];
+                                const isDoneReq = requestedUnlockMonths[plan.targetMonth] || requestedUnlockMonths[normKey];
+
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRequestUnlock(plan.targetMonth)}
+                                    disabled={isReq || isDoneReq}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-[12px] font-bold transition-colors duration-150 border disabled:opacity-80 disabled:cursor-not-allowed ${
+                                      isDoneReq
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                        : 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5] hover:bg-[#FEE2E2]'
+                                    }`}
+                                  >
+                                    {isReq ? (
+                                      <><Loader2 size={11} className="animate-spin" /> Requesting...</>
+                                    ) : isDoneReq ? (
+                                      <><CheckCircle2 size={11} className="text-emerald-600" /> Unlock Requested</>
+                                    ) : (
+                                      <><Lock size={11} /> Request Unlock</>
+                                    )}
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </td>
                         </tr>
