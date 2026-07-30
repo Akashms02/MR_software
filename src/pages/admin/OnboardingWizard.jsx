@@ -123,6 +123,8 @@ const FileDropzone = ({ label, file, onChange, required = false }) => (
 const OnboardingWizard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isManager = window.location.pathname.startsWith('/manager');
+  const myTeamPath = isManager ? '/manager/myteam' : '/admin/myteam';
   const { loading } = useSelector((state) => state.team);
   const { user } = useSelector((state) => state.auth || {});
 
@@ -528,7 +530,7 @@ const OnboardingWizard = () => {
       if (activeStep < 8) {
         setActiveStep((prev) => prev + 1);
       } else {
-        navigate('/admin/myteam');
+        navigate(myTeamPath);
       }
       return;
     }
@@ -756,7 +758,7 @@ const OnboardingWizard = () => {
         }, 800);
       } else {
         setFormSuccess('🎉 Onboarding complete! Redirecting...');
-        setTimeout(() => navigate('/admin/myteam'), 2000);
+        setTimeout(() => navigate(myTeamPath), 2000);
       }
     } catch (err) {
       setFormError(
@@ -772,7 +774,7 @@ const OnboardingWizard = () => {
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex items-center gap-3.5 mb-7">
         <button
-          onClick={() => navigate('/admin/myteam')}
+          onClick={() => navigate(myTeamPath)}
           className="bg-gray-100 border-none rounded-xl p-2.5 cursor-pointer flex items-center transition-colors duration-200 hover:bg-gray-200"
         >
           <ChevronLeft size={20} className="text-gray-700" />
