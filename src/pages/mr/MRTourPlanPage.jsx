@@ -416,7 +416,7 @@ const MRTourPlanPage = () => {
                               >
                                 <Eye size={12} /> Details
                               </button>
-                              {plan.status !== 'APPROVED' && (plan.unlocked || plan.status === 'DRAFT' || plan.status === 'REJECTED') && (
+                              {(plan.status === 'DRAFT' || plan.status === 'REJECTED') && (
                                 <button
                                   onClick={() => handleEditExistingPlan(plan)}
                                   title="Edit tour plan"
@@ -425,7 +425,7 @@ const MRTourPlanPage = () => {
                                   <Edit2 size={12} /> Edit
                                 </button>
                               )}
-                              {plan.status !== 'APPROVED' && (plan.status === 'DRAFT' || plan.unlocked) && (
+                              {plan.status === 'DRAFT' && (
                                 <button
                                   onClick={() => handleSubmitExistingDraft(plan.id)}
                                   disabled={actionLoading}
@@ -435,7 +435,7 @@ const MRTourPlanPage = () => {
                                   <Send size={11} /> Submit
                                 </button>
                               )}
-                              {plan.locked && !plan.unlocked && (
+                              {plan.locked && !plan.unlocked && plan.status !== 'SUBMITTED' && !plan.unlockUsed && (
                                 <button
                                   type="button"
                                   onClick={() => handleRequestUnlock(plan.targetMonth)}
