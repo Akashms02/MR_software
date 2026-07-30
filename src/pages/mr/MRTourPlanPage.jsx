@@ -36,6 +36,32 @@ const MRTourPlanPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
 
+  // Clear requested unlock memory when plan is unlocked or unlockUsed
+  useEffect(() => {
+    if (tourPlans && tourPlans.length > 0) {
+      setRequestedUnlockMonths(prev => {
+        let changed = false;
+        const next = { ...prev };
+        tourPlans.forEach(plan => {
+          const monthStr = plan.targetMonth?.slice(0, 7);
+          if (monthStr && (plan.unlocked || plan.unlockUsed)) {
+            if (next[monthStr]) {
+              delete next[monthStr];
+              changed = true;
+            }
+          }
+        });
+        if (changed) {
+          try {
+            localStorage.setItem('tour_plan_unlock_requested', JSON.stringify(next));
+          } catch (e) {}
+          return next;
+        }
+        return prev;
+      });
+    }
+  }, [tourPlans]);
+
   // Reset page when switching tabs
   useEffect(() => {
     setCurrentPage(0);
@@ -435,7 +461,7 @@ const MRTourPlanPage = () => {
                                   <Send size={11} /> Submit
                                 </button>
                               )}
-                              {plan.locked && !plan.unlocked && plan.status !== 'SUBMITTED' && !plan.unlockUsed && (
+                              {(plan.status === 'APPROVED' || plan.locked) && !plan.unlocked && plan.status !== 'SUBMITTED' && !plan.unlockUsed && (
                                 <button
                                   type="button"
                                   onClick={() => handleRequestUnlock(plan.targetMonth)}
