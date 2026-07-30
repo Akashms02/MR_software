@@ -973,6 +973,16 @@ axios.interceptors.request.use(
               }
 
               mockData = { success: true, status: 200, message: "Location updated successfully." };
+            } else if (cfg.url.includes('/settings/gps-threshold')) {
+              if (cfg.method === 'get') {
+                const saved = localStorage.getItem('company_gps_threshold_meters') || '200';
+                mockData = { success: true, data: { gpsThresholdMeters: parseFloat(saved) } };
+              } else if (cfg.method === 'put') {
+                const body = JSON.parse(cfg.data || '{}');
+                const threshold = Math.min(200, Math.max(1, body.gpsThresholdMeters || 200));
+                localStorage.setItem('company_gps_threshold_meters', String(threshold));
+                mockData = { success: true, data: { gpsThresholdMeters: threshold }, message: "GPS threshold updated successfully." };
+              }
             } else if (cfg.url.includes('/requests') && !cfg.url.includes('/requests/pending') && !cfg.url.includes('/requests/me') && cfg.method === 'post') {
               const body = JSON.parse(cfg.data || '{}');
               const requests = getOrInitializeOnboardingRequests();
