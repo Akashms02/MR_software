@@ -6,8 +6,11 @@ import MRAssignmentSection from '../../components/MRAssignmentSection';
 const DoctorAssignment = () => {
   const navigate = useNavigate();
 
+  const isManager = window.location.pathname.startsWith('/manager');
+  const requestsPath = isManager ? '/manager/requests' : '/admin/requests';
+
   const handleCancel = () => {
-    navigate('/admin/requests');
+    navigate(requestsPath);
   };
 
   return (

@@ -123,8 +123,11 @@ const DoctorOnboarding = () => {
   const homeWatchTimerRef = useRef(null);
   const bestHomeAccRef = useRef(null);
 
+  const isManager = window.location.pathname.startsWith('/manager');
+  const requestsPath = isManager ? '/manager/requests' : '/admin/requests';
+
   const handleCancel = () => {
-    navigate('/admin/requests');
+    navigate(requestsPath);
   };
 
   const handleExcelUpload = async (e) => {
@@ -141,7 +144,7 @@ const DoctorOnboarding = () => {
         setLocalSuccess(result.data?.message || 'Excel sheet uploaded and processed successfully! Redirecting...');
         setLocalError(null);
         setTimeout(() => {
-          navigate('/admin/requests');
+          navigate(requestsPath);
         }, 1500);
       } else {
         setLocalError(result?.message || 'Failed to upload Excel sheet.');
