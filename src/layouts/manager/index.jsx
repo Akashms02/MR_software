@@ -16,6 +16,7 @@ import AdminSalesPage from '../../pages/admin/AdminSalesPage'
 import EmployeeDocument from '../../pages/employee/EmployeeDocument'
 import AdminVisualAidPage from '../../pages/admin/AdminVisualAidPage'
 import AdminReports from '../../pages/admin/AdminReports'
+import AdminRequestsPage from '../../pages/admin/AdminRequestsPage'
 
 export default function ManagerLayoutRouter() {
   return (
@@ -24,6 +25,7 @@ export default function ManagerLayoutRouter() {
         <Route path="/" element={<ManagerDashboard />} />
         <Route path="dashboard" element={<ManagerDashboard />} />
         <Route path="reports" element={<AdminReports />} />
+        <Route path="requests" element={<AdminRequestsPage />} />
         <Route path="myteam" element={<TeamManagement />} />
         <Route path="myteam/onboard" element={<OnboardingWizard />} />
         <Route path="myteam/onboard-doctor" element={<DoctorOnboarding />} />
