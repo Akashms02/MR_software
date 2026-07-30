@@ -504,26 +504,18 @@ const AdminTourPlanReviewPage = () => {
 
               {/* Action buttons */}
               <div className="flex justify-end gap-2.5 w-full">
-                {canLockUnlock && (
+                {canLockUnlock && inspectPlan.unlockRequested && !inspectPlan.unlocked && !inspectPlan.unlockUsed && (
                   <button
                     type="button"
                     onClick={() => handleToggleLock(inspectPlan)}
                     disabled={togglingLock}
-                    className={`flex items-center gap-1.5 border-0 px-5 py-2.5 rounded-xl cursor-pointer font-bold text-[13px] text-white transition-colors duration-150 disabled:opacity-50 mr-auto ${
-                      inspectPlan.unlocked
-                        ? 'bg-[#EF4444] hover:bg-[#DC2626]'
-                        : 'bg-[#4F46E5] hover:bg-[#4338CA]'
-                    }`}
+                    className="flex items-center gap-1.5 border-0 px-5 py-2.5 rounded-xl cursor-pointer font-bold text-[13px] text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-colors duration-150 disabled:opacity-50 mr-auto"
                   >
                     {togglingLock ? (
                       <Loader2 size={13} className="animate-spin text-white" />
-                    ) : inspectPlan.unlocked ? (
-                      <>
-                        <Lock size={13} /> Lock Entry
-                      </>
                     ) : (
                       <>
-                        <Unlock size={13} /> Unlock Entry
+                        <Unlock size={13} /> Unlock Plan
                       </>
                     )}
                   </button>
