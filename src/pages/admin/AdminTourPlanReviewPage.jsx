@@ -284,7 +284,8 @@ const AdminTourPlanReviewPage = () => {
                   );
                 })}
               </div>
-              <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
+              {/* Second phase */}
+              {/* <span className="text-[12.5px] font-bold text-[#D97706] bg-[#FFFBEB] px-3 py-1.5 rounded-xl ml-2 shrink-0">
                 Pending: {pendingCount}
               </span>
               {canLockUnlock && (
@@ -295,7 +296,7 @@ const AdminTourPlanReviewPage = () => {
                 >
                   <Lock size={12} /> Lock / Unlock Entry
                 </button>
-              )}
+              )} */}
             </div>
           </div>
  
@@ -506,17 +507,17 @@ const AdminTourPlanReviewPage = () => {
               {inspectPlan.unlocked ? (
                 <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2.5">
                   <Unlock size={15} className="text-amber-600 shrink-0" />
-                  <span>This tour plan is currently <strong>unlocked</strong> for modifications. Approve and Reject controls are hidden.</span>
+                  <span>This tour plan is currently <strong>unlocked</strong> for modifications. You can review, approve, or reject the plan below.</span>
                 </div>
               ) : inspectPlan.unlockRequested ? (
                 <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-semibold flex items-center gap-2.5">
                   <Unlock size={15} className="text-indigo-600 shrink-0" />
-                  <span>An unlock request has been submitted for this tour plan. Review controls (Approve/Reject) are hidden.</span>
+                  <span>An unlock request has been submitted for this tour plan. Review controls (Approve/Reject) are hidden while unlock request is pending.</span>
                 </div>
               ) : null}
 
               {/* Remarks input */}
-              {inspectPlan.status === 'SUBMITTED' && !inspectPlan.unlocked && !inspectPlan.unlockRequested && (
+              {((inspectPlan.status === 'SUBMITTED' || inspectPlan.unlocked) && !inspectPlan.unlockRequested) && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-[#374151]">Review Feedback Remarks</label>
                   <input
@@ -553,7 +554,7 @@ const AdminTourPlanReviewPage = () => {
                 >
                   Close
                 </button>
-                {inspectPlan.status === 'SUBMITTED' && !inspectPlan.unlocked && !inspectPlan.unlockRequested && (
+                {((inspectPlan.status === 'SUBMITTED' || inspectPlan.unlocked) && !inspectPlan.unlockRequested) && (
                   <>
                     <button
                       onClick={() => handleReview(inspectPlan.id, 'REJECTED')}

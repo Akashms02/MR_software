@@ -277,7 +277,7 @@ const TeamManagement = () => {
                           {canManageEmployeeProfile && (
                             <>
                               <button
-                                onClick={() => handleEditClick(member.id)}
+                                onClick={() => handleEditClick(member.employeeId || member.id)}
                                 title="View & Edit Employee Profile"
                                 className="w-8 h-8 rounded-lg bg-teal-50 text-[#0F766E] border-none cursor-pointer flex items-center justify-center hover:bg-[#0F766E] hover:text-white transition-all duration-200"
                               >

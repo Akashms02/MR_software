@@ -770,12 +770,15 @@ const OnboardingWizard = () => {
 
       // For step 8 (frontend), call backend step7 endpoint
       const backendStep = activeStep === 8 ? 7 : activeStep;
+      const targetEmpId = employeeId || resumeId;
       const response = await dispatch(
-        saveOnboardingStep(backendStep, employeeId, payload, isMultipart)
+        saveOnboardingStep(backendStep, targetEmpId, payload, isMultipart)
       );
 
-      if (activeStep === 1 && response?.data?.employeeId) {
-        setEmployeeId(response.data.employeeId);
+      const createdEmpId = response?.data?.employeeId || response?.employeeId || response?.data?.data?.employeeId;
+      if (activeStep === 1 && createdEmpId) {
+        setEmployeeId(createdEmpId);
+        setResumeId(createdEmpId);
       }
 
       if (activeStep < 8) {
