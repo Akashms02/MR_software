@@ -353,9 +353,16 @@ const AdminTourPlanReviewPage = () => {
 
                           {/* Status */}
                           <td className="p-4">
-                            <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold border ${plan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]' : plan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
-                              {plan.status}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`inline-flex px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold border ${plan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]' : plan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
+                                {plan.status}
+                              </span>
+                              {plan.unlocked && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                                  <Unlock size={10} /> Unlocked
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Actions */}
@@ -402,7 +409,14 @@ const AdminTourPlanReviewPage = () => {
                   Target Month: {formatMonthLabel(inspectPlan.targetMonth)} • Plan Status: {inspectPlan.status}
                 </span>
               </div>
-              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[20px] ${inspectPlan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669]' : inspectPlan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#D97706]'}`}>{inspectPlan.status}</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[20px] ${inspectPlan.status === 'APPROVED' ? 'bg-[#ECFDF5] text-[#059669]' : inspectPlan.status === 'REJECTED' ? 'bg-[#FEF2F2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#D97706]'}`}>{inspectPlan.status}</span>
+                {inspectPlan.unlocked && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[20px] text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                    <Unlock size={11} /> UNLOCKED
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Modal Scroll Content */}
@@ -488,8 +502,21 @@ const AdminTourPlanReviewPage = () => {
             {/* Modal Review input + Footer */}
             <div className="px-6 py-5 border-t-[1.5px] border-[#F3F4F6] flex flex-col gap-4 shrink-0 bg-[#FAFAFA]">
               
+              {/* Unlocked / Unlock Requested Info Banner */}
+              {inspectPlan.unlocked ? (
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2.5">
+                  <Unlock size={15} className="text-amber-600 shrink-0" />
+                  <span>This tour plan is currently <strong>unlocked</strong> for modifications. Approve and Reject controls are hidden.</span>
+                </div>
+              ) : inspectPlan.unlockRequested ? (
+                <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-semibold flex items-center gap-2.5">
+                  <Unlock size={15} className="text-indigo-600 shrink-0" />
+                  <span>An unlock request has been submitted for this tour plan. Review controls (Approve/Reject) are hidden.</span>
+                </div>
+              ) : null}
+
               {/* Remarks input */}
-              {inspectPlan.status === 'SUBMITTED' && (
+              {inspectPlan.status === 'SUBMITTED' && !inspectPlan.unlocked && !inspectPlan.unlockRequested && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-[#374151]">Review Feedback Remarks</label>
                   <input
@@ -526,7 +553,7 @@ const AdminTourPlanReviewPage = () => {
                 >
                   Close
                 </button>
-                {inspectPlan.status === 'SUBMITTED' && (
+                {inspectPlan.status === 'SUBMITTED' && !inspectPlan.unlocked && !inspectPlan.unlockRequested && (
                   <>
                     <button
                       onClick={() => handleReview(inspectPlan.id, 'REJECTED')}
