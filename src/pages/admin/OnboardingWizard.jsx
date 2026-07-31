@@ -25,6 +25,24 @@ const DESIGNATION_OPTIONS = [
   { value: 'Other', label: 'Other / Custom Designation...' }
 ];
 
+const formatDateForInput = (dateVal) => {
+  if (!dateVal) return '';
+  if (Array.isArray(dateVal)) {
+    const [year, month, day] = dateVal;
+    const yyyy = String(year);
+    const mm = String(month).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  if (typeof dateVal === 'string') {
+    return dateVal.split('T')[0];
+  }
+  if (dateVal instanceof Date) {
+    return dateVal.toISOString().split('T')[0];
+  }
+  return String(dateVal);
+};
+
 const STEP_LABELS = [
   'Basic Setup',
   'Personal Info',
@@ -322,69 +340,81 @@ const OnboardingWizard = () => {
     setFormError(null);
     try {
       const res = await dispatch(fetchOnboardingStatus(checkId));
-      const data = res.data;
+      
+      const rawRes = res?.data?.data || res?.data || res || {};
+      const data = rawRes.data || rawRes.profile || rawRes.employee || rawRes;
 
-      const desig = data.employment?.designation || '';
+      const emp = data.employment || data.profile?.employment || data;
+      const pers = data.personal || data.profile?.personal || data;
+      const bnk = data.bank || data.profile?.bank || data;
+      const stat = data.statutory || data.profile?.statutory || data;
+      const emerg = data.emergency || data.profile?.emergency || data;
+
+      const desig = emp?.designation || data.designation || '';
       const isCustom = desig && !['Medical Representative (MR)', 'Area Sales Manager (ASM)', 'Regional Sales Manager (RSM)', 'Zonal Business Manager (ZBM)'].includes(desig);
       setIsCustomDesignation(!!isCustom);
 
+      const deptVal = emp?.department || data.department || '';
+      if (deptVal && !departmentsList.some(d => d.value === deptVal)) {
+        setDepartmentsList(prev => [...prev, { value: deptVal, label: deptVal }]);
+      }
+
       setFormData({
-        fullName: data.fullName || '',
+        fullName: data.fullName || (pers.firstName ? `${pers.firstName} ${pers.middleName || ''} ${pers.surname || ''}`.trim() : ''),
         email: data.email || '',
         phone: data.phone || '',
         password: '',
         role: data.role || 'MR',
         reportingToId: data.reportingToId || '',
 
-        firstName: data.personal?.firstName || '',
-        middleName: data.personal?.middleName || '',
-        surname: data.personal?.surname || '',
-        dateOfBirth: data.personal?.dateOfBirth || '',
-        gender: data.personal?.gender || 'Male',
-        bloodGroup: data.personal?.bloodGroup || 'A+',
-        maritalStatus: data.personal?.maritalStatus || 'Single',
-        fatherName: data.personal?.fatherName || '',
-        motherName: data.personal?.motherName || '',
-        currentAddress: data.personal?.currentAddress || '',
-        permanentAddress: data.personal?.permanentAddress || '',
-        sameAsCurrentAddress: data.personal?.sameAsCurrentAddress || false,
+        firstName: pers.firstName || data.firstName || '',
+        middleName: pers.middleName || data.middleName || '',
+        surname: pers.surname || data.surname || '',
+        dateOfBirth: formatDateForInput(pers.dateOfBirth || data.dateOfBirth),
+        gender: pers.gender || data.gender || 'Male',
+        bloodGroup: pers.bloodGroup || data.bloodGroup || 'A+',
+        maritalStatus: pers.maritalStatus || data.maritalStatus || 'Single',
+        fatherName: pers.fatherName || data.fatherName || '',
+        motherName: pers.motherName || data.motherName || '',
+        currentAddress: pers.currentAddress || data.currentAddress || '',
+        permanentAddress: pers.permanentAddress || data.permanentAddress || '',
+        sameAsCurrentAddress: pers.sameAsCurrentAddress || data.sameAsCurrentAddress || false,
 
-        department: data.employment?.department || '',
-        designation: data.employment?.designation || '',
-        dateOfJoining: data.employment?.dateOfJoining || '',
-        workLocation: data.employment?.workLocation || '',
-        employmentType: data.employment?.employmentType || 'Full-time',
-        salaryDetails: data.employment?.salaryDetails || '',
-        isFresher: data.employment?.isFresher || false,
+        department: deptVal,
+        designation: desig,
+        dateOfJoining: formatDateForInput(emp.dateOfJoining || data.dateOfJoining),
+        workLocation: emp.workLocation || data.workLocation || '',
+        employmentType: emp.employmentType || data.employmentType || 'Full-time',
+        salaryDetails: emp.salaryDetails !== undefined && emp.salaryDetails !== null ? emp.salaryDetails : (data.salaryDetails || ''),
+        isFresher: emp.isFresher ?? data.isFresher ?? false,
 
-        companyName: data.employment?.companyName || '',
-        prevDesignation: data.employment?.prevDesignation || '',
-        prevDepartment: data.employment?.prevDepartment || '',
-        totalExperience: data.employment?.totalExperience || '',
-        expFromDate: data.employment?.expFromDate || '',
-        expToDate: data.employment?.expToDate || '',
+        companyName: emp.companyName || data.companyName || '',
+        prevDesignation: emp.prevDesignation || data.prevDesignation || '',
+        prevDepartment: emp.prevDepartment || data.prevDepartment || '',
+        totalExperience: emp.totalExperience || data.totalExperience || '',
+        expFromDate: formatDateForInput(emp.expFromDate || data.expFromDate),
+        expToDate: formatDateForInput(emp.expToDate || data.expToDate),
 
-        bankName: data.bank?.bankName || '',
-        accountNumber: data.bank?.accountNumber || '',
-        ifscCode: data.bank?.ifscCode || '',
-        branchName: data.bank?.branchName || '',
+        bankName: bnk.bankName || data.bankName || '',
+        accountNumber: bnk.accountNumber || data.accountNumber || '',
+        ifscCode: bnk.ifscCode || data.ifscCode || '',
+        branchName: bnk.branchName || data.branchName || '',
 
-        panNumber: data.statutory?.panNumber || '',
-        aadharNumber: data.statutory?.aadharNumber || '',
-        uanNumber: data.statutory?.uanNumber || '',
-        pfNumber: data.statutory?.pfNumber || '',
-        esiNumber: data.statutory?.esiNumber || '',
+        panNumber: stat.panNumber || data.panNumber || '',
+        aadharNumber: stat.aadharNumber || data.aadharNumber || '',
+        uanNumber: stat.uanNumber || data.uanNumber || '',
+        pfNumber: stat.pfNumber || data.pfNumber || '',
+        esiNumber: stat.esiNumber || data.esiNumber || '',
 
-        emergencyContactName: data.emergency?.emergencyContactName || '',
-        relationship: data.emergency?.relationship || '',
-        emergencyContactNumber: data.emergency?.emergencyContactNumber || '',
-        alternateContactNumber: data.emergency?.alternateContactNumber || '',
+        emergencyContactName: emerg.emergencyContactName || data.emergencyContactName || '',
+        relationship: emerg.relationship || data.relationship || '',
+        emergencyContactNumber: emerg.emergencyContactNumber || data.emergencyContactNumber || '',
+        alternateContactNumber: emerg.alternateContactNumber || data.alternateContactNumber || '',
       });
 
-      setEmployeeId(data.employeeId);
-      // Mark this as a resumed session — step 1 account already exists on backend
+      setEmployeeId(data.employeeId || checkId);
       setIsResumed(true);
-      setResumedFromStep(data.onboardingStep);
+      setResumedFromStep(data.onboardingStep || 1);
       setActiveStep(data.onboardingStep);
       setFormSuccess(
         `✅ Loaded onboarding for ${data.fullName}. Resuming at Step ${data.onboardingStep}.`
