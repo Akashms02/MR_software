@@ -43,13 +43,13 @@ export default function HeroSection({ onBookDemoClick }) {
             className="text-[22px] sm:text-[24px] md:text-[28px] lg:text-[32px] font-extrabold text-[#0D2411] tracking-tight leading-tight max-w-7xl mx-auto lg:whitespace-nowrap text-center"
             style={{ fontFamily: '"Adelle Cyrillic", "Adelle", Georgia, Cambria, "Times New Roman", Times, serif' }}
           >
-            The Complete HRMS & Field Force Automation Platform for Pharmaceutical Teams
+            Medistrax Top MR Reporting Application for Pharmaceutical Teams
           </h1>
 
           <p
             className="text-[14px] sm:text-[15px] md:text-[16px] text-[#5C715E] font-medium max-w-3xl mx-auto leading-relaxed text-center"
           >
-            Everything Your Medical Representatives Need–Attendance, Doctor Visits, GPS Tracking, Leave, And Analytics–All In One Platform
+            Medistrax is designed to simplify pharmaceutical field force operations with HRMS, attendance, smart reporting, employee tracking, workflow visibility, and operational efficiency through a powerful web portal.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 pt-4">
