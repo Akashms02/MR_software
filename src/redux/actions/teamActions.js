@@ -215,6 +215,9 @@ export const saveOnboardingStep = (stepNumber, employeeId, payload, isMultipart 
   try {
     let url = `${API_ROUTE}/admin/onboard/step${stepNumber}`;
     if (stepNumber > 1) {
+      if (!employeeId || String(employeeId).trim() === '') {
+        throw new Error(`Employee ID is missing. Cannot save Step ${stepNumber}. Please complete Step 1 first.`);
+      }
       url += `/${employeeId}`;
     }
 

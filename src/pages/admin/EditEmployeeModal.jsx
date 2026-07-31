@@ -694,6 +694,20 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         };
       } else if (activeTab === 2) {
         payload = {
+          personal: {
+            firstName: formData.firstName,
+            middleName: formData.middleName,
+            surname: formData.surname,
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            bloodGroup: formData.bloodGroup,
+            maritalStatus: formData.maritalStatus,
+            fatherName: formData.fatherName,
+            motherName: formData.motherName,
+            currentAddress: formData.currentAddress,
+            permanentAddress: formData.permanentAddress,
+            sameAsCurrentAddress: formData.sameAsCurrentAddress,
+          },
           firstName: formData.firstName,
           middleName: formData.middleName,
           surname: formData.surname,
@@ -709,6 +723,15 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         };
       } else if (activeTab === 3) {
         payload = {
+          employment: {
+            department: formData.department,
+            designation: formData.designation,
+            dateOfJoining: formData.dateOfJoining,
+            workLocation: formData.workLocation,
+            employmentType: formData.employmentType,
+            salaryDetails: formData.salaryDetails ? parseFloat(formData.salaryDetails) : null,
+            isFresher: formData.isFresher,
+          },
           department: formData.department,
           designation: formData.designation,
           dateOfJoining: formData.dateOfJoining,
@@ -726,10 +749,22 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         form.append('totalExperience', formData.totalExperience || '');
         form.append('expFromDate', formData.expFromDate || '');
         form.append('expToDate', formData.expToDate || '');
+        form.append('employment.companyName', formData.companyName || '');
+        form.append('employment.prevDesignation', formData.prevDesignation || '');
+        form.append('employment.prevDepartment', formData.prevDepartment || '');
+        form.append('employment.totalExperience', formData.totalExperience || '');
+        form.append('employment.expFromDate', formData.expFromDate || '');
+        form.append('employment.expToDate', formData.expToDate || '');
         if (experienceLetter) form.append('experienceLetter', experienceLetter);
         payload = form;
       } else if (activeTab === 5) {
         payload = {
+          bank: {
+            bankName: formData.bankName,
+            accountNumber: formData.accountNumber,
+            ifscCode: formData.ifscCode,
+            branchName: formData.branchName,
+          },
           bankName: formData.bankName,
           accountNumber: formData.accountNumber,
           ifscCode: formData.ifscCode,
@@ -737,6 +772,13 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         };
       } else if (activeTab === 6) {
         payload = {
+          statutory: {
+            panNumber: formData.panNumber,
+            aadharNumber: formData.aadharNumber,
+            uanNumber: formData.uanNumber,
+            pfNumber: formData.pfNumber,
+            esiNumber: formData.esiNumber,
+          },
           panNumber: formData.panNumber,
           aadharNumber: formData.aadharNumber,
           uanNumber: formData.uanNumber,
@@ -745,6 +787,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employeeId }) => {
         };
       } else if (activeTab === 7) {
         payload = {
+          emergency: {
+            emergencyContactName: formData.emergencyContactName,
+            relationship: formData.relationship,
+            emergencyContactNumber: formData.emergencyContactNumber,
+            alternateContactNumber: formData.alternateContactNumber,
+          },
           emergencyContactName: formData.emergencyContactName,
           relationship: formData.relationship,
           emergencyContactNumber: formData.emergencyContactNumber,
