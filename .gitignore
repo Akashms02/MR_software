@@ -29,3 +29,5 @@ dist-ssr
 # PowerPoint Presentations & Scratch builds
 *.pptx
 scratch/
+.vercel
+.env*.local
