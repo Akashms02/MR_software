@@ -1,13 +1,15 @@
-name: Deploy to S3 and CloudFront
+name: Deploy to Environments
 
 on:
   push:
     branches:
       - main
-
+      - production
 
 jobs:
-  deploy:
+  deploy-main:
+    name: Deploy to S3 and CloudFront (Main)
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -46,3 +48,39 @@ jobs:
         aws cloudfront create-invalidation \
           --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
           --paths "/*"
+
+  deploy-production:
+    name: Deploy to Vercel (Production)
+    if: github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Inject Production Environment Variables
+      env:
+        VITE_REACT_APP_API_ROUTE: ${{ secrets.VITE_REACT_APP_API_ROUTE }}
+        VITE_REACT_APP_ROUTE: ${{ secrets.VITE_REACT_APP_ROUTE }}
+        VITE_ALLOWED_ONBOARDING_DOMAIN: ${{ secrets.VITE_ALLOWED_ONBOARDING_DOMAIN }}
+      run: |
+        echo "VITE_REACT_APP_API_ROUTE=${VITE_REACT_APP_API_ROUTE}" > .env.production
+        echo "VITE_REACT_APP_ROUTE=${VITE_REACT_APP_ROUTE}" >> .env.production
+        echo "VITE_ALLOWED_ONBOARDING_DOMAIN=${VITE_ALLOWED_ONBOARDING_DOMAIN}" >> .env.production
+
+    - name: Deploy to Vercel Production
+      run: |
+        npm install -g vercel
+        vercel pull --yes --environment=production
+        vercel build --prod --yes
+        vercel deploy --prebuilt --prod --yes
+        echo "Deployed Production to Vercel"
