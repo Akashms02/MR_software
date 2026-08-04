@@ -585,6 +585,10 @@ const MRDoctorOnboarding = () => {
       // License Number
       if (!doctorLicenseNumber.trim()) return setLocalError('Doctor License Number is required.');
       if (doctorLicenseNumber.trim().length < 4) return setLocalError('License Number seems too short. Please enter a valid license number.');
+      const licenseRegex = /^[A-Za-z0-9/-]+$/;
+      if (!licenseRegex.test(doctorLicenseNumber.trim())) {
+        return setLocalError('License Number must only contain alphanumeric characters and hyphens (e.g. MC-15JDKSJ). Special characters like commas or colons are not allowed.');
+      }
 
       // First Name
       if (!personalFirstName.trim()) return setLocalError('First Name is required.');
@@ -844,9 +848,9 @@ const MRDoctorOnboarding = () => {
                     <label className="text-xs font-bold text-[#4B5563]">License Number <span className="text-[#EF4444]">*</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. MC-12345"
+                      placeholder="e.g. MC-15JDKSJ"
                       value={doctorLicenseNumber}
-                      onChange={(e) => { setDoctorLicenseNumber(e.target.value); setLocalError(null); }}
+                      onChange={(e) => { setDoctorLicenseNumber(e.target.value.toUpperCase()); setLocalError(null); }}
                       required
                       disabled={isSubmitting}
                       className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
