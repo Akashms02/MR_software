@@ -14,6 +14,12 @@ import {
   UPDATE_DOCTOR_LOCATION_REQUEST,
   UPDATE_DOCTOR_LOCATION_SUCCESS,
   UPDATE_DOCTOR_LOCATION_FAILURE,
+  UPDATE_ONBOARDING_REQUEST_REQUEST,
+  UPDATE_ONBOARDING_REQUEST_SUCCESS,
+  UPDATE_ONBOARDING_REQUEST_FAILURE,
+  DELETE_ONBOARDING_REQUEST_REQUEST,
+  DELETE_ONBOARDING_REQUEST_SUCCESS,
+  DELETE_ONBOARDING_REQUEST_FAILURE,
 } from "../actionType/requestActionType";
 
 const initialState = {
@@ -31,6 +37,8 @@ export const requestReducer = (state = initialState, action) => {
     case SUBMIT_ONBOARDING_REQUEST_REQUEST:
     case REVIEW_ONBOARDING_REQUEST_REQUEST:
     case UPDATE_DOCTOR_LOCATION_REQUEST:
+    case UPDATE_ONBOARDING_REQUEST_REQUEST:
+    case DELETE_ONBOARDING_REQUEST_REQUEST:
       return {
         ...state,
         loading: true,
@@ -58,13 +66,23 @@ export const requestReducer = (state = initialState, action) => {
       };
 
     case REVIEW_ONBOARDING_REQUEST_SUCCESS:
+    case UPDATE_ONBOARDING_REQUEST_SUCCESS:
       return {
         ...state,
         loading: false,
-        success: `Request reviewed successfully!`,
+        success: `Request updated successfully!`,
         requests: state.requests.map((r) =>
           r.id === action.payload.id ? action.payload : r
         ),
+        error: null,
+      };
+
+    case DELETE_ONBOARDING_REQUEST_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        success: "Onboarding request deleted successfully!",
+        requests: state.requests.filter((r) => r.id !== action.payload),
         error: null,
       };
 
@@ -86,6 +104,8 @@ export const requestReducer = (state = initialState, action) => {
     case SUBMIT_ONBOARDING_REQUEST_FAILURE:
     case REVIEW_ONBOARDING_REQUEST_FAILURE:
     case UPDATE_DOCTOR_LOCATION_FAILURE:
+    case UPDATE_ONBOARDING_REQUEST_FAILURE:
+    case DELETE_ONBOARDING_REQUEST_FAILURE:
       return {
         ...state,
         loading: false,
