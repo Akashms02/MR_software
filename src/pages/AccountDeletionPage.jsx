@@ -39,7 +39,7 @@ export default function AccountDeletionPage() {
       if (result.success) {
         setSubmitted(true);
       } else {
-        // Fallback fallback: if access key not set, we still simulate success for the demo layout
+        // Fallback fallback: if access key not set,still simulate success for the demo layout
         // but log a console warning to help the developer configure it
         if (result.message && result.message.includes("access_key")) {
           console.warn("[Trust Center] Form submitted successfully in Demo Mode. To receive actual emails, configure VITE_WEB3FORMS_ACCESS_KEY in your env file.");
