@@ -493,9 +493,9 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }
               placeholder="e.g. Cardace 5mg, Lipvas 10mg" className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" autoFocus />
           </div>
           <div>
-            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Samples Distributed</label>
-            <input type="text" value={samples} onChange={e => setSamples(e.target.value)}
-              placeholder="e.g. Cardace (10 tabs), Visual Aid" className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" />
+            <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Samples Distributed (Quantity)</label>
+            <input type="text" inputMode="numeric" value={samples} onChange={e => setSamples(e.target.value.replace(/\D/g, ''))}
+              placeholder="e.g. 5, 10" className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border" />
           </div>
           <div>
             <label className="block text-[12px] font-bold text-gray-755 mb-1.5">Doctor Feedback / Call Summary</label>

@@ -609,15 +609,17 @@ const MRDoctorOnboarding = () => {
       if (ageInYears < 18) return setLocalError('Doctor must be at least 18 years old.');
       if (ageInYears > 100) return setLocalError('Please enter a valid Date of Birth.');
 
-      // Father's Name
-      if (!personalFatherName.trim()) return setLocalError("Father's Name is required.");
-      if (personalFatherName.trim().length < 2) return setLocalError("Father's Name must be at least 2 characters.");
-      if (/\d/.test(personalFatherName.trim())) return setLocalError("Father's Name must not contain numbers.");
+      // Father's Name (Optional)
+      if (personalFatherName.trim()) {
+        if (personalFatherName.trim().length < 2) return setLocalError("Father's Name must be at least 2 characters.");
+        if (/\d/.test(personalFatherName.trim())) return setLocalError("Father's Name must not contain numbers.");
+      }
 
-      // Mother's Name
-      if (!personalMotherName.trim()) return setLocalError("Mother's Name is required.");
-      if (personalMotherName.trim().length < 2) return setLocalError("Mother's Name must be at least 2 characters.");
-      if (/\d/.test(personalMotherName.trim())) return setLocalError("Mother's Name must not contain numbers.");
+      // Mother's Name (Optional)
+      if (personalMotherName.trim()) {
+        if (personalMotherName.trim().length < 2) return setLocalError("Mother's Name must be at least 2 characters.");
+        if (/\d/.test(personalMotherName.trim())) return setLocalError("Mother's Name must not contain numbers.");
+      }
 
       // Permanent Address (when different)
       if (!personalSameAsCurrentAddress && !personalPermanentAddress.trim()) {
@@ -1276,26 +1278,24 @@ const MRDoctorOnboarding = () => {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#4B5563]">Father's Name <span className="text-[#EF4444]">*</span></label>
+                    <label className="text-xs font-bold text-[#4B5563]">Father's Name</label>
                     <input
                       type="text"
-                      placeholder="John Connor Sr."
+                      placeholder="John Connor Sr. (Optional)"
                       value={personalFatherName}
                       onChange={(e) => setPersonalFatherName(e.target.value)}
-                      required
                       disabled={isSubmitting}
                       className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#4B5563]">Mother's Name <span className="text-[#EF4444]">*</span></label>
+                    <label className="text-xs font-bold text-[#4B5563]">Mother's Name</label>
                     <input
                       type="text"
-                      placeholder="Jane Connor"
+                      placeholder="Jane Connor (Optional)"
                       value={personalMotherName}
                       onChange={(e) => setPersonalMotherName(e.target.value)}
-                      required
                       disabled={isSubmitting}
                       className="w-full px-3.5 py-2.5 rounded-lg border-[1.5px] border-[#E5E7EB] text-[13.5px] text-[#1F2937] outline-none box-border bg-[#FAFAFA] transition-all duration-200 focus:border-[#7C3AED] focus:bg-white"
                     />
