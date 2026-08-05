@@ -433,9 +433,10 @@ export default function MRReports() {
                 <thead>
                   <tr>
                     <Th>Date</Th>
-                    <Th>Visits Completed</Th>
+                    <Th>Work Type / Activity</Th>
+                    <Th>Doctor Calls</Th>
                     <Th>Chemist Calls</Th>
-                    <Th>Total Doctor Calls</Th>
+                    <Th>Agenda / Remarks</Th>
                     <Th>DCR Verification Status</Th>
                   </tr>
                 </thead>
@@ -443,12 +444,22 @@ export default function MRReports() {
                   {currentData.list.map((row, idx) => (
                     <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors">
                       <Td className="font-bold text-[#1F2937]">{row.date}</Td>
-                      <Td>{row.visits} visits</Td>
-                      <Td>{row.chemistCalls || 0} calls</Td>
-                      <Td>{row.calls} calls</Td>
+                      <Td>
+                        <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[12px] uppercase ${
+                          row.workType === 'TRAINING' ? 'bg-purple-100 text-purple-800' :
+                          row.workType === 'MEETING' ? 'bg-blue-100 text-blue-800' :
+                          row.workType === 'OFFICE_WORK' ? 'bg-amber-100 text-amber-800' :
+                          'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {row.workType || 'FIELD_WORK'}
+                        </span>
+                      </Td>
+                      <Td>{row.doctorVisitCount ?? row.calls ?? 0} calls</Td>
+                      <Td>{row.chemistVisitCount ?? row.chemistCalls ?? 0} calls</Td>
+                      <Td className="text-xs text-gray-600 max-w-[240px] truncate" title={row.remarks}>{row.remarks || '—'}</Td>
                       <Td>
                         <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[12px] uppercase ${row.dcrStatus === 'APPROVED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
-                          {row.dcrStatus}
+                          {row.dcrStatus || 'PRESENT'}
                         </span>
                       </Td>
                     </tr>
@@ -457,6 +468,7 @@ export default function MRReports() {
               </table>
               {renderPagination(currentData.paginator)}
             </TableWrap>
+
           </>
         )}
 
