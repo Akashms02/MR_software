@@ -559,6 +559,98 @@ function VisitCheckOutModal({ visit, onSubmit, onClose, gpsLoading, gpsMessage }
   );
 }
 
+// ─── Punch In Work Type Selector Modal ───────────────────────────────────────
+function PunchInModal({ onConfirm, onClose, gpsLoading }) {
+  const [workType, setWorkType] = useState('FIELD_WORK');
+  const [remarks, setRemarks] = useState('');
+
+  const workTypes = [
+    { id: 'FIELD_WORK', label: 'Field Work', icon: '🏥', desc: 'Visiting Doctors & Chemists' },
+    { id: 'OFFICE_WORK', label: 'Office Work', icon: '🏢', desc: 'Reporting & Admin Tasks' },
+    { id: 'MEETING', label: 'Meeting', icon: '🤝', desc: 'Team or Manager Meeting' },
+    { id: 'TRAINING', label: 'Training', icon: '🎓', desc: 'Product / Sales Training' },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[1200] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-[460px] overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.3)] animate-[modalIn_0.25s_ease-out]">
+        <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 px-5 py-4 flex justify-between items-center">
+          <div>
+            <h3 className="m-0 text-white font-extrabold text-[16px]">Start Your Day</h3>
+            <p className="m-0 text-blue-100 text-[12px] font-medium mt-0.5">Select work type & punch in location</p>
+          </div>
+          <button onClick={onClose} className="bg-white/20 border-none text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-[14px]">✕</button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="block text-[12px] font-bold text-gray-700 mb-2">Select Today's Work Type</label>
+            <div className="grid grid-cols-2 gap-2.5">
+              {workTypes.map((wt) => (
+                <button
+                  key={wt.id}
+                  type="button"
+                  onClick={() => setWorkType(wt.id)}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    workType === wt.id
+                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[18px]">{wt.icon}</span>
+                    <span className={`text-[13px] font-extrabold ${workType === wt.id ? 'text-blue-900' : 'text-gray-800'}`}>
+                      {wt.label}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-gray-500 font-medium mt-1 leading-tight">{wt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-bold text-gray-700 mb-1.5">Remarks / Agenda (Optional)</label>
+            <input
+              type="text"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="e.g. Attending 3-Day Training & Office reporting"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-sans text-gray-800 outline-none box-border focus:border-blue-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="py-3 rounded-2xl border border-gray-200 bg-white text-gray-700 font-bold text-[14px] cursor-pointer hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={gpsLoading}
+              onClick={() => onConfirm({ workType, remarks: remarks || `Punched in as ${workType}` })}
+              className={`py-3 rounded-2xl border-none text-white font-extrabold text-[14px] cursor-pointer shadow-[0_4px_14px_rgba(37,99,235,0.3)] transition-all ${
+                gpsLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600'
+              }`}
+            >
+              {gpsLoading ? (
+                <span className="inline-flex items-center justify-center gap-1.5">
+                  <Loader2 size={15} className="animate-spin" /> Location...
+                </span>
+              ) : (
+                'Confirm Punch In ✅'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Progress Circle Helper ────────────────────────────────────────────────────
 function ProgressCircle({ pct, color, label, val }) {
   const r = 32;
@@ -701,6 +793,7 @@ export default function MRDashboard() {
   // modals
   const [modal, setModal] = useState(null); // null | 'visitIn' | 'visitOut'
   const [punchOutConfirmOpen, setPunchOutConfirmOpen] = useState(false);
+  const [punchInModalOpen, setPunchInModalOpen] = useState(false);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const todayDateKey = localTodayKey();
@@ -844,24 +937,30 @@ export default function MRDashboard() {
   };
 
   // ── Actions ────────────────────────────────────────────────────────────────
-  const handleStartDay = async () => {
+  const handleStartDay = () => {
+    setPunchInModalOpen(true);
+  };
+
+  const confirmStartDay = async ({ workType, remarks }) => {
     const coords = await getGps('punchIn');
     try {
       const res = await dispatch(
         punchInAction({
           latitude: coords.lat,
           longitude: coords.lng,
-          workType: 'FIELD_WORK',
-          remarks: 'Punching in from dashboard',
+          workType: workType || 'FIELD_WORK',
+          remarks: remarks || 'Punching in from dashboard',
         })
       );
+      setPunchInModalOpen(false);
       const time = formatIsoToTime(res?.data?.punchInTime || new Date());
-      showToast(`Day started at ${time} ✅`);
-      // State is updated by punchInAction; refetch can race and clear UI if API lags
+      const workTypeLabel = (workType || 'FIELD_WORK').replace('_', ' ');
+      showToast(`Day started (${workTypeLabel}) at ${time} ✅`);
     } catch (err) {
       showToast(err.message || 'Failed to punch in', 'error');
     }
   };
+
 
   const handleEndDay = () => {
     setPunchOutConfirmOpen(true);
@@ -1421,7 +1520,15 @@ export default function MRDashboard() {
 
 
       {/* ── Modals ───────────────────────────────────────────────────────── */}
+      {punchInModalOpen && (
+        <PunchInModal
+          onConfirm={confirmStartDay}
+          onClose={() => setPunchInModalOpen(false)}
+          gpsLoading={gpsLoading}
+        />
+      )}
       {punchOutConfirmOpen && (
+
         <ConfirmCard
           title="End workday?"
           message="You will not be able to check in again today. Please finish any open visit before checking out."
