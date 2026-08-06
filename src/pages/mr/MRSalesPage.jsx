@@ -113,6 +113,13 @@ const MRSalesPage = () => {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    // Auto-fill distributor name from file name if input field is currently empty
+    if (!inputValue.trim()) {
+      const baseName = selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.'));
+      const cleanName = baseName.replace(/[_]/g, ' ').trim();
+      setInputValue(cleanName);
+    }
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
