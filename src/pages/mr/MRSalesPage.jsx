@@ -1,24 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getDistributorsList, uploadDistributorSalesExcel, downloadDistributorSalesSample } from '../../redux/actions/reportActions';
-import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown, RefreshCw } from 'lucide-react';
+import { Loader2, FileSpreadsheet, Calendar, Upload, AlertCircle, CheckCircle2, ChevronRight, HelpCircle, X, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import axios from '../../api/axiosInstance';
-import { API_ROUTE } from '../../data/env';
 import { useToast } from '../../context/ToastContext';
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  try {
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD to DD-MM-YYYY
-    }
-    return dateStr;
-  } catch (e) {
-    return dateStr;
-  }
-};
 
 const MRSalesPage = () => {
   const dispatch = useDispatch();
@@ -32,10 +17,6 @@ const MRSalesPage = () => {
   const dropdownRef = useRef(null);
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
-
-  // Sales Records History State
-  const [salesHistory, setSalesHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useToast();
@@ -67,24 +48,7 @@ const MRSalesPage = () => {
     };
 
     fetchDistributors();
-    fetchSalesHistory();
   }, [dispatch]);
-
-  const fetchSalesHistory = async () => {
-    setHistoryLoading(true);
-    try {
-      const response = await axios.post(`${API_ROUTE}/mr/distributors/sales`, { page: 0, size: 50 });
-      const rawData = response.data?.data;
-      const records = Array.isArray(rawData)
-        ? rawData
-        : (rawData && Array.isArray(rawData.content) ? rawData.content : []);
-      setSalesHistory(records);
-    } catch (err) {
-      console.error('Failed to fetch sales history:', err);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -214,8 +178,6 @@ const MRSalesPage = () => {
         setInputValue('');
         setFile(null);
         setPreviewData([]);
-        // Refresh uploaded sales history list
-        fetchSalesHistory();
       } else {
         setErrorMsg(`Upload failed: ${result.error}`);
       }
@@ -258,64 +220,32 @@ const MRSalesPage = () => {
         showToast(result.error || 'Failed to download sample template.', 'error');
       }
     } catch (err) {
-      console.error('Download sample error:', err);
-      showToast('Failed to download sample template.', 'error');
+      console.error('Failed to download sample template:', err);
+      showToast('Failed to download sample template. Please try again.', 'error');
     }
   };
 
-  // Helper to determine the header row index (1st row containing "PRODUCT DESCRIPTION" or "PRODUCT")
-  const detectedHeaderRowIdx = previewData.findIndex((row) =>
-    Array.isArray(row) && row.some((cell) => {
-      const str = String(cell || '').toLowerCase();
-      return str.includes('product') || str.includes('item') || str.includes('description');
-    })
-  );
-
-  const maxPreviewRows = 25;
-  const previewRows = previewData.slice(0, maxPreviewRows);
-  const maxCols = previewRows.reduce((max, row) => Math.max(max, Array.isArray(row) ? row.length : 0), 0);
+  // Preview formatting helpers
+  const maxPreviewRows = 15;
   const hasMoreRows = previewData.length > maxPreviewRows;
+  const previewRows = previewData.slice(0, maxPreviewRows);
 
-  const getColLetter = (index) => {
-    let letter = '';
-    while (index >= 0) {
-      letter = String.fromCharCode((index % 26) + 65) + letter;
-      index = Math.floor(index / 26) - 1;
-    }
-    return letter;
-  };
+  // Find max columns to render properly structured rows
+  const maxCols = previewRows.reduce((max, row) => Math.max(max, (Array.isArray(row) ? row.length : 0)), 0);
+
+  // Detect header row inside previewData if title rows exist
+  const detectedHeaderRowIdx = previewData.findIndex((row) => {
+    if (!Array.isArray(row)) return false;
+    const line = row.join(' ').toLowerCase();
+    return line.includes('product') || line.includes('item') || line.includes('particulars') || line.includes('description');
+  });
+
+  const getColLetter = (colIdx) => String.fromCharCode(65 + colIdx);
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto flex flex-col gap-6 font-sans text-gray-800">
-      {/* Top Banner / Header Card */}
-      <div className="bg-gradient-to-r from-gray-900 via-gray-850 to-gray-900 rounded-[28px] p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-gray-800">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-[#C8F04A]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-12 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-bold text-[#C8F04A] uppercase tracking-wider">
-              <FileSpreadsheet size={13} /> Distributor Sales Management
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white m-0">
-              Distributor Sales Upload
-            </h1>
-            <p className="text-gray-300 text-[13.5px] max-w-xl font-medium m-0 leading-relaxed">
-              Upload distributor stock & sales statement spreadsheets to update sales quantities, unit prices, and closing balances.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <button
-              onClick={handleDownloadSample}
-              className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-[13px] font-bold backdrop-blur-md transition-all duration-150 cursor-pointer"
-            >
-              <FileSpreadsheet size={15} className="text-[#C8F04A]" />
-              Download Sample Format
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col gap-6 min-h-0">
+      
+      {/* Alerts handled by global toast system */}
 
       {/* Upload and Form Config Card */}
       <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
@@ -411,40 +341,49 @@ const MRSalesPage = () => {
             </div>
           </div>
 
-          {/* File Upload Drop Zone */}
-          <div className="flex flex-col gap-2">
-            <label className="block text-[12px] font-bold text-gray-750 uppercase tracking-wider">
-              Sales Spreadsheet (.xlsx, .xls, .csv) <span className="text-rose-500">*</span>
-            </label>
+          {/* Excel File Upload Drag & Drop */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <label className="block text-[12px] font-bold text-gray-755 uppercase tracking-wider">
+                Upload Excel Spreadsheet <span className="text-rose-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleDownloadSample}
+                className="text-[11.5px] font-extrabold text-[#4F46E5] hover:text-[#3730A3] transition-colors flex items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
+              >
+                <FileSpreadsheet size={13} />
+                Download Sample Template
+              </button>
+            </div>
+            
             {!file ? (
-              <label className="border-2 border-dashed border-gray-200 hover:border-[#C8F04A] hover:bg-[#C8F04A]/5 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 group">
+              <label className="border-2 border-dashed border-gray-200 rounded-2xl p-8 bg-gray-50/50 hover:bg-gray-50 flex flex-col items-center justify-center gap-3 cursor-pointer group transition-all duration-200">
+                <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-gray-600 transition-colors">
+                  <Upload size={20} />
+                </div>
+                <div className="text-center">
+                  <span className="text-[13.5px] font-bold text-gray-800 block">Click to upload spreadsheet</span>
+                  <span className="text-[11.5px] text-gray-400 mt-1 block">Supports .xlsx, .xls, .csv files</span>
+                </div>
                 <input
                   type="file"
                   accept=".xlsx, .xls, .csv"
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <div className="w-12 h-12 rounded-2xl bg-gray-50 group-hover:bg-[#C8F04A]/20 text-gray-500 group-hover:text-gray-900 flex items-center justify-center transition-colors">
-                  <Upload size={22} />
-                </div>
-                <div className="text-center">
-                  <p className="text-[13.5px] font-bold text-gray-800 m-0">
-                    Click to upload <span className="text-gray-400 font-medium">or drag and drop</span>
-                  </p>
-                  <p className="text-[11.5px] text-gray-400 font-medium m-0 mt-1">
-                    Excel Stock & Sales Statements (.xlsx, .xls) or CSV files supported
-                  </p>
-                </div>
               </label>
             ) : (
-              <div className="bg-gray-50 border border-gray-200/80 rounded-2xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C8F04A]/20 text-gray-900 flex items-center justify-center">
+              <div className="p-4 rounded-2xl border border-emerald-100 bg-[#F0FDF4] flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                     <FileSpreadsheet size={20} />
                   </div>
-                  <div>
-                    <p className="text-[13.5px] font-bold text-gray-900 m-0">{file.name}</p>
-                    <span className="text-[11.5px] text-gray-500 font-medium">
+                  <div className="min-w-0">
+                    <span className="text-[13px] font-bold text-gray-800 truncate block">
+                      {file.name}
+                    </span>
+                    <span className="text-[11px] text-gray-400 block mt-0.5">
                       {(file.size / 1024).toFixed(1)} KB · Spreadsheet Loaded
                     </span>
                   </div>
@@ -558,81 +497,6 @@ const MRSalesPage = () => {
         </div>
       )}
 
-      {/* Uploaded Sales Data Table Section */}
-      <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100">
-          <div>
-            <h2 className="text-[16px] font-extrabold text-gray-900 m-0">Uploaded Sales Data</h2>
-            <p className="text-[12px] text-gray-500 m-0 mt-0.5">
-              Recent distributor sales statement records retrieved from database
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={fetchSalesHistory}
-            disabled={historyLoading}
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-[12px] font-semibold transition-all cursor-pointer"
-          >
-            <RefreshCw size={13} className={historyLoading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
-        </div>
-
-        {historyLoading ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
-            <Loader2 size={24} className="animate-spin text-[#C8F04A]" />
-            <span className="text-[13px] font-medium">Loading sales records...</span>
-          </div>
-        ) : salesHistory.length === 0 ? (
-          <div className="py-10 text-center text-gray-400 text-[13px] font-medium bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-            No sales data uploaded yet. Select a distributor and upload a statement Excel above.
-          </div>
-        ) : (
-          <div className="overflow-x-auto border border-gray-100 rounded-xl">
-            <table className="w-full border-collapse text-left text-[13px] font-sans">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-150">
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider">Sales Date</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider">Product Name</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider text-right">Quantity</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider text-right">Unit Price</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider text-right">Total Amount</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider">Distributor</th>
-                  <th className="px-4 py-3 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider text-right">Closing Stock</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {salesHistory.map((row, idx) => (
-                  <tr key={row.id || idx} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
-                      {formatDate(row.salesDate) || row.salesMonth || '—'}
-                    </td>
-                    <td className="px-4 py-3 font-bold text-gray-900">
-                      {row.productName || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-gray-700">
-                      {row.quantity !== undefined && row.quantity !== null ? row.quantity : '0'}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-medium text-gray-600">
-                      ₹{row.unitPrice !== undefined && row.unitPrice !== null ? Number(row.unitPrice).toFixed(2) : '0.00'}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">
-                      ₹{row.totalAmount !== undefined && row.totalAmount !== null ? Number(row.totalAmount).toFixed(2) : '0.00'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">
-                      {row.distributorName || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-gray-700">
-                      {row.closingBalance !== undefined && row.closingBalance !== null ? row.closingBalance : '0'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -641,6 +505,6 @@ const MRSalesPage = () => {
       `}</style>
     </div>
   );
-};
+}
 
 export default MRSalesPage;
