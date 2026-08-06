@@ -224,7 +224,16 @@ const MRSalesPage = () => {
   const previewRows = previewData.slice(0, maxPreviewRows);
 
   // Find max columns to render properly structured rows
-  const maxCols = previewRows.reduce((max, row) => Math.max(max, row.length), 0);
+  const maxCols = previewRows.reduce((max, row) => Math.max(max, (Array.isArray(row) ? row.length : 0)), 0);
+
+  // Detect header row inside previewData if title rows exist
+  const detectedHeaderRowIdx = previewData.findIndex((row) => {
+    if (!Array.isArray(row)) return false;
+    const line = row.join(' ').toLowerCase();
+    return line.includes('product') || line.includes('item') || line.includes('particulars') || line.includes('description');
+  });
+
+  const getColLetter = (colIdx) => String.fromCharCode(65 + colIdx);
 
   return (
     <div className="animate-[fadeSlideIn_0.35s_ease-out] flex flex-col gap-6 min-h-0">
@@ -425,39 +434,50 @@ const MRSalesPage = () => {
           <div className="overflow-x-auto overflow-y-auto flex-1 max-h-[350px] border border-gray-100 rounded-xl">
             <table className="w-full border-collapse text-left text-[12.5px] font-sans">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100 sticky top-0">
+                <tr className="bg-gray-100 border-b border-gray-200 sticky top-0">
+                  <th className="px-3 py-2 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider text-center w-12 border-r border-gray-200">#</th>
                   {Array.from({ length: maxCols }).map((_, colIdx) => (
                     <th
                       key={colIdx}
-                      className="px-4 py-3 text-[11px] font-extrabold text-gray-400 uppercase tracking-wider border-r border-gray-100/30 last:border-none"
+                      className="px-4 py-2.5 text-[11px] font-extrabold text-gray-600 uppercase tracking-wider border-r border-gray-200/60 last:border-none"
                     >
-                      {colIdx === 0 ? 'Row 1 (Header)' : `Col ${colIdx + 1}`}
+                      Col {getColLetter(colIdx)}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {previewRows.map((row, rowIdx) => (
-                  <tr
-                    key={rowIdx}
-                    className={`border-b border-gray-50 hover:bg-gray-50/40 transition-colors ${
-                      rowIdx === 0 ? 'bg-gray-50/20 font-semibold' : ''
-                    }`}
-                  >
-                    {Array.from({ length: maxCols }).map((_, colIdx) => {
-                      const cellValue = row[colIdx];
-                      return (
-                        <td
-                          key={colIdx}
-                          className="px-4 py-2.5 text-gray-700 border-r border-gray-50 last:border-none font-medium truncate max-w-[160px]"
-                          title={cellValue !== undefined ? String(cellValue) : ''}
-                        >
-                          {cellValue !== undefined ? String(cellValue) : '—'}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                {previewRows.map((row, rowIdx) => {
+                  const isHeaderRow = detectedHeaderRowIdx !== -1 && rowIdx === detectedHeaderRowIdx;
+                  return (
+                    <tr
+                      key={rowIdx}
+                      className={`border-b border-gray-100 transition-colors ${
+                        isHeaderRow
+                          ? 'bg-[#E6F4EA] font-bold text-emerald-900 border-emerald-200'
+                          : rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                      }`}
+                    >
+                      <td className="px-3 py-2 text-[11px] text-gray-400 font-mono text-center border-r border-gray-100 font-semibold select-none">
+                        {rowIdx + 1}
+                      </td>
+                      {Array.from({ length: maxCols }).map((_, colIdx) => {
+                        const cellValue = Array.isArray(row) ? row[colIdx] : undefined;
+                        return (
+                          <td
+                            key={colIdx}
+                            className={`px-4 py-2.5 border-r border-gray-100 last:border-none font-medium truncate max-w-[180px] ${
+                              isHeaderRow ? 'text-emerald-950 font-bold' : 'text-gray-700'
+                            }`}
+                            title={cellValue !== undefined ? String(cellValue) : ''}
+                          >
+                            {cellValue !== undefined ? String(cellValue) : '—'}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
