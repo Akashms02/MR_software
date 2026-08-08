@@ -33,7 +33,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     isAllowed = true;
   } else if (allowedRoles.includes(userRole)) {
     isAllowed = true;
-  } else if (allowedRoles.includes('mr') && isFieldSalesRole(user?.role)) {
+  } else if (allowedRoles.includes('mr') && (isFieldSalesRole(user?.role) || isManagerRole(user?.role))) {
     isAllowed = true;
   } else if (allowedRoles.includes('manager') && isManagerRole(user?.role)) {
     isAllowed = true;
