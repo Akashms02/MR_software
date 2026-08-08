@@ -24,7 +24,8 @@ import {
   Check,
   Megaphone,
   TrendingUp,
-  BookOpen
+  BookOpen,
+  Package
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -204,7 +205,8 @@ export default function AdminLayout({ children }) {
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
   const navItems = [
-    { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',     path: '/admin/dashboard' },
+    { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard',          path: '/admin/dashboard' },
+    { id: 'products',     icon: Package,         label: 'Products & Pricing', path: '/admin/products' },
     { id: 'requests',     icon: UserPlus,        label: 'Onboarding Requests', path: '/admin/requests' },
     { id: 'employees',    icon: Users,           label: 'Employees',     path: '/admin/employees' },
     // { id: 'finance',      icon: Wallet,          label: 'Finance',       path: '/admin/finance' },

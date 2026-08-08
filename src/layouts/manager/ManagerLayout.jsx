@@ -17,7 +17,8 @@ import {
   Trash2, 
   Check,
   BookOpen,
-  BarChart2
+  BarChart2,
+  Package
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -113,6 +114,7 @@ export default function ManagerLayout({ children }) {
 
   const navItems = [
     { id: 'dashboard',         icon: LayoutDashboard, label: 'Dashboard',             path: '/manager/dashboard' },
+    { id: 'catalog',           icon: Package,         label: 'Products & Pricing',   path: '/manager/catalog' },
     { id: 'my-field-work',     icon: MapPin,          label: 'My Check-In & Visits', path: '/mr/dashboard' },
     { id: 'my-dcr',            icon: FileText,        label: 'My DCR Entry',          path: '/mr/dcr' },
     { id: 'reports',           icon: BarChart2,       label: 'Reports & Analytics',   path: '/manager/reports' },
@@ -130,7 +132,7 @@ export default function ManagerLayout({ children }) {
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'my-field-work' || item.id === 'my-dcr' || item.id === 'reports' || item.id === 'requests' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
+    if (item.id === 'dashboard' || item.id === 'catalog' || item.id === 'my-field-work' || item.id === 'my-dcr' || item.id === 'reports' || item.id === 'requests' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     
