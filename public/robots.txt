@@ -4,4 +4,4 @@ Disallow: /admin/
 Disallow: /mr/
 Disallow: /manager/
 
-Sitemap: https://mrsoftware.gmaxepay.in/sitemap.xml
+Sitemap: https://medistrax.gmaxepay.in/sitemap.xml
