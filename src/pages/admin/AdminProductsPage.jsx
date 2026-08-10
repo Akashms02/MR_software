@@ -61,16 +61,15 @@ export default function AdminProductsPage() {
   const [excelFile, setExcelFile] = useState(null);
   const [uploadingExcel, setUploadingExcel] = useState(false);
 
-  // Fetch Products on Mount
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  // Fetch Products from DB API via POST Filter Endpoint
+  const fetchProducts = async (cat = selectedCategory, search = searchTerm) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_ROUTE}/products`);
+      const res = await axios.post(`${API_ROUTE}/products/filter`, {
+        category: cat,
+        search: search
+      });
       if (res.data && res.data.data) {
         setProducts(res.data.data);
       }
@@ -80,6 +79,14 @@ export default function AdminProductsPage() {
       setLoading(false);
     }
   };
+
+  // Re-fetch products from DB whenever Category or Search Term changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts(selectedCategory, searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [selectedCategory, searchTerm]);
 
   // Auto-calculate margins when prices change
   const handlePriceChange = (field, value) => {
@@ -240,16 +247,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // Filtered list
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = selectedCategory === 'ALL' || (p.category || '').toUpperCase() === selectedCategory.toUpperCase();
-    const query = searchTerm.toLowerCase();
-    const matchesSearch = (p.name || '').toLowerCase().includes(query) ||
-                          (p.code || '').toLowerCase().includes(query) ||
-                          (p.composition || '').toLowerCase().includes(query);
-    return matchesCategory && matchesSearch;
-  });
-
   const categories = ['ALL', 'Tablets', 'Syrups', 'Injections', 'Ointments', 'Drops', 'Capsules', 'Other'];
 
   return (
@@ -372,7 +369,7 @@ export default function AdminProductsPage() {
                     Loading product catalog...
                   </td>
                 </tr>
-              ) : filteredProducts.length === 0 ? (
+              ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={canUploadOrEdit ? "12" : "11"} className="py-12 text-center text-gray-400">
                     {canUploadOrEdit ? (
@@ -383,7 +380,7 @@ export default function AdminProductsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((p) => (
+                products.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4 font-semibold text-gray-900 text-xs">
                       {p.code || <span className="text-gray-300">—</span>}
