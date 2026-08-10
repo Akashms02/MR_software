@@ -17,7 +17,8 @@ import {
   Trash2, 
   Check,
   BookOpen,
-  BarChart2
+  BarChart2,
+  Package
 } from 'lucide-react'
 import { logout } from '../../redux/actions/authActions'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -112,23 +113,26 @@ export default function ManagerLayout({ children }) {
   const activePage = pathParts[pathParts.length - 1] || 'dashboard'
 
   const navItems = [
-    { id: 'dashboard',     icon: LayoutDashboard, label: 'Dashboard',       path: '/manager/dashboard' },
-    { id: 'reports',       icon: BarChart2,       label: 'Reports & Analytics', path: '/manager/reports' },
-    { id: 'myteam',        icon: UsersRound,      label: 'My Team',         path: '/manager/myteam' },
-    { id: 'requests',      icon: FileText,        label: 'Onboarding Requests', path: '/manager/requests' },
-    { id: 'fieldtracking', icon: Navigation,      label: 'Field Tracking',  path: '/manager/fieldtracking' },
-    { id: 'dcr-approvals', icon: FileText,        label: 'DCR Approvals',   path: '/manager/dcr-approvals' },
-    { id: 'leaves',        icon: Calendar,        label: 'Leave Approvals', path: '/manager/leaves' },
-    { id: 'tourplans',     icon: MapPin,          label: 'Tour Plans',      path: '/manager/tourplans' },
-    { id: 'sales',         icon: TrendingUp,      label: 'Distributor Sales', path: '/manager/sales' },
-    { id: 'finance',       icon: FileText,        label: 'My Payslips',     path: '/manager/finance' },
-    { id: 'me',            icon: User,            label: 'My Leaves',       path: '/manager/me' },
-    { id: 'products',      icon: BookOpen,        label: 'Product Visual Aids', path: '/manager/products' },
+    { id: 'dashboard',         icon: LayoutDashboard, label: 'Dashboard',             path: '/manager/dashboard' },
+    { id: 'catalog',           icon: Package,         label: 'Products & Pricing',   path: '/manager/catalog' },
+    { id: 'my-field-work',     icon: MapPin,          label: 'My Check-In & Visits', path: '/mr/dashboard' },
+    { id: 'my-dcr',            icon: FileText,        label: 'My DCR Entry',          path: '/mr/dcr' },
+    { id: 'reports',           icon: BarChart2,       label: 'Reports & Analytics',   path: '/manager/reports' },
+    { id: 'myteam',            icon: UsersRound,      label: 'My Team',               path: '/manager/myteam' },
+    { id: 'requests',          icon: FileText,        label: 'Onboarding Requests',   path: '/manager/requests' },
+    { id: 'fieldtracking',     icon: Navigation,      label: 'Field Tracking',        path: '/manager/fieldtracking' },
+    { id: 'dcr-approvals',     icon: FileText,        label: 'DCR Approvals',         path: '/manager/dcr-approvals' },
+    { id: 'leaves',            icon: Calendar,        label: 'Leave Approvals',       path: '/manager/leaves' },
+    { id: 'tourplans',         icon: MapPin,          label: 'Tour Plans',            path: '/manager/tourplans' },
+    { id: 'sales',             icon: TrendingUp,      label: 'Distributor Sales',     path: '/manager/sales' },
+    { id: 'finance',           icon: FileText,        label: 'My Payslips',           path: '/manager/finance' },
+    { id: 'me',                icon: User,            label: 'My Leaves',             path: '/manager/me' },
+    { id: 'products',          icon: BookOpen,        label: 'Product Visual Aids',   path: '/manager/products' },
   ]
 
   const userAllowedModules = user?.allowedModules || "all";
   const filteredNavItems = navItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'reports' || item.id === 'requests' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
+    if (item.id === 'dashboard' || item.id === 'catalog' || item.id === 'my-field-work' || item.id === 'my-dcr' || item.id === 'reports' || item.id === 'requests' || item.id === 'me' || item.id === 'finance' || item.id === 'watercooler' || item.id === 'products') return true;
     if (userAllowedModules === 'all') return true;
     const allowedList = userAllowedModules.split(',').map(s => s.trim().toLowerCase());
     

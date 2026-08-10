@@ -79,7 +79,22 @@ export const punchOutAction = (payload) => async (dispatch) => {
   }
 };
 
+export const cancelPunchInAction = () => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  try {
+    const response = await axios.post(`${API_ROUTE}/attendance/punch-in/cancel`);
+    dispatch(fetchMyAttendanceAction());
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || 'Failed to revert punch-in';
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
 export const fetchMyAttendanceAction = () => async (dispatch, getState) => {
+
   dispatch({ type: LOADING_START });
   dispatch({ type: FETCH_MY_ATTENDANCE_REQUEST });
   try {

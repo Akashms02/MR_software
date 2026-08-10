@@ -15,6 +15,7 @@ import MRRequestsPage from '../../pages/mr/MRRequestsPage'
 import MRSalesPage from '../../pages/mr/MRSalesPage'
 import DistributerReport from '../../pages/mr/DistributerReport'
 import MRVisualAidPage from '../../pages/mr/MRVisualAidPage'
+import AdminProductsPage from '../../pages/admin/AdminProductsPage'
 
 export default function MRLayoutRouter() {
   return (
@@ -22,6 +23,7 @@ export default function MRLayoutRouter() {
       <Routes>
         <Route path="/" element={<MRDashboard />} />
         <Route path="dashboard" element={<MRDashboard />} />
+        <Route path="catalog" element={<AdminProductsPage />} />
         <Route path="dcr" element={<MRDcrPage />} />
         <Route path="attendance" element={<MRAttendancePage />} />
         <Route path="tourplan" element={<MRTourPlanPage />} />

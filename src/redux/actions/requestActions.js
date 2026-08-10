@@ -16,6 +16,12 @@ import {
   UPDATE_DOCTOR_LOCATION_REQUEST,
   UPDATE_DOCTOR_LOCATION_SUCCESS,
   UPDATE_DOCTOR_LOCATION_FAILURE,
+  UPDATE_ONBOARDING_REQUEST_REQUEST,
+  UPDATE_ONBOARDING_REQUEST_SUCCESS,
+  UPDATE_ONBOARDING_REQUEST_FAILURE,
+  DELETE_ONBOARDING_REQUEST_REQUEST,
+  DELETE_ONBOARDING_REQUEST_SUCCESS,
+  DELETE_ONBOARDING_REQUEST_FAILURE,
 } from "../actionType/requestActionType";
 import { LOADING_START, LOADING_END } from "../actionType/loadingActionType";
 
@@ -206,3 +212,47 @@ export const updateTargetLocationAction = (type, targetId, latitude, longitude) 
     dispatch({ type: LOADING_END });
   }
 };
+
+export const updateOnboardingRequestAction = (requestId, payload) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: UPDATE_ONBOARDING_REQUEST_REQUEST });
+  try {
+    const response = await axios.put(`${API_ROUTE}/requests/${requestId}`, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const updatedData = response.data?.data || response.data;
+    dispatch({
+      type: UPDATE_ONBOARDING_REQUEST_SUCCESS,
+      payload: updatedData,
+    });
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || commonError;
+    dispatch({ type: UPDATE_ONBOARDING_REQUEST_FAILURE, payload: msg });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+
+export const deleteOnboardingRequestAction = (requestId) => async (dispatch) => {
+  dispatch({ type: LOADING_START });
+  dispatch({ type: DELETE_ONBOARDING_REQUEST_REQUEST });
+  try {
+    const response = await axios.delete(`${API_ROUTE}/requests/${requestId}`);
+    dispatch({
+      type: DELETE_ONBOARDING_REQUEST_SUCCESS,
+      payload: requestId,
+    });
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.message || error.message || commonError;
+    dispatch({ type: DELETE_ONBOARDING_REQUEST_FAILURE, payload: msg });
+    throw new Error(msg);
+  } finally {
+    dispatch({ type: LOADING_END });
+  }
+};
+

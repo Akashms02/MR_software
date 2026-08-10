@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /mr/
+Disallow: /manager/
+
+Sitemap: https://medistrax.gmaxepay.in/sitemap.xml

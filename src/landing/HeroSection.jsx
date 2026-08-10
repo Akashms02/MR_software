@@ -105,6 +105,8 @@ export default function HeroSection({ onBookDemoClick }) {
             <img
               src="/landing/Desktop.svg"
               alt="HRMS Desktop View"
+              fetchpriority="high"
+              decoding="async"
               className="w-full h-auto select-none pointer-events-none"
             />
           </motion.div>
@@ -142,6 +144,8 @@ export default function HeroSection({ onBookDemoClick }) {
             <img
               src="/landing/Desktop.svg"
               alt="HRMS Desktop View"
+              fetchpriority="high"
+              decoding="async"
               className="w-full h-auto select-none pointer-events-none"
             />
           </motion.div>

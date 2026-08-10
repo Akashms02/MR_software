@@ -793,12 +793,13 @@ const MRDcrPage = () => {
                     {/* Samples given */}
                     {!String(visit.doctorId || '').startsWith('CHEMIST_') && (
                       <div className="col-span-1">
-                        <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Samples / Literature Distributed</label>
+                        <label className="block text-[12px] font-bold text-[#374151] mb-1.5">Samples / Literature Distributed (Quantity)</label>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={visit.samplesGiven}
-                          onChange={(e) => handleVisitChange(idx, 'samplesGiven', e.target.value)}
-                          placeholder="e.g. Cardace (10 Tabs), Visual Aid brochures"
+                          onChange={(e) => handleVisitChange(idx, 'samplesGiven', e.target.value.replace(/\D/g, ''))}
+                          placeholder="e.g. 5, 10"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13.5px] outline-none font-sans"
                         />
                       </div>
@@ -1082,11 +1083,13 @@ const MRDcrPage = () => {
                         </div>
                         {!String(visit.doctorId || '').startsWith('CHEMIST_') && (
                           <div className="col-span-1">
-                            <label className="block text-[11px] font-bold text-[#374151] mb-1">Distributed Samples</label>
+                            <label className="block text-[11px] font-bold text-[#374151] mb-1">Distributed Samples (Quantity)</label>
                             <input
                               type="text"
+                              inputMode="numeric"
                               value={visit.samplesGiven}
-                              onChange={(e) => handleModalVisitChange(idx, 'samplesGiven', e.target.value)}
+                              onChange={(e) => handleModalVisitChange(idx, 'samplesGiven', e.target.value.replace(/\D/g, ''))}
+                              placeholder="e.g. 5"
                               className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12.5px] outline-none font-sans"
                             />
                           </div>

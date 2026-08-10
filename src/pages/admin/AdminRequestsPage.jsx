@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Check, X, AlertCircle, FileText, Loader2, RefreshCw, Search, Edit2, MapPin } from 'lucide-react';
+import { Plus, Check, X, AlertCircle, FileText, Loader2, RefreshCw, Search, Edit2, MapPin, Trash2, Edit3 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchPendingRequestsAction,
   reviewOnboardingRequestAction,
+  updateOnboardingRequestAction,
+  deleteOnboardingRequestAction,
   requestStatusFromTab,
 } from '../../redux/actions/requestActions';
 import axios from '../../api/axiosInstance';
@@ -122,6 +124,91 @@ const AdminRequestsPage = () => {
   const [reviewStatus, setReviewStatus] = useState(null);
   const [remarks, setRemarks] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Edit Request Modal State
+  const [editModalRequest, setEditModalRequest] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    type: 'DOCTOR',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    doctorSpeciality: 'OTHER',
+    doctorQualification: '',
+    doctorLicenseNumber: '',
+    chemistContactPerson: '',
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Delete Request Modal State
+  const [deleteModalRequest, setDeleteModalRequest] = useState(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  const handleOpenEdit = (request) => {
+    setEditModalRequest(request);
+    setEditFormData({
+      type: request.type || 'DOCTOR',
+      name: request.name || '',
+      email: request.email || '',
+      phone: request.phone || '',
+      address: request.address || '',
+      city: request.city || '',
+      state: request.state || '',
+      pincode: request.pincode || '',
+      doctorSpeciality: request.doctorSpeciality || 'OTHER',
+      doctorQualification: request.doctorQualification || '',
+      doctorLicenseNumber: request.doctorLicenseNumber || '',
+      chemistContactPerson: request.chemistContactPerson || '',
+    });
+  };
+
+  const handleCloseEdit = () => {
+    setEditModalRequest(null);
+  };
+
+  const handleSubmitEdit = async (e) => {
+    if (e) e.preventDefault();
+    if (!editModalRequest) return;
+    setEditSubmitting(true);
+    try {
+      await dispatch(updateOnboardingRequestAction(editModalRequest.id, editFormData));
+      showToast(`Onboarding request for "${editFormData.name}" updated successfully!`, 'success');
+      handleCloseEdit();
+      fetchRequests(activeTab, currentPage);
+      initializeTabCounts();
+    } catch (err) {
+      showToast(err.message || 'Failed to update request', 'error');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleOpenDelete = (request) => {
+    setDeleteModalRequest(request);
+  };
+
+  const handleCloseDelete = () => {
+    setDeleteModalRequest(null);
+  };
+
+  const handleSubmitDelete = async () => {
+    if (!deleteModalRequest) return;
+    setDeleteSubmitting(true);
+    try {
+      await dispatch(deleteOnboardingRequestAction(deleteModalRequest.id));
+      showToast(`Onboarding request for "${deleteModalRequest.name}" deleted successfully!`, 'success');
+      handleCloseDelete();
+      fetchRequests(activeTab, currentPage);
+      initializeTabCounts();
+    } catch (err) {
+      showToast(err.message || 'Failed to delete request', 'error');
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
 
   const searchTimerRef = useRef(null);
 
@@ -458,26 +545,40 @@ const AdminRequestsPage = () => {
                       </td>
                       {/* Actions Column */}
                       <td className="px-4 py-4">
-                        {req.status === 'PENDING' ? (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleOpenReview(req, 'APPROVED')}
-                              className="bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#059669] border border-[#A7F3D0] p-2 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
-                              title="Approve"
-                            >
-                              <Check size={16} strokeWidth={2.5} />
-                            </button>
-                            <button
-                              onClick={() => handleOpenReview(req, 'REJECTED')}
-                              className="bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5] p-2 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
-                              title="Reject"
-                            >
-                              <X size={16} strokeWidth={2.5} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[#9CA3AF] font-bold">—</span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          {req.status === 'PENDING' && (
+                            <>
+                              <button
+                                onClick={() => handleOpenReview(req, 'APPROVED')}
+                                className="bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#059669] border border-[#A7F3D0] p-1.5 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
+                                title="Approve Request"
+                              >
+                                <Check size={14} strokeWidth={2.5} />
+                              </button>
+                              <button
+                                onClick={() => handleOpenReview(req, 'REJECTED')}
+                                className="bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5] p-1.5 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
+                                title="Reject Request"
+                              >
+                                <X size={14} strokeWidth={2.5} />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => handleOpenEdit(req)}
+                            className="bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] border border-[#BFDBFE] p-1.5 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
+                            title="Edit Request"
+                          >
+                            <Edit3 size={14} strokeWidth={2} />
+                          </button>
+                          <button
+                            onClick={() => handleOpenDelete(req)}
+                            className="bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5] p-1.5 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105"
+                            title="Delete Request"
+                          >
+                            <Trash2 size={14} strokeWidth={2} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -561,6 +662,224 @@ const AdminRequestsPage = () => {
               <button onClick={handleSubmitReview} disabled={reviewLoading}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-none text-white font-extrabold text-[13px] cursor-pointer transition-opacity duration-150 ${reviewStatus === 'APPROVED' ? 'bg-[#10B981]' : 'bg-[#EF4444]'}`}>
                 {reviewLoading ? <><Loader2 size={13} className="animate-spin" /> Submitting...</> : 'Submit Decision'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Request Modal */}
+      {editModalRequest && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 max-w-[560px] w-full p-6 shadow-2xl animate-[scaleIn_0.2s_ease-out] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <div>
+                <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-[#EFF6FF] text-[#2563EB] mb-1">
+                  Edit Onboarding Request #{editModalRequest.id}
+                </span>
+                <h3 className="text-[17px] font-extrabold text-[#111827] m-0">Edit Request Details</h3>
+              </div>
+              <button onClick={handleCloseEdit} className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitEdit} className="flex flex-col gap-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Request Type</label>
+                  <select
+                    value={editFormData.type}
+                    onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold outline-none bg-white"
+                  >
+                    <option value="DOCTOR">Doctor</option>
+                    <option value="CHEMIST">Chemist</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    placeholder="Doctor / Chemist Shop Name"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    placeholder="Email Address"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    placeholder="Phone Number"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#374151] mb-1">Address</label>
+                <textarea
+                  rows={2}
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                  placeholder="Full Address"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none resize-none font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editFormData.city}
+                    onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                    placeholder="City"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">State</label>
+                  <input
+                    type="text"
+                    value={editFormData.state}
+                    onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value })}
+                    placeholder="State"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Pincode</label>
+                  <input
+                    type="text"
+                    value={editFormData.pincode}
+                    onChange={(e) => setEditFormData({ ...editFormData, pincode: e.target.value })}
+                    placeholder="Pincode"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              {editFormData.type === 'DOCTOR' ? (
+                <div className="grid grid-cols-3 gap-3 bg-[#F9FAFB] p-3 rounded-xl border border-gray-100">
+                  <div>
+                    <label className="block text-xs font-bold text-[#374151] mb-1">Speciality</label>
+                    <input
+                      type="text"
+                      value={editFormData.doctorSpeciality}
+                      onChange={(e) => setEditFormData({ ...editFormData, doctorSpeciality: e.target.value })}
+                      placeholder="CARDIOLOGIST, OTHER..."
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs outline-none bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#374151] mb-1">Qualification</label>
+                    <input
+                      type="text"
+                      value={editFormData.doctorQualification}
+                      onChange={(e) => setEditFormData({ ...editFormData, doctorQualification: e.target.value })}
+                      placeholder="e.g. MBBS, MD"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs outline-none bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#374151] mb-1">License No.</label>
+                    <input
+                      type="text"
+                      value={editFormData.doctorLicenseNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, doctorLicenseNumber: e.target.value })}
+                      placeholder="License Number"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs outline-none bg-white"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#F9FAFB] p-3 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-bold text-[#374151] mb-1">Chemist Contact Person</label>
+                  <input
+                    type="text"
+                    value={editFormData.chemistContactPerson}
+                    onChange={(e) => setEditFormData({ ...editFormData, chemistContactPerson: e.target.value })}
+                    placeholder="Owner / Contact Person Name"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none bg-white"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2.5 justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseEdit}
+                  disabled={editSubmitting}
+                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#2563EB] text-white font-extrabold text-[13px] cursor-pointer hover:bg-[#1D4ED8] transition-all duration-150"
+                >
+                  {editSubmitting ? <><Loader2 size={13} className="animate-spin" /> Saving...</> : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalRequest && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 max-w-[420px] w-full p-6 shadow-2xl animate-[scaleIn_0.2s_ease-out] flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-[#FEF2F2] text-[#DC2626]">
+                <Trash2 size={24} />
+              </div>
+              <div>
+                <h3 className="text-[16px] font-extrabold text-[#111827] m-0">Delete Onboarding Request</h3>
+                <p className="text-[12.5px] text-[#6B7280] m-0 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-[13px] text-[#374151] m-0 bg-gray-50 p-3 rounded-xl border border-gray-100">
+              Are you sure you want to permanently delete the onboarding request for{' '}
+              <strong className="text-[#111827]">{deleteModalRequest.name}</strong> ({deleteModalRequest.type === 'CHEMIST' ? 'Chemist' : 'Doctor'})?
+            </p>
+
+            <div className="flex gap-2.5 justify-end mt-1">
+              <button
+                onClick={handleCloseDelete}
+                disabled={deleteSubmitting}
+                className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-[#374151] font-bold text-[13px] cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitDelete}
+                disabled={deleteSubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-none bg-[#DC2626] text-white font-extrabold text-[13px] cursor-pointer hover:bg-[#B91C1C] transition-all duration-150"
+              >
+                {deleteSubmitting ? <><Loader2 size={13} className="animate-spin" /> Deleting...</> : 'Delete Request'}
               </button>
             </div>
           </div>

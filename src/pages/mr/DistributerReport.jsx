@@ -96,8 +96,8 @@ export default function DistributerReport() {
     setErrorMsg(null);
     
     const params = {
-      startDate: startDate || '2000-01-01',
-      endDate: endDate || '2099-12-31',
+      startDate: '2000-01-01',
+      endDate: '2099-12-31',
       size: 100000
     };
     
@@ -115,19 +115,25 @@ export default function DistributerReport() {
     dispatch(distributerActivityReport(params));
   };
 
-  // Fetch records initially & when distributor or date range changes
+  // Fetch records initially & when distributor changes
   useEffect(() => {
     if (distributors.length >= 0) {
       handleFetchRecords();
     }
-  }, [selectedDistributorId, startDate, endDate, distributors.length, dispatch]);
+  }, [selectedDistributorId, distributors.length, dispatch]);
 
   // Get grouped uploads by distributor and uploadDate (createdAt portion)
   const getGroupedUploads = () => {
     const groups = [];
     const salesRecords = Array.isArray(distributesReport) ? distributesReport : [];
     
-    salesRecords.forEach(record => {
+    const filteredRecords = salesRecords.filter(record => {
+      const uploadDateStr = record.createdAt ? record.createdAt.split('T')[0] : (record.salesDate || '');
+      if (!uploadDateStr) return true;
+      return uploadDateStr >= startDate && uploadDateStr <= endDate;
+    });
+
+    filteredRecords.forEach(record => {
       const distName = record.distributorName || getDistributorName(record.distributor) || '—';
       const distId = record.distributor?.id || record.distributor?.distributorId || record.distributorName || 'unknown-dist';
       
@@ -142,18 +148,19 @@ export default function DistributerReport() {
         uploader = record.uploadedBy.email;
       }
 
-      const uploadDate = record.createdAt ? record.createdAt.split('T')[0] : '';
+      const uploadDate = record.createdAt ? record.createdAt.split('T')[0] : (record.salesDate || '');
       
       const recTime = record.createdAt ? new Date(record.createdAt).getTime() : 0;
       let group = groups.find(g => {
-        if (g.distributorId !== distId || g.uploader !== uploader) return false;
+        if (g.distributorName !== distName) return false;
+        if (g.uploader !== uploader && uploader !== '—' && g.uploader !== '—') return false;
         const groupTime = g.createdAt ? new Date(g.createdAt).getTime() : 0;
-        return Math.abs(recTime - groupTime) < 5000;
+        return recTime === 0 || groupTime === 0 || Math.abs(recTime - groupTime) < 300000;
       });
 
       if (!group) {
         group = {
-          key: `${distId}-${record.createdAt}`,
+          key: `${distName}-${record.createdAt || record.id || Math.random()}`,
           distributorId: distId,
           distributorName: distName,
           createdAt: record.createdAt || null,
