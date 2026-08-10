@@ -1,28 +1,39 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
-
-// Components
+// Eagerly loaded components for instant landing page boot
 import LandingPage from './landing/LandingPage';
-import LoginPage from './login/LoginPage';
-import ForgotPasswordPage from './login/ForgotPasswordPage';
-import CreatePasswordPage from './login/CreatePasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import AccountDeletionPage from './pages/AccountDeletionPage';
-import DeleteAccountPolicyPage from './pages/DeleteAccountPolicyPage';
 
-// Layout Routers for Roles
-import SuperAdminLayoutRouter from './layouts/superadmin';
-import AdminLayoutRouter from './layouts/admin';
-import MRLayoutRouter from './layouts/mr';
-import HRLayoutRouter from './layouts/hr';
-import ManagerLayoutRouter from './layouts/manager';
-import DoctorLayoutRouter from './layouts/doctor';
-import PharmacistLayoutRouter from './layouts/pharmacist';
-import DistributorLayoutRouter from './layouts/distributor';
-import PatientLayoutRouter from './layouts/patient';
+// Lazy-loaded authentication & secondary pages for fast initial FCP/LCP
+const LoginPage = lazy(() => import('./login/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('./login/ForgotPasswordPage'));
+const CreatePasswordPage = lazy(() => import('./login/CreatePasswordPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const AccountDeletionPage = lazy(() => import('./pages/AccountDeletionPage'));
+const DeleteAccountPolicyPage = lazy(() => import('./pages/DeleteAccountPolicyPage'));
+
+// Lazy-loaded Role Layout Routers
+const SuperAdminLayoutRouter = lazy(() => import('./layouts/superadmin'));
+const AdminLayoutRouter = lazy(() => import('./layouts/admin'));
+const MRLayoutRouter = lazy(() => import('./layouts/mr'));
+const HRLayoutRouter = lazy(() => import('./layouts/hr'));
+const ManagerLayoutRouter = lazy(() => import('./layouts/manager'));
+const DoctorLayoutRouter = lazy(() => import('./layouts/doctor'));
+const PharmacistLayoutRouter = lazy(() => import('./layouts/pharmacist'));
+const DistributorLayoutRouter = lazy(() => import('./layouts/distributor'));
+const PatientLayoutRouter = lazy(() => import('./layouts/patient'));
+
+// Fast fallback spinner for lazy route transitions
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-sans">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-sm font-medium text-slate-400">Loading Medistrax...</p>
+    </div>
+  </div>
+);
 
 function DashboardRedirect() {
   const { user } = useSelector((state) => state.auth);
@@ -244,132 +255,134 @@ export default function App() {
   */
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/account-deletion" element={<AccountDeletionPage />} />
-      <Route path="/delete-account-policy" element={<DeleteAccountPolicyPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/create-password" element={<CreatePasswordPage />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/account-deletion" element={<AccountDeletionPage />} />
+        <Route path="/delete-account-policy" element={<DeleteAccountPolicyPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/create-password" element={<CreatePasswordPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
-      {/* Role-Specific Layout Routers */}
-      <Route
-        path="/superadmin/*"
-        element={
-          <ProtectedRoute allowedRoles={['superadmin', 'super_admin', 'super admin']}>
-            <SuperAdminLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/*"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mr/*"
-        element={
-          <ProtectedRoute allowedRoles={['mr']}>
-            <MRLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/*"
-        element={
-          <ProtectedRoute allowedRoles={['hr']}>
-            <HRLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager/*"
-        element={
-          <ProtectedRoute allowedRoles={['manager']}>
-            <ManagerLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/regional-manager/*"
-        element={
-          <ProtectedRoute allowedRoles={['manager']}>
-            <ManagerLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/area-manager/*"
-        element={
-          <ProtectedRoute allowedRoles={['manager']}>
-            <ManagerLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/medical-manager/*"
-        element={
-          <ProtectedRoute allowedRoles={['manager']}>
-            <ManagerLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
+        {/* Role-Specific Layout Routers */}
+        <Route
+          path="/superadmin/*"
+          element={
+            <ProtectedRoute allowedRoles={['superadmin', 'super_admin', 'super admin']}>
+              <SuperAdminLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mr/*"
+          element={
+            <ProtectedRoute allowedRoles={['mr']}>
+              <MRLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/*"
+          element={
+            <ProtectedRoute allowedRoles={['hr']}>
+              <HRLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/*"
+          element={
+            <ProtectedRoute allowedRoles={['manager']}>
+              <ManagerLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/regional-manager/*"
+          element={
+            <ProtectedRoute allowedRoles={['manager']}>
+              <ManagerLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/area-manager/*"
+          element={
+            <ProtectedRoute allowedRoles={['manager']}>
+              <ManagerLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medical-manager/*"
+          element={
+            <ProtectedRoute allowedRoles={['manager']}>
+              <ManagerLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/doctor/*"
-        element={
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <DoctorLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pharmacist/*"
-        element={
-          <ProtectedRoute allowedRoles={['pharmacist']}>
-            <PharmacistLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/distributor/*"
-        element={
-          <ProtectedRoute allowedRoles={['distributor']}>
-            <DistributorLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/patient/*"
-        element={
-          <ProtectedRoute allowedRoles={['patient']}>
-            <PatientLayoutRouter />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/doctor/*"
+          element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pharmacist/*"
+          element={
+            <ProtectedRoute allowedRoles={['pharmacist']}>
+              <PharmacistLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/distributor/*"
+          element={
+            <ProtectedRoute allowedRoles={['distributor']}>
+              <DistributorLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/*"
+          element={
+            <ProtectedRoute allowedRoles={['patient']}>
+              <PatientLayoutRouter />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Redirect fallbacks for legacy or generic paths */}
-      <Route
-        path="/employee/*"
-        element={
-          <ProtectedRoute>
-            <DashboardRedirect />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/*"
-        element={
-          <ProtectedRoute>
-            <DashboardRedirect />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Redirect fallbacks for legacy or generic paths */}
+        <Route
+          path="/employee/*"
+          element={
+            <ProtectedRoute>
+              <DashboardRedirect />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <DashboardRedirect />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
